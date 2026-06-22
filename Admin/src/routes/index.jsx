@@ -4,7 +4,6 @@ import { Navigate } from 'react-router'
 
 // Auth View
 const SignIn = lazy(() => import('@/views/auth/basic/sign-in'))
-const SignUp = lazy(() => import('@/views/auth/basic/sign-up'))
 const ResetPass = lazy(() => import('@/views/auth/basic/reset-pass'))
 const NewPass = lazy(() => import('@/views/auth/basic/new-pass'))
 

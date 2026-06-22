@@ -98,6 +98,7 @@ const AppMenu = () => {
   const getPermissionForMenu = (slug) => {
     const map = {
       'staff': 'staff',
+      'staff-delivery': 'staff',
       'delivery-boys': 'delivery',
       'customers': 'pos',
       'suppliers': 'inventory',
