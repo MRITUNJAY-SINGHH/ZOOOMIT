@@ -14,7 +14,13 @@ export default function ConfirmModal({
   busy = false,
 }) {
   return (
-    <Modal show={show} onHide={onCancel} centered>
+    <Modal 
+      show={show} 
+      onHide={onCancel} 
+      centered
+      backdrop="static"
+      style={{ backdropFilter: 'blur(5px)', backgroundColor: 'rgba(0,0,0,0.4)' }}
+    >
       <Modal.Header closeButton>
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>

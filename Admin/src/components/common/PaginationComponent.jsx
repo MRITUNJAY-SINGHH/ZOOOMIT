@@ -23,13 +23,13 @@ export default function PaginationComponent({
             {[10, 20, 50, 100].map((size) => <option value={size} key={size}>{size} / page</option>)}
           </Form.Select>
         )}
-        <Button variant="outline-secondary" disabled={currentPage <= 1} onClick={() => onPageChange?.(currentPage - 1)}>
-          <ChevronLeft size={20} />
+        <Button variant="primary" disabled={currentPage <= 1} onClick={() => onPageChange?.(currentPage - 1)} className="d-flex align-items-center gap-1 shadow-sm px-3">
+          <ChevronLeft size={18} />
           Prev
         </Button>
-        <Button variant="outline-secondary" disabled={currentPage >= totalPages} onClick={() => onPageChange?.(currentPage + 1)}>
+        <Button variant="primary" disabled={currentPage >= totalPages} onClick={() => onPageChange?.(currentPage + 1)} className="d-flex align-items-center gap-1 shadow-sm px-3">
           Next
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </Button>
       </div>
     </div>

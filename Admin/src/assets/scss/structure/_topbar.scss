@@ -7,7 +7,7 @@
     top: 0;
     z-index: 1001;
     background: $topbar-bg;
-    box-shadow: $card-box-shadow;
+    box-shadow: none;
     height: $topbar-height;
     margin-inline-start: $sidenav-width;
     transition: margin-left 0.25s ease-in-out;

@@ -17,9 +17,9 @@ const Categories = lazy(() => import('@/views/admin/catalog/categories'))
 const Products = lazy(() => import('@/views/admin/catalog/products'))
 const InventoryOverview = lazy(() => import('@/views/admin/inventory/overview'))
 const StockEntry = lazy(() => import('@/views/admin/inventory/stock-entry'))
-const InventoryLogs = lazy(() => import('@/views/admin/inventory/logs'))
 const LowStock = lazy(() => import('@/views/admin/inventory/low-stock'))
 const UpcomingExpiry = lazy(() => import('@/views/admin/inventory/upcoming-expiry'))
+const InventoryLogs = lazy(() => import('@/views/admin/inventory/logs'))
 const OrdersAll = lazy(() => import('@/views/admin/orders/all'))
 const POSBilling = lazy(() => import('@/views/admin/pos'))
 const Coupons = lazy(() => import('@/views/admin/coupons'))
@@ -49,9 +49,9 @@ export const routes = [
           { path: '/catalog/products', element: <ProtectedRoute permission="products" />, children: [{ path: '', Component: Products }] },
           { path: '/inventory/overview', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: InventoryOverview }] },
           { path: '/inventory/stock-entry', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: StockEntry }] },
-          { path: '/inventory/logs', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: InventoryLogs }] },
           { path: '/inventory/low-stock', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: LowStock }] },
           { path: '/inventory/upcoming-expiry', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: UpcomingExpiry }] },
+          { path: '/inventory/logs', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: InventoryLogs }] },
           { path: '/orders/all', element: <ProtectedRoute permission="orders" />, children: [{ path: '', Component: OrdersAll }] },
           { path: '/pos', element: <ProtectedRoute permission="pos" />, children: [{ path: '', Component: POSBilling }] },
           { path: '/coupons', element: <ProtectedRoute permission="coupons" />, children: [{ path: '', Component: Coupons }] },

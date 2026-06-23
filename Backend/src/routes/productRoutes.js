@@ -1,6 +1,6 @@
 import express from 'express';
 import { 
-  getProducts, getProductById, createProduct, updateProduct, deleteProduct, 
+  getProducts, getProductById, createProduct, updateProduct, deleteProduct, bulkDeleteProducts,
   searchProductByBarcode, addVariant, deleteVariant, getProductBatches, bulkImportProducts 
 } from '../controllers/productController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
@@ -12,7 +12,8 @@ router.route('/')
   .post(protect, authorize('products'), createProduct);
 
 router.route('/bulk')
-  .post(protect, authorize('products'), bulkImportProducts);
+  .post(protect, authorize('products'), bulkImportProducts)
+  .delete(protect, authorize('products'), bulkDeleteProducts);
 
 router.route('/barcode/:barcode')
   .get(protect, authorize('pos'), searchProductByBarcode);

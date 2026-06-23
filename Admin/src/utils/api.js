@@ -24,6 +24,11 @@ export const fetchApi = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
+      if (response.status === 401 && data.message === 'Not authorized, token failed') {
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        window.location.href = '/auth/sign-in';
+      }
       const error = new Error(data.message || 'Something went wrong');
       error.response = { data };
       throw error;

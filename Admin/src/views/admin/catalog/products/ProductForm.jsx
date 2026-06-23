@@ -4,6 +4,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
+import { ArrowLeft } from 'lucide-react';
+import PageHeader from '@/components/common/PageHeader';
 
 export default function ProductForm({ productId, onBack, onSave }) {
   const isEdit = !!productId;
@@ -109,10 +111,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h2>{isEdit ? 'Edit Product' : 'Add Product'}</h2>
-        <Button variant="secondary" onClick={onBack}>Back to List</Button>
-      </div>
+      <PageHeader 
+        title={isEdit ? 'Edit Product' : 'Add Product'} 
+        rightContent={
+          <Button variant="outline-primary" className="d-flex align-items-center gap-2 shadow-sm px-3 fw-medium" onClick={onBack}>
+            <ArrowLeft size={16} /> Back to List
+          </Button>
+        } 
+      />
 
       <Tabs defaultActiveKey="basic" className="mb-3">
         <Tab eventKey="basic" title="Basic Info">

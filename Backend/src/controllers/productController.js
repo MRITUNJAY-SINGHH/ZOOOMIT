@@ -3,12 +3,15 @@ import ProductVariant from '../models/ProductVariant.js';
 
 export const getProducts = async (req, res) => {
   try {
-    let { page = 1, limit = 20, search = '' } = req.query;
+    let { page = 1, limit = 20, search = '', status = '' } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
     if (limit > 100) limit = 100;
 
     let query = {};
+    if (status === 'active') query.isActive = true;
+    if (status === 'inactive') query.isActive = false;
+
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
@@ -76,6 +79,22 @@ export const deleteProduct = async (req, res) => {
     await Product.deleteOne({ _id: product._id });
     
     res.json({ message: 'Product removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const bulkDeleteProducts = async (req, res) => {
+  try {
+    const { productIds } = req.body;
+    if (!productIds || !Array.isArray(productIds)) {
+      return res.status(400).json({ message: 'Invalid productIds array' });
+    }
+    
+    await ProductVariant.deleteMany({ product: { $in: productIds } });
+    await Product.deleteMany({ _id: { $in: productIds } });
+    
+    res.json({ message: 'Products removed successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

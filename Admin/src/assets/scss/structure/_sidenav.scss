@@ -8,7 +8,7 @@
     bottom: 0;
     top: 0;
     width: $sidenav-width;
-    background: #0f172a !important; // Enforce exact mockup color
+    background: var(--#{$prefix}sidenav-bg);
     box-shadow: var(--#{$prefix}box-shadow-sm);
     border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
     transition: width 0.25s ease-in-out;
@@ -35,19 +35,19 @@
             gap: 12px;
             position: relative;
             white-space: nowrap;
-            color: rgba(255, 255, 255, 0.9) !important; // White text
+            color: var(--#{$prefix}sidenav-item-color);
             transition: all 0.2s ease-in-out;
             line-height: calc($sidenav-item-font-size * 1.25);
-            font-size: 15px;
+            font-size: calc(var(--#{$prefix}sidenav-item-font-size) + 1px);
             font-weight: 500;
-            padding: 8px 14px; // Tighter padding
+            padding: calc(var(--#{$prefix}sidenav-item-padding-y) + 4px) var(--#{$prefix}sidenav-item-padding-x);
             border-radius: 6px;
 
             &:hover,
             &:focus,
             &:active {
-                color: #ffffff !important;
-                background-color: rgba(255, 255, 255, 0.05);
+                color: var(--#{$prefix}sidenav-item-hover-color);
+                background-color: var(--#{$prefix}sidenav-item-hover-bg);
             }
 
             .menu-icon {
@@ -103,12 +103,12 @@
 
         .side-nav-item {
             .side-nav-link {
-                font-size: 14px;
-                padding-block: 10px; // More top bottom space as requested
-                padding-inline: 14px;
+                font-size: calc(var(--#{$prefix}sidenav-sub-item-font-size) + 2px);
+                padding-block: calc(var(--#{$prefix}sidenav-sub-item-padding-y) + 4px);
+                padding-inline: var(--#{$prefix}sidenav-sub-item-padding-x);
                 padding-inline-start: 32px; // Adjusted for icons
                 font-weight: 400;
-                color: rgba(255, 255, 255, 0.75) !important; // Slightly dimmed for submenus
+                color: var(--#{$prefix}sidenav-item-color);
 
                 .menu-icon {
                     font-size: 16px;
@@ -126,7 +126,7 @@
                 }
 
                 &:hover {
-                    color: #ffffff !important;
+                    color: var(--#{$prefix}sidenav-item-hover-color);
                     background-color: transparent;
                 }
             }
@@ -143,7 +143,7 @@
         cursor: default;
         white-space: nowrap;
         text-transform: uppercase;
-        color: #fff;
+        color: var(--#{$prefix}sidenav-item-color);
         font-weight: 600;
         font-size: 11px;
         padding: 12px 14px 4px;
@@ -152,10 +152,9 @@
     // Active Menu
     >.side-nav-item.active {
         >a {
-            color: #ffffff !important;
-            background-color: #1d4ed8 !important; // Blue 700
+            color: var(--#{$prefix}sidenav-item-active-color);
+            background-color: var(--#{$prefix}sidenav-item-active-bg);
             font-weight: 500;
-            box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.2);
 
             .menu-arrow {
                 transform: rotate(-180deg);
@@ -165,7 +164,7 @@
 
         .side-nav-item.active {
             >a {
-                color: #ffffff !important;
+                color: var(--#{$prefix}sidenav-item-active-color);
                 font-weight: 500;
 
                 .menu-arrow {
@@ -245,7 +244,7 @@ html[data-sidenav-size='condensed'] {
 
         .logo {
             z-index: 1;
-            background: #0f172a !important;
+            background: inherit;
             text-align: center;
             padding: 0;
 
@@ -313,7 +312,7 @@ html[data-sidenav-size='condensed'] {
                         box-shadow: var(--#{$prefix}box-shadow);
                         border: $card-border-width solid $sidenav-border-color;
                         border-top: 0;
-                        background: #0f172a !important;
+                        background: var(--#{$prefix}sidenav-bg);
                         border-radius: 0 0 4px 4px;
 
                         .sub-menu {
@@ -381,7 +380,7 @@ html[data-sidenav-size='condensed'] {
             >.side-nav-item:hover {
                 >.side-nav-link {
                     color: $sidenav-item-active-color;
-                    background: #0f172a !important;
+                    background: var(--#{$prefix}sidenav-item-hover-bg);
                     box-shadow: var(--#{$prefix}box-shadow);
                     width: calc($sidenav-width + calc($sidenav-width-sm * 0.35));
                     border-radius: 4px;

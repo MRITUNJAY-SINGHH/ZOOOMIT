@@ -6,86 +6,43 @@ export const menuItems = [
     'url': '/dashboard'
   },
   {
-    'isTitle': true,
-    'label': 'CATALOG'
-  },
-  {
-    'icon': 'lucide:grid', // Using generic grid/box icon
-    'slug': 'catalog-categories',
-    'label': 'Categories',
+    'icon': 'lucide:grid',
+    'slug': 'catalog',
+    'label': 'Catalog',
     'children': [
-      { 'url': '/catalog/categories', 'slug': 'catalog-categories-list', 'label': 'All Categories', 'icon': 'lucide:layout-grid' }
+      { 'url': '/catalog/categories', 'slug': 'catalog-categories', 'label': 'Categories', 'icon': 'lucide:layout-grid' },
+      { 'url': '/catalog/products', 'slug': 'catalog-products', 'label': 'Products', 'icon': 'lucide:package' }
     ]
   },
   {
-    'icon': 'lucide:shopping-bag',
-    'slug': 'catalog-products',
-    'label': 'Products',
+    'icon': 'lucide:box',
+    'slug': 'inventory',
+    'label': 'Inventory',
     'children': [
-      { 'url': '/catalog/products', 'slug': 'catalog-products-list', 'label': 'All Products', 'icon': 'lucide:package' }
+      { 'url': '/inventory/overview', 'slug': 'inventory-overview', 'label': 'Inventory Overview', 'icon': 'lucide:activity' },
+      { 'url': '/inventory/stock-entry', 'slug': 'inventory-stock-entry', 'label': 'Stock Entry', 'icon': 'lucide:plus-square' },
+      { 'url': '/inventory/logs', 'slug': 'inventory-logs', 'label': 'Inventory Logs', 'icon': 'lucide:clipboard-list' },
+      { 'url': '/inventory/low-stock', 'slug': 'inventory-low-stock', 'label': 'Low Stock', 'icon': 'lucide:alert-triangle' },
+      { 'url': '/inventory/upcoming-expiry', 'slug': 'inventory-upcoming-expiry', 'label': 'Upcoming Expiry', 'icon': 'lucide:clock' }
     ]
   },
   {
-    'isTitle': true,
-    'label': 'INVENTORY'
-  },
-  {
-    'icon': 'lucide:layout-list',
-    'slug': 'inventory-overview',
-    'label': 'Overview',
+    'icon': 'lucide:shopping-cart',
+    'slug': 'orders',
+    'label': 'Orders',
     'children': [
-      { 'url': '/inventory/overview', 'slug': 'inventory-overview-list', 'label': 'Overview Details', 'icon': 'lucide:activity' }
-    ]
-  },
-  {
-    'icon': 'lucide:plus-circle',
-    'slug': 'inventory-stock-entry',
-    'label': 'Stock Entry',
-    'children': [
-      { 'url': '/inventory/stock-entry', 'slug': 'inventory-stock-entry-list', 'label': 'Add Stock', 'icon': 'lucide:plus-square' }
-    ]
-  },
-  {
-    'icon': 'lucide:clipboard-list',
-    'slug': 'inventory-logs',
-    'label': 'Inventory Logs',
-    'children': [
-      { 'url': '/inventory/logs', 'slug': 'inventory-logs-list', 'label': 'View Logs', 'icon': 'lucide:minus' }
-    ]
-  },
-  {
-    'icon': 'lucide:alert-triangle',
-    'slug': 'inventory-low-stock',
-    'label': 'Low Stock',
-    'children': [
-      { 'url': '/inventory/low-stock', 'slug': 'inventory-low-stock-list', 'label': 'Low Stock Alerts', 'icon': 'lucide:minus' }
-    ]
-  },
-  {
-    'icon': 'lucide:clock',
-    'slug': 'inventory-upcoming-expiry',
-    'label': 'Upcoming Expiry',
-    'children': [
-      { 'url': '/inventory/upcoming-expiry', 'slug': 'inventory-upcoming-expiry-list', 'label': 'Expiry List', 'icon': 'lucide:minus' }
-    ]
-  },
-  {
-    'isTitle': true,
-    'label': 'ORDERS'
-  },
-  {
-    'icon': 'lucide:receipt',
-    'slug': 'orders-all',
-    'label': 'All Orders',
-    'children': [
-      { 'url': '/orders/all', 'slug': 'orders-all-list', 'label': 'View All Orders', 'icon': 'lucide:list-ordered' }
+      { 'url': '/orders/all', 'slug': 'orders-all', 'label': 'All Orders', 'icon': 'lucide:list-ordered' }
     ]
   },
   {
     'icon': 'lucide:calculator',
     'slug': 'pos',
     'label': 'POS Billing',
-    'url': '/pos'
+    'children': [
+      { 'url': '/pos/new', 'slug': 'pos-new', 'label': 'New Billing', 'icon': 'lucide:plus-circle' },
+      { 'url': '/pos/history', 'slug': 'pos-history', 'label': 'Billing History', 'icon': 'lucide:history' },
+      { 'url': '/pos/returns', 'slug': 'pos-returns', 'label': 'Returns', 'icon': 'lucide:corner-up-left' }
+    ]
   },
   {
     'icon': 'lucide:users',
@@ -100,36 +57,32 @@ export const menuItems = [
     'url': '/suppliers'
   },
   {
-    'isTitle': true,
-    'label': 'STAFF & DELIVERY'
-  },
-  {
-    'icon': 'lucide:users-2',
-    'slug': 'staff-management',
-    'label': 'Staff Management',
-    'children': [
-      { 'url': '/staff', 'slug': 'staff-management-list', 'label': 'Manage Staff', 'icon': 'lucide:user-cog' }
-    ]
+    'icon': 'lucide:user-cog',
+    'slug': 'staff',
+    'label': 'Staff',
+    'url': '/staff'
   },
   {
     'icon': 'lucide:truck',
-    'slug': 'delivery-boys',
-    'label': 'Delivery Boys',
+    'slug': 'delivery',
+    'label': 'Delivery',
+    'url': '/delivery-boys'
+  },
+  {
+    'icon': 'lucide:tag',
+    'slug': 'promotions',
+    'label': 'Promotions',
     'children': [
-      { 'url': '/delivery-boys', 'slug': 'delivery-boys-list', 'label': 'Manage Delivery', 'icon': 'lucide:map-pin' }
+      { 'url': '/coupons', 'slug': 'promotions-coupons', 'label': 'Coupons', 'icon': 'lucide:ticket' }
     ]
   },
   {
-    'icon': 'lucide:ticket',
-    'slug': 'coupons',
-    'label': 'Coupons',
-    'url': '/coupons'
-  },
-  {
-    'icon': 'lucide:credit-card',
-    'slug': 'payments',
-    'label': 'Payments',
-    'url': '/payments'
+    'icon': 'lucide:dollar-sign',
+    'slug': 'finance',
+    'label': 'Finance',
+    'children': [
+      { 'url': '/payments', 'slug': 'finance-payments', 'label': 'Payments', 'icon': 'lucide:credit-card' }
+    ]
   },
   {
     'icon': 'lucide:bar-chart-2',
@@ -137,7 +90,9 @@ export const menuItems = [
     'label': 'Reports',
     'children': [
       { 'url': '/reports/sales', 'slug': 'reports-sales', 'label': 'Sales Report', 'icon': 'lucide:trending-up' },
-      { 'url': '/reports/inventory', 'slug': 'reports-inventory', 'label': 'Inventory Report', 'icon': 'lucide:package-check' }
+      { 'url': '/reports/inventory', 'slug': 'reports-inventory', 'label': 'Inventory Report', 'icon': 'lucide:package-check' },
+      { 'url': '/reports/payment', 'slug': 'reports-payment', 'label': 'Payment Report', 'icon': 'lucide:file-text' },
+      { 'url': '/reports/customer', 'slug': 'reports-customer', 'label': 'Customer Report', 'icon': 'lucide:users-2' }
     ]
   },
   {
@@ -145,7 +100,9 @@ export const menuItems = [
     'slug': 'settings',
     'label': 'Settings',
     'children': [
-      { 'url': '/settings/general', 'slug': 'settings-general', 'label': 'General Settings', 'icon': 'lucide:sliders' }
+      { 'url': '/settings/general', 'slug': 'settings-general', 'label': 'General Settings', 'icon': 'lucide:sliders' },
+      { 'url': '/settings/invoice', 'slug': 'settings-invoice', 'label': 'Invoice Settings', 'icon': 'lucide:file-text' },
+      { 'url': '/settings/security', 'slug': 'settings-security', 'label': 'Security Settings', 'icon': 'lucide:shield' }
     ]
   }
 ];

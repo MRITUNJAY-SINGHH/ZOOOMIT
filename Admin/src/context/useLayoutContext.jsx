@@ -36,7 +36,7 @@ export const hideBackdrop = () => {
   }
 }
 const INIT_STATE = {
-  skin: 'default',
+  skin: 'retro',
   theme: 'light',
   orientation: 'vertical',
   sidenavSize: 'default',

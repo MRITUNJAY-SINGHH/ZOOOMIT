@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Card, Button, Form, Alert } from 'react-bootstrap';
 import Papa from 'papaparse';
 import { fetchApi } from '@/utils/api';
+import { ArrowLeft } from 'lucide-react';
+import PageHeader from '@/components/common/PageHeader';
 
 export default function BulkImport({ onBack, onComplete }) {
   const [loading, setLoading] = useState(false);
@@ -45,13 +47,18 @@ export default function BulkImport({ onBack, onComplete }) {
   };
 
   return (
-    <Card>
-      <Card.Header className="d-flex justify-content-between align-items-center">
-        <h4>Bulk Import Products (CSV)</h4>
-        <Button variant="secondary" size="sm" onClick={onBack}>Cancel</Button>
-      </Card.Header>
-      <Card.Body>
-        <p>Please upload a CSV file with the following headers: <code>name, slug, barcode, mrp, sellingPrice, categoryId</code></p>
+    <div>
+      <PageHeader 
+        title="Bulk Import Products (CSV)" 
+        rightContent={
+          <Button variant="outline-primary" className="d-flex align-items-center gap-2 shadow-sm px-3 fw-medium" onClick={onBack}>
+            <ArrowLeft size={16} /> Back to List
+          </Button>
+        } 
+      />
+      <Card>
+        <Card.Body>
+          <p className="text-muted mb-4">Please upload a CSV file with the following headers: <code>name, slug, barcode, mrp, sellingPrice, categoryId</code></p>
         <Form.Group className="mb-4">
           <Form.Control type="file" accept=".csv" onChange={handleFileUpload} disabled={loading} />
         </Form.Group>
@@ -74,5 +81,6 @@ export default function BulkImport({ onBack, onComplete }) {
         )}
       </Card.Body>
     </Card>
+    </div>
   );
 }
