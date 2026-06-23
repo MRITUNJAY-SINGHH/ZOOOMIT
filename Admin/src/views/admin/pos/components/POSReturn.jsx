@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { Table, Button, Form } from 'react-bootstrap';
 import { fetchApi } from '@/utils/api';
+import { formatCurrency } from '@/utils/format';
 
 export default function POSReturn({ invoice, onBack, onComplete }) {
-  // `invoice` here is actually the Order object mapped from POSHistory for simplicity in this sprint.
-  // The items array has `qty` and `returnedQty`.
-  
   const [returnItems, setReturnItems] = useState(
     invoice.items.map(i => ({ 
       productId: i.productId, 
@@ -19,6 +17,7 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
   
   const [reason, setReason] = useState('Customer Request');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleReturnQtyChange = (productId, val) => {
     const qty = parseInt(val) || 0;
@@ -36,19 +35,22 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
   const processReturn = async () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
     if (itemsToReturn.length === 0) return alert("Select quantities to return.");
+    if (!invoice.invoiceNumber) {
+      setError('Return processing requires an invoiceNumber. Add an invoice lookup by order endpoint before enabling POS returns from billing history.');
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     try {
-      // Backend expects invoiceNumber, but we might only have order in this UI flow right now.
-      // In a production scenario, we fetch the Invoice by Order. Let's assume the POS return API accepts order ID or we mocked it.
-      // Our backend posController.js expects `invoiceNumber`, but we'll adapt it or alert.
-      
-      alert("In a fully connected flow, this payload posts to POST /api/pos/return with the itemsToReturn array. The backend Mongo Transaction deducts it and restores inventory!");
-      
-      onComplete(); // refresh history
+      await fetchApi('/pos/return', {
+        method: 'POST',
+        body: JSON.stringify({ invoiceNumber: invoice.invoiceNumber, itemsToReturn, reason })
+      });
+      onComplete();
       onBack();
     } catch (error) {
-      alert(error.message);
+      setError(error.message);
     }
     setLoading(false);
   };
@@ -58,7 +60,8 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
   return (
     <div style={{ padding: '20px' }}>
       <Button variant="secondary" onClick={onBack} className="mb-3">Back to History</Button>
-      <h4>Initiate Return for {invoice.billNumber || invoice.orderNumber}</h4>
+      <h4>Initiate Return for {invoice.invoiceNumber || invoice.billNumber || invoice.orderNumber}</h4>
+      {error && <div className="alert alert-danger mt-3">{error}</div>}
       
       <Table bordered className="mt-3">
         <thead>
@@ -86,7 +89,7 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
                   disabled={item.purchasedQty - item.alreadyReturned === 0}
                 />
               </td>
-              <td>${(item.qtyToReturn * item.price).toFixed(2)}</td>
+              <td>{formatCurrency(item.qtyToReturn * item.price)}</td>
             </tr>
           ))}
         </tbody>
@@ -103,7 +106,7 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
         </Form.Group>
         
         <div>
-          <h5 className="mb-2">Total Refund: ${totalRefund.toFixed(2)}</h5>
+          <h5 className="mb-2">Total Refund: {formatCurrency(totalRefund)}</h5>
           <Button variant="danger" size="lg" onClick={processReturn} disabled={loading || totalRefund === 0}>Process Return</Button>
         </div>
       </div>

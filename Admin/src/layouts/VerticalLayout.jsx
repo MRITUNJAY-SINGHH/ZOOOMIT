@@ -10,7 +10,9 @@ const VerticalLayout = ({ children }) => {
         <Sidenav />
         <TopBar />
         <div className="content-page">
-          <Container fluid>{children}</Container>
+          <div className="content">
+            <Container fluid>{children}</Container>
+          </div>
           <Footer />
         </div>
       </div>

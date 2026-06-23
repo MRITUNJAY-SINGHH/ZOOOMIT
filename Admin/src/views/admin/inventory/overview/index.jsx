@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Badge, Row, Col } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import { Link } from 'react-router';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';

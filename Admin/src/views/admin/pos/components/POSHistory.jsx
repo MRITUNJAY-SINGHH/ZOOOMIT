@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Offcanvas, Table, Button, Badge } from 'react-bootstrap';
 import { fetchApi } from '@/utils/api';
+import { formatCurrency } from '@/utils/format';
 import POSReturn from './POSReturn';
 
 export default function POSHistory({ onClose, onReprint }) {
@@ -14,10 +15,8 @@ export default function POSHistory({ onClose, onReprint }) {
 
   const loadInvoices = async () => {
     try {
-      // In a real app we'd filter for POS offline invoices
-      // We will fetch all orders and filter offline for now
-      const data = await fetchApi('/orders');
-      const offlineOrders = data.filter(o => o.orderType === 'OFFLINE');
+      const data = await fetchApi('/orders?orderType=OFFLINE&page=1&limit=50');
+      const offlineOrders = data.data || [];
       setInvoices(offlineOrders);
     } catch (e) {
       console.error(e);
@@ -26,9 +25,7 @@ export default function POSHistory({ onClose, onReprint }) {
   };
 
   const handleReprintClick = async (orderId) => {
-    // We need the Invoice document. In Kuiklo, Invoice is generated on checkout.
-    // For demo/speed, we'll fetch order details or assume we have an endpoint.
-    alert("In a full app, this fetches the Invoice document by Order ID and passes it to onReprint()");
+    console.warn(`Invoice lookup endpoint is required before reprinting order ${orderId}.`);
   };
 
   if (returnInvoice) {
@@ -57,7 +54,7 @@ export default function POSHistory({ onClose, onReprint }) {
                 <tr key={order._id}>
                   <td>{order.billNumber || order.orderNumber}</td>
                   <td>{new Date(order.createdAt).toLocaleString()}</td>
-                  <td>${order.amount.toFixed(2)}</td>
+                  <td>{formatCurrency(order.amount)}</td>
                   <td><Badge bg={order.status === 'Returned' ? 'danger' : 'success'}>{order.status}</Badge></td>
                   <td>
                     <Button size="sm" variant="outline-primary" className="me-2" onClick={() => handleReprintClick(order._id)}>Reprint</Button>

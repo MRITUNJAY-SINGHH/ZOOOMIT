@@ -1,14 +1,22 @@
 import React from 'react';
-import { Icon } from '@iconify/react';
 import { Button } from 'react-bootstrap';
+import * as Icons from 'lucide-react';
+
+const resolveIcon = (icon) => {
+  if (typeof icon !== 'string') return icon || Icons.Inbox;
+  const pascal = icon.replace(/^lucide:/, '').split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('');
+  return Icons[pascal] || Icons.Inbox;
+};
 
 export default function EmptyState({ icon = 'lucide:inbox', title = 'No Data Found', message, actionLabel, onAction }) {
+  const StateIcon = resolveIcon(icon);
+
   return (
-    <div className="text-center p-5">
-      <div className="mb-3">
-        <Icon icon={icon} className="text-muted opacity-50" width="48" height="48" />
+    <div className="kuiklo-state kuiklo-empty-state text-center">
+      <div className="kuiklo-state-icon mb-3">
+        <StateIcon size={48} />
       </div>
-      <h5 className="mb-2 fw-medium text-dark">{title}</h5>
+      <h2>{title}</h2>
       {message && <p className="text-muted mb-4">{message}</p>}
       {actionLabel && onAction && (
         <Button variant="primary" onClick={onAction}>

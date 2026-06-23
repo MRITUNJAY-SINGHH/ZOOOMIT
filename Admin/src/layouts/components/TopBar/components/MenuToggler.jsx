@@ -1,4 +1,4 @@
-import Icon from '@/components/wrappers/Icon'
+import { Menu } from 'lucide-react'
 import { showBackdrop, useLayoutContext } from '@/context/useLayoutContext'
 import { Button } from 'react-bootstrap'
 const MenuToggler = () => {
@@ -20,10 +20,10 @@ const MenuToggler = () => {
   return (
     <>
       <Button variant="default" className="sidenav-toggle-button btn-icon" onClick={toggleSideNav}>
-        <Icon icon="menu" />
+        <Menu size={20} strokeWidth={2} />
       </Button>
       <button onClick={showBackdrop} className="topnav-toggle-button px-2">
-        <Icon icon="menu" />
+        <Menu size={20} strokeWidth={2} />
       </button>
     </>
   )

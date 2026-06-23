@@ -1,6 +1,6 @@
 /**
- * Template Name: UBold - Multipurpose Admin & Dashboard Template
- * By (Author): Coderthemes
+ * Template Name: Kuiklo - Professional ERP & POS System
+ * By (Author): MRITUNJAY SINGH
  * Module/App (File Name): App CSS File
  * Version: 8.0.0
  */
@@ -73,3 +73,164 @@
 @import "plugins/pass-bar";
 
 @import 'framework-custom';
+
+.kuiklo-page-header {
+  padding: 4px 0 8px;
+}
+
+.kuiklo-page-title {
+  font-size: clamp(28px, 2.2vw, 32px);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.kuiklo-page-description,
+.kuiklo-breadcrumb,
+.kuiklo-record-count,
+.kuiklo-pagination,
+.table,
+.form-control,
+.form-select,
+.btn,
+.dropdown-menu,
+.modal-body {
+  font-size: 16px;
+}
+
+.kuiklo-breadcrumb .breadcrumb-item {
+  font-size: 16px;
+}
+
+.kuiklo-action-card,
+.kuiklo-section-card,
+.kuiklo-stat-card,
+.card {
+  border-radius: 8px;
+  border-color: var(--#{$prefix}border-color);
+  box-shadow: 0 2px 8px rgba(var(--#{$prefix}body-color-rgb), .04);
+}
+
+.kuiklo-action-card .card-body {
+  padding: 16px;
+}
+
+.kuiklo-search {
+  max-width: 360px;
+  min-width: min(100%, 280px);
+}
+
+.kuiklo-search .input-group-text,
+.kuiklo-search .form-control,
+.kuiklo-filter-bar .form-select,
+.kuiklo-pagination .form-select,
+.btn {
+  min-height: 40px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.kuiklo-icon-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.kuiklo-status-badge {
+  padding: 6px 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.kuiklo-state {
+  padding: 48px 24px;
+  border: 1px solid var(--#{$prefix}border-color);
+  border-radius: 8px;
+  background: var(--#{$prefix}tertiary-bg);
+}
+
+.kuiklo-state h2,
+.kuiklo-section-title {
+  font-size: 20px;
+  line-height: 1.3;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.kuiklo-state-icon {
+  color: var(--#{$prefix}secondary-color);
+  opacity: .75;
+}
+
+.kuiklo-modal-icon,
+.kuiklo-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+}
+
+.kuiklo-stat-card .card-body {
+  padding: 18px;
+}
+
+.kuiklo-stat-card h2 {
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.kuiklo-stat-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.kuiklo-stat-footer span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.table > :not(caption) > * > * {
+  padding: 14px 16px;
+}
+
+.table thead th {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: none;
+  color: var(--#{$prefix}secondary-color);
+}
+
+.table tbody td {
+  vertical-align: middle;
+}
+
+.kuiklo-filter-bar .form-select {
+  width: auto;
+  min-width: 170px;
+}
+
+@media (max-width: 767.98px) {
+  .kuiklo-search,
+  .kuiklo-filter-bar .form-select {
+    max-width: none;
+    width: 100%;
+  }
+
+  .kuiklo-action-card .btn {
+    flex: 1 1 auto;
+  }
+}

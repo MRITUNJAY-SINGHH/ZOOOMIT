@@ -3,6 +3,7 @@ import { Card, Form, Button, Tabs, Tab, Row, Col, Table } from 'react-bootstrap'
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { fetchApi } from '@/utils/api';
+import { formatCurrency } from '@/utils/format';
 
 export default function ProductForm({ productId, onBack, onSave }) {
   const isEdit = !!productId;
@@ -193,7 +194,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
                 <thead><tr><th>Name</th><th>SKU</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
                 <tbody>
                   {variants.map(v => (
-                    <tr key={v._id}><td>{v.name}</td><td>{v.sku}</td><td>${v.sellingPrice || formData.sellingPrice}</td><td>{v.stock}</td><td><Button size="sm" variant="danger">Del</Button></td></tr>
+                    <tr key={v._id}><td>{v.name}</td><td>{v.sku}</td><td>{formatCurrency(v.sellingPrice || formData.sellingPrice)}</td><td>{v.stock}</td><td><Button size="sm" variant="danger">Del</Button></td></tr>
                   ))}
                   {variants.length === 0 && <tr><td colSpan="5" className="text-center">No variants.</td></tr>}
                 </tbody>
@@ -210,7 +211,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
                 <thead><tr><th>Batch #</th><th>Supplier</th><th>Stock</th><th>Cost</th><th>Expiry Date</th></tr></thead>
                 <tbody>
                   {batches.map(b => (
-                    <tr key={b._id}><td>{b.batchNumber}</td><td>{b.supplier?.name}</td><td>{b.stock}</td><td>${b.costPrice}</td><td>{b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : 'N/A'}</td></tr>
+                    <tr key={b._id}><td>{b.batchNumber}</td><td>{b.supplier?.name}</td><td>{b.stock}</td><td>{formatCurrency(b.costPrice)}</td><td>{b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : 'N/A'}</td></tr>
                   ))}
                   {batches.length === 0 && <tr><td colSpan="5" className="text-center">No active batches.</td></tr>}
                 </tbody>

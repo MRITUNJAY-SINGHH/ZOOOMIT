@@ -1,60 +1,50 @@
 import User1 from '@/assets/images/users/user-1.jpg'
-import Icon from '@/components/wrappers/Icon'
-import { META_DATA } from '@/config/constants'
-import { Dropdown, DropdownDivider, DropdownHeader, DropdownItem, DropdownMenu, DropdownToggle } from 'react-bootstrap'
+import { User, Settings, Bell, KeyRound, LogOut, ChevronDown } from 'lucide-react'
+import { useAuthContext } from '@/context/useAuthContext'
+import { Dropdown, DropdownDivider, DropdownItem, DropdownMenu, DropdownToggle } from 'react-bootstrap'
+import { Link } from 'react-router'
+
 const UserDropdown = () => {
+  const { user } = useAuthContext();
+  
   return (
     <div id="simple-user-dropdown" className="topbar-item nav-user">
       <Dropdown>
         <DropdownToggle className="topbar-link drop-arrow-none" type="button">
           <img src={User1} width={32} className="rounded-circle me-lg-2 d-flex" alt="user-image" />
-          <div className="d-lg-flex align-items-center gap-1 d-none">
-            <h5 className="my-0">{META_DATA.username}</h5>
-            <Icon icon="chevron-down" className="align-middle" />
+          <div className="d-lg-flex flex-column align-items-start d-none me-1">
+            <h5 className="my-0 fs-16 fw-semibold">{user?.name || 'User'}</h5>
+            <small className="text-muted fs-14">{user?.role || 'Admin'}</small>
           </div>
+          <ChevronDown size={16} strokeWidth={2} className="d-none d-lg-block ms-1 text-muted" />
         </DropdownToggle>
+        
         <DropdownMenu className="dropdown-menu-end">
-          <DropdownHeader className="noti-title">
-            <h6 className="text-overflow m-0">Welcome back!</h6>
-          </DropdownHeader>
-
-          <DropdownItem href="">
-            <Icon icon="circle-user-round" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Profile</span>
+          <DropdownItem as={Link} to="/profile" className="d-flex align-items-center py-2">
+            <User size={18} strokeWidth={2} className="me-2 text-muted" />
+            <span className="fs-16">My Profile</span>
           </DropdownItem>
 
-          <DropdownItem href="">
-            <Icon icon="bell-ring" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Notifications</span>
+          <DropdownItem as={Link} to="/settings" className="d-flex align-items-center py-2">
+            <Settings size={18} strokeWidth={2} className="me-2 text-muted" />
+            <span className="fs-16">Account Settings</span>
           </DropdownItem>
 
-          <DropdownItem href="">
-            <Icon icon="credit-card" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">
-              Balance: <span className="fw-semibold">$985.25</span>
-            </span>
+          <DropdownItem as={Link} to="/notifications" className="d-flex align-items-center py-2">
+            <Bell size={18} strokeWidth={2} className="me-2 text-muted" />
+            <span className="fs-16">Notifications</span>
           </DropdownItem>
 
-          <DropdownItem href="">
-            <Icon icon="bolt" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Account Settings</span>
-          </DropdownItem>
-
-          <DropdownItem href="">
-            <Icon icon="headset" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Support Center</span>
+          <DropdownItem as={Link} to="/change-password" className="d-flex align-items-center py-2">
+            <KeyRound size={18} strokeWidth={2} className="me-2 text-muted" />
+            <span className="fs-16">Change Password</span>
           </DropdownItem>
 
           <DropdownDivider />
 
-          <DropdownItem href="/auth/lock-screen">
-            <Icon icon="lock-keyhole" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Lock Screen</span>
-          </DropdownItem>
-
-          <DropdownItem href="" className="text-danger fw-semibold">
-            <Icon icon="log-out" className="me-1 fs-lg align-middle" />
-            <span className="align-middle">Log Out</span>
+          <DropdownItem as={Link} to="/auth/logout" className="d-flex align-items-center py-2 text-danger fw-semibold">
+            <LogOut size={18} strokeWidth={2} className="me-2" />
+            <span className="fs-16">Log Out</span>
           </DropdownItem>
         </DropdownMenu>
       </Dropdown>

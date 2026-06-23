@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Form, Badge, Modal, InputGroup } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
+import DeleteModal from '@/components/common/DeleteModal';
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
@@ -15,6 +16,7 @@ export default function Suppliers() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ _id: null, name: '', phone: '', email: '', address: '', status: 'Active' });
 
@@ -45,9 +47,9 @@ export default function Suppliers() {
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to save'); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this supplier?')) return;
-    try { await api.delete(`/suppliers/${id}`); toast.success('Supplier deleted'); fetchSuppliers(); }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try { await api.delete(`/suppliers/${deleteTarget._id}`); toast.success('Supplier deleted'); setDeleteTarget(null); fetchSuppliers(); }
     catch (err) { toast.error('Failed to delete'); }
   };
 
@@ -83,7 +85,7 @@ export default function Suppliers() {
                       <td><Badge bg={s.status === 'Active' ? 'success' : 'danger'}>{s.status}</Badge></td>
                       <td className="text-end">
                         <Button variant="light" size="sm" className="me-1" onClick={() => handleOpenModal(s)}><Icon icon="lucide:edit" width={14} /></Button>
-                        <Button variant="light" size="sm" className="text-danger" onClick={() => handleDelete(s._id)}><Icon icon="lucide:trash-2" width={14} /></Button>
+                        <Button variant="light" size="sm" className="text-danger" onClick={() => setDeleteTarget(s)}><Icon icon="lucide:trash-2" width={14} /></Button>
                       </td>
                     </tr>
                   ))}
@@ -119,6 +121,7 @@ export default function Suppliers() {
           <Button variant="primary" size="sm" onClick={handleSave} disabled={!formData.name}>Save</Button>
         </Modal.Footer>
       </Modal>
+      <DeleteModal show={Boolean(deleteTarget)} itemName={deleteTarget?.name || 'this supplier'} onCancel={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   );
 }

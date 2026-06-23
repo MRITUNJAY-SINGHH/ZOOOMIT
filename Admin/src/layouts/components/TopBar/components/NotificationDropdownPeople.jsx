@@ -1,5 +1,5 @@
 import { Dropdown } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Bell, AlertTriangle, Clock, ShoppingBag, XCircle, RotateCcw, AlertOctagon } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import api from '@/utils/api';
 import clsx from 'clsx';
@@ -20,11 +20,11 @@ const NotificationDropdownPeople = () => {
   };
 
   useEffect(() => {
-    fetchNotifications(); // Fetch on mount
+    fetchNotifications();
 
     const interval = setInterval(() => {
       fetchNotifications();
-    }, 60000); // 60 seconds polling
+    }, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -50,44 +50,45 @@ const NotificationDropdownPeople = () => {
   };
 
   const getIconForType = (type) => {
+    const props = { size: 20, strokeWidth: 2 };
     switch (type) {
-      case 'Low Stock': return <Icon icon="lucide:alert-triangle" className="text-warning" />;
-      case 'Expiring Product': return <Icon icon="lucide:clock" className="text-danger" />;
-      case 'New Order': return <Icon icon="lucide:shopping-bag" className="text-success" />;
-      case 'Cancelled Order': return <Icon icon="lucide:x-circle" className="text-danger" />;
-      case 'Returned Order': return <Icon icon="lucide:rotate-ccw" className="text-info" />;
-      case 'Refund Failure': return <Icon icon="lucide:alert-octagon" className="text-danger" />;
-      default: return <Icon icon="lucide:bell" className="text-primary" />;
+      case 'Low Stock': return <AlertTriangle {...props} className="text-warning" />;
+      case 'Expiring Product': return <Clock {...props} className="text-danger" />;
+      case 'New Order': return <ShoppingBag {...props} className="text-success" />;
+      case 'Cancelled Order': return <XCircle {...props} className="text-danger" />;
+      case 'Returned Order': return <RotateCcw {...props} className="text-info" />;
+      case 'Refund Failure': return <AlertOctagon {...props} className="text-danger" />;
+      default: return <Bell {...props} className="text-primary" />;
     }
   };
 
   return (
-    <Dropdown>
-      <Dropdown.Toggle
-        as="a"
-        className="nav-link dropdown-toggle arrow-none"
-        role="button"
-        data-bs-toggle="dropdown"
-        aria-haspopup="true"
-        aria-expanded="false"
-      >
-        <Icon icon="lucide:bell" />
-        {unreadCount > 0 && (
-          <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-            {unreadCount > 99 ? '99+' : unreadCount}
+    <div className="topbar-item nav-user">
+      <Dropdown>
+        <Dropdown.Toggle
+          as="button"
+          className="topbar-link drop-arrow-none"
+          role="button"
+          data-bs-toggle="dropdown"
+          aria-haspopup="true"
+          aria-expanded="false"
+        >
+          <span className="topbar-link-icon position-relative">
+            <Bell size={20} strokeWidth={2} />
+            {unreadCount > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '10px', padding: '0.25em 0.4em' }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </span>
-        )}
-      </Dropdown.Toggle>
+        </Dropdown.Toggle>
 
-      <Dropdown.Menu className="dropdown-menu-end dropdown-menu-lg py-0">
-        <div className="p-2 border-top-0 border-start-0 border-end-0 border-dashed border">
-          <div className="row align-items-center">
-            <div className="col">
+        <Dropdown.Menu className="dropdown-menu-end dropdown-menu-lg py-0">
+          <div className="p-3 border-bottom">
+            <div className="d-flex align-items-center justify-content-between">
               <h6 className="m-0 fs-16 fw-semibold">Notifications</h6>
-            </div>
-            <div className="col-auto">
               <button 
-                className="btn btn-link p-0 text-dark fw-semibold text-decoration-none" 
+                className="btn btn-link p-0 text-dark fw-semibold text-decoration-none fs-16" 
                 onClick={markAllAsRead}
                 disabled={unreadCount === 0}
               >
@@ -95,42 +96,38 @@ const NotificationDropdownPeople = () => {
               </button>
             </div>
           </div>
-        </div>
 
-        <div className="p-1" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-          {notifications.length === 0 ? (
-            <div className="text-center p-3 text-muted">
-              No new notifications
-            </div>
-          ) : (
-            notifications.map((item) => (
-              <div
-                key={item._id}
-                className={clsx(
-                  'dropdown-item d-flex align-items-center py-2 border-bottom',
-                  { 'bg-light': !item.isRead }
-                )}
-                style={{ whiteSpace: 'normal', cursor: 'pointer' }}
-                onClick={() => markAsRead(item._id)}
-              >
-                <div className="flex-shrink-0 me-3">
-                  <div className="avatar-sm">
-                    <span className="avatar-title bg-soft-primary rounded-circle fs-20">
-                      {getIconForType(item.type)}
-                    </span>
+          <div className="p-1" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            {notifications.length === 0 ? (
+              <div className="text-center p-3 text-muted fs-16">
+                No new notifications
+              </div>
+            ) : (
+              notifications.map((item) => (
+                <div
+                  key={item._id}
+                  className={clsx(
+                    'dropdown-item d-flex align-items-start py-2 border-bottom',
+                    { 'bg-light': !item.isRead }
+                  )}
+                  style={{ whiteSpace: 'normal', cursor: 'pointer' }}
+                  onClick={() => markAsRead(item._id)}
+                >
+                  <div className="flex-shrink-0 me-3 mt-1">
+                    {getIconForType(item.type)}
+                  </div>
+                  <div className="flex-grow-1">
+                    <h6 className="mb-1 fs-16">{item.type}</h6>
+                    <p className="mb-1 text-muted fs-16">{item.message}</p>
+                    <small className="text-muted fs-14">{new Date(item.createdAt).toLocaleString()}</small>
                   </div>
                 </div>
-                <div className="flex-grow-1">
-                  <h6 className="mb-1">{item.type}</h6>
-                  <p className="mb-0 text-muted fs-13">{item.message}</p>
-                  <small className="text-muted">{new Date(item.createdAt).toLocaleString()}</small>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </Dropdown.Menu>
-    </Dropdown>
+              ))
+            )}
+          </div>
+        </Dropdown.Menu>
+      </Dropdown>
+    </div>
   );
 };
 

@@ -39,7 +39,7 @@ const MenuItemWithChildren = ({ item, openMenuKey, setOpenMenuKey, level = 0 }) 
       })}
     >
       <Link to={item.url ?? '#'} onClick={toggleOpen} className={clsx('side-nav-link', isActive && 'active')} aria-expanded={isOpen}>
-        {item.icon && isTopLevel && (
+        {item.icon && (
           <span className="menu-icon">
             <Icon icon={item.icon} />
           </span>
@@ -66,7 +66,7 @@ const MenuItem = ({ item, level = 0 }) => {
   return (
     <li className={clsx('side-nav-item', isActive && 'active')}>
       <Link to={item.url ?? '/'} className={clsx('side-nav-link', isActive && 'active', item.isDisabled && 'disabled', item.isSpecial && 'special-menu')}>
-        {item.icon && isTopLevel && (
+        {item.icon && (
           <span className="menu-icon">
             <Icon icon={item.icon} />
           </span>
@@ -107,7 +107,9 @@ const AppMenu = () => {
       'orders': 'orders',
       'pos': 'pos',
       'coupons': 'coupons',
+      'promotions': 'coupons',
       'payments': 'payments',
+      'finance': 'payments',
       'reports': 'reports'
     };
     return map[slug];
@@ -122,14 +124,20 @@ const AppMenu = () => {
 
   return (
     <ul className="side-nav">
-      {filteredMenuItems.map((item, idx) => (
-        <Fragment key={idx}>
-          {item.isTitle && <li className="side-nav-title mt-2">{item.label}</li>}
-          {(item.children || [item]).map((item, idx) => (
-            <Fragment key={idx}>{item.children ? <MenuItemWithChildren key={item.slug} item={item} openMenuKey={openMenuKey} setOpenMenuKey={setOpenMenuKey} /> : <MenuItem key={item.slug} item={item} />}</Fragment>
-          ))}
-        </Fragment>
-      ))}
+      {filteredMenuItems.map((item, idx) => {
+        if (item.isTitle) {
+          return <li key={idx} className="side-nav-title">{item.label}</li>;
+        }
+        return (
+          <Fragment key={item.slug || idx}>
+            {item.children ? (
+              <MenuItemWithChildren item={item} openMenuKey={openMenuKey} setOpenMenuKey={setOpenMenuKey} />
+            ) : (
+              <MenuItem item={item} />
+            )}
+          </Fragment>
+        );
+      })}
     </ul>
   )
 }

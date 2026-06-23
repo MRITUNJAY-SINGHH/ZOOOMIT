@@ -5,14 +5,14 @@ import useScrollEvent from '@/hooks/useScrollEvent'
 import clsx from 'clsx'
 import { Container } from 'react-bootstrap'
 import { Link } from 'react-router'
-import CustomizerToggler from './components/CustomizerToggler'
-import FullscreenToggler from './components/FullscreenToggler'
 import MenuToggler from './components/MenuToggler'
-import MonochromeToggler from './components/MonochromeToggler'
 import NotificationDropdownPeople from './components/NotificationDropdownPeople'
 import SearchBoxRoundedRight from './components/SearchBoxRoundedRight'
 import SimpleUserDropdown from './components/SimpleUserDropdown'
 import ThemeDropdown from './components/ThemeDropdown'
+import CustomizerToggler from './components/CustomizerToggler'
+import FullscreenToggler from './components/FullscreenToggler'
+
 const TopBar = () => {
   const { scrollY } = useScrollEvent()
   return (
@@ -43,27 +43,14 @@ const TopBar = () => {
           </div>
 
           <MenuToggler />
-
-
-
-
         </div>
+        
         <div className="d-flex align-items-center gap-2">
           <SearchBoxRoundedRight />
-
-          <ThemeDropdown />
-
-
-
-          <NotificationDropdownPeople />
-
           <FullscreenToggler />
-
-          <MonochromeToggler />
-
+          <ThemeDropdown />
           <CustomizerToggler />
-
-
+          <NotificationDropdownPeople />
           <SimpleUserDropdown />
         </div>
       </Container>

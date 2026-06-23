@@ -12,7 +12,7 @@ export default function SkeletonCard({ lines = 3 }) {
           <p className="card-text placeholder-glow">
             {Array.from({ length: lines }).map((_, i) => (
               <React.Fragment key={i}>
-                <span className={`placeholder col-${Math.floor(Math.random() * 4) + 5}`}></span>{' '}
+                <span className={`placeholder col-${(i % 4) + 5}`}></span>{' '}
               </React.Fragment>
             ))}
           </p>

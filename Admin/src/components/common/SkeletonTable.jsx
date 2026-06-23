@@ -17,7 +17,7 @@ export default function SkeletonTable({ rows = 5, columns = 5 }) {
             {Array.from({ length: columns }).map((_, cIndex) => (
               <td key={cIndex}>
                 <div className="placeholder-glow">
-                  <span className={`placeholder col-${Math.floor(Math.random() * 5) + 4}`}></span>
+                  <span className={`placeholder col-${((rIndex + cIndex) % 5) + 4}`}></span>
                 </div>
               </td>
             ))}

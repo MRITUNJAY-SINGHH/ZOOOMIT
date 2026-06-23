@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from 'react-bootstrap';
+import { formatCurrency } from '@/utils/format';
 
 export default function InvoicePrintOut({ invoice, onBack }) {
   useEffect(() => {
@@ -43,7 +44,7 @@ export default function InvoicePrintOut({ invoice, onBack }) {
               <tr key={idx}>
                 <td style={{ padding: '5px 0' }}>{item.productName}<br/><small>{item.sku}</small></td>
                 <td style={{ textAlign: 'center' }}>{item.qty}</td>
-                <td style={{ textAlign: 'right' }}>${item.total.toFixed(2)}</td>
+                <td style={{ textAlign: 'right' }}>{formatCurrency(item.total)}</td>
               </tr>
             ))}
           </tbody>
@@ -51,15 +52,15 @@ export default function InvoicePrintOut({ invoice, onBack }) {
 
         <div className="d-flex justify-content-between">
           <span>Subtotal:</span>
-          <span>${invoice.totalsSnapshot.subTotal.toFixed(2)}</span>
+          <span>{formatCurrency(invoice.totalsSnapshot.subTotal)}</span>
         </div>
         <div className="d-flex justify-content-between">
           <span>Tax:</span>
-          <span>${invoice.totalsSnapshot.tax.toFixed(2)}</span>
+          <span>{formatCurrency(invoice.totalsSnapshot.tax)}</span>
         </div>
         <div className="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
           <span>Total:</span>
-          <span>${invoice.totalsSnapshot.amount.toFixed(2)}</span>
+          <span>{formatCurrency(invoice.totalsSnapshot.amount)}</span>
         </div>
 
         <p className="text-center mt-5 mb-0">Thank you for shopping with Kuiklo!</p>

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Row, Col, Table, Button, Form, InputGroup, Modal } from 'react-bootstrap';
 import { fetchApi } from '@/utils/api';
+import PageHeader from '@/components/common/PageHeader';
+import ConfirmModal from '@/components/common/ConfirmModal';
+import { formatCurrency } from '@/utils/format';
 import InvoicePrintOut from './components/InvoicePrintOut';
 import POSHistory from './components/POSHistory';
 
@@ -14,6 +17,7 @@ export default function POSBilling() {
   const [holdName, setHoldName] = useState('');
   const [heldBills, setHeldBills] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [clearCartModal, setClearCartModal] = useState(false);
   
   const [invoiceToPrint, setInvoiceToPrint] = useState(null);
 
@@ -79,7 +83,8 @@ export default function POSBilling() {
 
   const removeItem = (id) => setCart(prev => prev.filter(item => item.productId !== id));
   const clearCart = () => {
-    if (window.confirm("Clear cart?")) setCart([]);
+    setCart([]);
+    setClearCartModal(false);
   };
 
   const total = cart.reduce((acc, item) => acc + item.total, 0);
@@ -147,13 +152,15 @@ export default function POSBilling() {
 
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>POS Billing</h2>
-        <div>
-          <Button variant="secondary" className="me-2" onClick={() => setShowHistory(true)}>History / Returns</Button>
-          <Button variant="outline-danger" onClick={clearCart}>Clear Cart</Button>
-        </div>
-      </div>
+      <PageHeader 
+        title="POS Billing" 
+        rightContent={
+          <>
+            <Button variant="secondary" className="me-2" onClick={() => setShowHistory(true)}>History / Returns</Button>
+            <Button variant="outline-danger" onClick={() => setClearCartModal(true)} disabled={cart.length === 0}>Clear Cart</Button>
+          </>
+        }
+      />
 
       {showHistory && <POSHistory onClose={() => setShowHistory(false)} onReprint={(inv) => setInvoiceToPrint(inv)} />}
 
@@ -188,13 +195,13 @@ export default function POSBilling() {
                   {cart.length === 0 ? <tr><td colSpan="5" className="text-center">Cart empty</td></tr> : cart.map(item => (
                     <tr key={item.productId}>
                       <td>{item.productName}</td>
-                      <td>${item.price}</td>
+                      <td>{formatCurrency(item.price)}</td>
                       <td>
                         <Button size="sm" variant="outline-secondary" onClick={() => updateQty(item.productId, -1)}>-</Button>
                         <span className="mx-2">{item.qty}</span>
                         <Button size="sm" variant="outline-secondary" onClick={() => updateQty(item.productId, 1)}>+</Button>
                       </td>
-                      <td>${item.total.toFixed(2)}</td>
+                      <td>{formatCurrency(item.total)}</td>
                       <td><Button size="sm" variant="danger" onClick={() => removeItem(item.productId)}>X</Button></td>
                     </tr>
                   ))}
@@ -209,8 +216,8 @@ export default function POSBilling() {
             <Card.Body>
               <h4>Order Summary</h4>
               <hr />
-              <div className="d-flex justify-content-between mb-2"><span>Subtotal:</span><span>${total.toFixed(2)}</span></div>
-              <div className="d-flex justify-content-between mb-4"><strong>Total:</strong><strong>${total.toFixed(2)}</strong></div>
+              <div className="d-flex justify-content-between mb-2"><span>Subtotal:</span><span>{formatCurrency(total)}</span></div>
+              <div className="d-flex justify-content-between mb-4"><strong>Total:</strong><strong>{formatCurrency(total)}</strong></div>
 
               <h5>Payment</h5>
               <div className="d-grid gap-2">
@@ -230,7 +237,7 @@ export default function POSBilling() {
                   <div key={bill._id} className="d-flex justify-content-between align-items-center mb-2 border-bottom pb-2">
                     <div>
                       <strong>{bill.referenceName}</strong><br/>
-                      <small>${bill.totals.amount.toFixed(2)} ({bill.items.length} items)</small>
+                      <small>{formatCurrency(bill.totals.amount)} ({bill.items.length} items)</small>
                     </div>
                     <Button size="sm" variant="outline-primary" onClick={() => handleResumeBill(bill._id)}>Resume</Button>
                   </div>
@@ -254,6 +261,15 @@ export default function POSBilling() {
           <Button variant="primary" onClick={handleHoldBill} disabled={!holdName}>Save Hold</Button>
         </Modal.Footer>
       </Modal>
+      <ConfirmModal
+        show={clearCartModal}
+        title="Clear cart"
+        message="Remove all products from the current bill?"
+        confirmLabel="Clear Cart"
+        confirmVariant="danger"
+        onCancel={() => setClearCartModal(false)}
+        onConfirm={clearCart}
+      />
     </div>
   );
 }

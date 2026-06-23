@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import PageHeader from '@/components/common/PageHeader';
 
 export default function Coupons() {

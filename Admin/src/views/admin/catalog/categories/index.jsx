@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Form, Badge, Modal, InputGroup } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
+import DeleteModal from '@/components/common/DeleteModal';
 
 export default function Categories() {
   const [categories, setCategories] = useState([]);
@@ -14,6 +15,7 @@ export default function Categories() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [showModal, setShowModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ _id: null, name: '', slug: '', status: 'Active', image: '' });
   const [uploading, setUploading] = useState(false);
@@ -48,9 +50,9 @@ export default function Categories() {
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to save'); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this category?')) return;
-    try { await api.delete(`/categories/${id}`); toast.success('Category deleted'); fetchCategories(); }
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try { await api.delete(`/categories/${deleteTarget._id}`); toast.success('Category deleted'); setDeleteTarget(null); fetchCategories(); }
     catch (err) { toast.error('Failed to delete'); }
   };
 
@@ -89,7 +91,7 @@ export default function Categories() {
                       <td><Badge bg={c.status === 'Active' ? 'success' : 'danger'} style={{ cursor: 'pointer' }}>{c.status}</Badge></td>
                       <td className="text-end">
                         <Button variant="light" size="sm" className="me-1" onClick={() => handleOpenModal(c)}><Icon icon="lucide:edit" width={14} /></Button>
-                        <Button variant="light" size="sm" className="text-danger" onClick={() => handleDelete(c._id)}><Icon icon="lucide:trash-2" width={14} /></Button>
+                        <Button variant="light" size="sm" className="text-danger" onClick={() => setDeleteTarget(c)}><Icon icon="lucide:trash-2" width={14} /></Button>
                       </td>
                     </tr>
                   ))}
@@ -127,6 +129,7 @@ export default function Categories() {
           <Button variant="primary" size="sm" onClick={handleSave} disabled={uploading || !formData.name || !formData.slug}>Save</Button>
         </Modal.Footer>
       </Modal>
+      <DeleteModal show={Boolean(deleteTarget)} itemName={deleteTarget?.name || 'this category'} onCancel={() => setDeleteTarget(null)} onConfirm={handleDelete} />
     </div>
   );
 }

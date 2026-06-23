@@ -8,9 +8,9 @@
     bottom: 0;
     top: 0;
     width: $sidenav-width;
-    background: $sidenav-bg;
+    background: #0f172a !important; // Enforce exact mockup color
     box-shadow: var(--#{$prefix}box-shadow-sm);
-    border-inline-end: $card-border-width solid $sidenav-border-color;
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.05);
     transition: width 0.25s ease-in-out;
 
     [data-simplebar] {
@@ -24,7 +24,7 @@
     list-style-type: none;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 2px; // Reduced gap between items
     padding-bottom: 50px;
     font-family: $font-family-secondary;
 
@@ -32,35 +32,37 @@
         .side-nav-link {
             display: flex;
             align-items: center;
-            gap: $sidenav-item-gap;
+            gap: 12px;
             position: relative;
             white-space: nowrap;
-            color: $sidenav-item-color;
-            transition: color 0.25s ease-in-out;
+            color: rgba(255, 255, 255, 0.9) !important; // White text
+            transition: all 0.2s ease-in-out;
             line-height: calc($sidenav-item-font-size * 1.25);
-            font-size: $sidenav-item-font-size;
-            font-weight: $sidenav-item-font-weight;
-            padding: $sidenav-item-padding-y $sidenav-item-padding-x;
-            border-radius: 5px;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 8px 14px; // Tighter padding
+            border-radius: 6px;
 
             &:hover,
             &:focus,
             &:active {
-                color: $sidenav-item-hover-color;
+                color: #ffffff !important;
+                background-color: rgba(255, 255, 255, 0.05);
             }
 
             .menu-icon {
-                font-size: $sidenav-item-icon-size;
-                line-height: $sidenav-item-icon-size;
+                font-size: 18px;
+                line-height: 18px;
+                opacity: 0.9; // Match text opacity
 
                 i {
-                    font-size: $sidenav-item-icon-size;
-                    line-height: $sidenav-item-icon-size;
+                    font-size: 18px;
+                    line-height: 18px;
                 }
 
                 svg {
-                    height: $sidenav-item-icon-size;
-                    width: $sidenav-item-icon-size;
+                    height: 18px;
+                    width: 18px;
                 }
             }
 
@@ -86,8 +88,8 @@
         }
     }
 
-    > .side-nav-item {
-        padding: 0 10px;
+    >.side-nav-item {
+        padding: 0 12px;
     }
 
     // Multi Level Menu
@@ -95,16 +97,38 @@
         list-style-type: none;
         display: flex;
         flex-direction: column;
-        gap: $sidenav-sub-item-gap;
+        gap: 2px;
         padding-inline-start: 0;
+        margin-top: 2px;
 
         .side-nav-item {
             .side-nav-link {
-                font-size: $sidenav-sub-item-font-size;
-                padding-block: $sidenav-sub-item-padding-y;
-                padding-inline: $sidenav-item-padding-x;
-                padding-inline-start: calc($sidenav-item-icon-size + $sidenav-item-padding-x + $sidenav-item-gap);
-                font-weight: $sidenav-sub-item-font-weight;
+                font-size: 14px;
+                padding-block: 10px; // More top bottom space as requested
+                padding-inline: 14px;
+                padding-inline-start: 32px; // Adjusted for icons
+                font-weight: 400;
+                color: rgba(255, 255, 255, 0.75) !important; // Slightly dimmed for submenus
+
+                .menu-icon {
+                    font-size: 16px;
+                    line-height: 16px;
+
+                    i {
+                        font-size: 16px;
+                        line-height: 16px;
+                    }
+
+                    svg {
+                        height: 16px;
+                        width: 16px;
+                    }
+                }
+
+                &:hover {
+                    color: #ffffff !important;
+                    background-color: transparent;
+                }
             }
         }
 
@@ -114,35 +138,39 @@
     }
 
     .side-nav-title {
-        letter-spacing: 0.1em;
+        letter-spacing: 0.05em;
         pointer-events: none;
         cursor: default;
         white-space: nowrap;
         text-transform: uppercase;
-        color: $sidenav-item-color;
-        font-weight: $font-weight-bold;
-        font-size: calc($sidenav-item-font-size * 0.7);
-        padding: $sidenav-item-padding-y calc($sidenav-item-padding-x + 10px);
+        color: #fff;
+        font-weight: 600;
+        font-size: 11px;
+        padding: 12px 14px 4px;
     }
 
     // Active Menu
-    > .side-nav-item.active {
-        > a {
-            color: $sidenav-item-active-color !important;
-            background-color: $sidenav-item-active-bg;
+    >.side-nav-item.active {
+        >a {
+            color: #ffffff !important;
+            background-color: #1d4ed8 !important; // Blue 700
+            font-weight: 500;
+            box-shadow: 0 4px 6px -1px rgba(29, 78, 216, 0.2);
 
             .menu-arrow {
                 transform: rotate(-180deg);
+                filter: brightness(0) invert(1);
             }
         }
 
         .side-nav-item.active {
-            > a {
-                color: $sidenav-item-hover-color;
-                font-weight: $sidenav-item-font-weight;
+            >a {
+                color: #ffffff !important;
+                font-weight: 500;
 
                 .menu-arrow {
                     transform: rotate(-180deg);
+                    filter: brightness(0) invert(1);
                 }
             }
         }
@@ -217,7 +245,7 @@ html[data-sidenav-size='condensed'] {
 
         .logo {
             z-index: 1;
-            background: $sidenav-bg;
+            background: #0f172a !important;
             text-align: center;
             padding: 0;
 
@@ -233,7 +261,7 @@ html[data-sidenav-size='condensed'] {
         .side-nav {
             gap: 0;
 
-            > .side-nav-item {
+            >.side-nav-item {
                 padding: 0px;
             }
 
@@ -285,7 +313,7 @@ html[data-sidenav-size='condensed'] {
                         box-shadow: var(--#{$prefix}box-shadow);
                         border: $card-border-width solid $sidenav-border-color;
                         border-top: 0;
-                        background: $sidenav-bg;
+                        background: #0f172a !important;
                         border-radius: 0 0 4px 4px;
 
                         .sub-menu {
@@ -309,20 +337,21 @@ html[data-sidenav-size='condensed'] {
                         }
                     }
 
-                    > .collapse,
-                    > .collapsing {
+                    >.collapse,
+                    >.collapsing {
                         display: block !important;
                         transition: none !important;
 
-                        > .sub-menu {
+                        >.sub-menu {
                             display: block;
                             inset-inline-start: $sidenav-width-sm;
                             width: calc($sidenav-width - calc($sidenav-width-sm * 0.65));
 
                             .side-nav-item:hover {
-                                > .collapse,
-                                > .collapsing {
-                                    > .sub-menu {
+
+                                >.collapse,
+                                >.collapsing {
+                                    >.sub-menu {
                                         top: 0;
                                         inset-inline-start: calc($sidenav-width - calc($sidenav-width-sm * 0.65));
                                         width: calc($sidenav-width - calc($sidenav-width-sm * 0.65));
@@ -349,10 +378,10 @@ html[data-sidenav-size='condensed'] {
                 }
             }
 
-            > .side-nav-item:hover {
-                > .side-nav-link {
+            >.side-nav-item:hover {
+                >.side-nav-link {
                     color: $sidenav-item-active-color;
-                    background: $sidenav-bg;
+                    background: #0f172a !important;
                     box-shadow: var(--#{$prefix}box-shadow);
                     width: calc($sidenav-width + calc($sidenav-width-sm * 0.35));
                     border-radius: 4px;
@@ -396,6 +425,7 @@ html[data-sidenav-size='compact'] {
 
 // Hover View Menu
 html[data-sidenav-size='on-hover'] {
+
     .content-page,
     .app-topbar {
         margin-inline-start: $sidenav-width-sm;

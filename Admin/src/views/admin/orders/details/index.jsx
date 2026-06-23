@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Badge, Button, Modal, Form } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import SkeletonCard from '@/components/common/SkeletonCard';

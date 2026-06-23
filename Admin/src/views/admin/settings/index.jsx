@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button } from 'react-bootstrap';
-import { Icon } from '@iconify/react';
+import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
