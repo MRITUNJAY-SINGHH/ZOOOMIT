@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 export const exportToExcel = (data, filename) => {
   const worksheet = XLSX.utils.json_to_sheet(data);
@@ -14,11 +14,23 @@ export const exportToPDF = (headers, dataRows, title, filename) => {
   
   doc.text(title, 14, 15);
   
-  doc.autoTable({
+  autoTable(doc, {
     head: [headers],
     body: dataRows,
     startY: 20,
     theme: 'grid',
+    headStyles: {
+      fillColor: [107, 94, 174], // #6b5eae (Kuiklo Primary Dark)
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+    },
+    alternateRowStyles: {
+      fillColor: [248, 249, 250],
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 6,
+    },
   });
 
   doc.save(`${filename}.pdf`);

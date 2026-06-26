@@ -1,4 +1,5 @@
 import Customer from '../models/Customer.js';
+import mongoose from 'mongoose';
 
 export const getCustomers = async (req, res) => {
   try {
@@ -29,6 +30,33 @@ export const getCustomers = async (req, res) => {
       total,
       totalPages: Math.ceil(total / limit)
     });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getCustomerById = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+    
+    // In a real application, you might also fetch and append order history and stats here.
+    // However, the frontend currently expects `stats` and `orderHistory` directly on the customer object if available,
+    // so let's try to grab basic stats if possible.
+    const orders = await mongoose.model('Order').find({ customer: req.params.id }).sort('-createdAt');
+    const orderCount = orders.length;
+    const totalSpent = orders.reduce((sum, order) => sum + (order.amount || 0), 0);
+    const lastOrderDate = orders.length > 0 ? orders[0].createdAt : null;
+
+    const responseData = {
+      ...customer.toObject(),
+      stats: { totalOrders: orderCount, totalSpent, lastOrderDate },
+      orderHistory: orders.slice(0, 10)
+    };
+
+    res.json(responseData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

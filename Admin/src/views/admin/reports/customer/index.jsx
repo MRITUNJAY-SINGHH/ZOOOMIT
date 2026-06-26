@@ -6,6 +6,7 @@ import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 import { Doughnut, Line } from 'react-chartjs-2';
 import CountUp from 'react-countup';
 import { useLayoutContext } from '@/context/useLayoutContext';
+import CustomerActionModals from './CustomerActionModals';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -57,6 +58,10 @@ export default function CustomerReport() {
   const [orderCount, setOrderCount] = useState('All');
   const [spent, setSpent] = useState('All');
   const [sortBy, setSortBy] = useState('totalSpent-desc');
+  
+  const [modalState, setModalState] = useState({ show: false, type: '', customerId: null });
+  const [exportingExcel, setExportingExcel] = useState(false);
+  const [exportingPdf, setExportingPdf] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
   const { theme } = useLayoutContext();
@@ -154,14 +159,23 @@ export default function CustomerReport() {
       'Avg Order Value': c.orderCount > 0 ? Math.round(c.totalSpent / c.orderCount) : 0,
       'Created At': new Date(c.createdAt).toLocaleDateString(),
     }));
+    
     if (type === 'excel') {
-      exportToExcel(rows, 'Customer_Report');
+      setExportingExcel(true);
+      setTimeout(() => {
+        exportToExcel(rows, 'Customer_Report');
+        setExportingExcel(false);
+      }, 50);
     } else {
-      exportToPDF(
-        ['Name', 'Phone', 'Orders', 'Total Spent', 'Avg Value', 'Joined'],
-        rows.map(r => [r.Name, r.Phone, String(r['Total Orders']), `₹${r['Total Spent']}`, `₹${r['Avg Order Value']}`, r['Created At']]),
-        'Customer Report', 'Customer_Report'
-      );
+      setExportingPdf(true);
+      setTimeout(() => {
+        exportToPDF(
+          ['Name', 'Phone', 'Orders', 'Total Spent', 'Avg Value', 'Joined'],
+          rows.map(r => [r.Name, r.Phone, String(r['Total Orders']), `₹${r['Total Spent']}`, `₹${r['Avg Order Value']}`, r['Created At']]),
+          'Customer Report', 'Customer_Report'
+        );
+        setExportingPdf(false);
+      }, 50);
     }
   }, [data, allCustomers]);
 
@@ -234,11 +248,11 @@ export default function CustomerReport() {
               <span>Export</span>
             </Dropdown.Toggle>
             <Dropdown.Menu align="end">
-              <Dropdown.Item onClick={() => handleExport('excel')}>
-                <Icon icon="lucide:file-spreadsheet" width={16} className="me-2" /> Export as Excel
+              <Dropdown.Item onClick={() => handleExport('excel')} disabled={exportingExcel || exportingPdf}>
+                {exportingExcel ? <Spinner size="sm" className="me-2" /> : <Icon icon="lucide:file-spreadsheet" width={16} className="me-2" />} Export as Excel
               </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleExport('pdf')}>
-                <Icon icon="lucide:file-text" width={16} className="me-2" /> Export as PDF
+              <Dropdown.Item onClick={() => handleExport('pdf')} disabled={exportingExcel || exportingPdf}>
+                {exportingPdf ? <Spinner size="sm" className="me-2" /> : <Icon icon="lucide:file-text" width={16} className="me-2" />} Export as PDF
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
@@ -398,21 +412,21 @@ export default function CustomerReport() {
                             </div>
                           </td>
                           <td className="align-middle border-dashed">
-                            <div style={{ fontSize: '13px', color: 'var(--bs-body-color)' }}>{cust.customerEmail || '-'}</div>
+                            <div style={{ fontSize: '14px', color: 'var(--bs-body-color)' }}>{cust.customerEmail || '-'}</div>
                           </td>
                           <td className="align-middle border-dashed">
-                            <div style={{ color: 'var(--bs-secondary-color)', fontSize: '13px' }}>{cust.customerPhone || '-'}</div>
+                            <div style={{ color: 'var(--bs-secondary-color)', fontSize: '14px' }}>{cust.customerPhone || '-'}</div>
                           </td>
-                          <td className="text-center fw-semibold align-middle border-dashed" style={{ fontSize: '13px' }}>{cust.orderCount}</td>
+                          <td className="text-center fw-semibold align-middle border-dashed" style={{ fontSize: '14px' }}>{cust.orderCount}</td>
                           <td className="text-end align-middle border-dashed">
-                            <div className="fw-semibold" style={{ color: 'var(--bs-body-color)', fontSize: '13px' }}>₹{cust.totalSpent.toLocaleString()}</div>
+                            <div className="fw-semibold" style={{ color: 'var(--bs-body-color)', fontSize: '14px' }}>₹{cust.totalSpent.toLocaleString()}</div>
                           </td>
-                          <td className="text-end align-middle border-dashed" style={{ fontSize: '13px' }}>₹{avgOrder.toLocaleString()}</td>
+                          <td className="text-end align-middle border-dashed" style={{ fontSize: '14px' }}>₹{avgOrder.toLocaleString()}</td>
                           <td className="text-center border-dashed">
-                            <div className="d-flex justify-content-center" style={{ gap: '2px' }}>
-                              <button className="report-action-btn" title="View"><Icon icon="lucide:eye" width={14} /></button>
-                              <button className="report-action-btn" title="Edit"><Icon icon="lucide:pencil" width={14} /></button>
-                              <button className="report-action-btn danger" title="Delete"><Icon icon="lucide:trash-2" width={14} /></button>
+                            <div className="d-flex justify-content-center" style={{ gap: '8px' }}>
+                              <button className="report-action-btn" title="View" onClick={() => setModalState({ show: true, type: 'view', customerId: cust._id })}><Icon icon="lucide:eye" width={17} /></button>
+                              <button className="report-action-btn" title="Edit" onClick={() => setModalState({ show: true, type: 'edit', customerId: cust._id })}><Icon icon="lucide:pencil" width={17} /></button>
+                              <button className="report-action-btn danger" title="Delete" onClick={() => setModalState({ show: true, type: 'delete', customerId: cust._id })}><Icon icon="lucide:trash-2" width={17} /></button>
                             </div>
                           </td>
                         </tr>
@@ -451,6 +465,14 @@ export default function CustomerReport() {
           </Card>
         </>
       )}
+
+      <CustomerActionModals 
+        show={modalState.show}
+        modalType={modalState.type}
+        customerId={modalState.customerId}
+        onHide={() => setModalState({ show: false, type: '', customerId: null })}
+        onSuccess={fetchData}
+      />
     </div>
   );
 }
