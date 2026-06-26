@@ -25,8 +25,11 @@ const FILTER_TABS = [
   { key: 'Pending', label: 'Pending' },
   { key: 'Confirmed', label: 'Confirmed' },
   { key: 'Assigned', label: 'Assigned' },
+  { key: 'OutForDelivery', label: 'Out For Delivery' },
   { key: 'Delivered', label: 'Delivered' },
   { key: 'Cancelled', label: 'Cancelled' },
+  { key: 'Returned', label: 'Returned' },
+  { key: 'Refunded', label: 'Refunded' },
 ];
 
 export default function OrdersList() {
@@ -49,7 +52,7 @@ export default function OrdersList() {
     setLoading(true);
     setError(null);
     try {
-      const statusParam = ['Pending', 'Confirmed', 'Assigned', 'Delivered', 'Cancelled'].includes(activeTab) ? activeTab : '';
+      const statusParam = ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(activeTab) ? activeTab : '';
       const orderTypeParam = ['ONLINE', 'OFFLINE'].includes(activeTab) ? activeTab : '';
 
       const res = await api.get(`/orders?page=${currentPage}&limit=20&status=${statusParam}&orderType=${orderTypeParam}&search=${search}`);

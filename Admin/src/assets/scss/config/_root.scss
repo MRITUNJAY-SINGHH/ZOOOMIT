@@ -53,7 +53,7 @@
     --#{$prefix}font-size-xl: 20px;
     --#{$prefix}font-size-xxl: 22px;
 
-     --#{$prefix}link-color: var(--#{$prefix}primary);
+    --#{$prefix}link-color: var(--#{$prefix}primary);
     --#{$prefix}link-hover-color: var(--#{$prefix}primary-text-emphasis);
 
     // Chart Colors
@@ -77,6 +77,7 @@
     --#{$prefix}chart-dark-rgb: #{to-rgb(#6b5eae)};
     --#{$prefix}chart-border-color: #ecf4fc; // Border Color
     --#{$prefix}chart-title-color: #bbcae1; // Title Color
+    --#{$prefix}theme-white-color: #fff; //White color
 }
 
 [data-bs-theme='dark'] {

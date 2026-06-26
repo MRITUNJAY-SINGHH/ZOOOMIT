@@ -24,7 +24,11 @@ const OrdersAll = lazy(() => import('@/views/admin/orders/all'))
 const POSBilling = lazy(() => import('@/views/admin/pos'))
 const Coupons = lazy(() => import('@/views/admin/coupons'))
 const Payments = lazy(() => import('@/views/admin/payments'))
-const Reports = lazy(() => import('@/views/admin/reports'))
+const Invoices = lazy(() => import('@/views/admin/invoices'))
+const SalesReport = lazy(() => import('@/views/admin/reports/sales'))
+const InventoryReport = lazy(() => import('@/views/admin/reports/inventory'))
+const PaymentReport = lazy(() => import('@/views/admin/reports/payment'))
+const CustomerReport = lazy(() => import('@/views/admin/reports/customer'))
 const Settings = lazy(() => import('@/views/admin/settings'))
 
 import { ProtectedRoute } from './ProtectedRoute'
@@ -56,7 +60,11 @@ export const routes = [
           { path: '/pos', element: <ProtectedRoute permission="pos" />, children: [{ path: '', Component: POSBilling }] },
           { path: '/coupons', element: <ProtectedRoute permission="coupons" />, children: [{ path: '', Component: Coupons }] },
           { path: '/payments', element: <ProtectedRoute permission="payments" />, children: [{ path: '', Component: Payments }] },
-          { path: '/reports', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: Reports }] },
+          { path: '/invoices', element: <ProtectedRoute permission="payments" />, children: [{ path: '', Component: Invoices }] },
+          { path: '/reports/sales', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: SalesReport }] },
+          { path: '/reports/inventory', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: InventoryReport }] },
+          { path: '/reports/payment', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: PaymentReport }] },
+          { path: '/reports/customer', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: CustomerReport }] },
           { path: '/settings', Component: Settings }, // Settings might be Admin only implicitly
         ],
       }

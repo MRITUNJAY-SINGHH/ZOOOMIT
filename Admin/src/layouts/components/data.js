@@ -1,108 +1,144 @@
 export const menuItems = [
+  { isTitle: true, label: 'Dashboard' },
   {
-    'icon': 'lucide:layout-dashboard',
-    'slug': 'dashboard',
-    'label': 'Dashboard',
-    'url': '/dashboard'
+    icon: 'lucide:layout-dashboard',
+    slug: 'dashboard',
+    label: 'Dashboard',
+    url: '/dashboard'
+  },
+  { isTitle: true, label: 'Catalog' },
+  {
+    icon: 'lucide:package',
+    slug: 'catalog-products',
+    label: 'Products',
+    url: '/catalog/products'
   },
   {
-    'icon': 'lucide:grid',
-    'slug': 'catalog',
-    'label': 'Catalog',
-    'children': [
-      { 'url': '/catalog/categories', 'slug': 'catalog-categories', 'label': 'Categories', 'icon': 'lucide:layout-grid' },
-      { 'url': '/catalog/products', 'slug': 'catalog-products', 'label': 'Products', 'icon': 'lucide:package' }
+    icon: 'lucide:layout-grid',
+    slug: 'catalog-categories',
+    label: 'Categories',
+    url: '/catalog/categories'
+  },
+  {
+    icon: 'lucide:upload-cloud',
+    slug: 'catalog-import',
+    label: 'Bulk Product Import',
+    url: '/catalog/products' // Redirecting to products for now, as bulk import usually exists as a modal/tab there
+  },
+  { isTitle: true, label: 'Inventory' },
+  {
+    icon: 'lucide:box',
+    slug: 'inventory',
+    label: 'Inventory',
+    children: [
+      { url: '/inventory/stock-entry', slug: 'inventory-stock-entry', label: 'Stock Entry', icon: 'lucide:plus-square' },
+      { url: '/inventory/logs', slug: 'inventory-logs', label: 'Inventory Logs', icon: 'lucide:clipboard-list' },
+      { url: '/inventory/low-stock', slug: 'inventory-low-stock', label: 'Low Stock', icon: 'lucide:alert-triangle' },
+      { url: '/inventory/upcoming-expiry', slug: 'inventory-upcoming-expiry', label: 'Upcoming Expiry', icon: 'lucide:clock' }
     ]
   },
+  { isTitle: true, label: 'Sales' },
   {
-    'icon': 'lucide:box',
-    'slug': 'inventory',
-    'label': 'Inventory',
-    'children': [
-      { 'url': '/inventory/overview', 'slug': 'inventory-overview', 'label': 'Inventory Overview', 'icon': 'lucide:activity' },
-      { 'url': '/inventory/stock-entry', 'slug': 'inventory-stock-entry', 'label': 'Stock Entry', 'icon': 'lucide:plus-square' },
-      { 'url': '/inventory/logs', 'slug': 'inventory-logs', 'label': 'Inventory Logs', 'icon': 'lucide:clipboard-list' },
-      { 'url': '/inventory/low-stock', 'slug': 'inventory-low-stock', 'label': 'Low Stock', 'icon': 'lucide:alert-triangle' },
-      { 'url': '/inventory/upcoming-expiry', 'slug': 'inventory-upcoming-expiry', 'label': 'Upcoming Expiry', 'icon': 'lucide:clock' }
-    ]
+    icon: 'lucide:shopping-cart',
+    slug: 'orders',
+    label: 'Orders',
+    url: '/orders/all'
   },
   {
-    'icon': 'lucide:shopping-cart',
-    'slug': 'orders',
-    'label': 'Orders',
-    'children': [
-      { 'url': '/orders/all', 'slug': 'orders-all', 'label': 'All Orders', 'icon': 'lucide:list-ordered' }
-    ]
+    icon: 'lucide:calculator',
+    slug: 'pos',
+    label: 'POS Billing',
+    url: '/pos/new'
   },
   {
-    'icon': 'lucide:calculator',
-    'slug': 'pos',
-    'label': 'POS Billing',
-    'children': [
-      { 'url': '/pos/new', 'slug': 'pos-new', 'label': 'New Billing', 'icon': 'lucide:plus-circle' },
-      { 'url': '/pos/history', 'slug': 'pos-history', 'label': 'Billing History', 'icon': 'lucide:history' },
-      { 'url': '/pos/returns', 'slug': 'pos-returns', 'label': 'Returns', 'icon': 'lucide:corner-up-left' }
-    ]
+    icon: 'lucide:history',
+    slug: 'billing-history',
+    label: 'Billing History',
+    url: '/pos/history'
   },
   {
-    'icon': 'lucide:users',
-    'slug': 'customers',
-    'label': 'Customers',
-    'url': '/customers'
+    icon: 'lucide:corner-up-left',
+    slug: 'returns',
+    label: 'Returns',
+    url: '/pos/returns'
+  },
+  { isTitle: true, label: 'CRM' },
+  {
+    icon: 'lucide:users',
+    slug: 'customers',
+    label: 'Customers',
+    url: '/customers'
   },
   {
-    'icon': 'lucide:user-plus',
-    'slug': 'suppliers',
-    'label': 'Suppliers',
-    'url': '/suppliers'
+    icon: 'lucide:user-plus',
+    slug: 'suppliers',
+    label: 'Suppliers',
+    url: '/suppliers'
+  },
+  { isTitle: true, label: 'Team' },
+  {
+    icon: 'lucide:user-cog',
+    slug: 'staff',
+    label: 'Staff',
+    url: '/staff'
   },
   {
-    'icon': 'lucide:user-cog',
-    'slug': 'staff',
-    'label': 'Staff',
-    'url': '/staff'
+    icon: 'lucide:truck',
+    slug: 'delivery-boys',
+    label: 'Delivery Boys',
+    url: '/delivery-boys'
+  },
+  { isTitle: true, label: 'Marketing' },
+  {
+    icon: 'lucide:ticket',
+    slug: 'coupons',
+    label: 'Coupons',
+    url: '/coupons'
+  },
+  { isTitle: true, label: 'Finance' },
+  {
+    icon: 'lucide:credit-card',
+    slug: 'payments',
+    label: 'Payments',
+    url: '/payments'
   },
   {
-    'icon': 'lucide:truck',
-    'slug': 'delivery',
-    'label': 'Delivery',
-    'url': '/delivery-boys'
+    icon: 'lucide:file-text',
+    slug: 'invoices',
+    label: 'Invoices',
+    url: '/invoices'
+  },
+  { isTitle: true, label: 'Analytics' },
+  {
+    icon: 'lucide:trending-up',
+    slug: 'reports-sales',
+    label: 'Sales Reports',
+    url: '/reports/sales'
   },
   {
-    'icon': 'lucide:tag',
-    'slug': 'promotions',
-    'label': 'Promotions',
-    'children': [
-      { 'url': '/coupons', 'slug': 'promotions-coupons', 'label': 'Coupons', 'icon': 'lucide:ticket' }
-    ]
+    icon: 'lucide:package-check',
+    slug: 'reports-inventory',
+    label: 'Inventory Reports',
+    url: '/reports/inventory'
   },
   {
-    'icon': 'lucide:dollar-sign',
-    'slug': 'finance',
-    'label': 'Finance',
-    'children': [
-      { 'url': '/payments', 'slug': 'finance-payments', 'label': 'Payments', 'icon': 'lucide:credit-card' }
-    ]
+    icon: 'lucide:file-text',
+    slug: 'reports-payment',
+    label: 'Payment Reports',
+    url: '/reports/payment'
   },
   {
-    'icon': 'lucide:bar-chart-2',
-    'slug': 'reports',
-    'label': 'Reports',
-    'children': [
-      { 'url': '/reports/sales', 'slug': 'reports-sales', 'label': 'Sales Report', 'icon': 'lucide:trending-up' },
-      { 'url': '/reports/inventory', 'slug': 'reports-inventory', 'label': 'Inventory Report', 'icon': 'lucide:package-check' },
-      { 'url': '/reports/payment', 'slug': 'reports-payment', 'label': 'Payment Report', 'icon': 'lucide:file-text' },
-      { 'url': '/reports/customer', 'slug': 'reports-customer', 'label': 'Customer Report', 'icon': 'lucide:users-2' }
-    ]
+    icon: 'lucide:users-2',
+    slug: 'reports-customer',
+    label: 'Customer Reports',
+    url: '/reports/customer'
   },
+  { isTitle: true, label: 'System' },
   {
-    'icon': 'lucide:settings',
-    'slug': 'settings',
-    'label': 'Settings',
-    'children': [
-      { 'url': '/settings/general', 'slug': 'settings-general', 'label': 'General Settings', 'icon': 'lucide:sliders' },
-      { 'url': '/settings/invoice', 'slug': 'settings-invoice', 'label': 'Invoice Settings', 'icon': 'lucide:file-text' },
-      { 'url': '/settings/security', 'slug': 'settings-security', 'label': 'Security Settings', 'icon': 'lucide:shield' }
-    ]
+    icon: 'lucide:settings',
+    slug: 'settings',
+    label: 'Settings',
+    url: '/settings/general'
   }
 ];
+

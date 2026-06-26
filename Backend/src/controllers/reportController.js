@@ -4,127 +4,283 @@ import Customer from '../models/Customer.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
 import InventoryLog from '../models/InventoryLog.js';
+import ProductBatch from '../models/ProductBatch.js';
+import RefundQueue from '../models/RefundQueue.js';
 
-export const getDashboardStats = async (req, res) => {
+export const getSalesReport = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const [totalOrders, todayOrders, pendingOrders, completedOrders, totalCustomers, totalProducts, totalStaff] = await Promise.all([
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+
+    const [totalOrders, cancelledOrders, returnedOrders] = await Promise.all([
       Order.countDocuments(),
-      Order.countDocuments({ createdAt: { $gte: today } }),
-      Order.countDocuments({ status: 'Pending' }),
-      Order.countDocuments({ status: 'Delivered' }),
-      Customer.countDocuments(),
-      Product.countDocuments(),
-      User.countDocuments()
+      Order.countDocuments({ status: 'Cancelled' }),
+      Order.countDocuments({ status: 'Returned' })
     ]);
 
-    // Aggregate Sales
-    const salesData = await Order.aggregate([
+    // Aggregate Sales By Period
+    const salesAgg = await Order.aggregate([
       { $match: { paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
       { $group: {
         _id: null,
         totalSales: { $sum: "$amount" },
+        todaySales: { $sum: { $cond: [ { $gte: ["$createdAt", today] }, "$amount", 0 ] } },
+        weeklySales: { $sum: { $cond: [ { $gte: ["$createdAt", startOfWeek] }, "$amount", 0 ] } },
+        monthlySales: { $sum: { $cond: [ { $gte: ["$createdAt", startOfMonth] }, "$amount", 0 ] } },
+        yearlySales: { $sum: { $cond: [ { $gte: ["$createdAt", startOfYear] }, "$amount", 0 ] } },
         onlineSales: { $sum: { $cond: [ { $eq: ["$orderType", "ONLINE"] }, "$amount", 0 ] } },
         offlineSales: { $sum: { $cond: [ { $eq: ["$orderType", "OFFLINE"] }, "$amount", 0 ] } },
       }}
     ]);
 
-    const todaySalesData = await Order.aggregate([
-      { $match: { createdAt: { $gte: today }, paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
-      { $group: { _id: null, todaySales: { $sum: "$amount" } } }
+    // Top Selling Products
+    const topProducts = await Order.aggregate([
+      { $match: { status: 'Delivered' } },
+      { $unwind: "$items" },
+      { $group: {
+        _id: "$items.productName",
+        totalQty: { $sum: "$items.qty" },
+        totalRevenue: { $sum: "$items.total" }
+      }},
+      { $sort: { totalQty: -1 } },
+      { $limit: 10 }
     ]);
 
-    const stats = {
-      totalSales: salesData[0]?.totalSales || 0,
-      onlineSales: salesData[0]?.onlineSales || 0,
-      offlineSales: salesData[0]?.offlineSales || 0,
-      todaySales: todaySalesData[0]?.todaySales || 0,
-      totalOrders,
-      todayOrders,
-      pendingOrders,
-      completedOrders,
-      totalCustomers,
-      totalProducts,
-      totalStaff
-    };
-
-    res.json(stats);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-export const getSalesChart = async (req, res) => {
-  try {
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const dailySales = await Order.aggregate([
-      { $match: { createdAt: { $gte: sevenDaysAgo }, paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
+    // Revenue Graph (Last 30 Days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const revenueGraph = await Order.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo }, paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
       { $group: {
         _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
         sales: { $sum: "$amount" }
       }},
       { $sort: { _id: 1 } }
     ]);
-    res.json(dailySales);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
 
-export const getSalesReport = async (req, res) => {
-  try {
-    const sales = await Order.find({ paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } })
-      .select('orderNumber amount orderType paymentStatus createdAt')
-      .sort('-createdAt')
-      .limit(100);
-    res.json(sales);
+    res.json({
+      summary: salesAgg[0] || { totalSales: 0, todaySales: 0, weeklySales: 0, monthlySales: 0, yearlySales: 0, onlineSales: 0, offlineSales: 0 },
+      counts: { totalOrders, cancelledOrders, returnedOrders },
+      topProducts,
+      revenueGraph
+    });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
 export const getInventoryReport = async (req, res) => {
   try {
-    const products = await Product.find({}).populate('category', 'name').select('name sku totalStock status');
-    res.json(products);
+    const today = new Date();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(today.getDate() + 30);
+
+    const [products, lowStock, outOfStock] = await Promise.all([
+      Product.aggregate([
+        { $match: { isTrackInventory: true } },
+        { $group: { _id: null, currentStock: { $sum: "$stock" } } }
+      ]),
+      Product.countDocuments({ $expr: { $lte: ['$stock', '$lowStockThreshold'] }, stock: { $gt: 0 }, isTrackInventory: true }),
+      Product.countDocuments({ stock: 0, isTrackInventory: true })
+    ]);
+
+    const [expiring, expired, valueAgg] = await Promise.all([
+      ProductBatch.countDocuments({ expiryDate: { $lte: thirtyDaysFromNow, $gte: today }, stock: { $gt: 0 } }),
+      ProductBatch.countDocuments({ expiryDate: { $lt: today }, stock: { $gt: 0 } }),
+      ProductBatch.aggregate([
+        { $match: { stock: { $gt: 0 } } },
+        { $group: { _id: null, inventoryValue: { $sum: { $multiply: ["$stock", "$costPrice"] } } } }
+      ])
+    ]);
+
+    const recentLogs = await InventoryLog.find()
+      .populate('product', 'name')
+      .populate('user', 'name')
+      .sort('-date')
+      .limit(50);
+
+    res.json({
+      summary: {
+        currentStock: products[0]?.currentStock || 0,
+        lowStock,
+        outOfStock,
+        expiring,
+        expired,
+        inventoryValue: valueAgg[0]?.inventoryValue || 0
+      },
+      recentLogs
+    });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
 export const getPaymentsReport = async (req, res) => {
   try {
-    let { page = 1, limit = 20, search = '', status, startDate, endDate } = req.query;
-    page = parseInt(page);
-    limit = parseInt(limit);
-    if (limit > 100) limit = 100;
+    const paymentAgg = await Transaction.aggregate([
+      { $group: {
+        _id: null,
+        totalPayments: { $sum: { $cond: [ { $in: ["$paymentStatus", ["Success", "Paid"]] }, "$amount", 0 ] } },
+        cashPayments: { $sum: { $cond: [ { $and: [ { $eq: ["$paymentMethod", "Cash"] }, { $gt: ["$amount", 0] } ] }, "$amount", 0 ] } },
+        upiPayments: { $sum: { $cond: [ { $and: [ { $eq: ["$paymentMethod", "UPI"] }, { $gt: ["$amount", 0] } ] }, "$amount", 0 ] } },
+        cardPayments: { $sum: { $cond: [ { $and: [ { $eq: ["$paymentMethod", "Card"] }, { $gt: ["$amount", 0] } ] }, "$amount", 0 ] } },
+        razorpayPayments: { $sum: { $cond: [ { $and: [ { $eq: ["$paymentMethod", "Razorpay"] }, { $gt: ["$amount", 0] } ] }, "$amount", 0 ] } },
+        refundedAmount: { $sum: "$refundAmount" } // assuming refundAmount stores absolute refund value
+      }}
+    ]);
 
-    let query = {};
-    if (search) {
-      query.$or = [
-        { transactionId: { $regex: search, $options: 'i' } }
-      ];
-    }
-    if (status) query.paymentStatus = status;
-    if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) query.createdAt.$gte = new Date(startDate);
-      if (endDate) query.createdAt.$lte = new Date(endDate);
-    }
+    const [pendingRefunds, failedPayments] = await Promise.all([
+      RefundQueue.countDocuments({ status: { $in: ['Pending', 'Retrying'] } }),
+      Transaction.countDocuments({ paymentStatus: 'Failed' })
+    ]);
 
-    const total = await Transaction.countDocuments(query);
-    const payments = await Transaction.find(query)
+    const recentTransactions = await Transaction.find()
       .populate('order', 'orderNumber')
       .sort('-createdAt')
-      .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(50);
 
     res.json({
-      data: payments,
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit)
+      summary: {
+        ...(paymentAgg[0] || { totalPayments: 0, cashPayments: 0, upiPayments: 0, cardPayments: 0, razorpayPayments: 0, refundedAmount: 0 }),
+        pendingRefunds,
+        failedPayments
+      },
+      recentTransactions
     });
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getCustomerReport = async (req, res) => {
+  try {
+    const { startDate, endDate, search, customerType, status, orderCount, spent, sortBy } = req.query;
+
+    let customerMatch = {};
+    if (search) {
+      customerMatch.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (customerType && customerType !== 'All') customerMatch.customerType = customerType;
+    if (status && status !== 'All') customerMatch.status = status;
+
+    let orderMatch = { paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } };
+    let dateFilter = {};
+    if (startDate && endDate) {
+      dateFilter = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      orderMatch.createdAt = dateFilter;
+    }
+
+    const aggregationPipeline = [
+      { $match: customerMatch },
+      {
+        $lookup: {
+          from: 'orders',
+          let: { customerId: '$_id' },
+          pipeline: [
+            { $match: { 
+                $expr: { $eq: ['$customer', '$$customerId'] },
+                ...orderMatch
+              }
+            }
+          ],
+          as: 'orders'
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          email: 1,
+          createdAt: 1,
+          orderCount: { $size: '$orders' },
+          totalSpent: { $sum: '$orders.amount' }
+        }
+      }
+    ];
+
+    let postMatch = {};
+    if (orderCount && orderCount !== 'All') {
+      if (orderCount === 'First Order') postMatch.orderCount = 1;
+      else if (orderCount === 'Returning') postMatch.orderCount = { $gt: 1 };
+      else if (orderCount === 'VIP Customers') postMatch.orderCount = { $gte: 5 };
+    }
+
+    if (spent && spent !== 'All') {
+      if (spent === '₹0–₹5,000') postMatch.totalSpent = { $gte: 0, $lte: 5000 };
+      else if (spent === '₹5,000–₹20,000') postMatch.totalSpent = { $gt: 5000, $lte: 20000 };
+      else if (spent === '₹20,000+') postMatch.totalSpent = { $gt: 20000 };
+    }
+
+    if (Object.keys(postMatch).length > 0) {
+      aggregationPipeline.push({ $match: postMatch });
+    }
+
+    let sortStage = { totalSpent: -1 };
+    if (sortBy === 'Highest Spending') sortStage = { totalSpent: -1 };
+    else if (sortBy === 'Most Orders') sortStage = { orderCount: -1 };
+    else if (sortBy === 'Newest Customer') sortStage = { createdAt: -1 };
+    else if (sortBy === 'Oldest Customer') sortStage = { createdAt: 1 };
+    else if (sortBy === 'name-asc') sortStage = { name: 1 };
+    else if (sortBy === 'name-desc') sortStage = { name: -1 };
+    else if (sortBy === 'totalSpent-asc') sortStage = { totalSpent: 1 };
+    else if (sortBy === 'totalSpent-desc') sortStage = { totalSpent: -1 };
+    else if (sortBy === 'orderCount-asc') sortStage = { orderCount: 1 };
+    else if (sortBy === 'orderCount-desc') sortStage = { orderCount: -1 };
+
+    aggregationPipeline.push({ $sort: sortStage });
+
+    const customers = await Customer.aggregate(aggregationPipeline);
+
+    let totalCustomersFound = customers.length;
+    let newCustomersFound = 0;
+    let returningCustomersFound = 0;
+    
+    let createdDateMatch = dateFilter;
+    if (!createdDateMatch.$gte) {
+       const thirtyDaysAgo = new Date();
+       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+       createdDateMatch = { $gte: thirtyDaysAgo };
+    }
+
+    customers.forEach(c => {
+       if (c.createdAt >= createdDateMatch.$gte && (!createdDateMatch.$lte || c.createdAt <= createdDateMatch.$lte)) {
+         newCustomersFound++;
+       }
+       if (c.orderCount > 1) {
+         returningCustomersFound++;
+       }
+    });
+
+    const topCustomers = customers.map(c => ({
+      _id: c._id,
+      customerName: c.name,
+      customerPhone: c.phone,
+      customerEmail: c.email,
+      orderCount: c.orderCount,
+      totalSpent: c.totalSpent,
+      createdAt: c.createdAt
+    }));
+
+    res.json({
+      summary: {
+        totalCustomers: totalCustomersFound,
+        newCustomers: newCustomersFound,
+        returningCustomers: returningCustomersFound
+      },
+      topCustomers
+    });
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getDashboardStats = async (req, res) => {
+  // Legacy Dashboard Stats for backward compatibility if needed elsewhere
+  try {
+    const totalOrders = await Order.countDocuments();
+    res.json({ totalOrders });
   } catch (error) { res.status(500).json({ message: error.message }); }
 };

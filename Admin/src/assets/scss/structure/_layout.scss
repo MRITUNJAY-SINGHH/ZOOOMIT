@@ -34,7 +34,8 @@
 // Logo Height
 .logo-lg {
     img {
-        height: $logo-lg-height;
+        height: 100%;
+        width: 129px;
     }
 }
 
@@ -228,6 +229,7 @@ body.fullscreen-enable {
     .lucide-minimize {
         display: block !important;
     }
+
     .lucide-maximize {
         display: none;
     }
@@ -268,6 +270,7 @@ html[data-bs-theme="light"] {
         }
     }
 }
+
 html[data-bs-theme="dark"] {
     [for="layout-color-dark"] {
         &:before {
@@ -296,29 +299,10 @@ html[data-bs-theme="dark"] {
             box-shadow: var(--#{$prefix}box-shadow);
         }
     }
+
     .row.g-3 {
         --#{$prefix}gutter-y: 1rem;
         --#{$prefix}gutter-x: 1rem;
-    }
-
-    #skin-pixel, #skin-retro,
-    #skin-galaxy, #skin-neon {
-        h5 {
-            position: relative;
-
-            &::before {
-                content: "NEW";
-                position: absolute;
-                background: var(--#{$prefix}danger);
-                color: $white;
-                font-weight: $font-weight-bold;
-                padding: 3px 8px;
-                border-radius: 4px;
-                font-size: 9px;
-                top: -35px;
-                left: 8px;
-            }
-        }
     }
 }
 
@@ -331,12 +315,15 @@ html[dir="rtl"] {
     .offcanvas-end {
         transform: translateX(-100%);
     }
+
     .offcanvas-start {
         transform: translateX(100%);
     }
+
     .form-select {
         background-position: left .77rem center;
     }
+
     .pagination svg {
         transform: scaleX(-1) !important
     }

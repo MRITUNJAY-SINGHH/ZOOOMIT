@@ -36,13 +36,13 @@ export const hideBackdrop = () => {
   }
 }
 const INIT_STATE = {
-  skin: 'retro',
-  theme: 'light',
+  skin: 'galaxy',
+  theme: 'dark',
   orientation: 'vertical',
   sidenavSize: 'default',
-  sidenavColor: 'light',
+  sidenavColor: 'gray',
   sidenavUser: false,
-  topbarColor: 'dark',
+  topbarColor: 'gray',
   width: 'fluid',
   position: 'fixed',
   dir: 'ltr',
