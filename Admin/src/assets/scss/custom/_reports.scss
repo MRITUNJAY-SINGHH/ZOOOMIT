@@ -180,11 +180,11 @@
 .report-section-card {
   border: 1px solid var(--#{$prefix}border-color);
   border-radius: 0.75rem;
-  background: var(--#{$prefix}body-bg);
+  background: var(--#{$prefix}tertiary-bg);
   overflow: hidden;
 }
 .report-section-card > .card-header {
-  background: var(--#{$prefix}body-bg);
+  background: transparent;
   border-bottom: 1px solid var(--#{$prefix}border-color);
   padding: 1rem 1.25rem;
 }
@@ -250,6 +250,10 @@
   padding: 0.25rem 0.625rem;
   border-radius: 0.25rem;
   display: inline-block;
+}
+
+.report-page {
+  padding-bottom: 2rem;
 }
 
 /* ---------- Report Select ---------- */

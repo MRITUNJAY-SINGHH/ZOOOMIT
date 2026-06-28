@@ -86,10 +86,10 @@ export default function CustomerActionModals({
     return (
       <>
         <style>{`
-          .backdrop-blur {
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            background-color: rgba(0, 0, 0, 0.4) !important;
+          .customer-modal-backdrop {
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            background-color: rgba(0, 0, 0, 0.7) !important;
           }
           .custom-cancel-btn {
             background-color: #303641 !important;
@@ -101,9 +101,9 @@ export default function CustomerActionModals({
             border-color: #3d4452 !important;
           }
         `}</style>
-        <Modal show={show} onHide={onHide} size="lg" centered backdropClassName="backdrop-blur">
+        <Modal show={show} onHide={onHide} size="lg" centered backdropClassName="customer-modal-backdrop">
         <Modal.Header closeButton className="border-bottom-0 pb-0">
-          <Modal.Title className="fw-bold fs-5">Customer Profile</Modal.Title>
+          <Modal.Title className="fw-bold fs-4">Customer Profile</Modal.Title>
         </Modal.Header>
         <Modal.Body className="pt-2 px-4 pb-4">
           {loading ? (
@@ -118,43 +118,41 @@ export default function CustomerActionModals({
                     </span>
                   </div>
                   <div>
-                    <h3 className="mb-1 fw-bolder" style={{ letterSpacing: '-0.5px' }}>{customer.name}</h3>
-                    <div className="text-muted d-flex align-items-center" style={{ fontSize: '14px' }}>
-                      <div className="d-flex align-items-center me-3">
-                        <Icon icon="lucide:phone" width={14} className="me-1 opacity-75" />
-                        <a href={`tel:${customer.phone}`} className="text-muted text-decoration-none hover-primary">{customer.phone}</a>
-                      </div>
+                    <h2 className="mb-1 fw-bolder" style={{ letterSpacing: '-0.5px', fontSize: '1.6rem' }}>{customer.name}</h2>
+                    <div className="text-muted d-flex align-items-center flex-wrap gap-3" style={{ fontSize: '15px' }}>
+                      <a href={`tel:${customer.phone}`} className="d-flex align-items-center text-muted text-decoration-none">
+                        <Icon icon="lucide:phone" width={16} className="me-2 opacity-75" />{customer.phone}
+                      </a>
                       {customer.email && (
-                        <div className="d-flex align-items-center">
-                          <Icon icon="lucide:mail" width={14} className="me-1 opacity-75" />
-                          <a href={`mailto:${customer.email}`} className="text-muted text-decoration-none hover-primary">{customer.email}</a>
-                        </div>
+                        <a href={`mailto:${customer.email}`} className="d-flex align-items-center text-muted text-decoration-none">
+                          <Icon icon="lucide:mail" width={16} className="me-2 opacity-75" />{customer.email}
+                        </a>
                       )}
                     </div>
                   </div>
                 </div>
-                <Badge bg={customer.status === 'Active' ? 'success' : 'danger'} className="px-3 py-2 fs-6">
-                  {customer.status || 'Active'}
-                </Badge>
+                <Button variant="primary" size="sm" className="px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1" style={{ fontSize: '13px', pointerEvents: 'none' }}>
+                  <Icon icon="lucide:circle-check" width={14} /> {customer.status || 'Active'}
+                </Button>
               </div>
               
-              <div className="row g-3 mb-4 pb-4 border-bottom border-dashed" style={{ borderColor: 'var(--bs-border-color) !important' }}>
+              <div className="row g-3 mb-4">
                 {[
-                  { label: 'Total Orders', value: customer.stats?.totalOrders || 0, icon: 'lucide:shopping-bag', color: '#6b5eae' },
-                  { label: 'Total Spent', value: `₹${(customer.stats?.totalSpent || 0).toLocaleString()}`, icon: 'lucide:credit-card', color: '#10b981' },
-                  { label: 'Last Order', value: customer.stats?.lastOrderDate ? new Date(customer.stats.lastOrderDate).toLocaleDateString() : 'Never', icon: 'lucide:calendar', color: '#f59e0b' },
+                  { label: 'Total Orders', value: customer.stats?.totalOrders || 0, icon: 'lucide:shopping-bag', bg: 'rgba(108, 92, 231, 0.2)', color: '#7c6fe0' },
+                  { label: 'Total Spent', value: `₹${(customer.stats?.totalSpent || 0).toLocaleString()}`, icon: 'lucide:credit-card', bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981' },
+                  { label: 'Avg. Order Value', value: `₹${(customer.stats?.totalOrders > 0 ? Math.round((customer.stats?.totalSpent || 0) / customer.stats.totalOrders) : 0).toLocaleString()}`, icon: 'lucide:trending-up', bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' },
                 ].map((s, i) => (
                   <div className="col-md-4" key={i}>
-                    <Card style={{ backgroundColor: 'var(--theme-table-bg)', border: `var(--theme-border-width) dashed var(--theme-border-color)`, borderRadius: '12px' }}>
-                      <Card.Body className="p-3">
-                        <div className="d-flex align-items-center">
-                          <div className="rounded-circle d-flex justify-content-center align-items-center me-3" style={{ width: '40px', height: '40px', backgroundColor: `${s.color}15`, color: s.color }}>
-                            <Icon icon={s.icon} width={20} />
+                    <Card className="report-stat-card h-100">
+                      <Card.Body className="d-flex align-items-center p-3">
+                        <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 44, height: 44, background: s.bg, color: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Icon icon={s.icon} width={20} />
+                        </div>
+                        <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+                          <div className="stat-value text-truncate" style={{ fontSize: '1.25rem', fontWeight: '700', lineHeight: 1 }}>
+                            {s.value}
                           </div>
-                          <div>
-                            <h5 className="mb-0 fw-bold" style={{ color: 'var(--bs-body-color)' }}>{s.value}</h5>
-                            <span className="text-muted" style={{ fontSize: '12px' }}>{s.label}</span>
-                          </div>
+                          <div className="stat-label mt-1 text-truncate" style={{ fontSize: '13px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{s.label}</div>
                         </div>
                       </Card.Body>
                     </Card>
@@ -188,7 +186,7 @@ export default function CustomerActionModals({
                           <td className="fw-semibold px-3 py-3 border-dashed" style={{ color: 'var(--bs-primary)', fontSize: '14px', whiteSpace: 'nowrap' }}>{o.orderNumber}</td>
                           <td className="text-muted px-3 py-3 border-dashed" style={{ fontSize: '14px', whiteSpace: 'nowrap' }}>{new Date(o.createdAt).toLocaleDateString()}</td>
                           <td className="px-3 py-3 border-dashed">
-                            <Badge bg="info-subtle" text="info" className="px-2 py-1">{o.orderType}</Badge>
+                            <Badge bg="primary" className="px-2 py-1" style={{ fontSize: '12px' }}>{o.orderType}</Badge>
                           </td>
                           <td className="text-muted px-3 py-3 border-dashed" style={{ fontSize: '14px' }}>{o.status}</td>
                           <td className="text-end fw-bold px-3 py-3 border-dashed" style={{ fontSize: '14px' }}>₹{(o.amount || 0).toLocaleString()}</td>
@@ -212,13 +210,13 @@ export default function CustomerActionModals({
     return (
       <>
         <style>{`
-          .backdrop-blur {
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            background-color: rgba(0, 0, 0, 0.4) !important;
+          .customer-modal-backdrop {
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            background-color: rgba(0, 0, 0, 0.7) !important;
           }
         `}</style>
-        <Modal show={show} onHide={onHide} centered>
+        <Modal show={show} onHide={onHide} centered backdropClassName="customer-modal-backdrop">
         <Modal.Header closeButton>
           <Modal.Title>Edit Customer</Modal.Title>
         </Modal.Header>
@@ -275,44 +273,55 @@ export default function CustomerActionModals({
     return (
       <>
         <style>{`
-          .backdrop-blur {
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            background-color: rgba(0, 0, 0, 0.4) !important;
+          .customer-modal-backdrop {
+            backdrop-filter: blur(20px) saturate(200%);
+            -webkit-backdrop-filter: blur(20px) saturate(200%);
+            background-color: rgba(0, 0, 0, 0.7) !important;
+          }
+          .custom-cancel-btn {
+            background-color: #303641 !important;
+            border-color: #303641 !important;
+            color: #fff !important;
+          }
+          .custom-cancel-btn:hover {
+            background-color: #3d4452 !important;
+            border-color: #3d4452 !important;
           }
         `}</style>
-        <Modal show={show} onHide={onHide} centered backdropClassName="backdrop-blur">
-        <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="text-danger"></Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="text-center pb-4 px-3">
-            <Icon icon="lucide:alert-triangle" width={72} className="text-danger mb-4" />
-            <h4 className="mb-3 fw-bold">Are you sure?</h4>
-            <p className="text-muted mb-0" style={{ fontSize: '15px' }}>
-              This action cannot be undone. This will permanently delete the customer's profile from the database. Order records will be preserved but delinked.
+        <Modal show={show} onHide={onHide} centered backdropClassName="customer-modal-backdrop">
+        <Modal.Body className="pt-5 pb-4 px-4">
+          <button type="button" className="btn-close position-absolute top-0 end-0 m-3" onClick={onHide}></button>
+          <div className="text-center">
+            <div className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4" style={{ width: '100px', height: '100px', background: 'rgba(239, 68, 68, 0.12)' }}>
+              <Icon icon="lucide:trash-2" width={44} className="text-danger" />
+            </div>
+            <h3 className="mb-2 fw-bold">Delete Customer?</h3>
+            <p className="text-muted mb-4 mx-auto" style={{ fontSize: '15px', maxWidth: '320px', lineHeight: '1.6' }}>
+              This action cannot be undone. The customer profile will be permanently removed. Order records will be preserved.
             </p>
+            <div className="d-flex justify-content-center gap-3">
+              <Button 
+                variant="dark" 
+                onClick={onHide} 
+                disabled={loading} 
+                className="px-4 py-2 fw-semibold custom-cancel-btn"
+                style={{ minWidth: '120px' }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                variant="danger" 
+                onClick={handleDelete} 
+                disabled={loading} 
+                className="px-4 py-2 fw-semibold d-inline-flex align-items-center justify-content-center"
+                style={{ minWidth: '120px' }}
+              >
+                {loading && <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>}
+                {loading ? 'Deleting...' : 'Yes, Delete'}
+              </Button>
+            </div>
           </div>
         </Modal.Body>
-        <Modal.Footer className="justify-content-center border-0 pt-0 pb-4">
-          <Button 
-            variant="dark" 
-            onClick={onHide} 
-            disabled={loading} 
-            className="px-4 py-2 fw-semibold custom-cancel-btn" 
-          >
-            Cancel
-          </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleDelete} 
-            disabled={loading} 
-            className="px-4 py-2 fw-semibold d-inline-flex align-items-center"
-          >
-            {loading && <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>}
-            {loading ? 'Deleting...' : 'Yes, Delete'}
-          </Button>
-        </Modal.Footer>
       </Modal>
       </>
     );

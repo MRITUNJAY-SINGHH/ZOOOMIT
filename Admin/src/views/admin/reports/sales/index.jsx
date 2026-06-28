@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Row, Col, Card, Table, Spinner, Dropdown } from 'react-bootstrap';
+import { Row, Col, Card, Table, Spinner, Dropdown, Button, Modal, Badge } from 'react-bootstrap';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
@@ -15,6 +15,9 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 export default function SalesReport() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const { theme } = useLayoutContext();
 
   const isDark = useMemo(() => {
@@ -26,6 +29,19 @@ export default function SalesReport() {
   useEffect(() => {
     api.get('/reports/sales').then(res => { setData(res.data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
+
+  const filteredProducts = useMemo(() => {
+    if (!data?.topProducts) return [];
+    if (!search) return data.topProducts;
+    return data.topProducts.filter(p => 
+      (p.productName || p._id || '').toLowerCase().includes(search.toLowerCase())
+    );
+  }, [data?.topProducts, search]);
+
+  const handleViewProduct = (product) => {
+    setSelectedProduct(product);
+    setShowModal(true);
+  };
 
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
   const textColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
@@ -98,16 +114,31 @@ export default function SalesReport() {
       <div className="report-header">
         <div className="report-header-left">
           <h3 className="report-title">Sales Reports</h3>
-          <p className="report-subtitle">Comprehensive view of all sales metrics and revenue trends.</p>
         </div>
-        <div className="report-header-right">
-          <button className="report-btn"><Icon icon="lucide:calendar" width={16} /> <span>Last 30 Days</span></button>
-          <button className="report-btn"><Icon icon="lucide:sliders-horizontal" width={16} /> <span>Filters</span></button>
+        <div className="report-header-right d-flex gap-3 align-items-center">
+          <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+            <Icon icon="lucide:search" width={20} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+            <input 
+              type="text" 
+              className="form-control report-search-input" 
+              placeholder="Search sales..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: '40px' }}
+            />
+          </div>
           <Dropdown>
-            <Dropdown.Toggle as="button" className="report-btn report-btn-primary"><Icon icon="lucide:download" width={16} /> <span>Export</span></Dropdown.Toggle>
+            <Dropdown.Toggle variant="primary" className="d-inline-flex align-items-center gap-2">
+              <Icon icon="lucide:download" width={16} />
+              <span>Export</span>
+            </Dropdown.Toggle>
             <Dropdown.Menu align="end">
-              <Dropdown.Item onClick={() => handleExport('excel')}><Icon icon="lucide:file-spreadsheet" width={16} className="me-2" /> Excel</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleExport('pdf')}><Icon icon="lucide:file-text" width={16} className="me-2" /> PDF</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleExport('excel')}>
+                <Icon icon="lucide:file-spreadsheet" width={16} className="me-2" /> Excel
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => handleExport('pdf')}>
+                <Icon icon="lucide:file-text" width={16} className="me-2" /> PDF
+              </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         </div>
@@ -115,20 +146,24 @@ export default function SalesReport() {
 
       <Row className="mb-4 g-3">
         {[
-          { label: 'Total Revenue', value: `₹${(data?.summary?.totalSales || 0).toLocaleString()}`, change: 15.2, icon: 'lucide:indian-rupee', accent: 'accent-purple' },
-          { label: "Today's Sales", value: `₹${(data?.summary?.todaySales || 0).toLocaleString()}`, change: 8.5, icon: 'lucide:calendar', accent: 'accent-green' },
-          { label: 'Weekly Sales', value: `₹${(data?.summary?.weeklySales || 0).toLocaleString()}`, change: 12.1, icon: 'lucide:trending-up', accent: 'accent-blue' },
-          { label: 'Monthly Sales', value: `₹${(data?.summary?.monthlySales || 0).toLocaleString()}`, change: 22.4, icon: 'lucide:bar-chart-3', accent: 'accent-orange' },
+          { label: 'Total Revenue', value: `₹${(data?.summary?.totalSales || 0).toLocaleString()}`, change: 15.2, icon: 'lucide:indian-rupee', bg: 'rgba(108, 92, 231, 0.2)', color: '#7c6fe0' },
+          { label: "Today's Sales", value: `₹${(data?.summary?.todaySales || 0).toLocaleString()}`, change: 8.5, icon: 'lucide:calendar', bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981' },
+          { label: 'Weekly Sales', value: `₹${(data?.summary?.weeklySales || 0).toLocaleString()}`, change: 12.1, icon: 'lucide:trending-up', bg: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6' },
+          { label: 'Monthly Sales', value: `₹${(data?.summary?.monthlySales || 0).toLocaleString()}`, change: 22.4, icon: 'lucide:bar-chart-3', bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' },
         ].map((stat, i) => (
           <Col md={6} xl={3} key={i}>
             <Card className="report-stat-card h-100">
-              <Card.Body className="d-flex align-items-start gap-3 p-3">
-                <div className={`stat-icon ${stat.accent}`}><Icon icon={stat.icon} width={22} /></div>
-                <div>
-                  <div className="stat-label">{stat.label}</div>
-                  <div className="stat-value">{stat.value}</div>
-                  <div className="stat-change" style={{ color: 'var(--bs-success)' }}>
-                    <Icon icon="lucide:trending-up" width={14} /> {stat.change}% vs last 30 days
+              <Card.Body className="d-flex align-items-center p-3">
+                <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: stat.bg, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon icon={stat.icon} width={24} />
+                </div>
+                <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+                  <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.5rem', fontWeight: '700', lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div className="stat-label text-truncate mb-2" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{stat.label}</div>
+                  <div className="stat-change" style={{ fontSize: '13px', color: stat.change >= 0 ? 'var(--bs-success)' : 'var(--bs-danger)' }}>
+                    <Icon icon={stat.change >= 0 ? 'lucide:trending-up' : 'lucide:trending-down'} width={14} /> {Math.abs(stat.change)}% vs last 30 days
                   </div>
                 </div>
               </Card.Body>
@@ -157,41 +192,62 @@ export default function SalesReport() {
         </Col>
       </Row>
 
-      <Row className="g-3">
-        <Col lg={4}>
+      <Row className="g-3 mb-4">
+        <Col lg={12}>
           <Card className="report-section-card h-100">
             <Card.Header><h5>Order Insights</h5></Card.Header>
             <Card.Body className="p-0">
-              {[
-                { label: 'Total Orders', value: data?.counts?.totalOrders || 0, color: 'var(--bs-primary)' },
-                { label: 'Cancelled Orders', value: data?.counts?.cancelledOrders || 0, color: 'var(--bs-danger)' },
-                { label: 'Returned Orders', value: data?.counts?.returnedOrders || 0, color: 'var(--bs-warning)' },
-              ].map((item, i) => (
-                <div key={i} className="d-flex justify-content-between align-items-center px-4 py-3" style={{ borderBottom: '1px solid var(--bs-border-color)' }}>
-                  <span style={{ fontSize: '1rem' }}>{item.label}</span>
-                  <span className="fw-bold" style={{ color: item.color, fontSize: '1.125rem' }}>{item.value}</span>
-                </div>
-              ))}
+              <Row className="g-0">
+                {[
+                  { label: 'Total Orders', value: data?.counts?.totalOrders || 0, color: 'var(--bs-primary)' },
+                  { label: 'Cancelled Orders', value: data?.counts?.cancelledOrders || 0, color: 'var(--bs-danger)' },
+                  { label: 'Returned Orders', value: data?.counts?.returnedOrders || 0, color: 'var(--bs-warning)' },
+                ].map((item, i) => (
+                  <Col md={4} key={i} className={`p-4 ${i !== 2 ? 'border-end' : ''}`} style={{ borderColor: 'var(--bs-border-color)' }}>
+                    <div className="text-muted mb-1" style={{ fontSize: '1rem' }}>{item.label}</div>
+                    <div className="fw-bold" style={{ color: item.color, fontSize: '1.75rem' }}>{item.value}</div>
+                  </Col>
+                ))}
+              </Row>
             </Card.Body>
           </Card>
         </Col>
-        <Col lg={8}>
+      </Row>
+
+      <Row className="g-3">
+        <Col lg={12}>
           <Card className="report-section-card h-100">
             <Card.Header><h5>Top Selling Products</h5></Card.Header>
             <div style={{ overflowX: 'auto' }}>
               <Table className="report-table mb-0">
-                <thead><tr><th>#</th><th>Product Name</th><th className="text-end">Units Sold</th><th className="text-end">Total Revenue</th></tr></thead>
+                <thead className="custom-table-thead" style={{ 
+                  fontSize: '12px', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.5px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                }}>
+                  <tr>
+                    <th className="py-2 text-muted border-dashed">#</th>
+                    <th className="py-2 text-muted border-dashed">PRODUCT NAME</th>
+                    <th className="py-2 text-end text-muted border-dashed">UNITS SOLD</th>
+                    <th className="py-2 text-end text-muted border-dashed">TOTAL REVENUE</th>
+                    <th className="py-2 text-center text-muted border-dashed">ACTION</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {(data?.topProducts || []).map((p, idx) => (
+                  {filteredProducts.map((p, idx) => (
                     <tr key={idx}>
-                      <td style={{ color: 'var(--bs-secondary-color)' }}>{idx + 1}</td>
-                      <td className="fw-medium">{p._id}</td>
-                      <td className="text-end">{p.totalQty}</td>
-                      <td className="text-end fw-bold" style={{ color: 'var(--bs-success)' }}>₹{p.totalRevenue.toLocaleString()}</td>
+                      <td className="align-middle border-dashed" style={{ color: 'var(--bs-secondary-color)' }}>{idx + 1}</td>
+                      <td className="align-middle border-dashed fw-medium">{p.productName || p._id}</td>
+                      <td className="align-middle border-dashed text-end" style={{ fontSize: '14px' }}>{p.totalQty}</td>
+                      <td className="align-middle border-dashed text-end fw-semibold" style={{ color: 'var(--bs-body-color)', fontSize: '14px' }}>₹{p.totalRevenue.toLocaleString()}</td>
+                      <td className="align-middle border-dashed text-center">
+                        <button className="report-action-btn" title="View" onClick={() => handleViewProduct(p)}><Icon icon="lucide:eye" width={17} /></button>
+                      </td>
                     </tr>
                   ))}
-                  {(!data?.topProducts || data.topProducts.length === 0) && (
-                    <tr><td colSpan="4" className="text-center py-4" style={{ color: 'var(--bs-secondary-color)' }}>No data</td></tr>
+                  {filteredProducts.length === 0 && (
+                    <tr><td colSpan="5" className="text-center py-4 border-dashed" style={{ color: 'var(--bs-secondary-color)' }}>No products found</td></tr>
                   )}
                 </tbody>
               </Table>
@@ -199,6 +255,63 @@ export default function SalesReport() {
           </Card>
         </Col>
       </Row>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="fw-bold">{selectedProduct?.productName || selectedProduct?._id}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedProduct && selectedProduct.productDetails ? (
+            <Row>
+              <Col md={4} className="text-center mb-4 mb-md-0">
+                {selectedProduct.productDetails.images?.length > 0 ? (
+                  <img src={selectedProduct.productDetails.images[0].url} alt={selectedProduct.productName} className="img-fluid rounded shadow-sm" style={{ maxHeight: '200px', objectFit: 'contain' }} />
+                ) : (
+                  <div className="bg-light rounded d-flex align-items-center justify-content-center shadow-sm" style={{ height: '200px', width: '100%' }}>
+                    <Icon icon="lucide:image-off" width={48} className="text-muted" />
+                  </div>
+                )}
+              </Col>
+              <Col md={8}>
+                <h5 className="fw-bold mb-3">Product Details</h5>
+                <Table borderless size="sm" className="mb-0">
+                  <tbody>
+                    <tr><td className="text-muted" style={{ width: '140px' }}>Category:</td><td className="fw-medium">{selectedProduct.productDetails.category?.name || 'N/A'}</td></tr>
+                    <tr><td className="text-muted">Brand:</td><td className="fw-medium">{selectedProduct.productDetails.brand || 'N/A'}</td></tr>
+                    <tr><td className="text-muted">Base Price:</td><td className="fw-medium text-success">₹{selectedProduct.productDetails.basePrice}</td></tr>
+                    <tr><td className="text-muted">Status:</td><td><Badge bg={selectedProduct.productDetails.isActive ? 'success' : 'danger'}>{selectedProduct.productDetails.isActive ? 'Active' : 'Inactive'}</Badge></td></tr>
+                  </tbody>
+                </Table>
+                
+                <h5 className="fw-bold mt-4 mb-3">Sales Performance (Last 30 Days)</h5>
+                <Table borderless size="sm" className="mb-0">
+                  <tbody>
+                    <tr><td className="text-muted" style={{ width: '140px' }}>Units Sold:</td><td className="fw-bold text-primary">{selectedProduct.totalQty}</td></tr>
+                    <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold text-success">₹{selectedProduct.totalRevenue.toLocaleString()}</td></tr>
+                  </tbody>
+                </Table>
+              </Col>
+            </Row>
+          ) : (
+            <div className="text-center py-5">
+              <Icon icon="lucide:box" width={48} className="text-muted mb-3" />
+              <h5>Detailed information not available</h5>
+              <p className="text-muted">This product might have been deleted or details are unavailable.</p>
+              
+              <h5 className="fw-bold mt-4 mb-3 text-start">Sales Performance (Last 30 Days)</h5>
+              <Table borderless size="sm" className="mb-0 text-start" style={{ maxWidth: '300px', margin: '0 auto' }}>
+                <tbody>
+                  <tr><td className="text-muted">Units Sold:</td><td className="fw-bold text-primary">{selectedProduct?.totalQty}</td></tr>
+                  <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold text-success">₹{selectedProduct?.totalRevenue?.toLocaleString()}</td></tr>
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer className="border-0 pb-4 pe-4">
+          <Button variant="primary" onClick={() => setShowModal(false)} className="px-4">Close</Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

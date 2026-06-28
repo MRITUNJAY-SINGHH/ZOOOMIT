@@ -44,12 +44,15 @@ export const getSalesReport = async (req, res) => {
       { $match: { status: 'Delivered' } },
       { $unwind: "$items" },
       { $group: {
-        _id: "$items.productName",
+        _id: "$items.product",
+        productName: { $first: "$items.productName" },
         totalQty: { $sum: "$items.qty" },
         totalRevenue: { $sum: "$items.total" }
       }},
       { $sort: { totalQty: -1 } },
-      { $limit: 10 }
+      { $limit: 10 },
+      { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'productDetails' } },
+      { $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }
     ]);
 
     // Revenue Graph (Last 30 Days)

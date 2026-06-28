@@ -64,8 +64,9 @@ export default function CustomerReport() {
   const [exportingPdf, setExportingPdf] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageLoading, setPageLoading] = useState(false);
   const { theme } = useLayoutContext();
-  const perPage = 5;
+  const perPage = 20;
 
   const isDark = useMemo(() => {
     if (theme === 'dark') return true;
@@ -340,24 +341,25 @@ export default function CustomerReport() {
         <>
           <Row className="mb-4 g-3">
             {[
-              { label: 'Total Customers', value: totalCustomers, prefix: '', icon: 'lucide:users', accent: 'accent-purple' },
-              { label: 'New Customers', value: newCustomers, prefix: '', icon: 'lucide:user-plus', accent: 'accent-green' },
-              { label: 'Returning Customers', value: returningCustomers, prefix: '', icon: 'lucide:repeat-2', accent: 'accent-blue' },
-              { label: 'Avg. Lifetime Value', value: avgLifetimeValue, prefix: '₹', icon: 'lucide:indian-rupee', accent: 'accent-orange' },
+              { label: 'Total Customers', value: totalCustomers, prefix: '', icon: 'lucide:users', bg: 'rgba(108, 92, 231, 0.2)', color: '#7c6fe0' },
+              { label: 'New Customers', value: newCustomers, prefix: '', icon: 'lucide:user-plus', bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981' },
+              { label: 'Returning Customers', value: returningCustomers, prefix: '', icon: 'lucide:repeat-2', bg: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6' },
+              { label: 'Avg. Lifetime Value', value: avgLifetimeValue, prefix: '₹', icon: 'lucide:indian-rupee', bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' },
             ].map((stat, i) => (
               <Col md={6} xl={3} key={i}>
                 <Card className="report-stat-card h-100">
                   <Card.Body className="d-flex align-items-center p-3">
-                    <div className={`stat-icon rounded-circle ${stat.accent} me-3`} style={{ width: 48, height: 48 }}>
+                    <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: stat.bg, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Icon icon={stat.icon} width={24} />
                     </div>
-                    <div className="d-flex flex-column flex-grow-1">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div className="stat-value" style={{ fontSize: '1.5rem', fontWeight: '700', lineHeight: 1 }}>
-                          {stat.prefix}<CountUp end={stat.value} duration={2} separator="," />
-                        </div>
+                    <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+                      <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.5rem', fontWeight: '700', lineHeight: 1 }}>
+                        {stat.prefix}<CountUp end={stat.value} duration={2} separator="," />
                       </div>
-                      <div className="stat-label mt-1" style={{ fontSize: '13px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{stat.label}</div>
+                      <div className="stat-label text-truncate mb-2" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{stat.label}</div>
+                      <div className="stat-change" style={{ fontSize: '13px', color: 'var(--bs-success)' }}>
+                        <Icon icon="lucide:trending-up" width={14} /> 12.5% vs last 30 days
+                      </div>
                     </div>
                   </Card.Body>
                 </Card>
@@ -376,7 +378,7 @@ export default function CustomerReport() {
               </div>
             </div>
             
-            {loading ? (
+            {(loading || pageLoading) ? (
                <div className="text-center py-5"><Spinner animation="border" size="sm" className="me-2"/> Loading data...</div>
             ) : (
               <div style={{ overflowX: 'auto' }}>
@@ -446,17 +448,17 @@ export default function CustomerReport() {
                   Showing {Math.min((currentPage - 1) * perPage + 1, allCustomers.length)} to {Math.min(currentPage * perPage, allCustomers.length)} of {allCustomers.length} results
                 </span>
                 <Pagination className="report-pagination mb-0">
-                  <Pagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                  <Pagination.Prev onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p => Math.max(1, p - 1)); setPageLoading(false); }, 300); }} disabled={currentPage === 1}>
                     <Icon icon="lucide:chevron-left" width={16} />
                   </Pagination.Prev>
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                    <Pagination.Item key={p} active={p === currentPage} onClick={() => setCurrentPage(p)}>{p}</Pagination.Item>
+                    <Pagination.Item key={p} active={p === currentPage} onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p); setPageLoading(false); }, 300); }}>{p}</Pagination.Item>
                   ))}
                   {totalPages > 5 && <Pagination.Ellipsis />}
                   {totalPages > 5 && (
                     <Pagination.Item onClick={() => setCurrentPage(totalPages)}>{totalPages}</Pagination.Item>
                   )}
-                  <Pagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                  <Pagination.Next onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setPageLoading(false); }, 300); }} disabled={currentPage === totalPages}>
                     <Icon icon="lucide:chevron-right" width={16} />
                   </Pagination.Next>
                 </Pagination>

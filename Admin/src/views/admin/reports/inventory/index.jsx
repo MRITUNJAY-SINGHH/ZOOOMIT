@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Row, Col, Card, Table, Spinner, Dropdown } from 'react-bootstrap';
+import { Row, Col, Card, Table, Spinner, Dropdown, Button } from 'react-bootstrap';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
@@ -12,6 +12,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 export default function InventoryReport() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const { theme } = useLayoutContext();
 
   const isDark = useMemo(() => {
@@ -70,15 +71,31 @@ export default function InventoryReport() {
       <div className="report-header">
         <div className="report-header-left">
           <h3 className="report-title">Inventory Reports</h3>
-          <p className="report-subtitle">Monitor stock levels, value, and recent movements.</p>
         </div>
-        <div className="report-header-right">
-          <button className="report-btn"><Icon icon="lucide:sliders-horizontal" width={16} /> <span>Filters</span></button>
+        <div className="report-header-right d-flex gap-3 align-items-center">
+          <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+            <Icon icon="lucide:search" width={20} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+            <input 
+              type="text" 
+              className="form-control report-search-input" 
+              placeholder="Search inventory..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ paddingLeft: '40px' }}
+            />
+          </div>
           <Dropdown>
-            <Dropdown.Toggle as="button" className="report-btn report-btn-primary"><Icon icon="lucide:download" width={16} /> <span>Export</span></Dropdown.Toggle>
+            <Dropdown.Toggle variant="primary" className="d-inline-flex align-items-center gap-2">
+              <Icon icon="lucide:download" width={16} />
+              <span>Export</span>
+            </Dropdown.Toggle>
             <Dropdown.Menu align="end">
-              <Dropdown.Item onClick={() => handleExport('excel')}><Icon icon="lucide:file-spreadsheet" width={16} className="me-2" /> Excel</Dropdown.Item>
-              <Dropdown.Item onClick={() => handleExport('pdf')}><Icon icon="lucide:file-text" width={16} className="me-2" /> PDF</Dropdown.Item>
+              <Dropdown.Item onClick={() => handleExport('excel')}>
+                <Icon icon="lucide:file-spreadsheet" width={16} className="me-2" /> Excel
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => handleExport('pdf')}>
+                <Icon icon="lucide:file-text" width={16} className="me-2" /> PDF
+              </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
         </div>
@@ -86,19 +103,23 @@ export default function InventoryReport() {
 
       <Row className="mb-4 g-3">
         {[
-          { label: 'Current Stock (Units)', value: currentStock.toLocaleString(), change: 5.2, icon: 'lucide:box', accent: 'accent-purple' },
-          { label: 'Inventory Value', value: `₹${inventoryValue.toLocaleString()}`, change: 8.1, icon: 'lucide:indian-rupee', accent: 'accent-green' },
-          { label: 'Low Stock Items', value: lowStock.toString(), change: -3.4, icon: 'lucide:alert-triangle', accent: 'accent-orange' },
-          { label: 'Out of Stock Items', value: outOfStock.toString(), change: -1.2, icon: 'lucide:x-circle', accent: 'accent-red' },
+          { label: 'Current Stock (Units)', value: currentStock.toLocaleString(), change: 5.2, icon: 'lucide:box', bg: 'rgba(108, 92, 231, 0.2)', color: '#7c6fe0' },
+          { label: 'Inventory Value', value: `₹${inventoryValue.toLocaleString()}`, change: 8.1, icon: 'lucide:indian-rupee', bg: 'rgba(16, 185, 129, 0.2)', color: '#10b981' },
+          { label: 'Low Stock Items', value: lowStock.toString(), change: -3.4, icon: 'lucide:alert-triangle', bg: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' },
+          { label: 'Out of Stock Items', value: outOfStock.toString(), change: -1.2, icon: 'lucide:x-circle', bg: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' },
         ].map((stat, i) => (
           <Col md={6} xl={3} key={i}>
             <Card className="report-stat-card h-100">
-              <Card.Body className="d-flex align-items-start gap-3 p-3">
-                <div className={`stat-icon ${stat.accent}`}><Icon icon={stat.icon} width={22} /></div>
-                <div>
-                  <div className="stat-label">{stat.label}</div>
-                  <div className="stat-value">{stat.value}</div>
-                  <div className="stat-change" style={{ color: stat.change >= 0 ? 'var(--bs-success)' : 'var(--bs-danger)' }}>
+              <Card.Body className="d-flex align-items-center p-3">
+                <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: stat.bg, color: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon icon={stat.icon} width={24} />
+                </div>
+                <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+                  <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.5rem', fontWeight: '700', lineHeight: 1 }}>
+                    {stat.value}
+                  </div>
+                  <div className="stat-label text-truncate mb-2" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{stat.label}</div>
+                  <div className="stat-change" style={{ fontSize: '13px', color: stat.change >= 0 ? 'var(--bs-success)' : 'var(--bs-danger)' }}>
                     <Icon icon={stat.change >= 0 ? 'lucide:trending-up' : 'lucide:trending-down'} width={14} /> {Math.abs(stat.change)}% vs last 30 days
                   </div>
                 </div>
