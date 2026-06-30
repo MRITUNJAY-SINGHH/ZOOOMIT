@@ -33,6 +33,7 @@
     "lodash": "^4.17.21",
     "lucide-react": "^1.21.0",
     "papaparse": "^5.5.4",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.5",
     "react-bootstrap": "^2.10.10",
     "react-chartjs-2": "^5.3.1",

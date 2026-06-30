@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Badge, Button, Form, InputGroup, Row, Col } from 'react-bootstrap';
+import { useLocation } from 'react-router';
 import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
@@ -33,11 +34,15 @@ const FILTER_TABS = [
 ];
 
 export default function OrdersList() {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTab = searchParams.get('status') || 'ALL';
+
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewOrderId, setViewOrderId] = useState(null);
-  const [activeTab, setActiveTab] = useState('ALL');
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);

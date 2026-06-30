@@ -39,10 +39,22 @@ export const getSalesReport = async (req, res) => {
       }}
     ]);
 
-    // Top Selling Products
-    const topProducts = await Order.aggregate([
+    const { search } = req.query;
+
+    const topProductsPipeline = [
       { $match: { status: 'Delivered' } },
-      { $unwind: "$items" },
+      { $unwind: "$items" }
+    ];
+
+    if (search) {
+      topProductsPipeline.push({
+        $match: {
+          "items.productName": { $regex: search, $options: 'i' }
+        }
+      });
+    }
+
+    topProductsPipeline.push(
       { $group: {
         _id: "$items.product",
         productName: { $first: "$items.productName" },
@@ -53,7 +65,10 @@ export const getSalesReport = async (req, res) => {
       { $limit: 10 },
       { $lookup: { from: 'products', localField: '_id', foreignField: '_id', as: 'productDetails' } },
       { $unwind: { path: '$productDetails', preserveNullAndEmptyArrays: true } }
-    ]);
+    );
+
+    // Top Selling Products
+    const topProducts = await Order.aggregate(topProductsPipeline);
 
     // Revenue Graph (Last 30 Days)
     const thirtyDaysAgo = new Date();

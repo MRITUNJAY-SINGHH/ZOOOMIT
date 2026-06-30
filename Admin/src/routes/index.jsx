@@ -25,6 +25,8 @@ const POSBilling = lazy(() => import('@/views/admin/pos'))
 const Coupons = lazy(() => import('@/views/admin/coupons'))
 const Payments = lazy(() => import('@/views/admin/payments'))
 const Invoices = lazy(() => import('@/views/admin/invoices'))
+const CreateInvoice = lazy(() => import('@/views/admin/invoices/CreateInvoice'))
+const ViewInvoice = lazy(() => import('@/views/admin/invoices/ViewInvoice'))
 const SalesReport = lazy(() => import('@/views/admin/reports/sales'))
 const InventoryReport = lazy(() => import('@/views/admin/reports/inventory'))
 const PaymentReport = lazy(() => import('@/views/admin/reports/payment'))
@@ -60,7 +62,12 @@ export const routes = [
           { path: '/pos', element: <ProtectedRoute permission="pos" />, children: [{ path: '', Component: POSBilling }] },
           { path: '/coupons', element: <ProtectedRoute permission="coupons" />, children: [{ path: '', Component: Coupons }] },
           { path: '/payments', element: <ProtectedRoute permission="payments" />, children: [{ path: '', Component: Payments }] },
-          { path: '/invoices', element: <ProtectedRoute permission="payments" />, children: [{ path: '', Component: Invoices }] },
+          { path: '/invoices', element: <ProtectedRoute permission="payments" />, children: [
+            { path: '', Component: Invoices },
+            { path: 'create', Component: CreateInvoice },
+            { path: 'edit/:id', Component: CreateInvoice },
+            { path: ':id', Component: ViewInvoice },
+          ] },
           { path: '/reports/sales', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: SalesReport }] },
           { path: '/reports/inventory', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: InventoryReport }] },
           { path: '/reports/payment', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: PaymentReport }] },

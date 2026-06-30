@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { Row, Col, Card, Table, Spinner, Dropdown, Button, Modal, Badge } from 'react-bootstrap';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
@@ -15,6 +16,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarEleme
 export default function SalesReport() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -27,16 +29,22 @@ export default function SalesReport() {
   }, [theme]);
 
   useEffect(() => {
-    api.get('/reports/sales').then(res => { setData(res.data); setLoading(false); }).catch(() => setLoading(false));
+    api.get('/reports/sales')
+      .then(res => { setData(res.data); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  const filteredProducts = useMemo(() => {
-    if (!data?.topProducts) return [];
-    if (!search) return data.topProducts;
-    return data.topProducts.filter(p => 
-      (p.productName || p._id || '').toLowerCase().includes(search.toLowerCase())
-    );
-  }, [data?.topProducts, search]);
+  const handleSearch = () => {
+    setTableLoading(true);
+    api.get(`/reports/sales?search=${encodeURIComponent(search)}`)
+      .then(res => {
+        setData(res.data);
+        setTableLoading(false);
+      })
+      .catch(() => setTableLoading(false));
+  };
+
+  const navigate = useNavigate();
 
   const handleViewProduct = (product) => {
     setSelectedProduct(product);
@@ -116,17 +124,6 @@ export default function SalesReport() {
           <h3 className="report-title">Sales Reports</h3>
         </div>
         <div className="report-header-right d-flex gap-3 align-items-center">
-          <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
-            <Icon icon="lucide:search" width={20} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
-            <input 
-              type="text" 
-              className="form-control report-search-input" 
-              placeholder="Search sales..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: '40px' }}
-            />
-          </div>
           <Dropdown>
             <Dropdown.Toggle variant="primary" className="d-inline-flex align-items-center gap-2">
               <Icon icon="lucide:download" width={16} />
@@ -192,33 +189,59 @@ export default function SalesReport() {
         </Col>
       </Row>
 
+      <div className="mb-2"><h5 style={{ fontSize: '1.125rem', color: 'var(--bs-body-color)', fontWeight: 600 }}>Order Insights</h5></div>
       <Row className="g-3 mb-4">
-        <Col lg={12}>
-          <Card className="report-section-card h-100">
-            <Card.Header><h5>Order Insights</h5></Card.Header>
-            <Card.Body className="p-0">
-              <Row className="g-0">
-                {[
-                  { label: 'Total Orders', value: data?.counts?.totalOrders || 0, color: 'var(--bs-primary)' },
-                  { label: 'Cancelled Orders', value: data?.counts?.cancelledOrders || 0, color: 'var(--bs-danger)' },
-                  { label: 'Returned Orders', value: data?.counts?.returnedOrders || 0, color: 'var(--bs-warning)' },
-                ].map((item, i) => (
-                  <Col md={4} key={i} className={`p-4 ${i !== 2 ? 'border-end' : ''}`} style={{ borderColor: 'var(--bs-border-color)' }}>
-                    <div className="text-muted mb-1" style={{ fontSize: '1rem' }}>{item.label}</div>
-                    <div className="fw-bold" style={{ color: item.color, fontSize: '1.75rem' }}>{item.value}</div>
-                  </Col>
-                ))}
-              </Row>
-            </Card.Body>
-          </Card>
-        </Col>
+        {[
+          { label: 'Total Orders', value: data?.counts?.totalOrders || 0 },
+          { label: 'Cancelled Orders', value: data?.counts?.cancelledOrders || 0 },
+          { label: 'Returned Orders', value: data?.counts?.returnedOrders || 0 },
+        ].map((item, i) => {
+          let targetUrl = '/orders/all';
+          if (item.label === 'Cancelled Orders') targetUrl = '/orders/all?status=Cancelled';
+          if (item.label === 'Returned Orders') targetUrl = '/orders/all?status=Returned';
+          
+          return (
+          <Col md={4} key={i}>
+            <Card 
+              className="report-stat-card h-100 p-4" 
+              onClick={() => navigate(targetUrl)}
+              style={{ cursor: 'pointer', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              <div className="d-flex flex-column">
+                <div className="text-muted mb-2" style={{ fontSize: '13px', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
+                <div className="fw-bold" style={{ fontSize: '1.75rem', color: 'var(--bs-body-color)', lineHeight: 1 }}>{item.value}</div>
+              </div>
+            </Card>
+          </Col>
+        )})}
       </Row>
 
       <Row className="g-3">
         <Col lg={12}>
           <Card className="report-section-card h-100">
-            <Card.Header><h5>Top Selling Products</h5></Card.Header>
-            <div style={{ overflowX: 'auto' }}>
+            <Card.Header className="d-flex justify-content-between align-items-center pb-0 border-0">
+              <h5 className="mb-0">Top Selling Products</h5>
+              <div className="d-flex gap-2 align-items-center">
+                <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+                  <Icon icon="lucide:search" width={18} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+                  <input 
+                    type="text" 
+                    className="form-control report-search-input" 
+                    placeholder="Search products..." 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                    style={{ paddingLeft: '38px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--bs-border-color)' }}
+                  />
+                </div>
+                <Button variant="primary" onClick={handleSearch} disabled={tableLoading} className="px-3">
+                  {tableLoading ? <Spinner size="sm" /> : 'Search'}
+                </Button>
+              </div>
+            </Card.Header>
+            <div style={{ overflowX: 'auto' }} className="pt-3">
               <Table className="report-table mb-0">
                 <thead className="custom-table-thead" style={{ 
                   fontSize: '12px', 
@@ -235,7 +258,7 @@ export default function SalesReport() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((p, idx) => (
+                  {(data?.topProducts || []).map((p, idx) => (
                     <tr key={idx}>
                       <td className="align-middle border-dashed" style={{ color: 'var(--bs-secondary-color)' }}>{idx + 1}</td>
                       <td className="align-middle border-dashed fw-medium">{p.productName || p._id}</td>
@@ -246,7 +269,7 @@ export default function SalesReport() {
                       </td>
                     </tr>
                   ))}
-                  {filteredProducts.length === 0 && (
+                  {(!data?.topProducts || data.topProducts.length === 0) && (
                     <tr><td colSpan="5" className="text-center py-4 border-dashed" style={{ color: 'var(--bs-secondary-color)' }}>No products found</td></tr>
                   )}
                 </tbody>
@@ -273,21 +296,37 @@ export default function SalesReport() {
                 )}
               </Col>
               <Col md={8}>
-                <h5 className="fw-bold mb-3">Product Details</h5>
+                <h5 className="fw-bold mb-3">Product Information</h5>
                 <Table borderless size="sm" className="mb-0">
                   <tbody>
-                    <tr><td className="text-muted" style={{ width: '140px' }}>Category:</td><td className="fw-medium">{selectedProduct.productDetails.category?.name || 'N/A'}</td></tr>
-                    <tr><td className="text-muted">Brand:</td><td className="fw-medium">{selectedProduct.productDetails.brand || 'N/A'}</td></tr>
-                    <tr><td className="text-muted">Base Price:</td><td className="fw-medium text-success">₹{selectedProduct.productDetails.basePrice}</td></tr>
-                    <tr><td className="text-muted">Status:</td><td><Badge bg={selectedProduct.productDetails.isActive ? 'success' : 'danger'}>{selectedProduct.productDetails.isActive ? 'Active' : 'Inactive'}</Badge></td></tr>
+                    <tr><td className="text-muted" style={{ width: '140px' }}>Category:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct.productDetails.category?.name || 'N/A'}</td></tr>
+                    <tr><td className="text-muted">Brand:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct.productDetails.brand || 'N/A'}</td></tr>
+                    <tr><td className="text-muted">SKU / Barcode:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct.productDetails.baseSku || '-'} / {selectedProduct.productDetails.barcode || '-'}</td></tr>
+                    <tr><td className="text-muted">Stock Level:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct.productDetails.stock || 0} Units</td></tr>
+                    <tr><td className="text-muted">MRP:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>₹{selectedProduct.productDetails.mrp || '-'}</td></tr>
+                    <tr><td className="text-muted">Selling Price:</td><td className="fw-medium" style={{ color: 'var(--bs-body-color)' }}>₹{selectedProduct.productDetails.sellingPrice || '-'}</td></tr>
+                    <tr>
+                      <td className="text-muted">Status:</td>
+                      <td>
+                        {selectedProduct.productDetails.isActive ? (
+                          <Badge bg="primary" className="px-3 py-2 d-inline-flex align-items-center gap-2" style={{ borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}>
+                            <Icon icon="lucide:check-circle-2" width={16} /> Active
+                          </Badge>
+                        ) : (
+                          <Badge bg="secondary" className="px-3 py-2 d-inline-flex align-items-center gap-2" style={{ borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}>
+                            <Icon icon="lucide:x-circle" width={16} /> Inactive
+                          </Badge>
+                        )}
+                      </td>
+                    </tr>
                   </tbody>
                 </Table>
                 
                 <h5 className="fw-bold mt-4 mb-3">Sales Performance (Last 30 Days)</h5>
                 <Table borderless size="sm" className="mb-0">
                   <tbody>
-                    <tr><td className="text-muted" style={{ width: '140px' }}>Units Sold:</td><td className="fw-bold text-primary">{selectedProduct.totalQty}</td></tr>
-                    <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold text-success">₹{selectedProduct.totalRevenue.toLocaleString()}</td></tr>
+                    <tr><td className="text-muted" style={{ width: '140px' }}>Units Sold:</td><td className="fw-bold" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct.totalQty}</td></tr>
+                    <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold" style={{ color: 'var(--bs-body-color)' }}>₹{selectedProduct.totalRevenue.toLocaleString()}</td></tr>
                   </tbody>
                 </Table>
               </Col>
@@ -301,8 +340,8 @@ export default function SalesReport() {
               <h5 className="fw-bold mt-4 mb-3 text-start">Sales Performance (Last 30 Days)</h5>
               <Table borderless size="sm" className="mb-0 text-start" style={{ maxWidth: '300px', margin: '0 auto' }}>
                 <tbody>
-                  <tr><td className="text-muted">Units Sold:</td><td className="fw-bold text-primary">{selectedProduct?.totalQty}</td></tr>
-                  <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold text-success">₹{selectedProduct?.totalRevenue?.toLocaleString()}</td></tr>
+                  <tr><td className="text-muted">Units Sold:</td><td className="fw-bold" style={{ color: 'var(--bs-body-color)' }}>{selectedProduct?.totalQty}</td></tr>
+                  <tr><td className="text-muted">Total Revenue:</td><td className="fw-bold" style={{ color: 'var(--bs-body-color)' }}>₹{selectedProduct?.totalRevenue?.toLocaleString()}</td></tr>
                 </tbody>
               </Table>
             </div>

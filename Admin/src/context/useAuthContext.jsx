@@ -5,17 +5,11 @@ const AuthContext = createContext();
 export const useAuthContext = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-
-  useEffect(() => {
-    // If token exists, we could fetch user profile here.
-    // For now, rely on login response to set user.
+  const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+  const [token, setToken] = useState(localStorage.getItem('token') || null);
 
   const login = (userData, tokenData) => {
     setUser(userData);
