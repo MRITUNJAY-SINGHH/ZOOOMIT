@@ -99,7 +99,7 @@ export default function ViewInvoice() {
   }
 
   const storeName = settings?.storeName || 'KUIKLO';
-  const logo = settings?.logo || null;
+  const logo = settings?.storeLogo || null;
 
   return (
     <div className="py-4">
@@ -120,7 +120,15 @@ export default function ViewInvoice() {
                         <Icon icon="lucide:file-text" width={24} color="#fff" />
                       </div>
                     )}
-                    <h2 className="mb-0 fw-bold" style={{ letterSpacing: '1px', textTransform: 'uppercase', fontSize: '20px' }}>{storeName}</h2>
+                    <div>
+                      <h2 className="mb-0 fw-bold" style={{ letterSpacing: '1px', textTransform: 'uppercase', fontSize: '20px' }}>{storeName}</h2>
+                      {(settings?.storePhone || settings?.storeEmail) && (
+                        <div className="text-muted mt-1" style={{ fontSize: '13px' }}>
+                          {settings?.storePhone && <span className="me-3"><Icon icon="lucide:phone" width={12} className="me-1" />{settings.storePhone}</span>}
+                          {settings?.storeEmail && <span><Icon icon="lucide:mail" width={12} className="me-1" />{settings.storeEmail}</span>}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Col>
                 <Col xs={12} sm={6} className="text-sm-end">
@@ -240,18 +248,49 @@ export default function ViewInvoice() {
 
               {/* Notes & Footer */}
               <div className="mb-4 p-3 rounded" style={{ backgroundColor: 'rgba(var(--bs-primary-rgb), 0.05)' }}>
+                <Row>
+                  <Col md={7}>
+                    <p className="text-muted mb-2 fw-bold" style={{ fontSize: '13px' }}>Terms & Conditions:</p>
+                    <p className="text-muted mb-0" style={{ fontSize: '12px', whiteSpace: 'pre-line' }}>
+                      {settings?.termsAndConditions || '1. All sales are final.\n2. Goods once sold cannot be returned without valid reason.'}
+                    </p>
+                  </Col>
+                  {settings?.bankDetails?.accountNumber && (
+                    <Col md={5}>
+                      <p className="text-muted mb-2 fw-bold" style={{ fontSize: '13px' }}>Bank Details:</p>
+                      <div className="text-muted" style={{ fontSize: '12px' }}>
+                        <p className="mb-0"><strong>Bank Name:</strong> {settings.bankDetails.bankName}</p>
+                        <p className="mb-0"><strong>Account Name:</strong> {settings.bankDetails.accountName}</p>
+                        <p className="mb-0"><strong>Account No:</strong> {settings.bankDetails.accountNumber}</p>
+                        <p className="mb-0"><strong>IFSC Code:</strong> {settings.bankDetails.ifscCode}</p>
+                      </div>
+                    </Col>
+                  )}
+                </Row>
+              </div>
+
+              <div className="mb-4 text-center">
                 <p className="text-muted mb-0" style={{ fontSize: '13px' }}>
-                  <span className="fw-medium">Note: </span>
-                  {invoice.notes || settings.invoiceFooter || 'Please make payment within 10 days. For any billing inquiries, contact us.'}
+                  {invoice.notes || settings?.invoiceFooter || 'Thank you for your business!'}
                 </p>
               </div>
 
-              <div>
-                <p className="fw-bold mb-4" style={{ fontSize: '14px' }}>Thank you for your business!</p>
-                <div style={{ display: 'inline-block', borderBottom: '1px solid var(--bs-secondary-color)', paddingBottom: '4px' }}>
-                  <p className="mb-0" style={{ fontFamily: 'cursive', fontSize: '24px', color: 'var(--bs-primary)' }}>{storeName}</p>
-                </div>
-                <p className="text-muted mt-2 mb-0" style={{ fontSize: '12px', fontStyle: 'italic' }}>Authorized Signature</p>
+              <div className="text-end mt-5 pt-3">
+                {settings?.authorizedSignature ? (
+                  <div className="d-inline-block text-center">
+                    <img src={settings.authorizedSignature} alt="Signature" style={{ maxHeight: '60px', objectFit: 'contain' }} />
+                    <div style={{ borderTop: '1px solid var(--bs-border-color)', marginTop: '8px', paddingTop: '4px', minWidth: '150px' }}>
+                      <p className="text-muted mb-0" style={{ fontSize: '12px', fontStyle: 'italic' }}>Authorized Signature</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="d-inline-block text-center">
+                    <div style={{ borderBottom: '1px solid var(--bs-secondary-color)', paddingBottom: '4px', minWidth: '150px' }}>
+                      <p className="mb-0" style={{ fontFamily: 'cursive', fontSize: '24px', color: 'var(--bs-primary)' }}>{storeName}</p>
+                    </div>
+                    <p className="text-muted mt-2 mb-0" style={{ fontSize: '12px', fontStyle: 'italic' }}>Authorized Signature</p>
+                  </div>
+                )}
               </div>
 
             </Card.Body>

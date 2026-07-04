@@ -1,16 +1,26 @@
-import React, { useEffect } from 'react';
-import { Button } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Button, Spinner } from 'react-bootstrap';
 import { formatCurrency } from '@/utils/format';
+import api from '@/utils/api';
 
 export default function InvoicePrintOut({ invoice, onBack }) {
+  const [settings, setSettings] = useState(null);
+
   useEffect(() => {
-    // Automatically trigger print on load
-    setTimeout(() => {
-      window.print();
-    }, 500);
+    // Fetch settings then print
+    api.get('/settings').then(res => {
+      setSettings(res.data);
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    });
   }, []);
 
-  if (!invoice) return null;
+  if (!invoice || !settings) return (
+    <div className="d-flex justify-content-center align-items-center vh-100">
+      <Spinner animation="border" variant="primary" />
+    </div>
+  );
 
   return (
     <div className="invoice-print-container" style={{ padding: '20px', maxWidth: '400px', margin: '0 auto', background: '#fff', color: '#000' }}>
@@ -20,8 +30,18 @@ export default function InvoicePrintOut({ invoice, onBack }) {
       </div>
 
       <div className="invoice-content" style={{ fontFamily: 'monospace' }}>
-        <h2 className="text-center mb-1">KUIKLO STORE</h2>
-        <p className="text-center mb-4">123 Retail Lane, Commerce City<br/>Phone: (555) 123-4567</p>
+        {settings?.storeLogo ? (
+          <div className="text-center mb-2">
+            <img src={settings.storeLogo} alt="Logo" style={{ maxHeight: '40px', objectFit: 'contain' }} />
+          </div>
+        ) : (
+          <h2 className="text-center mb-1 text-uppercase">{settings.storeName || 'KUIKLO STORE'}</h2>
+        )}
+        <p className="text-center mb-4">
+          {settings.address || 'Address Not Set'}<br/>
+          {settings.storePhone && <>Phone: {settings.storePhone}</>}
+          {settings.gstNumber && <><br/>GST: {settings.gstNumber}</>}
+        </p>
         
         {invoice.isCancelled && <h3 className="text-center text-danger border border-danger p-1">RETURNED / CANCELLED</h3>}
 
@@ -58,13 +78,9 @@ export default function InvoicePrintOut({ invoice, onBack }) {
           <span>Tax:</span>
           <span>{formatCurrency(invoice.totalsSnapshot.tax)}</span>
         </div>
-        <div className="d-flex justify-content-between fw-bold mt-2 pt-2 border-top">
-          <span>Total:</span>
+        <h4 className="mt-2 mb-4 d-flex justify-content-between">
+          <span>TOTAL:</span>
           <span>{formatCurrency(invoice.totalsSnapshot.amount)}</span>
-        </div>
-
-        <p className="text-center mt-5 mb-0">Thank you for shopping with Kuiklo!</p>
-        <p className="text-center"><small>Please retain this receipt for returns.</small></p>
       </div>
       
       {/* Hide surrounding layout when printing */}

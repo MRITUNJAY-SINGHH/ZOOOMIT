@@ -138,7 +138,7 @@ export const menuItems = [
     icon: 'lucide:settings',
     slug: 'settings',
     label: 'Settings',
-    url: '/settings/general'
+    url: '/settings'
   }
 ];
 
