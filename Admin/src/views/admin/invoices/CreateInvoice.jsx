@@ -393,11 +393,11 @@ export default function CreateInvoice() {
               <Button 
                 variant="danger" 
                 className="w-100 py-2 mt-2 d-flex align-items-center justify-content-center gap-2 fw-bold text-white" 
-                style={{ backgroundColor: '#ff4d4f', border: 'none' }} // Matching the red "Send" button in screenshot
+                style={{ backgroundColor: '#ff4d4f', border: 'none' }}
                 onClick={handleSubmit}
                 disabled={loading}
               >
-                {loading ? <Spinner size="sm" /> : <><Icon icon="lucide:send" width={18} /> >{isEdit ? `Update Invoice` : `Save Invoice`}</>}
+                {loading ? <Spinner size="sm" /> : <><Icon icon="lucide:send" width={18} /> {isEdit ? `Update Invoice` : `Save Invoice`}</>}
               </Button>
             </Card.Body>
           </Card>

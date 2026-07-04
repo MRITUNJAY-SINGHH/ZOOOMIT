@@ -81,6 +81,11 @@ export default function InvoicePrintOut({ invoice, onBack }) {
         <h4 className="mt-2 mb-4 d-flex justify-content-between">
           <span>TOTAL:</span>
           <span>{formatCurrency(invoice.totalsSnapshot.amount)}</span>
+        </h4>
+        
+        <div className="text-center mt-4">
+          <p className="mb-0" style={{ fontSize: '12px' }}>{settings.invoiceFooter || 'Thank You For Shopping!'}</p>
+        </div>
       </div>
       
       {/* Hide surrounding layout when printing */}
