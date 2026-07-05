@@ -32,7 +32,21 @@ import notificationRoutes from './routes/notificationRoutes.js';
 // Middleware
 app.use(express.json());
 const corsOptions = {
-  origin: process.env.ADMIN_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Allow localhost or any vercel.app domain, or specific ADMIN_URL
+    if (
+      origin.startsWith('http://localhost') || 
+      origin.endsWith('.vercel.app') || 
+      origin === process.env.ADMIN_URL
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));

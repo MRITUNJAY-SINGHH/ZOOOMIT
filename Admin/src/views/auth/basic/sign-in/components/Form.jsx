@@ -1,9 +1,12 @@
 import { useAuth } from '@/hooks/useAuth'
 import { useState } from 'react'
-import { Button, Form, FormCheck, FormControl, FormLabel } from 'react-bootstrap'
+import { Button, Form, FormCheck, FormControl, FormLabel, InputGroup } from 'react-bootstrap'
 import { Link } from 'react-router'
+import { Icon } from '@/components/common/LucideIcon'
+
 const LoginForm = () => {
   const { login, loading, error } = useAuth()
+  const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({
     email: 'admin@example.com',
     password: 'password',
@@ -31,7 +34,12 @@ const LoginForm = () => {
         <FormLabel>
           Password <span className="text-danger">*</span>
         </FormLabel>
-        <FormControl type="password" placeholder="••••••••" value={form.password} required onChange={handleChange} />
+        <InputGroup>
+          <FormControl name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={form.password} required onChange={handleChange} />
+          <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)} style={{ border: '1px solid var(--bs-border-color)' }}>
+            <Icon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} width={16} />
+          </Button>
+        </InputGroup>
       </div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <FormCheck>
