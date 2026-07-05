@@ -34,12 +34,16 @@ const LoginForm = () => {
         <FormLabel>
           Password <span className="text-danger">*</span>
         </FormLabel>
-        <InputGroup>
-          <FormControl name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={form.password} required onChange={handleChange} />
-          <Button variant="outline-secondary" onClick={() => setShowPassword(!showPassword)} style={{ border: '1px solid var(--bs-border-color)' }}>
-            <Icon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} width={16} />
-          </Button>
-        </InputGroup>
+        <div className="position-relative">
+          <FormControl name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={form.password} required onChange={handleChange} style={{ paddingRight: '40px' }} />
+          <span 
+            className="position-absolute top-50 translate-middle-y" 
+            style={{ right: '12px', cursor: 'pointer', color: 'var(--bs-gray-500)' }} 
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            <Icon icon={showPassword ? "lucide:eye-off" : "lucide:eye"} width={18} />
+          </span>
+        </div>
       </div>
       <div className="d-flex justify-content-between align-items-center mb-3">
         <FormCheck>
@@ -52,8 +56,15 @@ const LoginForm = () => {
       </div>
       {error && <p className="text-danger">{error}</p>}
       <div className="d-grid">
-        <Button variant="primary" type="submit" className="fw-semibold py-2" disabled={loading}>
-          Sign In
+        <Button variant="primary" type="submit" className="fw-semibold py-2 d-flex align-items-center justify-content-center" disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              Signing In...
+            </>
+          ) : (
+            'Sign In'
+          )}
         </Button>
       </div>
     </form>

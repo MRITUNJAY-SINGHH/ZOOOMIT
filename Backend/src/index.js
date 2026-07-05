@@ -29,14 +29,11 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
-// Middleware
 app.use(express.json());
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    // Allow localhost or any vercel.app domain, or specific ADMIN_URL
     if (
       origin.startsWith('http://localhost') || 
       origin.endsWith('.vercel.app') || 
@@ -53,7 +50,6 @@ app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
@@ -70,12 +66,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 
-// Basic route
 app.get('/', (req, res) => {
   res.send('Kuiklo API is running...');
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({
