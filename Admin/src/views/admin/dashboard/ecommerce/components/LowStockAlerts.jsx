@@ -32,7 +32,7 @@ export default function LowStockAlerts() {
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h2 className="kuiklo-section-title mb-0">Low Stock Alerts</h2>
-          <Link to="/inventory/low-stock" className="btn btn-light">View All</Link>
+          <Link to="/inventory/low-stock" className="btn btn-primary btn-sm">View All</Link>
         </div>
         {loading ? <LoadingSkeleton rows={5} columns={3} /> : error ? <ErrorState message={error} onRetry={loadData} /> : products.length === 0 ? (
           <EmptyState icon="lucide:package-check" title="No low stock" message="All tracked products are above threshold." />

@@ -96,7 +96,7 @@ export default function Dashboard() {
         <Col lg={4}><TopSellingProducts /></Col>
       </Row>
 
-      <Row className="g-3">
+      <Row className="g-3 mb-4">
         <Col lg={4}><RecentOrdersTable /></Col>
         <Col lg={4}><LowStockAlerts /></Col>
         <Col lg={4}><ExpiringSoon /></Col>

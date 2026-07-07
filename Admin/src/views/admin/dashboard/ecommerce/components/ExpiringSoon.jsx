@@ -32,7 +32,7 @@ export default function ExpiringSoon() {
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h2 className="kuiklo-section-title mb-0">Expiring Products</h2>
-          <Link to="/inventory/upcoming-expiry" className="btn btn-light">View All</Link>
+          <Link to="/inventory/upcoming-expiry" className="btn btn-primary btn-sm">View All</Link>
         </div>
         {loading ? <LoadingSkeleton rows={5} columns={3} /> : error ? <ErrorState message={error} onRetry={loadData} /> : batches.length === 0 ? (
           <EmptyState icon="lucide:calendar-check" title="No expiring batches" message="No batches expire in the next 30 days." />

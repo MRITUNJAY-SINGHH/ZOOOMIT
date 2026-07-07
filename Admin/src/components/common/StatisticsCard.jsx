@@ -2,11 +2,15 @@ import React from 'react';
 import { Card } from 'react-bootstrap';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 
-export default function StatisticsCard({ icon: Icon, title, value, helper, trend, variant = 'primary' }) {
+export default function StatisticsCard({ icon: Icon, title, value, helper, trend, variant = 'primary', onClick }) {
   const hasTrend = typeof trend === 'number';
 
   return (
-    <Card className="kuiklo-stat-card h-100">
+    <Card 
+      className={`kuiklo-stat-card h-100 ${onClick ? 'cursor-pointer' : ''}`} 
+      onClick={onClick}
+      style={onClick ? { cursor: 'pointer' } : {}}
+    >
       <Card.Body>
         <div className="d-flex justify-content-between align-items-start gap-3">
           <div>

@@ -6,6 +6,7 @@ import User from '../models/User.js';
 import InventoryLog from '../models/InventoryLog.js';
 import ProductBatch from '../models/ProductBatch.js';
 import RefundQueue from '../models/RefundQueue.js';
+import Supplier from '../models/Supplier.js';
 
 export const getSalesReport = async (req, res) => {
   try {
@@ -296,9 +297,100 @@ export const getCustomerReport = async (req, res) => {
 };
 
 export const getDashboardStats = async (req, res) => {
-  // Legacy Dashboard Stats for backward compatibility if needed elsewhere
   try {
-    const totalOrders = await Order.countDocuments();
-    res.json({ totalOrders });
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const [
+      totalOrders,
+      totalCustomers,
+      totalProducts,
+      totalStaff,
+      totalSuppliers
+    ] = await Promise.all([
+      Order.countDocuments(),
+      Customer.countDocuments(),
+      Product.countDocuments(),
+      User.countDocuments(),
+      Supplier.countDocuments()
+    ]);
+
+    const salesAgg = await Order.aggregate([
+      { $match: { paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
+      { $group: {
+        _id: null,
+        totalSales: { $sum: "$amount" },
+        todaySales: { $sum: { $cond: [ { $gte: ["$createdAt", today] }, "$amount", 0 ] } },
+        onlineSales: { $sum: { $cond: [ { $eq: ["$orderType", "ONLINE"] }, "$amount", 0 ] } },
+        offlineSales: { $sum: { $cond: [ { $eq: ["$orderType", "OFFLINE"] }, "$amount", 0 ] } },
+        monthRevenue: { $sum: { $cond: [ { $gte: ["$createdAt", startOfMonth] }, "$amount", 0 ] } },
+      }}
+    ]);
+
+    const sales = salesAgg[0] || {
+      totalSales: 0, todaySales: 0, onlineSales: 0, offlineSales: 0, monthRevenue: 0
+    };
+
+    res.json({
+      totalOrders,
+      totalCustomers,
+      totalProducts,
+      totalStaff,
+      totalSuppliers,
+      ...sales
+    });
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getSalesChart = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const sales = await Order.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo }, paymentStatus: { $in: ['Paid', 'PartiallyRefunded'] } } },
+      { $group: {
+        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+        sales: { $sum: "$amount" }
+      }},
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Fill in missing days
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      const found = sales.find(s => s._id === dateStr);
+      result.push({
+        _id: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        sales: found ? found.sales : 0
+      });
+    }
+
+    res.json(result);
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
+export const getTopSellingProducts = async (req, res) => {
+  try {
+    const products = await Order.aggregate([
+      { $match: { status: 'Delivered' } },
+      { $unwind: "$items" },
+      { $group: {
+        _id: "$items.product",
+        productName: { $first: "$items.productName" },
+        totalSold: { $sum: "$items.qty" },
+        totalRevenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+      }},
+      { $sort: { totalSold: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.json(products);
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
