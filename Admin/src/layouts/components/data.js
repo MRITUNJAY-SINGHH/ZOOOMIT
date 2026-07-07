@@ -23,7 +23,7 @@ export const menuItems = [
     icon: 'lucide:upload-cloud',
     slug: 'catalog-import',
     label: 'Bulk Product Import',
-    url: '/catalog/products' // Redirecting to products for now, as bulk import usually exists as a modal/tab there
+    url: '/catalog/import'
   },
   { isTitle: true, label: 'Inventory' },
   {
@@ -48,7 +48,7 @@ export const menuItems = [
     icon: 'lucide:calculator',
     slug: 'pos',
     label: 'POS Billing',
-    url: '/pos/new'
+    url: '/pos'
   },
   {
     icon: 'lucide:history',

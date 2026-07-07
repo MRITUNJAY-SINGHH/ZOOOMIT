@@ -4,6 +4,7 @@ import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import SkeletonCard from '@/components/common/SkeletonCard';
+import PageHeader from '@/components/common/PageHeader';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
@@ -103,20 +104,20 @@ export default function OrderDetails({ orderId, onBack }) {
   return (
     <div>
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <div>
-          <h5 className="mb-1">
-            Order #{order.orderNumber}
-            <Badge bg={STATUS_COLORS[order.status] || 'secondary'} className="ms-2 fs-12">{order.status}</Badge>
-          </h5>
-          <small className="text-muted">
-            Placed on {new Date(order.createdAt).toLocaleString()} • {order.orderType}
-          </small>
-        </div>
-        <Button variant="outline-secondary" size="sm" onClick={onBack}>
-          <Icon icon="lucide:arrow-left" className="me-1" width={14} />Back to Orders
-        </Button>
-      </div>
+      <PageHeader
+        title={
+          <div className="d-flex align-items-center gap-2">
+            <span>Order #{order.orderNumber}</span>
+            <Badge bg={STATUS_COLORS[order.status] || 'secondary'} className="fs-12">{order.status}</Badge>
+          </div>
+        }
+        description={`Placed on ${new Date(order.createdAt).toLocaleString()} • ${order.orderType}`}
+        rightContent={
+          <Button variant="primary" className="d-flex align-items-center gap-2" onClick={onBack}>
+            <Icon icon="lucide:arrow-left" width={16} /> Back to Orders
+          </Button>
+        }
+      />
 
       <Row className="g-3">
         {/* Left Column: Items + Actions */}

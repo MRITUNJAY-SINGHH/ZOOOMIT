@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Col, Modal, Row, Table } from 'react-bootstrap';
-import { Eye, Mail, Phone } from 'lucide-react';
+import { Button, Card, Col, Modal, Row, Table, Form } from 'react-bootstrap';
+import { Eye, Mail, Phone, Edit, Trash2 } from 'lucide-react';
 import api from '@/utils/api';
 import PageHeader from '@/components/common/PageHeader';
 import ActionBar from '@/components/common/ActionBar';
@@ -11,6 +11,7 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import PaginationComponent from '@/components/common/PaginationComponent';
 import StatisticsCard from '@/components/common/StatisticsCard';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { toast } from 'react-hot-toast';
 
@@ -24,6 +25,13 @@ export default function Customers() {
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
+  
+  const [editModal, setEditModal] = useState(false);
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active' });
+  const [saving, setSaving] = useState(false);
+  
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState(null);
 
   const fetchCustomers = async () => {
     setLoading(true);
@@ -57,9 +65,55 @@ export default function Customers() {
     }
   };
 
+  const openEditModal = (customer) => {
+    setFormData({
+      _id: customer._id,
+      name: customer.name || '',
+      phone: customer.phone || '',
+      email: customer.email || '',
+      customerType: customer.customerType || 'WALK_IN',
+      status: customer.status || 'Active'
+    });
+    setEditModal(true);
+  };
+
+  const saveCustomer = async () => {
+    if (!formData.name || !formData.phone) return toast.error('Name and phone are required');
+    setSaving(true);
+    try {
+      await api.put(`/customers/${formData._id}`, formData);
+      toast.success('Customer updated successfully');
+      setEditModal(false);
+      fetchCustomers();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update customer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDeleteModal = (customer) => {
+    setCustomerToDelete(customer);
+    setDeleteModal(true);
+  };
+
+  const deleteCustomer = async () => {
+    setSaving(true);
+    try {
+      await api.delete(`/customers/${customerToDelete._id}`);
+      toast.success('Customer deleted successfully');
+      setDeleteModal(false);
+      fetchCustomers();
+    } catch (err) {
+      toast.error('Failed to delete customer');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div>
-      <PageHeader title="Customers" description="View customer profiles, order history and lifetime value." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Customers' }]} />
+    <div className="report-page pt-1">
+      <PageHeader title="Customers" />
       <ActionBar
         left={<SearchBar placeholder="Search name, phone or email..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />}
         count={totalRecords}
@@ -82,7 +136,11 @@ export default function Customers() {
                       <td className="text-end fw-semibold">{customer.totalOrders || 0}</td>
                       <td className="text-end fw-semibold">{formatCurrency(customer.totalSpent || 0)}</td>
                       <td className="text-muted">{formatDate(customer.createdAt)}</td>
-                      <td className="text-end"><Button variant="light" className="kuiklo-icon-btn" onClick={() => viewCustomer(customer._id)}><Eye size={20} /></Button></td>
+                      <td className="text-end">
+                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => viewCustomer(customer._id)}><Eye size={20} /></Button>
+                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openEditModal(customer)}><Edit size={20} /></Button>
+                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => openDeleteModal(customer)}><Trash2 size={20} /></Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -132,6 +190,70 @@ export default function Customers() {
           ) : null}
         </Modal.Body>
       </Modal>
+
+      {/* Edit Customer Modal */}
+      <Modal show={editModal} onHide={() => setEditModal(false)} centered size="md">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold fs-4">Edit Customer</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          <div className="p-4 rounded-3 mb-0" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h6 className="fw-bold mb-4 text-white">Customer Information</h6>
+            <Row className="g-3">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Full Name <span className="text-danger">*</span></Form.Label>
+                  <Form.Control value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Enter customer name" />
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Phone Number <span className="text-danger">*</span></Form.Label>
+                  <Form.Control value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="e.g. 9000000000" />
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Email Address</Form.Label>
+                  <Form.Control type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="customer@example.com" />
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Customer Type</Form.Label>
+                  <Form.Select value={formData.customerType} onChange={(e) => setFormData({ ...formData, customerType: e.target.value })}>
+                    <option value="WALK_IN">Walk In</option>
+                    <option value="APP">App User</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Status</Form.Label>
+                  <Form.Select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })}>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+          </div>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0 px-4 pb-4">
+          <Button variant="secondary" onClick={() => setEditModal(false)}>Cancel</Button>
+          <Button variant="primary" disabled={saving} onClick={saveCustomer}>{saving ? 'Saving...' : 'Save Changes'}</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <ConfirmModal
+        show={deleteModal}
+        title="Delete Customer"
+        message={`Are you sure you want to delete ${customerToDelete?.name}? This action cannot be undone.`}
+        confirmText={saving ? 'Deleting...' : 'Delete'}
+        confirmVariant="danger"
+        onConfirm={deleteCustomer}
+        onCancel={() => setDeleteModal(false)}
+      />
     </div>
   );
 }

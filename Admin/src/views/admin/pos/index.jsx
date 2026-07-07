@@ -1,27 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, Row, Col, Table, Button, Form, InputGroup, Modal } from 'react-bootstrap';
+import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { fetchApi } from '@/utils/api';
 import PageHeader from '@/components/common/PageHeader';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { formatCurrency } from '@/utils/format';
 import InvoicePrintOut from './components/InvoicePrintOut';
-import POSHistory from './components/POSHistory';
 
 export default function POSBilling() {
   const [cart, setCart] = useState([]);
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   
   const [holdModal, setHoldModal] = useState(false);
   const [holdName, setHoldName] = useState('');
   const [heldBills, setHeldBills] = useState([]);
-  const [showHistory, setShowHistory] = useState(false);
   const [clearCartModal, setClearCartModal] = useState(false);
   
   const [invoiceToPrint, setInvoiceToPrint] = useState(null);
 
   const barcodeRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (barcodeRef.current) barcodeRef.current.focus();
@@ -35,22 +37,47 @@ export default function POSBilling() {
     } catch (e) { console.error(e); }
   };
 
-  const handleBarcodeScan = async (e) => {
+  const handleSearchChange = async (e) => {
+    const val = e.target.value;
+    setBarcodeInput(val);
+    if (!val.trim()) {
+      setSearchResults([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      // The API supports ?search= which fuzzy matches name, sku, barcode
+      const response = await fetchApi(`/products?search=${val.trim()}&limit=5`);
+      setSearchResults(response.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+    setIsSearching(false);
+  };
+
+  const handleSelectProduct = (product) => {
+    addToCart(product);
+    setBarcodeInput('');
+    setSearchResults([]);
+    if (barcodeRef.current) barcodeRef.current.focus();
+  };
+
+  const handleBarcodeSubmit = async (e) => {
     e.preventDefault();
     if (!barcodeInput.trim()) return;
 
+    // If there's an exact match in the results or we just want to hit the specific barcode endpoint
     setLoading(true);
     try {
       const response = await fetchApi(`/products/barcode/${barcodeInput.trim()}`);
       if (response && response.data) {
-        addToCart(response.data);
+        handleSelectProduct(response.data);
       }
     } catch (err) {
       alert(err.message || 'Product not found');
     }
     setLoading(false);
-    setBarcodeInput('');
-    if (barcodeRef.current) barcodeRef.current.focus();
   };
 
   const addToCart = (product) => {
@@ -156,30 +183,51 @@ export default function POSBilling() {
         title="POS Billing" 
         rightContent={
           <>
-            <Button variant="secondary" className="me-2" onClick={() => setShowHistory(true)}>History / Returns</Button>
+            <Button variant="secondary" className="me-2" onClick={() => navigate('/pos/history')}>History / Returns</Button>
             <Button variant="outline-danger" onClick={() => setClearCartModal(true)} disabled={cart.length === 0}>Clear Cart</Button>
           </>
         }
       />
 
-      {showHistory && <POSHistory onClose={() => setShowHistory(false)} onReprint={(inv) => setInvoiceToPrint(inv)} />}
-
       <Row>
         <Col md={8}>
           <Card>
             <Card.Body>
-              <Form onSubmit={handleBarcodeScan} className="mb-4">
-                <InputGroup>
-                  <Form.Control 
-                    ref={barcodeRef}
-                    placeholder="Scan Barcode or Enter SKU..." 
-                    value={barcodeInput}
-                    onChange={(e) => setBarcodeInput(e.target.value)}
-                    disabled={loading}
-                  />
-                  <Button type="submit" variant="primary" disabled={loading}>Add</Button>
-                </InputGroup>
-              </Form>
+              <div className="position-relative mb-4">
+                <Form onSubmit={handleBarcodeSubmit}>
+                  <InputGroup>
+                    <Form.Control 
+                      ref={barcodeRef}
+                      placeholder="Search product by name, SKU, or scan barcode..." 
+                      value={barcodeInput}
+                      onChange={handleSearchChange}
+                      disabled={loading}
+                      autoComplete="off"
+                    />
+                    <Button type="submit" variant="primary" disabled={loading}>Add</Button>
+                  </InputGroup>
+                </Form>
+                {searchResults.length > 0 && (
+                  <Card className="position-absolute w-100 mt-1 shadow border-secondary" style={{ zIndex: 1050, maxHeight: '250px', overflowY: 'auto', backgroundColor: '#1e1e2d' }}>
+                    <div className="list-group list-group-flush">
+                      {searchResults.map(prod => (
+                        <button 
+                          key={prod._id} 
+                          className="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-secondary text-light"
+                          style={{ backgroundColor: '#1e1e2d' }}
+                          onClick={() => handleSelectProduct(prod)}
+                        >
+                          <div className="text-start">
+                            <div className="fw-medium text-white">{prod.name}</div>
+                            <small className="text-muted">SKU: {prod.baseSku} | Barcode: {prod.barcode}</small>
+                          </div>
+                          <div className="fw-bold text-white">{formatCurrency(prod.sellingPrice || prod.mrp)}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </Card>
+                )}
+              </div>
 
               <Table striped bordered hover>
                 <thead>

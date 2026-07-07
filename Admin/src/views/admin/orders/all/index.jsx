@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Badge, Button, Form, InputGroup, Row, Col } from 'react-bootstrap';
+import { Card, Table, Badge, Button, Dropdown } from 'react-bootstrap';
 import { useLocation } from 'react-router';
 import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
@@ -7,6 +7,8 @@ import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
+import ActionBar from '@/components/common/ActionBar';
+import SearchBar from '@/components/common/SearchBar';
 import OrderDetails from '../details/index';
 
 const STATUS_COLORS = {
@@ -87,37 +89,39 @@ export default function OrdersList() {
         ]}
       />
 
+      <ActionBar
+        left={
+          <div className="d-flex align-items-center gap-2">
+            <SearchBar 
+              placeholder="Search order #..." 
+              value={search} 
+              onChange={(val) => { setSearch(val); setCurrentPage(1); }} 
+            />
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-secondary" id="dropdown-status-filter" className="d-flex align-items-center gap-2">
+                <Icon icon="lucide:filter" width={16} /> 
+                {FILTER_TABS.find(t => t.key === activeTab)?.label || 'All'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                {FILTER_TABS.map(tab => (
+                  <Dropdown.Item 
+                    key={tab.key}
+                    active={activeTab === tab.key}
+                    onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
+                  >
+                    {tab.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+        }
+        count={totalRecords}
+        onRefresh={loadOrders}
+      />
+
       <Card>
         <Card.Body>
-          {/* Filters Row */}
-          <div className="d-flex flex-wrap gap-2 mb-3 align-items-center">
-            <div className="d-flex flex-wrap gap-1 flex-grow-1">
-              {FILTER_TABS.map(tab => (
-                <Button
-                  key={tab.key}
-                  variant={activeTab === tab.key ? 'primary' : 'outline-secondary'}
-                  size="sm"
-                  onClick={() => { setActiveTab(tab.key); setCurrentPage(1); }}
-                >
-                  {tab.label}
-                </Button>
-              ))}
-            </div>
-            <div className="d-flex gap-2 align-items-center">
-              <InputGroup size="sm" style={{ maxWidth: '220px' }}>
-                <InputGroup.Text><Icon icon="lucide:search" width={14} /></InputGroup.Text>
-                <Form.Control
-                  placeholder="Search order #..."
-                  value={search}
-                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                />
-              </InputGroup>
-              <Button variant="outline-secondary" size="sm" onClick={loadOrders}>
-                <Icon icon="lucide:refresh-cw" width={14} />
-              </Button>
-            </div>
-          </div>
-
           {/* Table */}
           {loading ? (
             <SkeletonTable rows={8} columns={7} />

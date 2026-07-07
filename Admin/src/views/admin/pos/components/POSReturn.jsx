@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Table, Button, Form } from 'react-bootstrap';
+import { Offcanvas, Table, Button, Form } from 'react-bootstrap';
+import { Icon } from '@/components/common/LucideIcon';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
 
@@ -58,58 +59,72 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
   const totalRefund = returnItems.reduce((acc, i) => acc + (i.qtyToReturn * i.price), 0);
 
   return (
-    <div style={{ padding: '20px' }}>
-      <Button variant="secondary" onClick={onBack} className="mb-3">Back to History</Button>
-      <h4>Initiate Return for {invoice.invoiceNumber || invoice.billNumber || invoice.orderNumber}</h4>
-      {error && <div className="alert alert-danger mt-3">{error}</div>}
-      
-      <Table bordered className="mt-3">
-        <thead>
-          <tr>
-            <th>Product</th>
-            <th>Purchased</th>
-            <th>Returned Prior</th>
-            <th>Return Now</th>
-            <th>Refund Amt</th>
-          </tr>
-        </thead>
-        <tbody>
-          {returnItems.map(item => (
-            <tr key={item.productId}>
-              <td>{item.productName}</td>
-              <td>{item.purchasedQty}</td>
-              <td>{item.alreadyReturned}</td>
-              <td>
-                <Form.Control 
-                  type="number" 
-                  min="0" 
-                  max={item.purchasedQty - item.alreadyReturned}
-                  value={item.qtyToReturn}
-                  onChange={e => handleReturnQtyChange(item.productId, e.target.value)}
-                  disabled={item.purchasedQty - item.alreadyReturned === 0}
-                />
-              </td>
-              <td>{formatCurrency(item.qtyToReturn * item.price)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-      
-      <div className="d-flex justify-content-between align-items-center mt-4">
-        <Form.Group style={{ width: '300px' }}>
-          <Form.Label>Reason</Form.Label>
-          <Form.Control as="select" value={reason} onChange={e => setReason(e.target.value)}>
-            <option>Customer Request</option>
-            <option>Damaged Item</option>
-            <option>Wrong Item Billed</option>
-          </Form.Control>
-        </Form.Group>
-        
-        <div>
-          <h5 className="mb-2">Total Refund: {formatCurrency(totalRefund)}</h5>
-          <Button variant="danger" size="lg" onClick={processReturn} disabled={loading || totalRefund === 0}>Process Return</Button>
+    <Offcanvas show={true} onHide={onBack} placement="end" style={{ width: '800px' }}>
+      <Offcanvas.Header className="border-bottom border-dark">
+        <div className="d-flex align-items-center gap-3 w-100">
+          <Button variant="outline-secondary" size="sm" onClick={onBack} className="p-1 px-2 border-0">
+            <Icon icon="lucide:arrow-left" width={18} />
+          </Button>
+          <Offcanvas.Title className="fw-semibold m-0">Return for {invoice.invoiceNumber || invoice.billNumber || invoice.orderNumber}</Offcanvas.Title>
         </div>
-      </div>
-    </div>
+      </Offcanvas.Header>
+      <Offcanvas.Body className="p-0 d-flex flex-column">
+        {error && <div className="alert alert-danger m-3">{error}</div>}
+        
+        <div className="flex-grow-1 overflow-auto">
+          <Table responsive hover className="align-middle mb-0 border-0">
+            <thead className="bg-dark text-light">
+              <tr>
+                <th className="ps-4 border-0">Product</th>
+                <th className="border-0 text-center">Purchased</th>
+                <th className="border-0 text-center">Returned</th>
+                <th className="border-0 text-center" style={{ width: '120px' }}>Return Qty</th>
+                <th className="pe-4 border-0 text-end">Refund Amt</th>
+              </tr>
+            </thead>
+            <tbody>
+              {returnItems.map(item => (
+                <tr key={item.productId}>
+                  <td className="ps-4 fw-medium">{item.productName}</td>
+                  <td className="text-center">{item.purchasedQty}</td>
+                  <td className="text-center text-muted">{item.alreadyReturned}</td>
+                  <td>
+                    <Form.Control 
+                      size="sm"
+                      type="number" 
+                      min="0" 
+                      max={item.purchasedQty - item.alreadyReturned}
+                      value={item.qtyToReturn}
+                      onChange={e => handleReturnQtyChange(item.productId, e.target.value)}
+                      disabled={item.purchasedQty - item.alreadyReturned === 0}
+                      className="text-center"
+                    />
+                  </td>
+                  <td className="pe-4 text-end fw-semibold text-primary">{formatCurrency(item.qtyToReturn * item.price)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+        
+        <div className="p-4 border-top border-dark bg-dark text-light d-flex justify-content-between align-items-end">
+          <Form.Group style={{ width: '300px' }}>
+            <Form.Label className="text-muted mb-1 fs-14">Reason for Return</Form.Label>
+            <Form.Select value={reason} onChange={e => setReason(e.target.value)} className="bg-transparent text-light border-secondary">
+              <option value="Customer Request" className="text-dark">Customer Request</option>
+              <option value="Defective" className="text-dark">Defective / Damaged</option>
+              <option value="Wrong Item" className="text-dark">Wrong Item</option>
+            </Form.Select>
+          </Form.Group>
+          <div className="text-end">
+            <div className="text-muted mb-1">Total Refund</div>
+            <h4 className="mb-3 text-primary">{formatCurrency(totalRefund)}</h4>
+            <Button variant="danger" className="w-100 fw-semibold" onClick={processReturn} disabled={loading || totalRefund === 0}>
+              {loading ? 'Processing...' : 'Process Return'}
+            </Button>
+          </div>
+        </div>
+      </Offcanvas.Body>
+    </Offcanvas>
   );
 }

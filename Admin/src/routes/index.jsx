@@ -22,7 +22,10 @@ const UpcomingExpiry = lazy(() => import('@/views/admin/inventory/upcoming-expir
 const InventoryLogs = lazy(() => import('@/views/admin/inventory/logs'))
 const OrdersAll = lazy(() => import('@/views/admin/orders/all'))
 const POSBilling = lazy(() => import('@/views/admin/pos'))
+const POSHistoryPage = lazy(() => import('@/views/admin/pos/HistoryPage'))
+const POSReturnsPage = lazy(() => import('@/views/admin/pos/ReturnsPage'))
 const Coupons = lazy(() => import('@/views/admin/coupons'))
+const BulkImportPage = lazy(() => import('@/views/admin/catalog/products/BulkImport'))
 const Payments = lazy(() => import('@/views/admin/payments'))
 const Invoices = lazy(() => import('@/views/admin/invoices'))
 const CreateInvoice = lazy(() => import('@/views/admin/invoices/CreateInvoice'))
@@ -53,13 +56,18 @@ export const routes = [
           { path: '/suppliers', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: Suppliers }] },
           { path: '/catalog/categories', element: <ProtectedRoute permission="products" />, children: [{ path: '', Component: Categories }] },
           { path: '/catalog/products', element: <ProtectedRoute permission="products" />, children: [{ path: '', Component: Products }] },
+          { path: '/catalog/import', element: <ProtectedRoute permission="products" />, children: [{ path: '', Component: BulkImportPage }] },
           { path: '/inventory/overview', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: InventoryOverview }] },
           { path: '/inventory/stock-entry', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: StockEntry }] },
           { path: '/inventory/low-stock', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: LowStock }] },
           { path: '/inventory/upcoming-expiry', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: UpcomingExpiry }] },
           { path: '/inventory/logs', element: <ProtectedRoute permission="inventory" />, children: [{ path: '', Component: InventoryLogs }] },
           { path: '/orders/all', element: <ProtectedRoute permission="orders" />, children: [{ path: '', Component: OrdersAll }] },
-          { path: '/pos', element: <ProtectedRoute permission="pos" />, children: [{ path: '', Component: POSBilling }] },
+          { path: '/pos', element: <ProtectedRoute permission="pos" />, children: [
+            { path: 'history', Component: POSHistoryPage },
+            { path: 'returns', Component: POSReturnsPage },
+            { path: '', Component: POSBilling }
+          ] },
           { path: '/coupons', element: <ProtectedRoute permission="coupons" />, children: [{ path: '', Component: Coupons }] },
           { path: '/payments', element: <ProtectedRoute permission="payments" />, children: [{ path: '', Component: Payments }] },
           { path: '/invoices', element: <ProtectedRoute permission="payments" />, children: [
