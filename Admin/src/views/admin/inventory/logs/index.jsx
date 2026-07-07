@@ -70,7 +70,7 @@ export default function InventoryLogs() {
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
-                <thead className="table-light"><tr><th>Date</th><th>Type</th><th>Product</th><th>Batch / Supplier</th><th className="text-end">Stock Shift</th><th>Reason</th><th>Staff</th></tr></thead>
+                <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Batch / Supplier</th><th className="text-end">Stock Shift</th><th>Reason</th><th>Staff</th></tr></thead>
                 <tbody>
                   {logs.map(log => (
                     <tr key={log._id}>
@@ -101,3 +101,4 @@ export default function InventoryLogs() {
     </div>
   );
 }
+

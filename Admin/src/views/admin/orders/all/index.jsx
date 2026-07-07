@@ -41,7 +41,7 @@ export default function OrdersList() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [viewOrderId, setViewOrderId] = useState(null);
+  const [viewOrderId, setViewOrderId] = useState(location.state?.viewOrderId || null);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [search, setSearch] = useState('');
 
@@ -136,7 +136,7 @@ export default function OrdersList() {
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
-                <thead className="table-light">
+                <thead>
                   <tr>
                     <th>Order #</th>
                     <th>Date</th>
@@ -196,3 +196,4 @@ export default function OrdersList() {
     </div>
   );
 }
+

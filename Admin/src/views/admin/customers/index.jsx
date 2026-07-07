@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Form, InputGroup, Modal, Badge } from 'react-bootstrap';
-import { Icon } from '@/components/common/LucideIcon';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Modal, Row, Table } from 'react-bootstrap';
+import { Eye, Mail, Phone } from 'lucide-react';
 import api from '@/utils/api';
-import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
+import ActionBar from '@/components/common/ActionBar';
+import SearchBar from '@/components/common/SearchBar';
+import StatusBadge from '@/components/common/StatusBadge';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import StatisticsCard from '@/components/common/StatisticsCard';
+import { formatCurrency, formatDate } from '@/utils/format';
+import { toast } from 'react-hot-toast';
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -15,126 +22,117 @@ export default function Customers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
-  const [showDetails, setShowDetails] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
 
-  useEffect(() => { fetchCustomers(); }, [currentPage, search]);
-
   const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true); setError(null);
       const res = await api.get(`/customers?page=${currentPage}&limit=20&search=${search}`);
       setCustomers(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalRecords(res.data.total || 0);
-    } catch (err) { setError(err.message); toast.error('Failed to load customers'); }
-    finally { setLoading(false); }
+    } catch (err) {
+      setError(err.message);
+      toast.error('Failed to load customers');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewDetails = async (id) => {
+  useEffect(() => { fetchCustomers(); }, [currentPage, search]);
+
+  const viewCustomer = async (id) => {
+    setDetailsLoading(true);
+    setSelectedCustomer({});
     try {
-      setDetailsLoading(true); setShowDetails(true);
       const res = await api.get(`/customers/${id}`);
       setSelectedCustomer(res.data);
-    } catch (err) { toast.error('Failed to load details'); setShowDetails(false); }
-    finally { setDetailsLoading(false); }
+    } catch (err) {
+      toast.error('Failed to load customer');
+      setSelectedCustomer(null);
+    } finally {
+      setDetailsLoading(false);
+    }
   };
 
   return (
     <div>
-      <PageHeader title="Customers" description="View customer profiles, order history, and spending insights." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Customers' }]} />
+      <PageHeader title="Customers" description="View customer profiles, order history and lifetime value." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Customers' }]} />
+      <ActionBar
+        left={<SearchBar placeholder="Search name, phone or email..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />}
+        count={totalRecords}
+        onRefresh={fetchCustomers}
+      />
       <Card>
         <Card.Body>
-          <div className="d-flex justify-content-between mb-3 align-items-center">
-            <InputGroup size="sm" style={{ maxWidth: '280px' }}>
-              <InputGroup.Text><Icon icon="lucide:search" width={14} /></InputGroup.Text>
-              <Form.Control placeholder="Search name, phone, email..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
-            </InputGroup>
-            <div className="d-flex gap-2 align-items-center">
-              <span className="text-muted small">{totalRecords} records</span>
-              <Button variant="outline-secondary" size="sm" onClick={fetchCustomers}><Icon icon="lucide:refresh-cw" width={14} /></Button>
-            </div>
-          </div>
-          {loading ? <SkeletonTable rows={6} columns={5} /> : error ? (
-            <div className="text-center p-5"><Icon icon="lucide:alert-triangle" className="text-danger" width={40} /><p className="text-muted mt-2">{error}</p><Button variant="outline-danger" size="sm" onClick={fetchCustomers}>Retry</Button></div>
-          ) : customers.length === 0 ? (
-            <EmptyState icon="lucide:users" title="No Customers Found" message="No customers match your search." />
+          {loading ? <SkeletonTable rows={8} columns={7} /> : error ? <ErrorState message={error} onRetry={fetchCustomers} /> : customers.length === 0 ? (
+            <EmptyState icon="lucide:users" title="No customers found" message="Customer records will appear after orders or customer creation." />
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
-                <thead className="table-light"><tr><th>Name</th><th>Phone</th><th>Email</th><th>Joined</th><th className="text-end">Actions</th></tr></thead>
+                <thead><tr><th>Customer</th><th>Contact</th><th>Type</th><th className="text-end">Orders</th><th className="text-end">Spent</th><th>Joined</th><th className="text-end">Actions</th></tr></thead>
                 <tbody>
-                  {customers.map(c => (
-                    <tr key={c._id}>
-                      <td className="fw-medium">{c.name}</td>
-                      <td className="text-muted">{c.phone}</td>
-                      <td className="text-muted">{c.email || '-'}</td>
-                      <td className="text-muted">{new Date(c.createdAt).toLocaleDateString()}</td>
-                      <td className="text-end"><Button variant="light" size="sm" onClick={() => handleViewDetails(c._id)}><Icon icon="lucide:eye" width={16} /></Button></td>
+                  {customers.map((customer) => (
+                    <tr key={customer._id}>
+                      <td><div className="fw-semibold">{customer.name}</div><div className="text-muted">{customer.email || '-'}</div></td>
+                      <td><div className="d-flex align-items-center gap-2 text-muted"><Phone size={20} />{customer.phone}</div></td>
+                      <td><StatusBadge status={customer.customerType || 'WALK_IN'} variant={customer.customerType === 'APP' ? 'info' : 'secondary'} /></td>
+                      <td className="text-end fw-semibold">{customer.totalOrders || 0}</td>
+                      <td className="text-end fw-semibold">{formatCurrency(customer.totalSpent || 0)}</td>
+                      <td className="text-muted">{formatDate(customer.createdAt)}</td>
+                      <td className="text-end"><Button variant="light" className="kuiklo-icon-btn" onClick={() => viewCustomer(customer._id)}><Eye size={20} /></Button></td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                  <span className="text-muted small">Page {currentPage} of {totalPages}</span>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</Button>
-                    <Button variant="outline-secondary" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
-                  </div>
-                </div>
-              )}
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
             </>
           )}
         </Card.Body>
       </Card>
 
-      <Modal show={showDetails} onHide={() => setShowDetails(false)} size="lg" centered>
+      <Modal show={Boolean(selectedCustomer)} onHide={() => setSelectedCustomer(null)} size="lg" centered>
         <Modal.Header closeButton><Modal.Title>Customer Profile</Modal.Title></Modal.Header>
         <Modal.Body>
-          {detailsLoading ? <SkeletonTable rows={3} columns={3} /> : selectedCustomer ? (
-            <div>
-              <div className="d-flex justify-content-between align-items-start mb-4">
+          {detailsLoading ? <SkeletonTable rows={4} columns={3} /> : selectedCustomer?._id ? (
+            <>
+              <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
                 <div>
-                  <h5 className="mb-1">{selectedCustomer.name}</h5>
-                  <div className="text-muted small">
-                    <Icon icon="lucide:phone" width={12} className="me-1" />{selectedCustomer.phone}
-                    {selectedCustomer.email && <span className="ms-3"><Icon icon="lucide:mail" width={12} className="me-1" />{selectedCustomer.email}</span>}
+                  <h2 className="kuiklo-section-title mb-1">{selectedCustomer.name}</h2>
+                  <div className="text-muted d-flex flex-wrap gap-3">
+                    <span><Phone size={20} /> {selectedCustomer.phone}</span>
+                    {selectedCustomer.email && <span><Mail size={20} /> {selectedCustomer.email}</span>}
                   </div>
                 </div>
-                <Badge bg="primary" className="p-2">Member since {new Date(selectedCustomer.createdAt).getFullYear()}</Badge>
+                <StatusBadge status={selectedCustomer.status} />
               </div>
-              <div className="row g-3 mb-4">
-                {[
-                  { label: 'Total Orders', value: selectedCustomer.stats?.totalOrders || 0 },
-                  { label: 'Total Spent', value: `₹${(selectedCustomer.stats?.totalSpent || 0).toLocaleString()}` },
-                  { label: 'Last Order', value: selectedCustomer.stats?.lastOrderDate ? new Date(selectedCustomer.stats.lastOrderDate).toLocaleDateString() : '-' },
-                ].map((s, i) => (
-                  <div className="col-md-4" key={i}><Card className="bg-light border-0"><Card.Body className="text-center"><div className="text-muted small mb-1">{s.label}</div><h5 className="mb-0">{s.value}</h5></Card.Body></Card></div>
-                ))}
-              </div>
-              <h6 className="mb-3">Order History</h6>
-              <Table size="sm" responsive hover className="align-middle">
-                <thead className="table-light"><tr><th>Order #</th><th>Date</th><th>Type</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
+              <Row className="g-3 mb-4">
+                <Col md={4}><StatisticsCard title="Total Orders" value={selectedCustomer.stats?.totalOrders ?? selectedCustomer.totalOrders ?? 0} /></Col>
+                <Col md={4}><StatisticsCard title="Total Spending" value={formatCurrency(selectedCustomer.stats?.totalSpent ?? selectedCustomer.totalSpent ?? 0)} /></Col>
+                <Col md={4}><StatisticsCard title="Last Order" value={selectedCustomer.stats?.lastOrderDate ? formatDate(selectedCustomer.stats.lastOrderDate) : '-'} /></Col>
+              </Row>
+              <h2 className="kuiklo-section-title mb-3">Order History</h2>
+              <Table responsive hover className="align-middle mb-0">
+                <thead><tr><th>Order</th><th>Date</th><th>Type</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
                 <tbody>
-                  {(selectedCustomer.orderHistory || []).length === 0 ? (
-                    <tr><td colSpan="5" className="text-center py-3 text-muted">No orders found</td></tr>
-                  ) : selectedCustomer.orderHistory.map(o => (
-                    <tr key={o._id}>
-                      <td className="fw-medium text-primary">{o.orderNumber}</td>
-                      <td className="text-muted">{new Date(o.createdAt).toLocaleDateString()}</td>
-                      <td><Badge bg={o.orderType === 'ONLINE' ? 'info' : 'secondary'}>{o.orderType}</Badge></td>
-                      <td>{o.status}</td>
-                      <td className="text-end fw-bold">₹{(o.amount || 0).toLocaleString()}</td>
+                  {(selectedCustomer.orderHistory || []).length === 0 ? <tr><td colSpan="5" className="text-center text-muted py-4">No orders found</td></tr> : selectedCustomer.orderHistory.map((order) => (
+                    <tr key={order._id}>
+                      <td className="fw-semibold text-primary">{order.orderNumber}</td>
+                      <td>{formatDate(order.createdAt)}</td>
+                      <td><StatusBadge status={order.orderType} /></td>
+                      <td><StatusBadge status={order.status} /></td>
+                      <td className="text-end fw-semibold">{formatCurrency(order.amount)}</td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-            </div>
-          ) : <div className="text-center py-5 text-danger">Error loading customer data</div>}
+            </>
+          ) : null}
         </Modal.Body>
       </Modal>
     </div>
   );
 }
+

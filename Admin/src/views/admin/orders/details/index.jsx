@@ -128,7 +128,7 @@ export default function OrderDetails({ orderId, onBack }) {
             </Card.Header>
             <Card.Body className="p-0">
               <Table responsive className="align-middle mb-0">
-                <thead className="table-light">
+                <thead>
                   <tr>
                     <th className="ps-3">Product</th>
                     <th className="text-end">Price</th>
@@ -154,7 +154,7 @@ export default function OrderDetails({ orderId, onBack }) {
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="table-light">
+                <tfoot>
                   <tr>
                     <td colSpan="3" className="text-end ps-3 fw-medium">Subtotal</td>
                     <td className="text-end pe-3 fw-medium">₹{(order.subTotal || 0).toFixed(2)}</td>
@@ -314,3 +314,4 @@ export default function OrderDetails({ orderId, onBack }) {
     </div>
   );
 }
+

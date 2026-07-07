@@ -147,9 +147,12 @@
 }
 
 .kuiklo-status-badge {
-  padding: 6px 10px;
-  font-size: 16px;
-  font-weight: 600;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
 }
 
 .kuiklo-state {
@@ -206,7 +209,7 @@
   align-items: center;
 }
 
-.table > :not(caption) > * > * {
+.table> :not(caption)>*>* {
   padding: 14px 16px;
 }
 
@@ -226,7 +229,114 @@
   min-width: 170px;
 }
 
+
+
+.kuiklo-invoice-document {
+  border: 1px solid var(--#{$prefix}border-color);
+  border-radius: 8px;
+  background: var(--#{$prefix}body-bg);
+}
+
+.kuiklo-invoice-document .card-body {
+  padding: 40px;
+}
+
+.kuiklo-invoice-logo,
+.kuiklo-invoice-logo-fallback {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.kuiklo-invoice-logo-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--#{$prefix}primary-bg-subtle);
+  color: var(--#{$prefix}primary);
+  font-weight: 800;
+  font-size: 28px;
+}
+
+.kuiklo-invoice-document h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.kuiklo-invoice-document h2 {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.kuiklo-invoice-box,
+.kuiklo-invoice-meta {
+  border: 1px solid var(--#{$prefix}border-color);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--#{$prefix}tertiary-bg);
+}
+
+.kuiklo-invoice-box span,
+.kuiklo-invoice-meta span {
+  display: block;
+  color: var(--#{$prefix}secondary-color);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.kuiklo-invoice-box h3 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.kuiklo-invoice-box p {
+  margin-bottom: 4px;
+  color: var(--#{$prefix}secondary-color);
+}
+
+.kuiklo-invoice-total-row,
+.kuiklo-invoice-grand-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--#{$prefix}border-color);
+}
+
+.kuiklo-invoice-grand-total {
+  border-bottom: 0;
+  font-size: 22px;
+  color: var(--#{$prefix}primary);
+}
+
+.kuiklo-invoice-signature {
+  margin-top: 40px;
+  margin-left: auto;
+  width: 220px;
+  text-align: center;
+}
+
+.kuiklo-invoice-signature img {
+  max-width: 180px;
+  max-height: 72px;
+  object-fit: contain;
+}
+
+.kuiklo-invoice-signature span {
+  display: block;
+  border-top: 1px solid var(--#{$prefix}border-color);
+  margin-top: 8px;
+  padding-top: 8px;
+  color: var(--#{$prefix}secondary-color);
+  font-weight: 700;
+}
+
 @media (max-width: 767.98px) {
+
   .kuiklo-search,
   .kuiklo-filter-bar .form-select {
     max-width: none;
@@ -236,4 +346,23 @@
   .kuiklo-action-card .btn {
     flex: 1 1 auto;
   }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+  transform-origin: center;
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.show {
+  opacity: 1 !important;
 }

@@ -26,7 +26,7 @@ export default function Reports() {
 
   const renderSalesTable = () => (
     <Table responsive hover className="align-middle mb-0">
-      <thead className="table-light"><tr><th>Order #</th><th>Date</th><th>Type</th><th>Payment</th><th className="text-end">Amount</th></tr></thead>
+      <thead><tr><th>Order #</th><th>Date</th><th>Type</th><th>Payment</th><th className="text-end">Amount</th></tr></thead>
       <tbody>
         {data.map(item => (
           <tr key={item._id}>
@@ -43,7 +43,7 @@ export default function Reports() {
 
   const renderInventoryTable = () => (
     <Table responsive hover className="align-middle mb-0">
-      <thead className="table-light"><tr><th>Product</th><th>SKU</th><th>Category</th><th className="text-end">Stock</th><th>Status</th></tr></thead>
+      <thead><tr><th>Product</th><th>SKU</th><th>Category</th><th className="text-end">Stock</th><th>Status</th></tr></thead>
       <tbody>
         {data.map(item => (
           <tr key={item._id}>
@@ -60,7 +60,7 @@ export default function Reports() {
 
   const renderPaymentsTable = () => (
     <Table responsive hover className="align-middle mb-0">
-      <thead className="table-light"><tr><th>TXN ID</th><th>Order</th><th>Method</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
+      <thead><tr><th>TXN ID</th><th>Order</th><th>Method</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
       <tbody>
         {data.map(item => (
           <tr key={item._id}>
@@ -102,3 +102,4 @@ export default function Reports() {
     </div>
   );
 }
+

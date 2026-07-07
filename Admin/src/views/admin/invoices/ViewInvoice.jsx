@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Table, Button, Spinner } from 'react-bootstrap';
-import { useParams, useNavigate } from 'react-router';
-import Icon from '@/components/wrappers/Icon';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Row, Table } from 'react-bootstrap';
+import { ArrowLeft, Download, Edit, Printer, Send } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router';
 import api from '@/utils/api';
+import { generatePremiumInvoicePDF } from '@/utils/invoicePdfGenerator';
+import PageHeader from '@/components/common/PageHeader';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingSkeleton from '@/components/common/LoadingSkeleton';
+import StatusBadge from '@/components/common/StatusBadge';
+import { formatCurrency, formatDate } from '@/utils/format';
 import toast from 'react-hot-toast';
-import { QRCodeSVG } from 'qrcode.react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 export default function ViewInvoice() {
   const { id } = useParams();
@@ -14,349 +17,180 @@ export default function ViewInvoice() {
   const [invoice, setInvoice] = useState(null);
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const fetchData = async () => {
+  const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [invoiceRes, settingsRes] = await Promise.all([
-        api.get(`/invoices/${id}`),
-        api.get('/settings')
-      ]);
+      const [invoiceRes, settingsRes] = await Promise.all([api.get(`/invoices/${id}`), api.get('/settings')]);
       setInvoice(invoiceRes.data);
       setSettings(settingsRes.data);
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to load invoice or settings');
-      navigate('/invoices');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount, currencyCode = 'INR') => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: currencyCode,
-      minimumFractionDigits: 2
-    }).format(amount || 0);
-  };
+  useEffect(() => { loadData(); }, [id]);
 
   const downloadPDF = () => {
-    if (!invoice) return;
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text(`Invoice ${invoice.invoiceNumber}`, 14, 22);
-
-    const tableColumn = ["Description", "Qty", "Price", "Total"];
-    const tableRows = [];
-
-    invoice.productSnapshot.forEach(item => {
-      tableRows.push([
-        item.productName,
-        item.qty,
-        formatCurrency(item.price, invoice.currency),
-        formatCurrency(item.total, invoice.currency)
-      ]);
-    });
-
-    autoTable(doc, {
-      startY: 45,
-      head: [tableColumn],
-      body: tableRows,
-      theme: 'grid',
-      headStyles: { fillColor: [115, 51, 216] },
-    });
-
-    const finalY = doc.lastAutoTable.finalY || 45;
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    doc.text(`Total Amount: ${formatCurrency(invoice.totalsSnapshot?.amount, invoice.currency)}`, 14, finalY + 15);
-
-    doc.save(`${invoice.invoiceNumber}.pdf`);
+    generatePremiumInvoicePDF(invoice, settings);
   };
 
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-        <Spinner animation="border" variant="primary" />
+      <div>
+        <PageHeader title="Invoice" description="Loading invoice details." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Invoices', path: '/invoices' }, { label: 'View' }]} />
+        <LoadingSkeleton type="cards" cards={3} />
       </div>
     );
   }
 
-  if (!invoice) {
+  if (error || !invoice) {
     return (
-      <div className="text-center py-5">
-        <Icon icon="lucide:file-x" width={48} className="text-muted mb-3" />
-        <h4 className="text-white">Invoice not found</h4>
-        <Button variant="outline-light" className="mt-3" onClick={() => navigate('/invoices')}>Back to Invoices</Button>
+      <div>
+        <PageHeader title="Invoice" description="View branded invoice document." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Invoices', path: '/invoices' }, { label: 'View' }]} />
+        <ErrorState message={error || 'Invoice not found'} onRetry={loadData} />
       </div>
     );
   }
-
-  const storeName = settings?.storeName || 'KUIKLO';
-  const logo = settings?.storeLogo || null;
 
   return (
-    <div className="py-4">
-      <Row>
-        {/* Main Invoice Document */}
+    <div>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h2 className="mb-1 fw-bold">{invoice.invoiceNumber}</h2>
+          <div className="text-white-50">View, print, download or edit this invoice.</div>
+        </div>
+        <div className="d-flex align-items-center gap-4">
+          <div className="text-muted small fw-semibold d-none d-md-block">
+            Dashboard <span className="mx-1">&rsaquo;</span> Invoices <span className="mx-1">&rsaquo;</span> {invoice.invoiceNumber}
+          </div>
+          <Button variant="primary" onClick={() => navigate('/invoices')}><ArrowLeft size={18} className="me-1" />Back</Button>
+        </div>
+      </div>
+
+      <Row className="g-3">
         <Col xl={9}>
-          <Card id="invoice-print-area" className="shadow-none" style={{ backgroundColor: 'var(--bs-tertiary-bg)', border: '1px solid var(--bs-border-color)' }}>
-            <Card.Body className="p-5">
+          <Card id="invoice-print-area" className="kuiklo-invoice-document">
+            <Card.Body>
+              <div className="d-flex flex-column flex-md-row justify-content-between gap-4 mb-4">
+                <div className="d-flex align-items-center gap-3">
+                  {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" className="kuiklo-invoice-logo" /> : <div className="kuiklo-invoice-logo-fallback">K</div>}
+                  <div>
+                    <h2 className="mb-1">{settings?.storeName || 'Kuiklo'}</h2>
+                    <div className="text-muted">{settings?.address || 'Store address from settings'}</div>
+                    <div className="text-muted">{settings?.storePhone || ''} {settings?.storeEmail ? `· ${settings.storeEmail}` : ''}</div>
+                    {settings?.gstNumber && <div className="text-muted">GST: {settings.gstNumber}</div>}
+                  </div>
+                </div>
+                <div className="text-md-end">
+                  <h1 className="mb-2">Invoice</h1>
+                  <div className="fw-semibold text-primary">{invoice.invoiceNumber}</div>
+                  <StatusBadge status={invoice.status || (invoice.isCancelled ? 'Cancelled' : 'Paid')} className="mt-2" />
+                </div>
+              </div>
 
-              {/* Header */}
-              <Row className="justify-content-between align-items-center mb-5">
-                <Col xs={12} sm={6} className="mb-4 mb-sm-0">
-                  <div className="d-flex align-items-center gap-3">
-                    {logo ? (
-                      <img src={logo} alt="Logo" style={{ height: 48, objectFit: 'contain' }} />
-                    ) : (
-                      <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48 }}>
-                        <Icon icon="lucide:file-text" width={24} color="#fff" />
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="mb-0 fw-bold" style={{ letterSpacing: '1px', textTransform: 'uppercase', fontSize: '20px' }}>{storeName}</h2>
-                      {(settings?.storePhone || settings?.storeEmail) && (
-                        <div className="text-muted mt-1" style={{ fontSize: '13px' }}>
-                          {settings?.storePhone && <span className="me-3"><Icon icon="lucide:phone" width={12} className="me-1" />{settings.storePhone}</span>}
-                          {settings?.storeEmail && <span><Icon icon="lucide:mail" width={12} className="me-1" />{settings.storeEmail}</span>}
-                        </div>
-                      )}
-                    </div>
+              <Row className="g-3 mb-4">
+                <Col md={4}><div className="kuiklo-invoice-meta"><span>Date</span><strong>{formatDate(invoice.date)}</strong></div></Col>
+                <Col md={4}><div className="kuiklo-invoice-meta"><span>Due Date</span><strong>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</strong></div></Col>
+                <Col md={4}><div className="kuiklo-invoice-meta"><span>Payment</span><strong>{invoice.paymentMethod || '-'}</strong></div></Col>
+              </Row>
+
+              <Row className="g-3 mb-4">
+                <Col md={6}>
+                  <div className="p-4 rounded-3 h-100" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="text-white-50 fw-bold mb-3">Billed To</div>
+                    <h3 className="text-white mb-3 fs-5 fw-bold">{invoice.customerSnapshot?.name || 'Walk-in Customer'}</h3>
+                    {invoice.billingAddressSnapshot?.address && <div className="mb-2 text-white-50">{invoice.billingAddressSnapshot.address}</div>}
+                    {invoice.customerSnapshot?.email && <div className="mb-2 text-white-50">{invoice.customerSnapshot.email}</div>}
+                    {invoice.customerSnapshot?.phone && <div className="mb-0 text-white-50">{invoice.customerSnapshot.phone}</div>}
                   </div>
                 </Col>
-                <Col xs={12} sm={6} className="text-sm-end">
-                  <div className="d-inline-block text-start p-3 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--bs-border-color)' }}>
-                    <p className="text-muted mb-1 fw-bold" style={{ fontSize: '11px', letterSpacing: '1px' }}>INVOICE NUMBER</p>
-                    <p className="mb-0 fw-bold text-primary" style={{ fontSize: '18px' }}>{invoice.invoiceNumber}</p>
+                <Col md={6}>
+                  <div className="p-4 rounded-3 h-100" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="text-white-50 fw-bold mb-3">Shipped To</div>
+                    <h3 className="text-white mb-3 fs-5 fw-bold">{invoice.shippingAddressSnapshot?.name || invoice.customerSnapshot?.name || 'Same as billing'}</h3>
+                    {(invoice.shippingAddressSnapshot?.address || invoice.billingAddressSnapshot?.address) && <div className="mb-2 text-white-50">{invoice.shippingAddressSnapshot?.address || invoice.billingAddressSnapshot?.address}</div>}
+                    {(invoice.shippingAddressSnapshot?.email || invoice.customerSnapshot?.email) && <div className="mb-2 text-white-50">{invoice.shippingAddressSnapshot?.email || invoice.customerSnapshot?.email}</div>}
+                    {(invoice.shippingAddressSnapshot?.phone || invoice.customerSnapshot?.phone) && <div className="mb-0 text-white-50">{invoice.shippingAddressSnapshot?.phone || invoice.customerSnapshot?.phone}</div>}
                   </div>
                 </Col>
               </Row>
 
-              <hr className="border-secondary mb-5" />
-
-              {/* Addresses */}
-              <Row className="mb-5">
-                <Col sm={6} className="mb-4 mb-sm-0">
-                  <p className="text-muted fw-bold mb-3" style={{ fontSize: '11px', letterSpacing: '1px' }}>BILLED TO</p>
-                  <h6 className="fw-bold mb-2">{invoice.customerSnapshot?.name || 'Walk-in Customer'}</h6>
-                  {invoice.billingAddressSnapshot?.address && <p className="text-muted mb-1" style={{ fontSize: '14px' }}>{invoice.billingAddressSnapshot.address}</p>}
-                  {invoice.customerSnapshot?.phone && <p className="text-muted mb-1" style={{ fontSize: '14px' }}>{invoice.customerSnapshot.phone}</p>}
-                </Col>
-                <Col sm={6} className="text-sm-end">
-                  <p className="text-muted fw-bold mb-3" style={{ fontSize: '11px', letterSpacing: '1px' }}>SHIPPED TO</p>
-                  {invoice.shippingAddressSnapshot?.name ? (
-                    <>
-                      <h6 className="fw-bold mb-2">{invoice.shippingAddressSnapshot.name}</h6>
-                      <p className="text-muted mb-1" style={{ fontSize: '14px' }}>{invoice.shippingAddressSnapshot.address}</p>
-                      <p className="text-muted mb-1" style={{ fontSize: '14px' }}>{invoice.shippingAddressSnapshot.phone}</p>
-                    </>
-                  ) : (
-                    <p className="text-muted" style={{ fontSize: '14px' }}>Same as billing address</p>
-                  )}
-                </Col>
-              </Row>
-
-              {/* Dates & Info */}
-              <Row className="mb-5 p-4 rounded" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', border: '1px solid var(--bs-border-color)' }}>
-                <Col xs={6} sm={4} className="mb-3 mb-sm-0">
-                  <p className="text-muted fw-bold mb-1" style={{ fontSize: '11px', letterSpacing: '1px' }}>INVOICE DATE</p>
-                  <p className="fw-medium mb-0" style={{ fontSize: '14px' }}>{new Date(invoice.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
-                </Col>
-                <Col xs={6} sm={4} className="mb-3 mb-sm-0">
-                  <p className="text-muted fw-bold mb-1" style={{ fontSize: '11px', letterSpacing: '1px' }}>DUE DATE</p>
-                  <p className="fw-medium mb-0" style={{ fontSize: '14px' }}>{invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</p>
-                </Col>
-                {invoice.paymentMethod && (
-                  <Col xs={12} sm={4}>
-                    <p className="text-muted fw-bold mb-1" style={{ fontSize: '11px', letterSpacing: '1px' }}>PAYMENT METHOD</p>
-                    <p className="fw-medium mb-0" style={{ fontSize: '14px' }}>{invoice.paymentMethod}</p>
-                  </Col>
-                )}
-              </Row>
-
-              {/* Items Table */}
-              <div className="table-responsive mb-4">
-                <Table className="mb-0" style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                  <thead className="custom-table-thead" style={{
-                    fontSize: '12px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.03)'
-                  }}>
-                    <tr>
-                      <th className="py-2 text-muted border-dashed px-3" style={{ width: '40px' }}>#</th>
-                      <th className="py-2 text-muted border-dashed px-3">PRODUCT DETAILS</th>
-                      <th className="py-2 text-muted border-dashed px-3 text-center" style={{ width: '100px' }}>QTY</th>
-                      <th className="py-2 text-muted border-dashed px-3 text-end" style={{ width: '120px' }}>UNIT PRICE</th>
-                      <th className="py-2 text-muted border-dashed px-3 text-end" style={{ width: '120px' }}>TOTAL</th>
+              <Table responsive className="align-middle mb-4">
+                <thead className="table-light text-dark"><tr><th className="py-3 px-3">#</th><th className="py-3 px-3">Item</th><th className="py-3 px-3">SKU</th><th className="text-end py-3 px-3">Qty</th><th className="text-end py-3 px-3">Rate</th><th className="text-end py-3 px-3">Amount</th></tr></thead>
+                <tbody>
+                  {(invoice.productSnapshot || []).map((item, index) => (
+                    <tr key={`${item.productName}-${index}`}>
+                      <td className="px-3 fw-bold">{index + 1}</td>
+                      <td className="px-3 fw-bold">{item.productName}</td>
+                      <td className="px-3 text-muted">{item.sku || 'MANUAL'}</td>
+                      <td className="px-3 text-end">{item.qty}</td>
+                      <td className="px-3 text-end">{formatCurrency(item.price)}</td>
+                      <td className="px-3 text-end fw-bold">{formatCurrency(item.total)}</td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.productSnapshot?.map((item, index) => (
-                      <tr key={index} style={{ backgroundColor: 'rgba(var(--bs-primary-rgb), 0.05)' }}>
-                        <td className="align-middle border-0 rounded-start px-3 text-muted">{String(index + 1).padStart(2, '0')}</td>
-                        <td className="align-middle border-0 px-3">
-                          <p className="fw-medium mb-0" style={{ fontSize: '14px' }}>{item.productName}</p>
-                          {item.sku && item.sku !== 'MANUAL' && <p className="text-muted mb-0" style={{ fontSize: '12px' }}>SKU: {item.sku}</p>}
-                        </td>
-                        <td className="align-middle border-0 px-3 text-center text-muted" style={{ fontSize: '14px' }}>{item.qty}</td>
-                        <td className="align-middle border-0 px-3 text-end text-muted" style={{ fontSize: '14px' }}>{formatCurrency(item.price, invoice.currency)}</td>
-                        <td className="align-middle border-0 px-3 text-end fw-medium rounded-end" style={{ fontSize: '14px' }}>{formatCurrency(item.total, invoice.currency)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
+                  ))}
+                </tbody>
+              </Table>
 
-              {/* Totals */}
-              <Row className="justify-content-end mb-5 pt-3">
-                <Col md={6} lg={4}>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Subtotal</span>
-                    <span>{formatCurrency(invoice.totalsSnapshot?.subTotal, invoice.currency)}</span>
+              <Row className="justify-content-end mb-4">
+                <Col md={5}>
+                  <div className="kuiklo-invoice-total-row"><span>Subtotal</span><strong>{formatCurrency(invoice.totalsSnapshot?.subTotal)}</strong></div>
+                  <div className="kuiklo-invoice-total-row"><span>Tax</span><strong>{formatCurrency(invoice.totalsSnapshot?.tax)}</strong></div>
+                  <div className="kuiklo-invoice-total-row"><span>Discount</span><strong>- {formatCurrency(invoice.totalsSnapshot?.discount)}</strong></div>
+                  <div className="kuiklo-invoice-grand-total text-primary"><span className="text-primary">Total</span><strong>{formatCurrency(invoice.totalsSnapshot?.amount)}</strong></div>
+                </Col>
+              </Row>
+
+              <Row className="g-3">
+                <Col md={7}>
+                  <div className="kuiklo-invoice-box">
+                    <span>Terms & Notes</span>
+                    <p>{settings?.termsAndConditions || 'Terms are managed from Settings.'}</p>
+                    <p>{invoice.notes || settings?.invoiceFooter || 'Thank you for your business.'}</p>
                   </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3">
-                    <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Shipping</span>
-                    <span>Free</span>
-                  </div>
-                  {invoice.totalsSnapshot?.discount > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Discount</span>
-                      <span className="text-danger">- {formatCurrency(invoice.totalsSnapshot.discount, invoice.currency)}</span>
-                    </div>
-                  )}
-                  {invoice.totalsSnapshot?.tax > 0 && (
-                    <div className="d-flex justify-content-between align-items-center mb-3">
-                      <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Tax</span>
-                      <span>{formatCurrency(invoice.totalsSnapshot.tax, invoice.currency)}</span>
-                    </div>
-                  )}
-                  <hr className="border-secondary mb-3 mt-2" />
-                  <div className="d-flex justify-content-between align-items-center">
-                    <span className="fw-bold" style={{ fontSize: '16px' }}>Total</span>
-                    <span className="fw-bold text-primary" style={{ fontSize: '24px' }}>{formatCurrency(invoice.totalsSnapshot?.amount, invoice.currency)}</span>
+                </Col>
+                <Col md={5}>
+                  <div className="kuiklo-invoice-box">
+                    <span>Bank Details</span>
+                    <p>{settings?.bankDetails?.bankName || '-'}</p>
+                    <p>{settings?.bankDetails?.accountName || ''} {settings?.bankDetails?.accountNumber ? `· ${settings.bankDetails.accountNumber}` : ''}</p>
+                    <p>{settings?.bankDetails?.ifscCode || ''}</p>
                   </div>
                 </Col>
               </Row>
 
-              {/* Notes & Footer */}
-              <div className="mb-4 p-3 rounded" style={{ backgroundColor: 'rgba(var(--bs-primary-rgb), 0.05)' }}>
-                <Row>
-                  <Col md={7}>
-                    <p className="text-muted mb-2 fw-bold" style={{ fontSize: '13px' }}>Terms & Conditions:</p>
-                    <p className="text-muted mb-0" style={{ fontSize: '12px', whiteSpace: 'pre-line' }}>
-                      {settings?.termsAndConditions || '1. All sales are final.\n2. Goods once sold cannot be returned without valid reason.'}
-                    </p>
-                  </Col>
-                  {settings?.bankDetails?.accountNumber && (
-                    <Col md={5}>
-                      <p className="text-muted mb-2 fw-bold" style={{ fontSize: '13px' }}>Bank Details:</p>
-                      <div className="text-muted" style={{ fontSize: '12px' }}>
-                        <p className="mb-0"><strong>Bank Name:</strong> {settings.bankDetails.bankName}</p>
-                        <p className="mb-0"><strong>Account Name:</strong> {settings.bankDetails.accountName}</p>
-                        <p className="mb-0"><strong>Account No:</strong> {settings.bankDetails.accountNumber}</p>
-                        <p className="mb-0"><strong>IFSC Code:</strong> {settings.bankDetails.ifscCode}</p>
-                      </div>
-                    </Col>
-                  )}
-                </Row>
+              <div className="kuiklo-invoice-signature">
+                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" /> : <strong>{settings?.storeName || 'Kuiklo'}</strong>}
+                <span>Authorized Signature</span>
               </div>
-
-              <div className="mb-4 text-center">
-                <p className="text-muted mb-0" style={{ fontSize: '13px' }}>
-                  {invoice.notes || settings?.invoiceFooter || 'Thank you for your business!'}
-                </p>
-              </div>
-
-              <div className="text-end mt-5 pt-3">
-                {settings?.authorizedSignature ? (
-                  <div className="d-inline-block text-center">
-                    <img src={settings.authorizedSignature} alt="Signature" style={{ maxHeight: '60px', objectFit: 'contain' }} />
-                    <div style={{ borderTop: '1px solid var(--bs-border-color)', marginTop: '8px', paddingTop: '4px', minWidth: '150px' }}>
-                      <p className="text-muted mb-0" style={{ fontSize: '12px', fontStyle: 'italic' }}>Authorized Signature</p>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="d-inline-block text-center">
-                    <div style={{ borderBottom: '1px solid var(--bs-secondary-color)', paddingBottom: '4px', minWidth: '150px' }}>
-                      <p className="mb-0" style={{ fontFamily: 'cursive', fontSize: '24px', color: 'var(--bs-primary)' }}>{storeName}</p>
-                    </div>
-                    <p className="text-muted mt-2 mb-0" style={{ fontSize: '12px', fontStyle: 'italic' }}>Authorized Signature</p>
-                  </div>
-                )}
-              </div>
-
             </Card.Body>
           </Card>
         </Col>
 
         <Col xl={3} className="d-print-none">
-          <Card style={{ position: 'sticky', top: '100px' }}>
-            <Card.Body className="p-4 d-flex flex-column gap-2">
-              <Button
-                variant="dark"
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2"
-                style={{ backgroundColor: 'var(--bs-body-bg)', color: 'var(--bs-body-color)', border: '1px solid var(--bs-border-color)' }}
-                onClick={() => navigate(`/invoices/edit/${id}`)}
-              >
-                <Icon icon="lucide:edit-3" width={18} /> Edit
-              </Button>
-              <Button
-                variant="primary"
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-medium text-white"
-                style={{ backgroundColor: 'var(--theme-primary)', border: 'none' }}
-                onClick={() => window.print()}
-              >
-                <Icon icon="lucide:printer" width={18} /> Print
-              </Button>
-              <Button
-                variant="info"
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-medium text-white"
-                style={{ backgroundColor: '#0dcaf0', border: 'none' }}
-                onClick={downloadPDF}
-              >
-                <Icon icon="lucide:download" width={18} /> Download
-              </Button>
-              <Button
-                variant="danger"
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2 fw-bold text-white"
-                style={{ backgroundColor: '#ff4d4f', border: 'none' }}
-                onClick={() => toast.success('Invoice Sent!')}
-              >
-                <Icon icon="lucide:send" width={18} /> Send
-              </Button>
+          <Card className="kuiklo-section-card sticky-xl-top" style={{ top: 96 }}>
+            <Card.Body className="d-grid gap-2">
+              <Button variant="outline-info" onClick={() => navigate(`/invoices/edit/${id}`)}><Edit size={20} />Edit</Button>
+              <Button variant="primary" onClick={() => generatePremiumInvoicePDF(invoice, settings, 'print')}><Printer size={20} />Print</Button>
+              <Button variant="outline-primary" onClick={downloadPDF}><Download size={20} />Download</Button>
+              <Button variant="outline-info" onClick={() => toast.success('Invoice send action queued')}><Send size={20} />Send</Button>
             </Card.Body>
           </Card>
         </Col>
       </Row>
-      <style>
-        {`
-          @media print {
-            body * {
-              visibility: hidden;
-            }
-            #invoice-print-area, #invoice-print-area * {
-              visibility: visible;
-            }
-            #invoice-print-area {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-            }
-            .d-print-none {
-              display: none !important;
-            }
-          }
-        `}
-      </style>
+
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #invoice-print-area, #invoice-print-area * { visibility: visible; }
+          #invoice-print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          .d-print-none, .app-topbar, .app-sidenav { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

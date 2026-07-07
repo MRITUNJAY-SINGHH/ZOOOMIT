@@ -73,6 +73,7 @@ export const createInvoice = async (req, res) => {
       productSnapshot, 
       totalsSnapshot, 
       notes,
+      currency,
       status
     } = req.body;
 
@@ -91,6 +92,7 @@ export const createInvoice = async (req, res) => {
       productSnapshot,
       totalsSnapshot,
       notes,
+      currency: currency || 'INR',
       status: status || 'Draft'
     });
 
@@ -113,6 +115,7 @@ export const updateInvoice = async (req, res) => {
     }
 
     const { 
+      invoiceDate,
       dueDate, 
       paymentMethod, 
       customerSnapshot, 
@@ -121,9 +124,11 @@ export const updateInvoice = async (req, res) => {
       productSnapshot, 
       totalsSnapshot, 
       notes,
+      currency,
       status 
     } = req.body;
 
+    if (invoiceDate) invoice.date = invoiceDate;
     if (dueDate) invoice.dueDate = dueDate;
     if (paymentMethod) invoice.paymentMethod = paymentMethod;
     if (customerSnapshot) invoice.customerSnapshot = customerSnapshot;
@@ -132,6 +137,7 @@ export const updateInvoice = async (req, res) => {
     if (productSnapshot) invoice.productSnapshot = productSnapshot;
     if (totalsSnapshot) invoice.totalsSnapshot = totalsSnapshot;
     if (notes !== undefined) invoice.notes = notes;
+    if (currency) invoice.currency = currency;
     if (status) invoice.status = status;
 
     const updatedInvoice = await invoice.save();

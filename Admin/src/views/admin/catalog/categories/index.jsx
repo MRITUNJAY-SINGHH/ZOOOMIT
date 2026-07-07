@@ -81,7 +81,7 @@ export default function Categories() {
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
-                <thead className="table-light"><tr><th style={{width:60}}>Image</th><th>Name</th><th>Slug</th><th>Status</th><th className="text-end">Actions</th></tr></thead>
+                <thead><tr><th style={{width:60}}>Image</th><th>Name</th><th>Slug</th><th>Status</th><th className="text-end">Actions</th></tr></thead>
                 <tbody>
                   {currentData.map(c => (
                     <tr key={c._id}>
@@ -133,3 +133,4 @@ export default function Categories() {
     </div>
   );
 }
+

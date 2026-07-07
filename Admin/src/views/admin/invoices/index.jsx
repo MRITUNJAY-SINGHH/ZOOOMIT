@@ -1,295 +1,244 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Form, Table, Dropdown, Modal, ListGroup, Badge, Row, Col } from 'react-bootstrap';
+import { Edit, Eye, Plus, Trash2, MoreVertical, Download } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { Card, Table, Spinner, Dropdown, Button, Modal, Badge, Pagination, Form } from 'react-bootstrap';
-import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
+import { generatePremiumInvoicePDF } from '@/utils/invoicePdfGenerator';
+import PageHeader from '@/components/common/PageHeader';
+import ActionBar from '@/components/common/ActionBar';
+import SearchBar from '@/components/common/SearchBar';
+import FilterBar from '@/components/common/FilterBar';
+import StatusBadge from '@/components/common/StatusBadge';
+import EmptyState from '@/components/common/EmptyState';
+import ErrorState from '@/components/common/ErrorState';
+import SkeletonTable from '@/components/common/SkeletonTable';
+import DeleteModal from '@/components/common/DeleteModal';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import { formatCurrency, formatDate } from '@/utils/format';
+import { toast } from 'react-hot-toast';
 
 export default function InvoicesList() {
-  const [invoices, setInvoices] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [perPage, setPerPage] = useState(15);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalInvoices, setTotalInvoices] = useState(0);
-
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-
   const navigate = useNavigate();
+  const [invoices, setInvoices] = useState([]);
+  const [settings, setSettings] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [quickViewInvoice, setQuickViewInvoice] = useState(null);
 
   const fetchInvoices = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const res = await api.get('/invoices', {
-        params: { search, status: statusFilter, page: currentPage, limit: perPage }
-      });
-      setInvoices(res.data.invoices);
-      setTotalPages(res.data.pages);
-      setTotalInvoices(res.data.total);
-    } catch (error) {
-      console.error('Failed to fetch invoices', error);
+      const query = new URLSearchParams({ page: currentPage, limit: pageSize, search, status }).toString();
+      const res = await api.get(`/invoices?${query}`);
+      setInvoices(res.data.invoices || []);
+      setTotalPages(res.data.pages || 1);
+      setTotalRecords(res.data.total || 0);
+    } catch (err) {
+      setError(err.message);
+      toast.error('Failed to load invoices');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => { fetchInvoices(); }, [currentPage, pageSize, search, status]);
+
   useEffect(() => {
-    fetchInvoices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, statusFilter, currentPage, perPage]);
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(invoices.map(inv => inv._id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectOne = (id) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
+    api.get('/settings').then(res => setSettings(res.data)).catch(() => {});
+  }, []);
 
   const handleDelete = async () => {
+    if (selectedIds.length === 0) return;
     setDeleting(true);
     try {
       await api.post('/invoices/bulk-delete', { ids: selectedIds });
-      setShowDeleteModal(false);
+      toast.success('Invoice updated');
       setSelectedIds([]);
+      setDeleteOpen(false);
       fetchInvoices();
-    } catch (error) {
-      console.error('Delete failed', error);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete invoice');
     } finally {
       setDeleting(false);
     }
   };
 
-  const statusBadge = (s) => {
-    const map = { 
-      Paid: { bg: 'rgba(16,185,129,0.12)', color: '#10b981' }, 
-      Pending: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b' }, 
-      Overdue: { bg: 'rgba(239,68,68,0.12)', color: '#ef4444' }, 
-      Draft: { bg: 'rgba(59,130,246,0.12)', color: '#3b82f6' },
-      Cancelled: { bg: 'rgba(100,116,139,0.12)', color: '#64748b' }
-    };
-    return map[s] || map.Draft;
+  const toggleAll = (checked) => setSelectedIds(checked ? invoices.map((invoice) => invoice._id) : []);
+  const toggleOne = (id) => setSelectedIds((prev) => prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]);
+
+  const downloadInvoicePDF = (invoice) => {
+    generatePremiumInvoicePDF(invoice, settings);
   };
 
   return (
-    <div className="report-page">
-      <div className="report-header align-items-center mb-4 pb-2" style={{ borderBottom: '1px solid var(--bs-border-color)' }}>
-        <div className="report-header-left d-flex align-items-center gap-3">
-          <h3 className="report-title mb-0 me-4">Invoices</h3>
-          
-          <div className="report-search-wrap" style={{ width: '280px', position: 'relative' }}>
-            <Icon icon="lucide:search" width={18} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
-            <input 
-              type="text" 
-              className="form-control report-search-input" 
-              placeholder="Search invoices..." 
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              style={{ paddingLeft: '38px', backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
-            />
-          </div>
-
-          {selectedIds.length > 0 && (
-            <Button variant="danger" className="px-4" style={{ borderRadius: '0.5rem', fontWeight: 600 }} onClick={() => setShowDeleteModal(true)}>
-              Delete
-            </Button>
-          )}
-
-          <Button variant="primary" className="d-inline-flex align-items-center justify-content-center p-0" style={{ width: 40, height: 40, borderRadius: '50%' }} onClick={() => navigate('/invoices/create')}>
-            <Icon icon="lucide:plus" width={22} />
-          </Button>
-        </div>
-        
-        <div className="report-header-right d-flex gap-3 align-items-center">
-          <span style={{ color: 'var(--bs-secondary-color)', fontWeight: 500 }}>Filter By:</span>
-          
-          <Form.Select 
-            className="report-select" 
-            style={{ width: '140px', backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
-            value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-          >
-            <option value="all">Status</option>
-            <option value="Paid">Paid</option>
-            <option value="Pending">Pending</option>
-            <option value="Overdue">Overdue</option>
-            <option value="Draft">Draft</option>
-          </Form.Select>
-          
-          <Form.Select 
-            className="report-select" 
-            style={{ width: '80px', backgroundColor: 'rgba(255, 255, 255, 0.03)' }}
-            value={perPage}
-            onChange={(e) => { setPerPage(Number(e.target.value)); setCurrentPage(1); }}
-          >
-            <option value="8">8</option>
-            <option value="15">15</option>
-            <option value="30">30</option>
-            <option value="50">50</option>
-          </Form.Select>
+    <div className="report-page pt-1">
+      <div className="report-header">
+        <div className="report-header-left">
+          <h3 className="report-title">Invoices</h3>
         </div>
       </div>
 
-      <Card className="report-section-card border-0" style={{ backgroundColor: 'transparent' }}>
-        {loading ? (
-          <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 400 }}><Spinner animation="border" /></div>
-        ) : (
+      <ActionBar
+        left={(
           <>
-            <div style={{ overflowX: 'auto' }}>
-              <Table className="report-table mb-0" style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                <thead className="custom-table-thead" style={{
-                  fontSize: '11px',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  backgroundColor: 'transparent'
-                }}>
+            <SearchBar placeholder="Search invoices..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />
+            <FilterBar
+              filters={[{
+                name: 'status',
+                label: 'Status',
+                value: status,
+                onChange: (value) => { setStatus(value); setCurrentPage(1); },
+                options: [
+                  { value: 'all', label: 'All Statuses' },
+                  { value: 'Draft', label: 'Draft' },
+                  { value: 'Pending', label: 'Pending' },
+                  { value: 'Paid', label: 'Paid' },
+                  { value: 'Overdue', label: 'Overdue' },
+                  { value: 'Cancelled', label: 'Cancelled' },
+                ],
+              }]}
+              onClear={() => { setStatus('all'); setSearch(''); setCurrentPage(1); }}
+            />
+            <Form.Select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
+              size="sm"
+              style={{ width: 'auto', minWidth: '110px' }}
+            >
+              <option value={10}>10 / page</option>
+              <option value={15}>15 / page</option>
+              <option value={20}>20 / page</option>
+              <option value={50}>50 / page</option>
+            </Form.Select>
+          </>
+        )}
+        count={totalRecords}
+        onRefresh={fetchInvoices}
+        right={(
+          <>
+            {selectedIds.length > 0 && <Button variant="outline-danger" onClick={() => setDeleteOpen(true)}><Trash2 size={20} />Cancel Selected</Button>}
+            <Button variant="primary" onClick={() => navigate('/invoices/create')}><Plus size={20} />Create Invoice</Button>
+          </>
+        )}
+      />
+
+      <Card>
+        <Card.Body>
+          {loading ? <SkeletonTable rows={8} columns={8} /> : error ? (
+            <ErrorState message={error} onRetry={fetchInvoices} />
+          ) : invoices.length === 0 ? (
+            <EmptyState icon="lucide:file-text" title="No invoices found" message="Create your first invoice or adjust current filters." actionLabel="Create Invoice" onAction={() => navigate('/invoices/create')} />
+          ) : (
+            <>
+              <Table responsive hover className="align-middle mb-0">
+                <thead>
                   <tr>
-                    <th className="py-2 border-0" style={{ width: 40 }}>
-                      <Form.Check 
-                        type="checkbox" 
-                        checked={invoices.length > 0 && selectedIds.length === invoices.length}
-                        onChange={handleSelectAll}
-                        style={{ cursor: 'pointer' }}
-                      />
+                    <th style={{ width: 48 }}>
+                      <Form.Check checked={selectedIds.length === invoices.length && invoices.length > 0} onChange={(event) => toggleAll(event.target.checked)} />
                     </th>
-                    <th className="py-2 text-muted border-0">ID</th>
-                    <th className="py-2 text-muted border-0">CREATE & END DATE</th>
-                    <th className="py-2 text-muted border-0">CLIENTS NAME</th>
-                    <th className="py-2 text-muted border-0">PURCHASE</th>
-                    <th className="py-2 text-muted border-0">AMOUNT</th>
-                    <th className="py-2 text-muted border-0">STATUS</th>
-                    <th className="py-2 text-center text-muted border-0">ACTIONS</th>
+                    <th className="text-nowrap">Invoice</th>
+                    <th className="text-nowrap">Date</th>
+                    <th className="text-nowrap">Customer</th>
+                    <th>Items</th>
+                    <th className="text-end text-nowrap">Amount</th>
+                    <th className="text-nowrap">Status</th>
+                    <th className="text-end text-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {invoices.map((inv) => {
-                    const badge = statusBadge(inv.status);
-                    const purchaseDesc = inv.productSnapshot && inv.productSnapshot.length > 0 ? inv.productSnapshot[0].productName : '-';
-                    const isChecked = selectedIds.includes(inv._id);
-                    
-                    return (
-                      <tr key={inv._id} style={{ 
-                        backgroundColor: isChecked ? 'rgba(var(--bs-primary-rgb), 0.08)' : 'var(--bs-tertiary-bg)',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
-                      }}>
-                        <td className="align-middle border-0 rounded-start">
-                          <Form.Check 
-                            type="checkbox" 
-                            checked={isChecked}
-                            onChange={() => handleSelectOne(inv._id)}
-                            style={{ cursor: 'pointer' }}
-                          />
-                        </td>
-                        <td className="align-middle border-0 fw-bold" style={{ fontSize: '14px' }}>
-                          <div className="d-flex align-items-center gap-2" style={{ color: 'var(--bs-body-color)' }}>
-                            <Icon icon="lucide:file-text" width={16} style={{ color: 'var(--bs-primary)' }} />
-                            {inv.invoiceNumber}
-                          </div>
-                        </td>
-                        <td className="align-middle border-0" style={{ fontSize: '13px', color: 'var(--bs-secondary-color)' }}>
-                          {new Date(inv.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '-'}
-                        </td>
-                        <td className="align-middle border-0">
-                          <div className="d-flex align-items-center gap-2">
-                            <div className="avatar-initials bg-primary text-white" style={{ width: 32, height: 32, fontSize: '12px' }}>
-                              {inv.customerSnapshot?.name?.charAt(0) || 'U'}
-                            </div>
-                            <div>
-                              <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--bs-body-color)' }}>{inv.customerSnapshot?.name || '-'}</div>
-                              <div style={{ fontSize: '12px', color: 'var(--bs-secondary-color)' }}>{inv.customerSnapshot?.email || '-'}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="align-middle border-0" style={{ fontSize: '14px', color: 'var(--bs-body-color)' }}>
-                          {purchaseDesc} {inv.productSnapshot?.length > 1 ? `(+${inv.productSnapshot.length - 1} items)` : ''}
-                        </td>
-                        <td className="align-middle border-0 fw-bold" style={{ fontSize: '14px', color: 'var(--bs-body-color)' }}>
-                          ${inv.totalsSnapshot?.amount?.toLocaleString()} USD
-                        </td>
-                        <td className="align-middle border-0">
-                          <span className="report-badge px-2 py-1" style={{ background: badge.bg, color: badge.color, fontSize: '11px' }}>
-                            {inv.status}
-                          </span>
-                        </td>
-                        <td className="align-middle border-0 text-center rounded-end">
-                          <div className="d-flex justify-content-center gap-2">
-                            <button className="report-action-btn" title="View" onClick={() => navigate(`/invoices/${inv._id}`)}>
-                              <Icon icon="lucide:eye" width={15} />
-                            </button>
-                            <button className="report-action-btn" title="Edit" onClick={() => navigate(`/invoices/edit/${inv._id}`)}>
-                              <Icon icon="lucide:edit-3" width={15} />
-                            </button>
-                            <button className="report-action-btn danger" title="Delete" onClick={() => { setSelectedIds([inv._id]); setShowDeleteModal(true); }}>
-                              <Icon icon="lucide:trash-2" width={15} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {invoices.length === 0 && (
-                    <tr><td colSpan="8" className="text-center py-5 border-0" style={{ color: 'var(--bs-secondary-color)' }}>No invoices found matching your criteria.</td></tr>
-                  )}
+                  {invoices.map((invoice) => (
+                    <tr key={invoice._id}>
+                      <td><Form.Check checked={selectedIds.includes(invoice._id)} onChange={() => toggleOne(invoice._id)} /></td>
+                      <td className="fw-semibold text-primary text-nowrap">{invoice.invoiceNumber}</td>
+                      <td className="text-muted text-nowrap">{formatDate(invoice.date)}</td>
+                      <td>
+                        <div className="fw-semibold text-nowrap">{invoice.customerSnapshot?.name || 'Walk-in Customer'}</div>
+                        <div className="text-muted text-nowrap" style={{ fontSize: '0.875rem' }}>{invoice.customerSnapshot?.email || invoice.customerSnapshot?.phone || '-'}</div>
+                      </td>
+                      <td className="text-muted">
+                        <span className="text-truncate d-inline-block" style={{ maxWidth: '200px' }}>
+                          {invoice.productSnapshot?.[0]?.productName || '-'}
+                        </span>
+                      </td>
+                      <td className="text-end fw-semibold text-nowrap">{formatCurrency(invoice.totalsSnapshot?.amount)}</td>
+                      <td className="text-nowrap"><StatusBadge status={invoice.status || (invoice.isCancelled ? 'Cancelled' : 'Paid')} /></td>
+                      <td className="text-end">
+                        <Dropdown align="end">
+                          <Dropdown.Toggle variant="link" className="text-muted p-0 border-0 hide-caret" style={{ background: 'transparent' }}>
+                            <MoreVertical size={20} />
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu className="shadow-sm border-0" style={{ minWidth: '160px', zIndex: 1050 }}>
+                            <Dropdown.Item onClick={() => setQuickViewInvoice(invoice)} className="d-flex align-items-center gap-2 py-2">
+                              <Eye size={16} className="text-muted" /> Quick View
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => navigate(`/invoices/edit/${invoice._id}`)} className="d-flex align-items-center gap-2 py-2">
+                              <Edit size={16} className="text-muted" /> Edit
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => downloadInvoicePDF(invoice)} className="d-flex align-items-center gap-2 py-2">
+                              <Download size={16} className="text-muted" /> Download
+                            </Dropdown.Item>
+                            <Dropdown.Divider />
+                            <Dropdown.Item onClick={() => { setSelectedIds([invoice._id]); setDeleteOpen(true); }} className="d-flex align-items-center gap-2 py-2 text-danger">
+                              <Trash2 size={16} /> Delete
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </Table>
-            </div>
-
-            {/* Pagination */}
-            {totalInvoices > 0 && (
-              <div className="d-flex flex-wrap justify-content-between align-items-center px-2 py-3 mt-2">
-                <span style={{ color: 'var(--bs-secondary-color)', fontSize: '0.9375rem' }}>
-                  Showing {Math.min((currentPage - 1) * perPage + 1, totalInvoices)} to {Math.min(currentPage * perPage, totalInvoices)} of {totalInvoices} results
-                </span>
-                <Pagination className="report-pagination mb-0">
-                  <Pagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                    <Icon icon="lucide:chevron-left" width={16} />
-                  </Pagination.Prev>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                    <Pagination.Item key={p} active={p === currentPage} onClick={() => setCurrentPage(p)}>{p}</Pagination.Item>
-                  ))}
-                  {totalPages > 5 && <Pagination.Ellipsis />}
-                  {totalPages > 5 && (
-                    <Pagination.Item onClick={() => setCurrentPage(totalPages)}>{totalPages}</Pagination.Item>
-                  )}
-                  <Pagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                    <Icon icon="lucide:chevron-right" width={16} />
-                  </Pagination.Next>
-                </Pagination>
-              </div>
-            )}
-          </>
-        )}
+              <PaginationComponent
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalRecords={totalRecords}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(value) => { setPageSize(value); setCurrentPage(1); }}
+              />
+            </>
+          )}
+        </Card.Body>
       </Card>
 
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered backdrop="static" contentClassName="border-0">
-        <Modal.Body className="text-center p-5" style={{ backgroundColor: 'var(--bs-body-bg)', color: 'var(--bs-body-color)', borderRadius: '0.5rem' }}>
-          <div className="mb-4 d-inline-flex align-items-center justify-content-center rounded-circle" style={{ width: 80, height: 80, backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}>
-            <Icon icon="lucide:alert-triangle" width={40} />
-          </div>
-          <h4 className="fw-bold mb-3">Are you sure?</h4>
-          <p className="text-muted mb-4" style={{ fontSize: '15px' }}>
-            You are about to delete {selectedIds.length > 1 ? `${selectedIds.length} invoices` : 'this invoice'}. This action cannot be undone completely (it will be marked as cancelled in historical records).
-          </p>
-          <div className="d-flex justify-content-center gap-3">
-            <Button variant="secondary" className="px-4 py-2 fw-medium" onClick={() => setShowDeleteModal(false)} disabled={deleting}>
-              Cancel
-            </Button>
-            <Button variant="danger" className="px-4 py-2 fw-medium" onClick={handleDelete} disabled={deleting}>
-              {deleting ? <Spinner size="sm" /> : 'Yes, Delete!'}
-            </Button>
-          </div>
+      <Modal show={!!quickViewInvoice} onHide={() => setQuickViewInvoice(null)} centered size="lg">
+        <Modal.Header closeButton><Modal.Title>Invoice Details</Modal.Title></Modal.Header>
+        <Modal.Body>
+          {quickViewInvoice && (
+            <Table responsive className="align-middle mb-0">
+              <tbody>
+                <tr><th>Invoice Number</th><td className="fw-semibold text-primary">{quickViewInvoice.invoiceNumber}</td></tr>
+                <tr><th>Customer</th><td>{quickViewInvoice.customerSnapshot?.name || 'Walk-in Customer'}</td></tr>
+                <tr><th>Amount</th><td className="fw-semibold">{formatCurrency(quickViewInvoice.totalsSnapshot?.amount)}</td></tr>
+                <tr><th>Payment Method</th><td>{quickViewInvoice.paymentMethod || '-'}</td></tr>
+                <tr><th>Status</th><td><StatusBadge status={quickViewInvoice.status || (quickViewInvoice.isCancelled ? 'Cancelled' : 'Paid')} /></td></tr>
+                <tr><th>Date</th><td>{formatDate(quickViewInvoice.date)}</td></tr>
+                <tr><th>Due Date</th><td>{quickViewInvoice.dueDate ? formatDate(quickViewInvoice.dueDate) : '-'}</td></tr>
+                <tr><th>Items Count</th><td>{quickViewInvoice.productSnapshot?.length || 0} items</td></tr>
+                <tr><th>Notes</th><td>{quickViewInvoice.notes || '-'}</td></tr>
+              </tbody>
+            </Table>
+          )}
         </Modal.Body>
       </Modal>
 
+      <DeleteModal
+        show={deleteOpen}
+        itemName={selectedIds.length > 1 ? `${selectedIds.length} invoices` : 'this invoice'}
+        busy={deleting}
+        onCancel={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

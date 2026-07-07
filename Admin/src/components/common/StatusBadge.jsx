@@ -3,7 +3,7 @@ import { Badge } from 'react-bootstrap';
 
 const STATUS_VARIANTS = {
   active: 'success',
-  inactive: 'secondary',
+  inactive: 'danger',
   paid: 'success',
   pending: 'warning',
   refunded: 'dark',
@@ -22,8 +22,10 @@ const STATUS_VARIANTS = {
 export default function StatusBadge({ status, variant, className = '' }) {
   const label = status || 'Unknown';
   const key = String(label).replace(/\s+/g, '').toLowerCase();
+  const theme = variant || STATUS_VARIANTS[key] || 'secondary';
+  
   return (
-    <Badge bg={variant || STATUS_VARIANTS[key] || 'secondary'} className={`kuiklo-status-badge ${className}`}>
+    <Badge bg={`${theme}-subtle`} text={theme} className={`kuiklo-status-badge ${className}`}>
       {label}
     </Badge>
   );

@@ -1,403 +1,327 @@
-import React, { useState, useEffect } from 'react';
-import { Row, Col, Card, Form, Button, Table, Spinner, InputGroup } from 'react-bootstrap';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Card, Col, Form, Row, Spinner, Table } from 'react-bootstrap';
+import { ArrowLeft, Plus, Save, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router';
-import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
+import PageHeader from '@/components/common/PageHeader';
+import ErrorState from '@/components/common/ErrorState';
+import LoadingSkeleton from '@/components/common/LoadingSkeleton';
+import FormSection from '@/components/common/FormSection';
+import { formatCurrency } from '@/utils/format';
 import toast from 'react-hot-toast';
+
+const emptyItem = () => ({ id: crypto.randomUUID(), productName: '', sku: '', qty: 1, price: 0 });
 
 export default function CreateInvoice() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const isEdit = !!id;
-  
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(isEdit);
-  const [invoiceNumber, setInvoiceNumber] = useState('INV-YYYY-XXXXXX');
-  const [currency, setCurrency] = useState('INR');
+  const isEdit = Boolean(id);
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [showShipping, setShowShipping] = useState(false);
+  const [showTaxes, setShowTaxes] = useState(false);
+  const [validation, setValidation] = useState({});
+  const [form, setForm] = useState({
+    invoiceNumber: `INV-${new Date().getFullYear()}-XXXXXX`,
+    invoiceDate: new Date().toISOString().slice(0, 10),
+    dueDate: '',
+    paymentMethod: 'UPI',
+    status: 'Draft',
+    currency: 'INR',
+    customer: { name: '', email: '', phone: '' },
+    billingAddress: { address: '' },
+    shippingAddress: { name: '', address: '', phone: '' },
+    items: [emptyItem()],
+    tax: 0,
+    discount: 0,
+    notes: '',
+  });
 
-  // Form State
-  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [dueDate, setDueDate] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('');
-  const [status, setStatus] = useState('Draft');
-  
-  const [billing, setBilling] = useState({ name: '', address: '', phonePrefix: '+1', phone: '' });
-  const [shipping, setShipping] = useState({ name: '', address: '', phonePrefix: '+1', phone: '' });
-  
-  const [items, setItems] = useState([{ id: 1, description: '', qty: 1, price: 0 }]);
-  const [taxPercent, setTaxPercent] = useState(0);
-  const [discountVal, setDiscountVal] = useState(0);
-  const [notes, setNotes] = useState('');
+  const totals = useMemo(() => {
+    const subTotal = form.items.reduce((sum, item) => sum + Number(item.qty || 0) * Number(item.price || 0), 0);
+    const tax = Number(form.tax || 0);
+    const discount = Number(form.discount || 0);
+    return { subTotal, tax, discount, amount: Math.max(0, subTotal + tax - discount) };
+  }, [form.items, form.tax, form.discount]);
 
-  useEffect(() => {
-    if (isEdit) {
-      fetchInvoice();
-    } else {
-      setInvoiceNumber(`INV-${new Date().getFullYear()}-XXXXXX`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
-  const fetchInvoice = async () => {
-    try {
-      const res = await api.get(`/invoices/${id}`);
-      const inv = res.data;
-      
-      setInvoiceNumber(inv.invoiceNumber);
-      setCurrency(inv.currency || 'INR');
-      setInvoiceDate(new Date(inv.date).toISOString().split('T')[0]);
-      if (inv.dueDate) setDueDate(new Date(inv.dueDate).toISOString().split('T')[0]);
-      if (inv.paymentMethod) setPaymentMethod(inv.paymentMethod);
-      setStatus(inv.status);
-      setNotes(inv.notes || '');
-
-      if (inv.customerSnapshot) {
-        const phoneParts = (inv.customerSnapshot.phone || '').split(' ');
-        setBilling({
-          name: inv.customerSnapshot.name || '',
-          address: inv.billingAddressSnapshot?.address || '',
-          phonePrefix: phoneParts.length > 1 ? phoneParts[0] : '+1',
-          phone: phoneParts.length > 1 ? phoneParts[1] : phoneParts[0] || ''
-        });
-      }
-      
-      if (inv.shippingAddressSnapshot) {
-        const phoneParts = (inv.shippingAddressSnapshot.phone || '').split(' ');
-        setShipping({
-          name: inv.shippingAddressSnapshot.name || '',
-          address: inv.shippingAddressSnapshot.address || '',
-          phonePrefix: phoneParts.length > 1 ? phoneParts[0] : '+1',
-          phone: phoneParts.length > 1 ? phoneParts[1] : phoneParts[0] || ''
-        });
-      }
-
-      if (inv.productSnapshot && inv.productSnapshot.length > 0) {
-        setItems(inv.productSnapshot.map((p, i) => ({
-          id: i,
-          description: p.productName,
-          qty: p.qty,
-          price: p.price
-        })));
-      }
-
-      // Reverse engineer tax percent if possible, otherwise keep 0
-      if (inv.totalsSnapshot) {
-        setDiscountVal(inv.totalsSnapshot.discount || 0);
-        const sub = inv.totalsSnapshot.subTotal || 1;
-        const tax = inv.totalsSnapshot.tax || 0;
-        setTaxPercent(Math.round((tax / sub) * 100));
-      }
-
-    } catch (err) {
-      toast.error('Failed to load invoice');
-      navigate('/invoices');
-    } finally {
-      setFetching(false);
-    }
-  };
-
-  const handleItemChange = (id, field, value) => {
-    setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item));
-  };
-
-  const addItem = () => {
-    setItems([...items, { id: Date.now(), description: '', qty: 1, price: 0 }]);
-  };
-
-  const removeItem = (id) => {
-    if (items.length > 1) {
-      setItems(items.filter(item => item.id !== id));
-    }
-  };
-
-  // Calculations
-  const subtotal = items.reduce((sum, item) => sum + (Number(item.qty) * Number(item.price)), 0);
-  const taxAmount = (subtotal * Number(taxPercent)) / 100;
-  const total = subtotal + taxAmount - Number(discountVal);
-
-  const handleSubmit = async () => {
-    if (!billing.name || items.some(i => !i.description || i.price <= 0)) {
-      toast.error('Please fill in required fields (Billing Name, Item Descriptions, and positive Prices)');
-      return;
-    }
-
+  const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const payload = {
-        currency,
-        invoiceDate,
-        dueDate,
-        paymentMethod,
-        customerSnapshot: { 
-          name: billing.name, 
-          email: '', 
-          phone: `${billing.phonePrefix} ${billing.phone}`
-        },
-        billingAddressSnapshot: { ...billing },
-        shippingAddressSnapshot: { ...shipping, phone: `${shipping.phonePrefix} ${shipping.phone}` },
-        productSnapshot: items.map(i => ({ 
-          productName: i.description, 
-          sku: 'MANUAL', 
-          qty: Number(i.qty), 
-          price: Number(i.price), 
-          total: Number(i.qty) * Number(i.price) 
-        })),
-        totalsSnapshot: {
-          subTotal: subtotal,
-          tax: taxAmount,
-          discount: Number(discountVal),
-          amount: total
-        },
-        notes,
-        status: status // Keep existing or Draft
-      };
-
-      if (isEdit) {
-        await api.put(`/invoices/${id}`, payload);
-        toast.success('Invoice updated successfully!');
-        navigate(`/invoices/${id}`);
-      } else {
-        const res = await api.post('/invoices', payload);
-        toast.success('Invoice created successfully!');
-        navigate(`/invoices/${res.data._id}`);
+      const [settingsRes, invoiceRes] = await Promise.all([
+        api.get('/settings'),
+        isEdit ? api.get(`/invoices/${id}`) : Promise.resolve(null),
+      ]);
+      setSettings(settingsRes.data);
+      if (invoiceRes?.data) {
+        const invoice = invoiceRes.data;
+        setForm({
+          invoiceNumber: invoice.invoiceNumber,
+          invoiceDate: invoice.date ? new Date(invoice.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10),
+          dueDate: invoice.dueDate ? new Date(invoice.dueDate).toISOString().slice(0, 10) : '',
+          paymentMethod: invoice.paymentMethod || 'UPI',
+          status: invoice.status || 'Draft',
+          currency: invoice.currency || 'INR',
+          customer: {
+            name: invoice.customerSnapshot?.name || '',
+            email: invoice.customerSnapshot?.email || '',
+            phone: invoice.customerSnapshot?.phone || '',
+          },
+          billingAddress: { address: invoice.billingAddressSnapshot?.address || '' },
+          shippingAddress: {
+            name: invoice.shippingAddressSnapshot?.name || '',
+            address: invoice.shippingAddressSnapshot?.address || '',
+            phone: invoice.shippingAddressSnapshot?.phone || '',
+          },
+          items: (invoice.productSnapshot || []).map((item) => ({
+            id: crypto.randomUUID(),
+            productName: item.productName || '',
+            sku: item.sku || '',
+            qty: item.qty || 1,
+            price: item.price || 0,
+          })),
+          tax: invoice.totalsSnapshot?.tax || 0,
+          discount: invoice.totalsSnapshot?.discount || 0,
+          notes: invoice.notes || '',
+        });
+        if (invoice.shippingAddressSnapshot?.address || invoice.shippingAddressSnapshot?.name) setShowShipping(true);
+        if (invoice.totalsSnapshot?.tax || invoice.totalsSnapshot?.discount) setShowTaxes(true);
       }
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || 'Failed to save invoice');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const inputStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.03)',
-    border: '1px solid var(--bs-border-color)',
-    color: 'var(--bs-body-color)',
-    fontSize: '14px'
+  useEffect(() => { loadData(); }, [id]);
+
+  const setField = (path, value) => {
+    setForm((prev) => {
+      const next = structuredClone(prev);
+      const keys = path.split('.');
+      let ref = next;
+      keys.slice(0, -1).forEach((key) => { ref = ref[key]; });
+      ref[keys.at(-1)] = value;
+      return next;
+    });
   };
 
-  if (fetching) return <div className="d-flex justify-content-center align-items-center" style={{ minHeight: 400 }}><Spinner animation="border" /></div>;
+  const updateItem = (itemId, field, value) => {
+    setForm((prev) => ({
+      ...prev,
+      items: prev.items.map((item) => item.id === itemId ? { ...item, [field]: value } : item),
+    }));
+  };
+
+  const validate = () => {
+    const next = {};
+    if (!form.customer.name.trim()) next.customerName = 'Customer name is required.';
+    if (!form.customer.phone.trim() && !form.customer.email.trim()) next.customerContact = 'Phone or email is required.';
+    form.items.forEach((item, index) => {
+      if (!item.productName.trim()) next[`item-${index}`] = 'Item name is required.';
+      if (Number(item.qty) <= 0) next[`qty-${index}`] = 'Qty must be greater than 0.';
+      if (Number(item.price) <= 0) next[`price-${index}`] = 'Price must be greater than 0.';
+    });
+    setValidation(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate()) return;
+    setSaving(true);
+    try {
+      const payload = {
+        invoiceDate: form.invoiceDate,
+        dueDate: form.dueDate || undefined,
+        paymentMethod: form.paymentMethod,
+        currency: form.currency,
+        status: form.status,
+        customerSnapshot: form.customer,
+        billingAddressSnapshot: form.billingAddress,
+        shippingAddressSnapshot: form.shippingAddress.name || form.shippingAddress.address ? form.shippingAddress : undefined,
+        productSnapshot: form.items.map((item) => ({
+          productName: item.productName,
+          sku: item.sku || 'MANUAL',
+          qty: Number(item.qty),
+          price: Number(item.price),
+          total: Number(item.qty) * Number(item.price),
+        })),
+        totalsSnapshot: totals,
+        notes: form.notes,
+      };
+
+      const res = isEdit ? await api.put(`/invoices/${id}`, payload) : await api.post('/invoices', payload);
+      toast.success(isEdit ? 'Invoice updated' : 'Invoice created');
+      navigate(`/invoices/${isEdit ? id : res.data._id}`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save invoice');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div>
+        <PageHeader title={isEdit ? 'Edit Invoice' : 'Create Invoice'} description="Prepare a branded invoice using store settings." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Invoices', path: '/invoices' }, { label: isEdit ? 'Edit' : 'Create' }]} />
+        <LoadingSkeleton type="cards" cards={4} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader title={isEdit ? 'Edit Invoice' : 'Create Invoice'} description="Prepare a branded invoice using store settings." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Invoices', path: '/invoices' }, { label: isEdit ? 'Edit' : 'Create' }]} />
+        <ErrorState message={error} onRetry={loadData} />
+      </div>
+    );
+  }
 
   return (
-    <div className="report-page pb-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="report-title fw-bold mb-0">{isEdit ? `Edit Invoice` : `Create Invoice`}</h3>
+    <div>
+      <div className="d-flex justify-content-between align-items-end mb-4">
+        <div>
+          <h2 className="mb-1 fw-bold">{isEdit ? 'Edit Invoice' : 'Create Invoice'}</h2>
+          <div className="text-muted">Logo, signature, terms and bank details are pulled from Settings automatically.</div>
+        </div>
+        <div className="d-flex align-items-center gap-4">
+          <div className="text-muted small fw-semibold d-none d-md-block">
+            Dashboard <span className="mx-1">&rsaquo;</span> Invoices <span className="mx-1">&rsaquo;</span> {isEdit ? 'Edit' : 'Create'}
+          </div>
+          <Button variant="primary" onClick={() => navigate('/invoices')}><ArrowLeft size={18} className="me-1" />Back</Button>
+        </div>
       </div>
 
-      <Row className="g-4">
-        <Col xl={9}>
-          <Card className="report-section-card border-0" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px dashed var(--bs-border-color)' }}>
-            <Card.Body className="p-4 p-md-5">
-              
-              {/* Header Row */}
-              <div className="d-flex flex-wrap justify-content-between align-items-center mb-5">
-                <div className="d-flex align-items-center gap-3">
-                  <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: 48, height: 48 }}>
-                    <Icon icon="lucide:file-text" width={24} color="#fff" />
-                  </div>
-                  <h4 className="fw-bold mb-0 text-white" style={{ letterSpacing: '1px' }}>KUIKLO</h4>
+      <Row className="g-3">
+        <Col xl={8}>
+          <FormSection title="Invoice Details">
+            <Row className="g-3">
+              <Col md={4}><Form.Label>Invoice #</Form.Label><Form.Control value={form.invoiceNumber} disabled /></Col>
+              <Col md={4}><Form.Label>Invoice Date</Form.Label><Form.Control type="date" value={form.invoiceDate} onChange={(event) => setField('invoiceDate', event.target.value)} /></Col>
+              <Col md={4}><Form.Label>Due Date</Form.Label><Form.Control type="date" value={form.dueDate} onChange={(event) => setField('dueDate', event.target.value)} /></Col>
+              <Col md={4}><Form.Label>Status</Form.Label><Form.Select value={form.status} onChange={(event) => setField('status', event.target.value)}><option>Draft</option><option>Pending</option><option>Paid</option><option>Overdue</option></Form.Select></Col>
+              <Col md={4}><Form.Label>Payment Method</Form.Label><Form.Select value={form.paymentMethod} onChange={(event) => setField('paymentMethod', event.target.value)}><option>Cash</option><option>UPI</option><option>Card</option><option>NetBanking</option><option>Wallet</option></Form.Select></Col>
+              <Col md={4}><Form.Label>Currency</Form.Label><Form.Select value={form.currency} onChange={(event) => setField('currency', event.target.value)}><option value="INR">INR</option><option value="USD">USD</option><option value="EUR">EUR</option></Form.Select></Col>
+            </Row>
+          </FormSection>
+
+          <FormSection title="Customer Details">
+            <Row className="g-4">
+              <Col md={6}>
+                <h6 className="mb-3 text-white fw-bold">Billing Address</h6>
+                <Form.Control className="mb-3" isInvalid={Boolean(validation.customerName)} value={form.customer.name} onChange={(event) => setField('customer.name', event.target.value)} placeholder="Name" />
+                <Form.Control.Feedback type="invalid">{validation.customerName}</Form.Control.Feedback>
+                <Form.Control className="mb-3" as="textarea" rows={3} value={form.billingAddress.address} onChange={(event) => setField('billingAddress.address', event.target.value)} placeholder="Address" />
+                <Row className="g-2">
+                  <Col md={12}>
+                    <Form.Control value={form.customer.phone} onChange={(event) => setField('customer.phone', event.target.value)} placeholder="Phone Number" />
+                  </Col>
+                </Row>
+              </Col>
+              <Col md={6}>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h6 className="mb-0 text-white fw-bold">Shipping Address</h6>
+                  {showShipping && <Button variant="danger" size="sm" onClick={() => { setShowShipping(false); setField('shippingAddress', { name: '', address: '', phone: '' }); }}>Remove</Button>}
                 </div>
-                
-                <div className="d-flex gap-3 align-items-center mt-3 mt-md-0">
-                  <div>
-                    <Form.Label className="text-muted mb-1" style={{ fontSize: '12px' }}>Invoice #</Form.Label>
-                    <Form.Control value={invoiceNumber} disabled style={{ ...inputStyle, width: '180px', backgroundColor: 'transparent', borderStyle: 'dashed' }} />
-                  </div>
-                  <div>
-                    <Form.Label className="text-muted mb-1" style={{ fontSize: '12px' }}>Currency</Form.Label>
-                    <Form.Select value={currency} onChange={(e) => setCurrency(e.target.value)} style={{ ...inputStyle, width: '120px' }}>
-                      <option value="USD">USD ($)</option>
-                      <option value="INR">INR (₹)</option>
-                      <option value="EUR">EUR (€)</option>
-                    </Form.Select>
-                  </div>
-                </div>
-              </div>
+                {!showShipping ? (
+                  <Button variant="secondary" className="w-100 h-100" style={{ minHeight: '160px', borderStyle: 'dashed' }} onClick={() => setShowShipping(true)}>
+                    <Plus size={20} className="me-2" /> Add Shipping Address
+                  </Button>
+                ) : (
+                  <>
+                    <Form.Control className="mb-3" value={form.shippingAddress.name} onChange={(event) => setField('shippingAddress.name', event.target.value)} placeholder="Name" />
+                    <Form.Control className="mb-3" as="textarea" rows={3} value={form.shippingAddress.address} onChange={(event) => setField('shippingAddress.address', event.target.value)} placeholder="Address" />
+                    <Row className="g-2">
+                      <Col md={12}>
+                        <Form.Control value={form.shippingAddress.phone} onChange={(event) => setField('shippingAddress.phone', event.target.value)} placeholder="Phone Number" />
+                      </Col>
+                    </Row>
+                  </>
+                )}
+              </Col>
+            </Row>
+          </FormSection>
 
-              {/* Dates & Payment */}
-              <Row className="g-4 mb-5">
-                <Col md={4}>
-                  <Form.Label className="text-muted mb-1" style={{ fontSize: '13px' }}>Invoice Date</Form.Label>
-                  <Form.Control type="date" value={invoiceDate} onChange={(e) => setInvoiceDate(e.target.value)} style={inputStyle} />
+          <FormSection title="Line Items" actions={<Button variant="primary" onClick={() => setForm((prev) => ({ ...prev, items: [...prev.items, emptyItem()] }))}><Plus size={20} className="me-1" />Add Item</Button>}>
+            <Table responsive bordered hover className="align-middle mb-0">
+              <thead style={{ backgroundColor: 'rgba(255, 255, 255, 0.03)' }}>
+                <tr className="text-uppercase" style={{ fontSize: '12px', letterSpacing: '0.5px' }}>
+                  <th className="py-3 px-3" style={{ width: '40px' }}>#</th>
+                  <th className="py-3 px-3">Item Description</th>
+                  <th className="py-3 px-3" style={{ width: '15%' }}>SKU</th>
+                  <th className="text-end py-3 px-3" style={{ width: '90px' }}>Qty</th>
+                  <th className="text-end py-3 px-3" style={{ width: '130px' }}>Unit Price</th>
+                  <th className="text-end py-3 px-3" style={{ width: '120px' }}>Amount</th>
+                  <th className="text-center py-3 px-3" style={{ width: '60px' }}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.items.map((item, index) => (
+                  <tr key={item.id}>
+                    <td className="text-center fw-bold text-white-50">{index + 1}</td>
+                    <td><Form.Control isInvalid={Boolean(validation[`item-${index}`])} value={item.productName} onChange={(event) => updateItem(item.id, 'productName', event.target.value)} placeholder="Product or service name" /></td>
+                    <td><Form.Control value={item.sku} onChange={(event) => updateItem(item.id, 'sku', event.target.value)} placeholder="SKU" /></td>
+                    <td><Form.Control className="text-end px-2" type="number" min="1" isInvalid={Boolean(validation[`qty-${index}`])} value={item.qty} onChange={(event) => updateItem(item.id, 'qty', event.target.value)} /></td>
+                    <td><Form.Control className="text-end px-2" type="number" min="0" isInvalid={Boolean(validation[`price-${index}`])} value={item.price} onChange={(event) => updateItem(item.id, 'price', event.target.value)} /></td>
+                    <td className="text-end fw-semibold">{formatCurrency(Number(item.qty || 0) * Number(item.price || 0))}</td>
+                    <td className="text-center"><Button variant="danger" size="sm" className="kuiklo-icon-btn" disabled={form.items.length === 1} onClick={() => setForm((prev) => ({ ...prev, items: prev.items.filter((row) => row.id !== item.id) }))}><Trash2 size={16} /></Button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </FormSection>
+
+          <FormSection title="Totals & Notes">
+            <Row className="g-3">
+              {!showTaxes && (
+                <Col md={12} className="text-end">
+                  <Button variant="secondary" size="sm" onClick={() => setShowTaxes(true)}>
+                    + Add Tax / Discount
+                  </Button>
                 </Col>
-                <Col md={4}>
-                  <Form.Label className="text-muted mb-1" style={{ fontSize: '13px' }}>Due Date</Form.Label>
-                  <Form.Control type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} style={inputStyle} />
-                </Col>
-                <Col md={4}>
-                  <Form.Label className="text-muted mb-1" style={{ fontSize: '13px' }}>Payment Method</Form.Label>
-                  <Form.Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={inputStyle}>
-                    <option value="">Select</option>
-                    <option value="Card">Credit/Debit Card</option>
-                    <option value="UPI">UPI / NetBanking</option>
-                    <option value="Cash">Cash</option>
-                  </Form.Select>
-                </Col>
-              </Row>
-
-              {/* Addresses */}
-              <Row className="g-4 mb-5">
-                <Col md={6}>
-                  <h6 className="fw-bold mb-3" style={{ fontSize: '14px' }}>Billing Address</h6>
-                  <Form.Control placeholder="Name" value={billing.name} onChange={(e) => setBilling({...billing, name: e.target.value})} className="mb-3" style={inputStyle} />
-                  <Form.Control as="textarea" rows={3} placeholder="Address" value={billing.address} onChange={(e) => setBilling({...billing, address: e.target.value})} className="mb-3" style={inputStyle} />
-                  <InputGroup>
-                    <Form.Select value={billing.phonePrefix} onChange={(e) => setBilling({...billing, phonePrefix: e.target.value})} style={{ ...inputStyle, maxWidth: '100px' }}>
-                      <option value="+1">+1 (US)</option>
-                      <option value="+91">+91 (IN)</option>
-                      <option value="+44">+44 (UK)</option>
-                    </Form.Select>
-                    <Form.Control placeholder="Phone Number" value={billing.phone} onChange={(e) => setBilling({...billing, phone: e.target.value})} style={inputStyle} />
-                  </InputGroup>
-                </Col>
-                <Col md={6}>
-                  <h6 className="fw-bold mb-3" style={{ fontSize: '14px' }}>Shipping Address</h6>
-                  <Form.Control placeholder="Name" value={shipping.name} onChange={(e) => setShipping({...shipping, name: e.target.value})} className="mb-3" style={inputStyle} />
-                  <Form.Control as="textarea" rows={3} placeholder="Address" value={shipping.address} onChange={(e) => setShipping({...shipping, address: e.target.value})} className="mb-3" style={inputStyle} />
-                  <InputGroup>
-                    <Form.Select value={shipping.phonePrefix} onChange={(e) => setShipping({...shipping, phonePrefix: e.target.value})} style={{ ...inputStyle, maxWidth: '100px' }}>
-                      <option value="+1">+1 (US)</option>
-                      <option value="+91">+91 (IN)</option>
-                      <option value="+44">+44 (UK)</option>
-                    </Form.Select>
-                    <Form.Control placeholder="Phone Number" value={shipping.phone} onChange={(e) => setShipping({...shipping, phone: e.target.value})} style={inputStyle} />
-                  </InputGroup>
-                </Col>
-              </Row>
-
-              {/* Items Table */}
-              <div className="table-responsive mb-4">
-                <Table className="mb-0" style={{ borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                  <thead>
-                    <tr style={{ fontSize: '11px', color: 'var(--bs-secondary-color)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                      <th className="border-0" style={{ width: '40px' }}>#</th>
-                      <th className="border-0">ITEM DESCRIPTION</th>
-                      <th className="border-0" style={{ width: '120px' }}>QTY</th>
-                      <th className="border-0" style={{ width: '160px' }}>UNIT PRICE</th>
-                      <th className="border-0" style={{ width: '160px' }}>AMOUNT</th>
-                      <th className="border-0 text-center" style={{ width: '80px' }}>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item, index) => (
-                      <tr key={item.id} style={{ backgroundColor: 'rgba(255,255,255,0.02)' }}>
-                        <td className="align-middle border-0 rounded-start text-muted text-center">{index + 1}</td>
-                        <td className="align-middle border-0 p-2">
-                          <Form.Control 
-                            placeholder="Description" 
-                            value={item.description} 
-                            onChange={(e) => handleItemChange(item.id, 'description', e.target.value)} 
-                            style={{ ...inputStyle, border: 'none', backgroundColor: 'transparent' }} 
-                          />
-                        </td>
-                        <td className="align-middle border-0 p-2">
-                          <Form.Control 
-                            type="number" min="1" 
-                            value={item.qty} 
-                            onChange={(e) => handleItemChange(item.id, 'qty', e.target.value)} 
-                            style={inputStyle} 
-                          />
-                        </td>
-                        <td className="align-middle border-0 p-2">
-                          <Form.Control 
-                            type="number" min="0" step="0.01" 
-                            value={item.price} 
-                            onChange={(e) => handleItemChange(item.id, 'price', e.target.value)} 
-                            style={inputStyle} 
-                          />
-                        </td>
-                        <td className="align-middle border-0 p-2">
-                          <Form.Control 
-                            value={(Number(item.qty) * Number(item.price)).toFixed(2)} 
-                            disabled 
-                            style={{ ...inputStyle, border: 'none', backgroundColor: 'transparent' }} 
-                          />
-                        </td>
-                        <td className="align-middle border-0 text-center p-2 rounded-end">
-                          <Button variant="danger" className="p-0 d-inline-flex align-items-center justify-content-center" style={{ width: 32, height: 32, borderRadius: '6px' }} onClick={() => removeItem(item.id)}>
-                            <Icon icon="lucide:x" width={16} />
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-
-              <Button variant="primary" className="mb-5 px-3 py-2" style={{ fontSize: '13px', fontWeight: 600, borderRadius: '6px', backgroundColor: 'rgba(var(--bs-primary-rgb), 0.15)', color: 'var(--bs-primary)', border: 'none' }} onClick={addItem}>
-                <Icon icon="lucide:plus" width={16} className="me-2" /> Add Item
-              </Button>
-
-              {/* Totals Section */}
-              <Row className="justify-content-end mb-5">
-                <Col md={5} lg={4}>
-                  <div className="d-flex flex-column gap-3">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Subtotal</span>
-                      <span className="fw-bold">{subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Tax (%)</span>
-                      <Form.Control type="number" min="0" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} style={{ ...inputStyle, width: '100px', textAlign: 'right' }} />
-                    </div>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-muted fw-medium" style={{ fontSize: '14px' }}>Discount</span>
-                      <Form.Control type="number" min="0" value={discountVal} onChange={(e) => setDiscountVal(e.target.value)} style={{ ...inputStyle, width: '100px', textAlign: 'right' }} />
-                    </div>
-                    <hr className="my-1 border-secondary" />
-                    <div className="d-flex justify-content-between align-items-center">
-                      <span className="text-white fw-bold" style={{ fontSize: '16px' }}>Total</span>
-                      <span className="text-white fw-bold" style={{ fontSize: '18px' }}>{total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-
-              {/* Notes */}
-              <div>
-                <Form.Label className="text-white fw-bold mb-2" style={{ fontSize: '14px' }}>Additional Notes</Form.Label>
-                <Form.Control 
-                  as="textarea" 
-                  rows={4} 
-                  placeholder="e.g. Thank you for your business!" 
-                  value={notes} 
-                  onChange={(e) => setNotes(e.target.value)} 
-                  style={{ ...inputStyle, backgroundColor: 'rgba(255,255,255,0.02)' }} 
-                />
-              </div>
-
-            </Card.Body>
-          </Card>
+              )}
+              {showTaxes && (
+                <>
+                  <Col md={12}><div className="d-flex justify-content-between align-items-center mb-2"><h5 className="mb-0 text-dark fw-bold">Tax & Discount</h5><Button variant="danger" size="sm" onClick={() => { setShowTaxes(false); setField('tax', 0); setField('discount', 0); }}>Remove</Button></div></Col>
+                  <Col md={6}>
+                    <Form.Label>Tax Amount</Form.Label>
+                    <Form.Control type="number" min="0" value={form.tax} onChange={(event) => setField('tax', event.target.value)} />
+                  </Col>
+                  <Col md={6}><Form.Label>Discount</Form.Label><Form.Control type="number" min="0" value={form.discount} onChange={(event) => setField('discount', event.target.value)} /></Col>
+                </>
+              )}
+              <Col md={12}><Form.Label>Notes</Form.Label><Form.Control as="textarea" rows={3} value={form.notes} onChange={(event) => setField('notes', event.target.value)} placeholder={settings?.invoiceFooter || 'Thank you for your business.'} /></Col>
+            </Row>
+          </FormSection>
         </Col>
 
-        {/* Right Sidebar Actions */}
-        <Col xl={3}>
-          <Card className="report-section-card border-0" style={{ position: 'sticky', top: '20px', backgroundColor: 'rgba(255,255,255,0.02)' }}>
-            <Card.Body className="p-4 d-flex flex-column gap-3">
-              <Button 
-                variant="dark" 
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                onClick={() => toast.info('Preview mode coming soon')}
-              >
-                <Icon icon="lucide:eye" width={18} /> Preview
-              </Button>
-              <Button 
-                variant="dark" 
-                className="w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
-                style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}
-                onClick={() => toast.info('Save invoice first to download')}
-              >
-                <Icon icon="lucide:download" width={18} /> Download
-              </Button>
-              <Button 
-                variant="danger" 
-                className="w-100 py-2 mt-2 d-flex align-items-center justify-content-center gap-2 fw-bold text-white" 
-                style={{ backgroundColor: '#ff4d4f', border: 'none' }}
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? <Spinner size="sm" /> : <><Icon icon="lucide:send" width={18} /> {isEdit ? `Update Invoice` : `Save Invoice`}</>}
+        <Col xl={4}>
+          <Card className="kuiklo-section-card sticky-xl-top" style={{ top: 96 }}>
+            <Card.Body>
+              <div className="d-flex align-items-center gap-3 mb-4">
+                {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" style={{ width: 56, height: 56, objectFit: 'contain' }} /> : <div className="kuiklo-modal-icon bg-primary-subtle text-primary">K</div>}
+                <div>
+                  <h2 className="kuiklo-section-title mb-1">{settings?.storeName || 'Kuiklo'}</h2>
+                  <p className="text-muted mb-0">{settings?.gstNumber || 'GST details from settings'}</p>
+                </div>
+              </div>
+              <div className="border-top border-bottom py-3 mb-3">
+                <div className="d-flex justify-content-between mb-2"><span className="text-muted">Subtotal</span><strong>{formatCurrency(totals.subTotal)}</strong></div>
+                <div className="d-flex justify-content-between mb-2"><span className="text-muted">Tax</span><strong>{formatCurrency(totals.tax)}</strong></div>
+                <div className="d-flex justify-content-between mb-2"><span className="text-muted">Discount</span><strong>- {formatCurrency(totals.discount)}</strong></div>
+                <div className="d-flex justify-content-between fs-4"><strong>Total</strong><strong className="text-primary">{formatCurrency(totals.amount)}</strong></div>
+              </div>
+              <div className="text-end mb-4">
+                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" style={{ maxWidth: 180, maxHeight: 72, objectFit: 'contain' }} /> : <div className="text-muted">Signature from settings</div>}
+                <div className="border-top mt-2 pt-2 text-muted">Authorized Signature</div>
+              </div>
+              <Button className="w-100" variant="primary" disabled={saving} onClick={handleSubmit}>
+                {saving ? <Spinner size="sm" /> : <Save size={20} />}
+                {isEdit ? 'Update Invoice' : 'Save Invoice'}
               </Button>
             </Card.Body>
           </Card>
