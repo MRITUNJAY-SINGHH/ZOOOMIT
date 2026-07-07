@@ -5,9 +5,16 @@ import Invoice from '../models/Invoice.js';
 // @access  Private
 export const getInvoices = async (req, res) => {
   try {
-    const { search, status, page = 1, limit = 15 } = req.query;
+    const { search, status, order, page = 1, limit = 15 } = req.query;
     
-    let query = { isCancelled: false };
+    let query = {};
+    
+    // If querying by order, we might want cancelled invoices too
+    if (order) {
+      query.order = order;
+    } else {
+      query.isCancelled = false;
+    }
     
     if (status && status !== 'all') {
       query.status = status;

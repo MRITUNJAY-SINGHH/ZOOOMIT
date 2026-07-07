@@ -139,7 +139,7 @@ export const posCheckout = async (req, res) => {
       order: order._id,
       orderType: 'OFFLINE',
       paymentMethod,
-      paymentStatus: 'Success',
+      paymentStatus: 'Paid',
       amount,
       paidAt: new Date()
     });
@@ -185,23 +185,32 @@ export const posReturn = async (req, res) => {
   try {
     const { invoiceNumber, itemsToReturn, reason } = req.body;
     
-    // Find Invoice
-    const invoice = await Invoice.findOne({ invoiceNumber }).session(session);
-    if (!invoice) throw new Error('Invoice not found');
+    // Find Invoice or Order
+    let invoice = await Invoice.findOne({ invoiceNumber }).session(session);
+    let order;
 
-    // Find Order
-    const order = await Order.findById(invoice.order).session(session);
-    if (!order) throw new Error('Original order not found');
+    if (!invoice) {
+      order = await Order.findOne({ $or: [{ orderNumber: invoiceNumber }, { billNumber: invoiceNumber }] }).session(session);
+      if (!order) throw new Error('Invoice or Order not found');
+      invoice = await Invoice.findOne({ order: order._id }).session(session);
+      if (!invoice) throw new Error('Invoice not found for this order');
+    } else {
+      order = await Order.findById(invoice.order).session(session);
+      if (!order) throw new Error('Original order not found');
+    }
 
     let totalRefundAmount = 0;
 
     for (const returnItem of itemsToReturn) {
-      const { productId, qtyToReturn } = returnItem;
+      const { itemId, productId, qtyToReturn } = returnItem;
       if (qtyToReturn <= 0) continue;
 
       // Find item in order
-      const orderItem = order.items.find(i => i.productId.toString() === productId);
-      if (!orderItem) throw new Error(`Product ${productId} not found in this order`);
+      const orderItem = order.items.find(i => 
+        (itemId && i._id.toString() === itemId) || 
+        (productId && i.product && i.product.toString() === productId)
+      );
+      if (!orderItem) throw new Error(`Product ${productId || itemId} not found in this order`);
 
       if (orderItem.returnedQty + qtyToReturn > orderItem.qty) {
         throw new Error(`Cannot return more than purchased for ${orderItem.productName}`);
@@ -212,8 +221,10 @@ export const posReturn = async (req, res) => {
       totalRefundAmount += (orderItem.price * qtyToReturn);
 
       // Restore Inventory
-      const InventoryService = (await import('../services/InventoryService.js')).default;
-      await InventoryService.autoReturnStock(productId, null, qtyToReturn, reason, req.user._id, order._id, session);
+      if (orderItem.product) {
+        const InventoryService = (await import('../services/InventoryService.js')).default;
+        await InventoryService.autoReturnStock(orderItem.product.toString(), null, qtyToReturn, reason, req.user._id, order._id, session);
+      }
     }
 
     // Determine new status
@@ -247,7 +258,7 @@ export const posReturn = async (req, res) => {
           await updatedOrder.save();
         }
 
-        return res.json({ message: 'Return processed. Razorpay refund requested.', refundAmount: totalRefundAmount, refundStatus: refundSuccess ? 'Processed' : 'Failed' });
+        return res.json({ message: 'Return processed. Razorpay refund requested.', refundAmount: totalRefundAmount, refundStatus: refundSuccess ? 'Processed' : 'Failed', invoice });
       }
     } else {
       // Create Negative Transaction for Offline
@@ -273,7 +284,7 @@ export const posReturn = async (req, res) => {
         order: order._id
       });
 
-      return res.json({ message: 'Return processed successfully', refundAmount: totalRefundAmount });
+      return res.json({ message: 'Return processed successfully', refundAmount: totalRefundAmount, invoice });
     }
   } catch (error) {
     await session.abortTransaction();

@@ -65,6 +65,11 @@ export default function Customers() {
     }
   };
 
+  const openAddModal = () => {
+    setFormData({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active' });
+    setEditModal(true);
+  };
+
   const openEditModal = (customer) => {
     setFormData({
       _id: customer._id,
@@ -81,12 +86,17 @@ export default function Customers() {
     if (!formData.name || !formData.phone) return toast.error('Name and phone are required');
     setSaving(true);
     try {
-      await api.put(`/customers/${formData._id}`, formData);
-      toast.success('Customer updated successfully');
+      if (formData._id) {
+        await api.put(`/customers/${formData._id}`, formData);
+        toast.success('Customer updated successfully');
+      } else {
+        await api.post(`/customers`, formData);
+        toast.success('Customer added successfully');
+      }
       setEditModal(false);
       fetchCustomers();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update customer');
+      toast.error(err.response?.data?.message || 'Failed to save customer');
     } finally {
       setSaving(false);
     }
@@ -118,6 +128,8 @@ export default function Customers() {
         left={<SearchBar placeholder="Search name, phone or email..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />}
         count={totalRecords}
         onRefresh={fetchCustomers}
+        onAdd={openAddModal}
+        addLabel="Add Customer"
       />
       <Card>
         <Card.Body>
@@ -156,21 +168,17 @@ export default function Customers() {
         <Modal.Body>
           {detailsLoading ? <SkeletonTable rows={4} columns={3} /> : selectedCustomer?._id ? (
             <>
-              <div className="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3">
-                <div>
-                  <h2 className="kuiklo-section-title mb-1">{selectedCustomer.name}</h2>
-                  <div className="text-muted d-flex flex-wrap gap-3">
-                    <span><Phone size={20} /> {selectedCustomer.phone}</span>
-                    {selectedCustomer.email && <span><Mail size={20} /> {selectedCustomer.email}</span>}
-                  </div>
-                </div>
-                <StatusBadge status={selectedCustomer.status} />
-              </div>
-              <Row className="g-3 mb-4">
-                <Col md={4}><StatisticsCard title="Total Orders" value={selectedCustomer.stats?.totalOrders ?? selectedCustomer.totalOrders ?? 0} /></Col>
-                <Col md={4}><StatisticsCard title="Total Spending" value={formatCurrency(selectedCustomer.stats?.totalSpent ?? selectedCustomer.totalSpent ?? 0)} /></Col>
-                <Col md={4}><StatisticsCard title="Last Order" value={selectedCustomer.stats?.lastOrderDate ? formatDate(selectedCustomer.stats.lastOrderDate) : '-'} /></Col>
-              </Row>
+              <Table responsive className="align-middle mb-4">
+                <tbody>
+                  <tr><th>Name</th><td>{selectedCustomer.name}</td></tr>
+                  <tr><th>Phone</th><td>{selectedCustomer.phone}</td></tr>
+                  <tr><th>Email</th><td>{selectedCustomer.email || '-'}</td></tr>
+                  <tr><th>Status</th><td><StatusBadge status={selectedCustomer.status} /></td></tr>
+                  <tr><th>Total Orders</th><td>{selectedCustomer.stats?.totalOrders ?? selectedCustomer.totalOrders ?? 0}</td></tr>
+                  <tr><th>Total Spending</th><td className="fw-semibold">{formatCurrency(selectedCustomer.stats?.totalSpent ?? selectedCustomer.totalSpent ?? 0)}</td></tr>
+                  <tr><th>Last Order</th><td>{selectedCustomer.stats?.lastOrderDate ? formatDate(selectedCustomer.stats.lastOrderDate) : '-'}</td></tr>
+                </tbody>
+              </Table>
               <h2 className="kuiklo-section-title mb-3">Order History</h2>
               <Table responsive hover className="align-middle mb-0">
                 <thead><tr><th>Order</th><th>Date</th><th>Type</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
@@ -191,10 +199,10 @@ export default function Customers() {
         </Modal.Body>
       </Modal>
 
-      {/* Edit Customer Modal */}
+      {/* Add/Edit Customer Modal */}
       <Modal show={editModal} onHide={() => setEditModal(false)} centered size="md">
         <Modal.Header closeButton className="border-0 pb-0">
-          <Modal.Title className="fw-bold fs-4">Edit Customer</Modal.Title>
+          <Modal.Title className="fw-bold fs-4">{formData._id ? 'Edit Customer' : 'Add Customer'}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="p-4">
           <div className="p-4 rounded-3 mb-0" style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>

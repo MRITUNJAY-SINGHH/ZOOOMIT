@@ -13,7 +13,8 @@ export const getOrders = async (req, res) => {
     let query = {};
     if (search) {
       query.$or = [
-        { orderNumber: { $regex: search, $options: 'i' } }
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { billNumber: { $regex: search, $options: 'i' } }
       ];
       // Note: Searching by customer name requires aggregation or pre-fetching customer IDs.
       // For simplicity, we just search orderNumber right now, but could expand.

@@ -7,6 +7,7 @@ import PageHeader from '@/components/common/PageHeader';
 import ActionBar from '@/components/common/ActionBar';
 import SearchBar from '@/components/common/SearchBar';
 import EmptyState from '@/components/common/EmptyState';
+import InvoicePrintOut from './components/InvoicePrintOut';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
@@ -17,6 +18,7 @@ export default function HistoryPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [invoiceToPrint, setInvoiceToPrint] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -35,8 +37,51 @@ export default function HistoryPage() {
   };
 
   const handleReprintClick = async (orderId) => {
-    console.warn(`Invoice lookup endpoint is required before reprinting order ${orderId}.`);
+    try {
+      // First try to fetch the actual invoice
+      const res = await fetchApi(`/invoices?order=${orderId}&limit=1`);
+      if (res.invoices && res.invoices.length > 0) {
+        setInvoiceToPrint(res.invoices[0]);
+      } else {
+        // Fallback for old offline orders that don't have an Invoice document
+        const orderData = await fetchApi(`/orders/${orderId}`);
+        if (orderData) {
+          const dummyInvoice = {
+            invoiceNumber: orderData.billNumber || orderData.orderNumber,
+            createdAt: orderData.createdAt,
+            customerSnapshot: { 
+              name: orderData.customer?.name || 'Walk-In', 
+              phone: orderData.customer?.phone || '' 
+            },
+            productSnapshot: orderData.items.map(i => ({ 
+              productName: i.productName, 
+              sku: i.sku || 'N/A', 
+              qty: i.qty, 
+              price: i.price, 
+              total: i.price * i.qty 
+            })),
+            totalsSnapshot: { 
+              subTotal: orderData.amount, 
+              tax: 0, 
+              discount: 0, 
+              amount: orderData.amount 
+            },
+            isCancelled: orderData.status === 'Cancelled' || orderData.status === 'Returned'
+          };
+          setInvoiceToPrint(dummyInvoice);
+        } else {
+          alert("Order details not found.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error fetching invoice or order details.");
+    }
   };
+
+  if (invoiceToPrint) {
+    return <InvoicePrintOut invoice={invoiceToPrint} onBack={() => setInvoiceToPrint(null)} />;
+  }
 
   return (
     <div>

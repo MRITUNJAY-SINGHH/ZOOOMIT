@@ -13,6 +13,7 @@ export default function POSBilling() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [customer, setCustomer] = useState(null);
+  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
   const [loading, setLoading] = useState(false);
   
   const [holdModal, setHoldModal] = useState(false);
@@ -61,6 +62,23 @@ export default function POSBilling() {
     setBarcodeInput('');
     setSearchResults([]);
     if (barcodeRef.current) barcodeRef.current.focus();
+  };
+
+  const handleCustomerPhoneChange = async (e) => {
+    const phone = e.target.value;
+    setCustomerInfo(prev => ({ ...prev, phone }));
+    if (phone.length >= 10) {
+      try {
+        const res = await fetchApi(`/customers?search=${phone}`);
+        if (res.data && res.data.length > 0) {
+          const match = res.data.find(c => c.phone === phone) || res.data[0];
+          setCustomer(match);
+          setCustomerInfo({ name: match.name, phone: match.phone, email: match.email || '' });
+        }
+      } catch (err) {}
+    } else {
+      setCustomer(null);
+    }
   };
 
   const handleBarcodeSubmit = async (e) => {
@@ -157,7 +175,11 @@ export default function POSBilling() {
     try {
       const payload = {
         customer: customer ? customer._id : null,
-        customerSnapshot: customer ? { name: customer.name, phone: customer.phone } : { name: 'Walk-in' },
+        customerSnapshot: { 
+          name: customerInfo.name || (customer ? customer.name : 'Walk-in'), 
+          phone: customerInfo.phone || (customer ? customer.phone : undefined),
+          email: customerInfo.email || undefined
+        },
         items: cart,
         subTotal: total, tax: 0, discount: 0, amount: total,
         paymentMethod
@@ -166,6 +188,8 @@ export default function POSBilling() {
       const res = await fetchApi('/pos/checkout', { method: 'POST', body: JSON.stringify(payload) });
       
       setCart([]);
+      setCustomer(null);
+      setCustomerInfo({ name: '', phone: '', email: '' });
       setInvoiceToPrint(res.invoice);
     } catch (error) {
       alert(error.message);
@@ -262,6 +286,13 @@ export default function POSBilling() {
         <Col md={4}>
           <Card className="mb-3">
             <Card.Body>
+              <h5 className="mb-3">Customer Details</h5>
+              <div className="mb-4">
+                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Phone Number" value={customerInfo.phone} onChange={handleCustomerPhoneChange} />
+                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Customer Name" value={customerInfo.name} onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})} />
+                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Email Address (Optional)" value={customerInfo.email} onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})} />
+              </div>
+
               <h4>Order Summary</h4>
               <hr />
               <div className="d-flex justify-content-between mb-2"><span>Subtotal:</span><span>{formatCurrency(total)}</span></div>
