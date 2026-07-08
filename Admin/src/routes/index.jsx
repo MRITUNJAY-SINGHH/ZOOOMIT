@@ -35,6 +35,9 @@ const InventoryReport = lazy(() => import('@/views/admin/reports/inventory'))
 const PaymentReport = lazy(() => import('@/views/admin/reports/payment'))
 const CustomerReport = lazy(() => import('@/views/admin/reports/customer'))
 const Settings = lazy(() => import('@/views/admin/settings'))
+const ProfilePage = lazy(() => import('@/views/admin/profile'))
+const ChangePasswordPage = lazy(() => import('@/views/admin/profile/ChangePassword'))
+const NotificationsPage = lazy(() => import('@/views/admin/notifications'))
 
 import { ProtectedRoute } from './ProtectedRoute'
 
@@ -81,6 +84,9 @@ export const routes = [
           { path: '/reports/payment', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: PaymentReport }] },
           { path: '/reports/customer', element: <ProtectedRoute permission="reports" />, children: [{ path: '', Component: CustomerReport }] },
           { path: '/settings', Component: Settings }, // Settings might be Admin only implicitly
+          { path: '/profile', Component: ProfilePage },
+          { path: '/change-password', Component: ChangePasswordPage },
+          { path: '/notifications', Component: NotificationsPage },
         ],
       }
     ]

@@ -3,7 +3,7 @@ import { Bell, AlertTriangle, Clock, ShoppingBag, XCircle, RotateCcw, AlertOctag
 import React, { useState, useEffect } from 'react';
 import api from '@/utils/api';
 import clsx from 'clsx';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 
 const NotificationDropdownPeople = () => {
   const [notifications, setNotifications] = useState([]);
@@ -62,6 +62,20 @@ const NotificationDropdownPeople = () => {
     }
   };
 
+  const navigate = useNavigate();
+
+  const handleNotificationClick = async (item) => {
+    // Mark as read first
+    await markAsRead(item._id);
+    
+    // Navigate based on type
+    if (['New Order', 'Cancelled Order', 'Returned Order', 'Refund Failure'].includes(item.type)) {
+      navigate('/ecommerce/orders');
+    } else if (['Low Stock', 'Expiring Product', 'Stock Adjustment'].includes(item.type)) {
+      navigate('/ecommerce/products');
+    }
+  };
+
   return (
     <div className="topbar-item nav-user">
       <Dropdown>
@@ -87,13 +101,16 @@ const NotificationDropdownPeople = () => {
           <div className="p-3 border-bottom">
             <div className="d-flex align-items-center justify-content-between">
               <h6 className="m-0 fs-16 fw-semibold">Notifications</h6>
-              <button 
-                className="btn btn-link p-0 text-dark fw-semibold text-decoration-none fs-16" 
-                onClick={markAllAsRead}
-                disabled={unreadCount === 0}
-              >
-                Clear All
-              </button>
+              <div>
+                <button 
+                  className="btn btn-link p-0 text-dark fw-semibold text-decoration-none fs-14 me-3" 
+                  onClick={markAllAsRead}
+                  disabled={unreadCount === 0}
+                >
+                  Clear All
+                </button>
+                <Link to="/notifications" className="text-primary fw-semibold text-decoration-none fs-14">View All</Link>
+              </div>
             </div>
           </div>
 
@@ -111,7 +128,7 @@ const NotificationDropdownPeople = () => {
                     { 'bg-light': !item.isRead }
                   )}
                   style={{ whiteSpace: 'normal', cursor: 'pointer' }}
-                  onClick={() => markAsRead(item._id)}
+                  onClick={() => handleNotificationClick(item)}
                 >
                   <div className="flex-shrink-0 me-3 mt-1">
                     {getIconForType(item.type)}

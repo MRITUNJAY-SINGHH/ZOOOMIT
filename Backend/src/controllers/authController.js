@@ -44,6 +44,25 @@ export const getUserProfile = async (req, res) => {
   }
 };
 
+// @desc    Change Password
+// @route   PUT /api/auth/changepassword
+// @access  Private
+export const changePassword = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user && (await user.matchPassword(req.body.oldPassword))) {
+      user.password = req.body.newPassword;
+      await user.save();
+      res.json({ message: 'Password updated successfully' });
+    } else {
+      res.status(401).json({ message: 'Invalid old password' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
 

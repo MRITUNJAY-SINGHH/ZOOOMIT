@@ -74,14 +74,14 @@ export default function Settings() {
 
   if (loading) return (
     <div>
-      <PageHeader title="Settings" description="Configure store information, branding, invoicing, and alerts." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Settings' }]} />
+      <PageHeader title="Settings" />
       <SkeletonCard lines={8} />
     </div>
   );
 
   if (!settings) return (
     <div>
-      <PageHeader title="Settings" description="Configure store information, branding, invoicing, and alerts." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Settings' }]} />
+      <PageHeader title="Settings" />
       <div className="text-center p-5"><Icon icon="lucide:alert-triangle" className="text-danger" width={40} /><p className="mt-2">Failed to load settings</p><Button variant="outline-danger" size="sm" onClick={fetchSettings}>Retry</Button></div>
     </div>
   );
@@ -90,8 +90,6 @@ export default function Settings() {
     <div>
       <PageHeader 
         title="Settings" 
-        description="Configure store information, branding, invoicing, and alerts." 
-        breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Settings' }]} 
         rightContent={
           <Button variant="primary" onClick={handleSave} disabled={saving}>
             {saving ? <span className="spinner-border spinner-border-sm me-2"></span> : <Icon icon="lucide:save" width={16} className="me-2" />}
@@ -135,7 +133,7 @@ export default function Settings() {
               {/* GENERAL TAB */}
               <Tab.Pane eventKey="general">
                 <Card className="mb-3 border-0 shadow-sm">
-                  <Card.Header className="bg-white border-bottom border-light">
+                  <Card.Header className="bg-transparent border-bottom border-light">
                     <h5 className="mb-0 fw-bold">General Information</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
@@ -168,7 +166,7 @@ export default function Settings() {
               {/* BRANDING TAB */}
               <Tab.Pane eventKey="branding">
                 <Card className="mb-3 border-0 shadow-sm">
-                  <Card.Header className="bg-white border-bottom border-light">
+                  <Card.Header className="bg-transparent border-bottom border-light">
                     <h5 className="mb-0 fw-bold">Store Branding</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
@@ -220,7 +218,7 @@ export default function Settings() {
               {/* INVOICING TAB */}
               <Tab.Pane eventKey="invoicing">
                 <Card className="mb-3 border-0 shadow-sm">
-                  <Card.Header className="bg-white border-bottom border-light">
+                  <Card.Header className="bg-transparent border-bottom border-light">
                     <h5 className="mb-0 fw-bold">Invoicing & Billing</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
@@ -274,7 +272,7 @@ export default function Settings() {
               {/* ALERTS TAB */}
               <Tab.Pane eventKey="alerts">
                 <Card className="mb-3 border-0 shadow-sm">
-                  <Card.Header className="bg-white border-bottom border-light">
+                  <Card.Header className="bg-transparent border-bottom border-light">
                     <h5 className="mb-0 fw-bold">Inventory Alerts</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
