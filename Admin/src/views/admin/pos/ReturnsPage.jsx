@@ -15,6 +15,7 @@ export default function ReturnsPage() {
   const [manualInvoiceId, setManualInvoiceId] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
+  const [invoiceSuggestions, setInvoiceSuggestions] = useState([]);
 
   const [returnItems, setReturnItems] = useState([]);
   const [reason, setReason] = useState('Customer Request');
@@ -44,6 +45,7 @@ export default function ReturnsPage() {
     if (!manualInvoiceId.trim()) return;
     setSearching(true);
     setSearchError(null);
+    setInvoiceSuggestions([]);
     try {
       const res = await fetchApi(`/orders?search=${manualInvoiceId}&limit=1`);
       if (res.data && res.data.length > 0) {
@@ -57,6 +59,30 @@ export default function ReturnsPage() {
     setSearching(false);
   };
 
+  const handleInvoiceIdChange = async (e) => {
+    const val = e.target.value;
+    setManualInvoiceId(val);
+    
+    if (val.length >= 3) {
+      try {
+        const res = await fetchApi(`/orders?search=${val}&limit=5`);
+        if (res.data) {
+          setInvoiceSuggestions(res.data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      setInvoiceSuggestions([]);
+    }
+  };
+
+  const selectInvoice = (inv) => {
+    setManualInvoiceId(inv.invoiceNumber || inv.billNumber || inv.orderNumber);
+    setInvoice(inv);
+    setInvoiceSuggestions([]);
+  };
+
   if (!invoice) {
     return (
       <div>
@@ -67,18 +93,41 @@ export default function ReturnsPage() {
             <h4>No Invoice Selected</h4>
             <p className="text-muted mb-4">Please enter a Bill Number / Order Number to process a return, or select one from the billing history.</p>
             
-            <Form onSubmit={handleManualSearch} className="mb-4 text-start">
+            <Form onSubmit={handleManualSearch} className="mb-4 text-start position-relative">
               <InputGroup>
                 <Form.Control 
                   placeholder="e.g. POS-2026-00001" 
                   value={manualInvoiceId} 
-                  onChange={e => setManualInvoiceId(e.target.value)} 
+                  onChange={handleInvoiceIdChange} 
                   disabled={searching}
+                  autoComplete="off"
                 />
                 <Button type="submit" variant="primary" disabled={searching || !manualInvoiceId}>
                   {searching ? 'Searching...' : 'Search'}
                 </Button>
               </InputGroup>
+              
+              {invoiceSuggestions.length > 0 && (
+                <Card className="position-absolute w-100 mt-1 shadow border-secondary" style={{ zIndex: 1050, maxHeight: '200px', overflowY: 'auto', backgroundColor: '#1e1e2d' }}>
+                  <div className="list-group list-group-flush">
+                    {invoiceSuggestions.map(inv => (
+                      <button 
+                        key={inv._id} 
+                        type="button"
+                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-secondary text-light p-2"
+                        style={{ backgroundColor: '#1e1e2d', fontSize: '0.85rem' }}
+                        onClick={() => selectInvoice(inv)}
+                      >
+                        <div>
+                          <div className="fw-bold text-white">{inv.invoiceNumber || inv.billNumber || inv.orderNumber}</div>
+                          <small className="text-muted">{inv.customerSnapshot?.name || inv.customer?.name || 'Walk-in'} • {new Date(inv.createdAt).toLocaleDateString()}</small>
+                        </div>
+                        <div className="text-muted fw-bold" style={{ fontSize: '0.85rem' }}>{formatCurrency(inv.totalsSnapshot?.amount || inv.amount || 0)}</div>
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+              )}
               {searchError && <div className="text-danger mt-2 small">{searchError}</div>}
             </Form>
 

@@ -16,6 +16,7 @@ export default function POSBilling() {
   const [isSearching, setIsSearching] = useState(false);
   const [customer, setCustomer] = useState(null);
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
+  const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   
   const [holdModal, setHoldModal] = useState(false);
@@ -106,31 +107,48 @@ export default function POSBilling() {
     const phone = e.target.value;
     setCustomerInfo(prev => ({ ...prev, phone }));
     
-    if (phone.length >= 10) {
+    // Fetch suggestions if length is 4 or more
+    if (phone.length >= 4) {
       try {
-        const res = await fetchApi(`/customers?search=${phone}`);
-        const found = res.data?.find(c => c.phone === phone);
-        if (found) {
-          setCustomer(found);
-          setCustomerInfo(prev => ({
-            ...prev,
-            name: found.name || '',
-            email: found.email || '',
-            address: {
-              street: found.addresses?.[0]?.street || '',
-              city: found.addresses?.[0]?.city || '',
-              state: found.addresses?.[0]?.state || '',
-              zipCode: found.addresses?.[0]?.zipCode || ''
+        const res = await fetchApi(`/customers?search=${phone}&limit=5`);
+        if (res.data) {
+          setCustomerSuggestions(res.data);
+          
+          // Auto-select if exact match is found and user typed 10 digits
+          if (phone.length === 10) {
+            const found = res.data.find(c => c.phone === phone);
+            if (found) {
+              selectCustomer(found);
             }
-          }));
-          toast.success('Customer details auto-filled!');
+          }
         }
       } catch (err) {
         console.error(err);
       }
-    } else if (customer && phone !== customer.phone) {
-       setCustomer(null);
+    } else {
+      setCustomerSuggestions([]);
+      if (customer && phone !== customer.phone) {
+         setCustomer(null);
+      }
     }
+  };
+
+  const selectCustomer = (found) => {
+    setCustomer(found);
+    setCustomerInfo(prev => ({
+      ...prev,
+      phone: found.phone || prev.phone,
+      name: found.name || '',
+      email: found.email || '',
+      address: {
+        street: found.addresses?.[0]?.street || '',
+        city: found.addresses?.[0]?.city || '',
+        state: found.addresses?.[0]?.state || '',
+        zipCode: found.addresses?.[0]?.zipCode || ''
+      }
+    }));
+    setCustomerSuggestions([]);
+    toast.success('Customer details auto-filled!');
   };
 
   const updateQty = (id, delta) => {
@@ -308,8 +326,30 @@ export default function POSBilling() {
                 <h6 className="mb-3 text-white fw-bold d-flex align-items-center gap-2">
                   <User size={18} className="text-primary" /> Customer Information
                 </h6>
-                <div className="mb-3">
-                  <Form.Control size="sm" placeholder="Phone Number (Auto-fetch)" value={customerInfo.phone} onChange={handleCustomerPhoneChange} />
+                <div className="mb-3 position-relative">
+                  <Form.Control size="sm" placeholder="Phone Number (Auto-fetch)" value={customerInfo.phone} onChange={handleCustomerPhoneChange} autoComplete="off" />
+                  
+                  {customerSuggestions.length > 0 && (
+                    <Card className="position-absolute w-100 mt-1 shadow border-secondary" style={{ zIndex: 1050, maxHeight: '200px', overflowY: 'auto', backgroundColor: '#1e1e2d' }}>
+                      <div className="list-group list-group-flush">
+                        {customerSuggestions.map(cust => (
+                          <button 
+                            key={cust._id} 
+                            type="button"
+                            className="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-secondary text-light p-2"
+                            style={{ backgroundColor: '#1e1e2d', fontSize: '0.85rem' }}
+                            onClick={() => selectCustomer(cust)}
+                          >
+                            <div>
+                              <div className="fw-bold text-white">{cust.phone}</div>
+                              <small className="text-muted">{cust.name || 'Walk-in Customer'}</small>
+                            </div>
+                            <div className="text-muted" style={{ fontSize: '0.75rem' }}>Select</div>
+                          </button>
+                        ))}
+                      </div>
+                    </Card>
+                  )}
                 </div>
                 
                 <div className="mb-3">
