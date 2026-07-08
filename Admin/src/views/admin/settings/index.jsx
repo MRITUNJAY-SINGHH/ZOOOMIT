@@ -222,7 +222,7 @@ export default function Settings() {
                     <h5 className="mb-0 fw-bold">Invoicing & Billing</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
-                    <h6 className="mb-3 fw-bold text-primary">Invoice Numbering</h6>
+                    <h5 className="mb-4 fw-bolder text-primary text-uppercase" style={{ letterSpacing: '1.5px' }}>Invoice Numbering</h5>
                     <div className="row g-4 mb-4 pb-4 border-bottom border-light">
                       <div className="col-md-6">
                         <Form.Label className="fw-medium text-muted small text-uppercase">Online Invoice Prefix</Form.Label>
@@ -234,7 +234,7 @@ export default function Settings() {
                       </div>
                     </div>
 
-                    <h6 className="mb-3 fw-bold text-primary">Bank Details (For Invoices)</h6>
+                    <h5 className="mb-4 fw-bolder text-primary text-uppercase" style={{ letterSpacing: '1.5px' }}>Bank Details (For Invoices)</h5>
                     <div className="row g-4 mb-4 pb-4 border-bottom border-light">
                       <div className="col-md-6">
                         <Form.Label className="fw-medium text-muted small text-uppercase">Account Name</Form.Label>
@@ -254,7 +254,7 @@ export default function Settings() {
                       </div>
                     </div>
 
-                    <h6 className="mb-3 fw-bold text-primary">Terms & Notes</h6>
+                    <h5 className="mb-4 fw-bolder text-primary text-uppercase" style={{ letterSpacing: '1.5px' }}>Terms & Notes</h5>
                     <div className="row g-4">
                       <div className="col-md-12">
                         <Form.Label className="fw-medium text-muted small text-uppercase">Terms and Conditions</Form.Label>

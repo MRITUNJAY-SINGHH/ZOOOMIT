@@ -203,6 +203,19 @@ export default function InvoicePrintOut({ invoice, onBack }) {
                 <div><strong>Status:</strong> {invoice.status || 'Paid'}</div>
                 <div><strong>Cashier:</strong> {user?.name || 'Admin'}</div>
               </div>
+              
+              {settings?.bankDetails?.accountNumber && (
+                <>
+                  <h6 className="fw-bold mb-2" style={{ color: '#1e293b', fontSize: '1.1rem' }}>Bank Details</h6>
+                  <div style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '30px', lineHeight: '1.6' }}>
+                    {settings.bankDetails.bankName && <div><strong>Bank:</strong> {settings.bankDetails.bankName}</div>}
+                    {settings.bankDetails.accountName && <div><strong>Acc Name:</strong> {settings.bankDetails.accountName}</div>}
+                    <div><strong>Acc No:</strong> {settings.bankDetails.accountNumber}</div>
+                    {settings.bankDetails.ifscCode && <div><strong>IFSC:</strong> {settings.bankDetails.ifscCode}</div>}
+                  </div>
+                </>
+              )}
+
               <h6 className="fw-bold mb-2" style={{ color: '#1e293b', fontSize: '1.1rem' }}>Notes</h6>
               <div style={{ fontSize: '0.9rem', color: '#64748b' }}>
                 {invoice.notes || 'Please send proof of payment if paying offline. For inquiries, contact our billing team.'}
