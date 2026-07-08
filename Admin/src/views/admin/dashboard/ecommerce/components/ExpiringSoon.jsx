@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, Table } from 'react-bootstrap';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import api from '@/utils/api';
 import EmptyState from '@/components/common/EmptyState';
@@ -8,33 +9,25 @@ import LoadingSkeleton from '@/components/common/LoadingSkeleton';
 import { formatDate } from '@/utils/format';
 
 export default function ExpiringSoon() {
-  const [batches, setBatches] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: batchesData, isLoading: loading, error, refetch: loadData } = useQuery({
+    queryKey: ['expiringSoon'],
+    queryFn: async () => {
       const res = await api.get('/inventory/expiring?days=30');
-      setBatches((res.data || []).slice(0, 5));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      return (res.data || []).slice(0, 5);
     }
-  };
+  });
 
-  useEffect(() => { loadData(); }, []);
+  const batches = batchesData || [];
+  const errorMessage = error?.message;
 
   return (
     <Card className="h-100">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2 className="kuiklo-section-title mb-0">Expiring Products</h2>
-          <Link to="/inventory/upcoming-expiry" className="btn btn-primary btn-sm">View All</Link>
+          <h2 className="kuiklo-section-title mb-0">Expiring Soon</h2>
+          <Link to="/inventory/expiring" className="btn btn-danger btn-sm">View All</Link>
         </div>
-        {loading ? <LoadingSkeleton rows={5} columns={3} /> : error ? <ErrorState message={error} onRetry={loadData} /> : batches.length === 0 ? (
+        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : batches.length === 0 ? (
           <EmptyState icon="lucide:calendar-check" title="No expiring batches" message="No batches expire in the next 30 days." />
         ) : (
           <Table responsive hover className="align-middle mb-0">

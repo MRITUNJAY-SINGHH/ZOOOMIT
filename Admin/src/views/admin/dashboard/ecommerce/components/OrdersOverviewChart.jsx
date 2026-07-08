@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import { Card } from 'react-bootstrap';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Tooltip, Legend } from 'chart.js';
@@ -8,26 +8,19 @@ import ErrorState from '@/components/common/ErrorState';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+import { useQuery } from '@tanstack/react-query';
 
 export default function OrdersOverviewChart() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: ordersData, isLoading: loading, error, refetch: loadData } = useQuery({
+    queryKey: ['ordersChart'],
+    queryFn: async () => {
       const res = await api.get('/orders?page=1&limit=100');
-      setOrders(res.data?.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      return res.data?.data || [];
     }
-  };
+  });
 
-  useEffect(() => { loadData(); }, []);
+  const orders = ordersData || [];
+  const errorMessage = error?.message;
 
   const chartRows = useMemo(() => {
     const grouped = {};
@@ -52,7 +45,7 @@ export default function OrdersOverviewChart() {
     <Card className="h-100">
       <Card.Body>
         <h2 className="kuiklo-section-title mb-3">Orders Overview</h2>
-        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={error} onRetry={loadData} /> : chartRows.length === 0 ? (
+        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : orders.length === 0 ? (
           <EmptyState icon="lucide:shopping-bag" title="No order data" message="Order trends will appear when orders are created." />
         ) : (
           <div style={{ height: 280 }}>

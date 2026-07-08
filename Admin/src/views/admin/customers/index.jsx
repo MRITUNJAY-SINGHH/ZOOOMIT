@@ -27,7 +27,7 @@ export default function Customers() {
   const [detailsLoading, setDetailsLoading] = useState(false);
   
   const [editModal, setEditModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active' });
+  const [formData, setFormData] = useState({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active', address: { street: '', city: '', state: '', zipCode: '' } });
   const [saving, setSaving] = useState(false);
   
   const [deleteModal, setDeleteModal] = useState(false);
@@ -66,18 +66,25 @@ export default function Customers() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active' });
+    setFormData({ name: '', phone: '', email: '', customerType: 'WALK_IN', status: 'Active', address: { street: '', city: '', state: '', zipCode: '' } });
     setEditModal(true);
   };
 
   const openEditModal = (customer) => {
+    const defaultAddress = customer.addresses && customer.addresses.length > 0 ? customer.addresses[0] : { street: '', city: '', state: '', zipCode: '' };
     setFormData({
       _id: customer._id,
       name: customer.name || '',
       phone: customer.phone || '',
       email: customer.email || '',
       customerType: customer.customerType || 'WALK_IN',
-      status: customer.status || 'Active'
+      status: customer.status || 'Active',
+      address: {
+        street: defaultAddress.street || '',
+        city: defaultAddress.city || '',
+        state: defaultAddress.state || '',
+        zipCode: defaultAddress.zipCode || ''
+      }
     });
     setEditModal(true);
   };
@@ -86,11 +93,17 @@ export default function Customers() {
     if (!formData.name || !formData.phone) return toast.error('Name and phone are required');
     setSaving(true);
     try {
+      const payload = { ...formData };
+      if (payload.address && (payload.address.street || payload.address.city)) {
+        payload.addresses = [{ label: 'Billing/Shipping', ...payload.address }];
+      }
+      delete payload.address;
+
       if (formData._id) {
-        await api.put(`/customers/${formData._id}`, formData);
+        await api.put(`/customers/${formData._id}`, payload);
         toast.success('Customer updated successfully');
       } else {
-        await api.post(`/customers`, formData);
+        await api.post(`/customers`, payload);
         toast.success('Customer added successfully');
       }
       setEditModal(false);
@@ -242,6 +255,34 @@ export default function Customers() {
                     <option value="Active">Active</option>
                     <option value="Inactive">Inactive</option>
                   </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <h6 className="fw-bold mb-4 mt-4 text-white">Billing / Shipping Details</h6>
+            <Row className="g-3">
+              <Col md={12}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Street Address</Form.Label>
+                  <Form.Control value={formData.address.street} onChange={(e) => setFormData({ ...formData, address: { ...formData.address, street: e.target.value } })} placeholder="123 Main St" />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">City</Form.Label>
+                  <Form.Control value={formData.address.city} onChange={(e) => setFormData({ ...formData, address: { ...formData.address, city: e.target.value } })} placeholder="City" />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">State</Form.Label>
+                  <Form.Control value={formData.address.state} onChange={(e) => setFormData({ ...formData, address: { ...formData.address, state: e.target.value } })} placeholder="State" />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="text-white-50 small text-uppercase fw-bold text-nowrap">Zip Code</Form.Label>
+                  <Form.Control value={formData.address.zipCode} onChange={(e) => setFormData({ ...formData, address: { ...formData.address, zipCode: e.target.value } })} placeholder="Zip Code" />
                 </Form.Group>
               </Col>
             </Row>

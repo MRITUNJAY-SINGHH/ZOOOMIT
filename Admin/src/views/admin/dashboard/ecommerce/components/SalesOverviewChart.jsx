@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card } from 'react-bootstrap';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend } from 'chart.js';
@@ -8,26 +8,19 @@ import ErrorState from '@/components/common/ErrorState';
 import LoadingSkeleton from '@/components/common/LoadingSkeleton';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
+import { useQuery } from '@tanstack/react-query';
 
 export default function SalesOverviewChart() {
-  const [rows, setRows] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: rowsData, isLoading: loading, error, refetch: loadData } = useQuery({
+    queryKey: ['salesChart'],
+    queryFn: async () => {
       const res = await api.get('/reports/sales-chart');
-      setRows(Array.isArray(res.data) ? res.data : []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      return Array.isArray(res.data) ? res.data : [];
     }
-  };
+  });
 
-  useEffect(() => { loadData(); }, []);
+  const rows = rowsData || [];
+  const errorMessage = error?.message;
 
   const data = {
     labels: rows.map((item) => item._id),
@@ -46,7 +39,7 @@ export default function SalesOverviewChart() {
     <Card className="h-100">
       <Card.Body>
         <h2 className="kuiklo-section-title mb-3">Revenue Trend</h2>
-        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={error} onRetry={loadData} /> : rows.length === 0 ? (
+        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : rows.length === 0 ? (
           <EmptyState icon="lucide:line-chart" title="No revenue data" message="Revenue trend will appear after paid orders are available." />
         ) : (
           <div style={{ height: 280 }}>

@@ -62,7 +62,33 @@ export const posCheckout = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { customer, customerSnapshot, items, subTotal, tax, discount, amount, paymentMethod } = req.body;
+    let { customer, customerSnapshot, customerAddress, items, subTotal, tax, discount, amount, paymentMethod } = req.body;
+
+    // Check in my customer have this or not if not create that
+    if (!customer && customerSnapshot && customerSnapshot.phone) {
+      const Customer = (await import('../models/Customer.js')).default;
+      let existingCustomer = await Customer.findOne({ phone: customerSnapshot.phone }).session(session);
+      
+      if (existingCustomer) {
+        customer = existingCustomer._id;
+        // Check if existing customer has this address, if not we could add it
+        if (customerAddress && existingCustomer.addresses.length === 0) {
+          existingCustomer.addresses.push({ label: 'Billing/Shipping', ...customerAddress });
+          await existingCustomer.save({ session });
+        }
+      } else {
+        // Create new customer
+        const newCustomer = new Customer({
+          name: customerSnapshot.name || 'Walk-in',
+          phone: customerSnapshot.phone,
+          email: customerSnapshot.email,
+          customerType: 'WALK_IN',
+          addresses: customerAddress ? [{ label: 'Billing/Shipping', ...customerAddress }] : []
+        });
+        await newCustomer.save({ session });
+        customer = newCustomer._id;
+      }
+    }
 
     // 1. Generate Numbers
     const orderCount = await Order.countDocuments().session(session);

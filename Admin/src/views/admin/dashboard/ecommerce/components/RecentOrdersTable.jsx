@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, Table } from 'react-bootstrap';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
 import api from '@/utils/api';
 import EmptyState from '@/components/common/EmptyState';
@@ -9,24 +10,16 @@ import StatusBadge from '@/components/common/StatusBadge';
 import { formatCurrency } from '@/utils/format';
 
 export default function RecentOrdersTable() {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: ordersData, isLoading: loading, error, refetch: loadData } = useQuery({
+    queryKey: ['recentOrders'],
+    queryFn: async () => {
       const res = await api.get('/orders?page=1&limit=5');
-      setOrders(res.data?.data || []);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      return res.data?.data || [];
     }
-  };
+  });
 
-  useEffect(() => { loadData(); }, []);
+  const orders = ordersData || [];
+  const errorMessage = error?.message;
 
   return (
     <Card className="h-100">
@@ -35,7 +28,7 @@ export default function RecentOrdersTable() {
           <h2 className="kuiklo-section-title mb-0">Recent Orders</h2>
           <Link to="/orders/all" className="btn btn-primary btn-sm">View All</Link>
         </div>
-        {loading ? <LoadingSkeleton rows={5} columns={5} /> : error ? <ErrorState message={error} onRetry={loadData} /> : orders.length === 0 ? (
+        {loading ? <LoadingSkeleton rows={5} columns={5} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : orders.length === 0 ? (
           <EmptyState icon="lucide:shopping-cart" title="No orders" message="Recent orders will appear here." />
         ) : (
           <Table responsive hover className="align-middle mb-0">

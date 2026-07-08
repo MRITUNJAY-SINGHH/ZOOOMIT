@@ -6,6 +6,8 @@ import PageHeader from '@/components/common/PageHeader';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { formatCurrency } from '@/utils/format';
 import InvoicePrintOut from './components/InvoicePrintOut';
+import { toast } from 'react-hot-toast';
+import { User, Phone, Mail, MapPin } from 'lucide-react';
 
 export default function POSBilling() {
   const [cart, setCart] = useState([]);
@@ -13,7 +15,7 @@ export default function POSBilling() {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [customer, setCustomer] = useState(null);
-  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '' });
+  const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
   const [loading, setLoading] = useState(false);
   
   const [holdModal, setHoldModal] = useState(false);
@@ -64,22 +66,6 @@ export default function POSBilling() {
     if (barcodeRef.current) barcodeRef.current.focus();
   };
 
-  const handleCustomerPhoneChange = async (e) => {
-    const phone = e.target.value;
-    setCustomerInfo(prev => ({ ...prev, phone }));
-    if (phone.length >= 10) {
-      try {
-        const res = await fetchApi(`/customers?search=${phone}`);
-        if (res.data && res.data.length > 0) {
-          const match = res.data.find(c => c.phone === phone) || res.data[0];
-          setCustomer(match);
-          setCustomerInfo({ name: match.name, phone: match.phone, email: match.email || '' });
-        }
-      } catch (err) {}
-    } else {
-      setCustomer(null);
-    }
-  };
 
   const handleBarcodeSubmit = async (e) => {
     e.preventDefault();
@@ -114,6 +100,37 @@ export default function POSBilling() {
         total: product.sellingPrice || product.mrp 
       }];
     });
+  };
+
+  const handleCustomerPhoneChange = async (e) => {
+    const phone = e.target.value;
+    setCustomerInfo(prev => ({ ...prev, phone }));
+    
+    if (phone.length >= 10) {
+      try {
+        const res = await fetchApi(`/customers?search=${phone}`);
+        const found = res.data?.find(c => c.phone === phone);
+        if (found) {
+          setCustomer(found);
+          setCustomerInfo(prev => ({
+            ...prev,
+            name: found.name || '',
+            email: found.email || '',
+            address: {
+              street: found.addresses?.[0]?.street || '',
+              city: found.addresses?.[0]?.city || '',
+              state: found.addresses?.[0]?.state || '',
+              zipCode: found.addresses?.[0]?.zipCode || ''
+            }
+          }));
+          toast.success('Customer details auto-filled!');
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else if (customer && phone !== customer.phone) {
+       setCustomer(null);
+    }
   };
 
   const updateQty = (id, delta) => {
@@ -180,6 +197,7 @@ export default function POSBilling() {
           phone: customerInfo.phone || (customer ? customer.phone : undefined),
           email: customerInfo.email || undefined
         },
+        customerAddress: customerInfo.address && (customerInfo.address.street || customerInfo.address.city) ? customerInfo.address : undefined,
         items: cart,
         subTotal: total, tax: 0, discount: 0, amount: total,
         paymentMethod
@@ -189,7 +207,7 @@ export default function POSBilling() {
       
       setCart([]);
       setCustomer(null);
-      setCustomerInfo({ name: '', phone: '', email: '' });
+      setCustomerInfo({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
       setInvoiceToPrint(res.invoice);
     } catch (error) {
       alert(error.message);
@@ -286,11 +304,33 @@ export default function POSBilling() {
         <Col md={4}>
           <Card className="mb-3">
             <Card.Body>
-              <h5 className="mb-3">Customer Details</h5>
-              <div className="mb-4">
-                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Phone Number" value={customerInfo.phone} onChange={handleCustomerPhoneChange} />
-                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Customer Name" value={customerInfo.name} onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})} />
-                <Form.Control size="sm" className="mb-2 bg-dark text-light border-secondary" placeholder="Email Address (Optional)" value={customerInfo.email} onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})} />
+              <div className="mb-4 p-3 rounded-3" style={{ background: 'var(--card-bg, rgba(255,255,255,0.02))', border: '1px solid var(--border-color, rgba(255,255,255,0.05))' }}>
+                <h6 className="mb-3 text-white fw-bold d-flex align-items-center gap-2">
+                  <User size={18} className="text-primary" /> Customer Information
+                </h6>
+                <div className="mb-3">
+                  <Form.Control size="sm" placeholder="Phone Number (Auto-fetch)" value={customerInfo.phone} onChange={handleCustomerPhoneChange} />
+                </div>
+                
+                <div className="mb-3">
+                  <Form.Control size="sm" placeholder="Customer Name" value={customerInfo.name} onChange={e => setCustomerInfo({...customerInfo, name: e.target.value})} />
+                </div>
+
+                <div className="mb-3">
+                  <Form.Control size="sm" type="email" placeholder="Email Address (Optional)" value={customerInfo.email} onChange={e => setCustomerInfo({...customerInfo, email: e.target.value})} />
+                </div>
+
+                <hr className="border-secondary opacity-25 my-3" />
+                
+                <h6 className="mb-3 text-white-50 fw-bold d-flex align-items-center gap-2 text-uppercase" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>
+                  <MapPin size={14} /> Billing / Shipping
+                </h6>
+                <Form.Control size="sm" className="mb-2" placeholder="Street Address" value={customerInfo.address?.street || ''} onChange={e => setCustomerInfo({...customerInfo, address: { ...customerInfo.address, street: e.target.value }})} />
+                <Row className="g-2 mb-2">
+                  <Col><Form.Control size="sm" placeholder="City" value={customerInfo.address?.city || ''} onChange={e => setCustomerInfo({...customerInfo, address: { ...customerInfo.address, city: e.target.value }})} /></Col>
+                  <Col><Form.Control size="sm" placeholder="State" value={customerInfo.address?.state || ''} onChange={e => setCustomerInfo({...customerInfo, address: { ...customerInfo.address, state: e.target.value }})} /></Col>
+                  <Col><Form.Control size="sm" placeholder="Zip" value={customerInfo.address?.zipCode || ''} onChange={e => setCustomerInfo({...customerInfo, address: { ...customerInfo.address, zipCode: e.target.value }})} /></Col>
+                </Row>
               </div>
 
               <h4>Order Summary</h4>

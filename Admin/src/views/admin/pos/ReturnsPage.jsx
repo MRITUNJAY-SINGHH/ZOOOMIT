@@ -16,6 +16,29 @@ export default function ReturnsPage() {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState(null);
 
+  const [returnItems, setReturnItems] = useState([]);
+  const [reason, setReason] = useState('Customer Request');
+  const [customReason, setCustomReason] = useState('');
+  const [returnedInvoice, setReturnedInvoice] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (invoice && returnItems.length === 0) {
+      setReturnItems(
+        invoice.items.map(i => ({ 
+          itemId: i._id,
+          productId: i.product || i.productId, 
+          productName: i.productName,
+          purchasedQty: i.qty, 
+          alreadyReturned: i.returnedQty || 0,
+          qtyToReturn: 0,
+          price: i.price
+        }))
+      );
+    }
+  }, [invoice]);
+
   const handleManualSearch = async (e) => {
     e.preventDefault();
     if (!manualInvoiceId.trim()) return;
@@ -70,28 +93,6 @@ export default function ReturnsPage() {
     );
   }
 
-  const [returnItems, setReturnItems] = useState([]);
-  useEffect(() => {
-    if (invoice && returnItems.length === 0) {
-      setReturnItems(
-        invoice.items.map(i => ({ 
-          itemId: i._id,
-          productId: i.product || i.productId, 
-          productName: i.productName,
-          purchasedQty: i.qty, 
-          alreadyReturned: i.returnedQty || 0,
-          qtyToReturn: 0,
-          price: i.price
-        }))
-      );
-    }
-  }, [invoice]);
-  
-  const [reason, setReason] = useState('Customer Request');
-  const [customReason, setCustomReason] = useState('');
-  const [returnedInvoice, setReturnedInvoice] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const handleReturnQtyChange = (itemId, val) => {
     const qty = parseInt(val) || 0;

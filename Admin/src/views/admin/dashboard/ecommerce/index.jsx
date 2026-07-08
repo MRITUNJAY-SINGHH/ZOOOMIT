@@ -20,28 +20,21 @@ const metricValue = (stats, keys, formatter = (value) => value?.toLocaleString?.
   return key ? formatter(stats[key]) : '-';
 };
 
+import { useQuery } from '@tanstack/react-query';
+
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const loadDashboard = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data: statsData, isLoading: loading, error, refetch: loadDashboard } = useQuery({
+    queryKey: ['dashboardStats'],
+    queryFn: async () => {
       const res = await api.get('/reports/dashboard');
-      setStats(res.data || {});
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      return res.data || {};
     }
-  };
+  });
 
-  useEffect(() => {
-    loadDashboard();
-  }, []);
+  const stats = statsData || {};
+  const errorMessage = error?.message;
 
   if (loading) {
     return (
@@ -56,7 +49,7 @@ export default function Dashboard() {
     return (
       <div>
         <PageHeader title="Dashboard" description="Welcome back to Kuiklo ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
-        <ErrorState message={error} onRetry={loadDashboard} />
+        <ErrorState message={errorMessage} onRetry={loadDashboard} />
       </div>
     );
   }
@@ -67,7 +60,7 @@ export default function Dashboard() {
         title="Dashboard"
         description="Welcome back to Kuiklo ERP."
         breadcrumbs={[{ label: 'Dashboard' }]}
-        rightContent={<Button variant="outline-secondary" onClick={loadDashboard}>Refresh</Button>}
+        rightContent={<Button variant="outline-secondary" onClick={() => loadDashboard(false)}>Refresh</Button>}
       />
 
       <div className="d-flex flex-wrap gap-2 mb-3">
