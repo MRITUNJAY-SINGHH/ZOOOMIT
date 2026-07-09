@@ -150,6 +150,16 @@ export const assignRider = async (req, res) => {
   try {
     const { riderId } = req.body;
     const order = await OrderService.assignRider(req.params.id, riderId, req.user._id);
+
+    // Send notification to the assigned rider
+    const { default: NotificationService } = await import('../services/NotificationService.js');
+    await NotificationService.createNotification({
+      type: 'Rider Assigned',
+      message: `You have been assigned order ${order.orderNumber}. Please accept or reject.`,
+      order: order._id,
+      targetUser: riderId
+    });
+
     res.json(order);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -185,7 +195,7 @@ export const cancelOrder = async (req, res) => {
     // Restore Inventory safely within transaction
     const InventoryService = (await import('../services/InventoryService.js')).default;
     for (const item of order.items) {
-      await InventoryService.autoReturnStock(item.productId, item.variantId, item.qty, 'Order Cancelled', req.user._id, order._id, session);
+      await InventoryService.autoReturnStock(item.product, item.variant, item.qty, 'Order Cancelled', req.user._id, order._id, session);
     }
 
     order.cancelledBy = req.user._id;

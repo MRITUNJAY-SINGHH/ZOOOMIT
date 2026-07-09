@@ -1,9 +1,10 @@
 export const menuItems = [
-  { isTitle: true, label: 'Dashboard' },
-  { icon: 'lucide:layout-dashboard', slug: 'dashboard', label: 'Dashboard', url: '/dashboard' },
+  { isTitle: true, label: 'Dashboard', hideForRoles: ['DeliveryBoy'] },
+  { icon: 'lucide:layout-dashboard', slug: 'dashboard', label: 'Dashboard', url: '/dashboard', hideForRoles: ['DeliveryBoy'] },
   { isTitle: true, label: 'Delivery', roles: ['DeliveryBoy'] },
-  { icon: 'lucide:truck', slug: 'active-deliveries', label: 'Active Deliveries', url: '/delivery/active', roles: ['DeliveryBoy'] },
-  { icon: 'lucide:history', slug: 'delivery-history', label: 'Delivery History', url: '/delivery/history', roles: ['DeliveryBoy'] },
+  { icon: 'lucide:gauge', slug: 'delivery-dashboard', label: 'Dashboard', url: '/dashboard', roles: ['DeliveryBoy'] },
+  { icon: 'lucide:package-check', slug: 'delivery-orders', label: 'My Orders', url: '/delivery/orders', roles: ['DeliveryBoy'] },
+  { icon: 'lucide:clock-4', slug: 'delivery-history', label: 'Delivery History', url: '/delivery/history', roles: ['DeliveryBoy'] },
   
   { isTitle: true, label: 'Catalog', permission: 'products.view' },
   { icon: 'lucide:package', slug: 'catalog-products', label: 'Products', url: '/catalog/products', permission: 'products.view' },

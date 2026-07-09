@@ -58,6 +58,7 @@ const NotificationDropdownPeople = () => {
       case 'Cancelled Order': return <XCircle {...props} className="text-danger" />;
       case 'Returned Order': return <RotateCcw {...props} className="text-info" />;
       case 'Refund Failure': return <AlertOctagon {...props} className="text-danger" />;
+      case 'Rider Assigned': return <Bell {...props} className="text-primary" />;
       default: return <Bell {...props} className="text-primary" />;
     }
   };
@@ -74,6 +75,8 @@ const NotificationDropdownPeople = () => {
     } else if (['Low Stock', 'Expiring Product', 'Stock Adjustment'].includes(item.type)) {
       const productId = item.product?._id || item.batch?.product;
       navigate('/catalog/products', { state: { viewProductId: productId } });
+    } else if (item.type === 'Rider Assigned') {
+      navigate(`/delivery/orders/${item.order?._id}`);
     }
   };
 

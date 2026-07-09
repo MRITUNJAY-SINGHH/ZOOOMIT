@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { Collapse } from 'react-bootstrap'
 import { Link, useLocation } from 'react-router'
+import api from '@/utils/api'
 const MenuItemWithChildren = ({ item, openMenuKey, setOpenMenuKey, level = 0 }) => {
   const pathname = useLocation().pathname
   const isTopLevel = level === 0
@@ -95,6 +96,40 @@ const AppMenu = () => {
     setTimeout(scrollToActiveLink, 150)
   }, [])
 
+  const [assignedCount, setAssignedCount] = useState(0);
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (user?.role === 'DeliveryBoy') {
+      const fetchCounts = async () => {
+        try {
+          const res = await api.get('/orders/delivery/my-orders');
+          const count = res.data.filter(o => o.status === 'Assigned').length;
+          
+          if (location.pathname === '/delivery/orders') {
+            localStorage.setItem('seenAssignedCount', count.toString());
+            setAssignedCount(0);
+          } else {
+            const seenCount = parseInt(localStorage.getItem('seenAssignedCount') || '0', 10);
+            if (count > seenCount) {
+              setAssignedCount(count - seenCount);
+            } else if (count < seenCount) {
+              localStorage.setItem('seenAssignedCount', count.toString());
+              setAssignedCount(0);
+            } else {
+              setAssignedCount(0);
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchCounts();
+      const interval = setInterval(fetchCounts, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user, location.pathname]);
+
   const filteredMenuItems = menuItems.filter(item => {
     // If it has a specific roles array, check if user role matches
     if (item.roles && user && !item.roles.includes(user.role)) return false;
@@ -108,6 +143,12 @@ const AppMenu = () => {
     }
 
     return true;
+  }).map(item => {
+    // Inject dynamic badge for delivery orders
+    if (item.slug === 'delivery-orders' && assignedCount > 0) {
+      return { ...item, badge: { text: assignedCount, className: 'bg-danger text-white' } };
+    }
+    return item;
   });
 
   return (

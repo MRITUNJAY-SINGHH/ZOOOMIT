@@ -6,6 +6,18 @@ export const getNotifications = async (req, res) => {
     const allowedTypes = [];
     const permissions = req.user.permissions || {};
     
+    // DeliveryBoy: only see notifications targeted specifically to them
+    if (req.user.role === 'DeliveryBoy') {
+      const notifications = await Notification.find({
+        targetUser: req.user._id,
+        readBy: { $ne: req.user._id }
+      })
+      .populate('order', 'orderNumber _id')
+      .sort('-createdAt')
+      .limit(50);
+      return res.json(notifications);
+    }
+
     // Inventory alerts
     if (permissions.inventory?.view) {
       allowedTypes.push('Low Stock', 'Expiring Product', 'Stock Adjustment');
