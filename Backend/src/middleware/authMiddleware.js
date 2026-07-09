@@ -27,12 +27,28 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export const authorize = (permission) => {
+export const authorize = (module, action = 'view') => {
   return (req, res, next) => {
-    if (req.user && (req.user.role === 'Admin' || req.user.permissions[permission])) {
-      next();
-    } else {
-      res.status(403).json({ message: `Not authorized. Missing permission: ${permission}` });
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
     }
+    if (req.user.role === 'Admin') {
+      return next();
+    }
+    const modulePerms = req.user.permissions?.[module];
+    if (modulePerms && modulePerms[action]) {
+      return next();
+    }
+    res.status(403).json({ message: `Not authorized. Missing permission: ${module}.${action}` });
+  };
+};
+
+export const restrictTo = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) return res.status(401).json({ message: 'Not authenticated' });
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Role not authorized for this action' });
+    }
+    next();
   };
 };

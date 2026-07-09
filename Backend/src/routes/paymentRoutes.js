@@ -6,7 +6,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protect, authorize('payments'), async (req, res) => {
+router.get('/', protect, authorize('payments', 'view'), async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;

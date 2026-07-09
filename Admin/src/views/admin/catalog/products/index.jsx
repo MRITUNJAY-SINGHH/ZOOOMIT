@@ -3,6 +3,7 @@ import { Button, Card, Dropdown, Form, InputGroup, OverlayTrigger, Table, Toolti
 import { Edit, Eye, Image, Trash2, Upload, Plus, Search, Filter, Grid as GridIcon, List as ListIcon, Star, PackageOpen, LayoutGrid, List, Download } from 'lucide-react';
 import { fetchApi } from '@/utils/api';
 import { toast } from 'react-hot-toast';
+import { useLocation } from 'react-router';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
@@ -14,6 +15,7 @@ import DeleteModal from '@/components/common/DeleteModal';
 import ProductForm from './ProductForm';
 import BulkImport from './BulkImport';
 import QuickViewModal from './QuickViewModal';
+import PermissionGuard from '@/components/PermissionGuard';
 
 export default function ProductsList() {
   const [products, setProducts] = useState([]);
@@ -36,10 +38,11 @@ export default function ProductsList() {
   const [totalRecords, setTotalRecords] = useState(0);
   
   // Selection & Bulk Actions
+  const location = useLocation();
   const [selectedItems, setSelectedItems] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null); // specific product obj OR 'bulk'
   const [isDeleting, setIsDeleting] = useState(false);
-  const [viewTarget, setViewTarget] = useState(null);
+  const [viewTarget, setViewTarget] = useState(location.state?.viewProductId ? { _id: location.state.viewProductId } : null);
 
   useEffect(() => {
     if (viewState === 'list') loadProducts();
@@ -176,13 +179,17 @@ export default function ProductsList() {
               {/* Dynamic Action Button: Add or Delete */}
               <div className="ms-sm-2">
                 {selectedItems.length > 0 ? (
-                  <Button variant="danger" className="d-flex align-items-center gap-2 px-3 shadow-sm text-nowrap" onClick={() => setDeleteTarget('bulk')}>
-                    <Trash2 size={16} /> Delete All ({selectedItems.length})
-                  </Button>
+                  <PermissionGuard permission="products.delete">
+                    <Button variant="danger" className="d-flex align-items-center gap-2 px-3 shadow-sm text-nowrap" onClick={() => setDeleteTarget('bulk')}>
+                      <Trash2 size={16} /> Delete All ({selectedItems.length})
+                    </Button>
+                  </PermissionGuard>
                 ) : (
-                  <Button variant="primary" className="d-flex align-items-center gap-2 px-3 shadow-sm text-nowrap" onClick={() => { setEditId(null); setViewState('form'); }}>
-                    <Plus size={16} /> Add Product
-                  </Button>
+                  <PermissionGuard permission="products.create">
+                    <Button variant="primary" className="d-flex align-items-center gap-2 px-3 shadow-sm text-nowrap" onClick={() => { setEditId(null); setViewState('form'); }}>
+                      <Plus size={16} /> Add Product
+                    </Button>
+                  </PermissionGuard>
                 )}
               </div>
 
@@ -260,12 +267,16 @@ export default function ProductsList() {
                         <Button variant="light" size="sm" className="btn-icon me-1 text-secondary rounded-circle bg-body-secondary border-0" onClick={() => setViewTarget(product)} title="View">
                           <Eye size={15} />
                         </Button>
-                        <Button variant="light" size="sm" className="btn-icon me-1 text-primary rounded-circle bg-body-secondary border-0" onClick={() => { setEditId(product._id); setViewState('form'); }} title="Edit">
-                          <Edit size={15} />
-                        </Button>
-                        <Button variant="light" size="sm" className="btn-icon text-danger rounded-circle bg-body-secondary border-0" onClick={() => setDeleteTarget(product)} title="Delete">
-                          <Trash2 size={15} />
-                        </Button>
+                        <PermissionGuard permission="products.edit">
+                          <Button variant="light" size="sm" className="btn-icon me-1 text-primary rounded-circle bg-body-secondary border-0" onClick={() => { setEditId(product._id); setViewState('form'); }} title="Edit">
+                            <Edit size={15} />
+                          </Button>
+                        </PermissionGuard>
+                        <PermissionGuard permission="products.delete">
+                          <Button variant="light" size="sm" className="btn-icon text-danger rounded-circle bg-body-secondary border-0" onClick={() => setDeleteTarget(product)} title="Delete">
+                            <Trash2 size={15} />
+                          </Button>
+                        </PermissionGuard>
                       </td>
                     </tr>
                   ))}
@@ -316,12 +327,16 @@ export default function ProductsList() {
                     </Card.Body>
                     <Card.Footer className="bg-transparent border-top-0 pt-0 pb-3 px-3">
                        <div className="d-flex gap-2">
-                          <Button variant="light" className="flex-grow-1 text-primary d-flex align-items-center justify-content-center gap-2 bg-primary-subtle border-0 fw-medium" onClick={() => { setEditId(product._id); setViewState('form'); }}>
-                            <Edit size={16} /> Edit
-                          </Button>
-                          <Button variant="light" className="text-danger bg-danger-subtle border-0" onClick={() => setDeleteTarget(product)}>
-                            <Trash2 size={16} />
-                          </Button>
+                          <PermissionGuard permission="products.edit">
+                            <Button variant="light" className="flex-grow-1 text-primary d-flex align-items-center justify-content-center gap-2 bg-primary-subtle border-0 fw-medium" onClick={() => { setEditId(product._id); setViewState('form'); }}>
+                              <Edit size={16} /> Edit
+                            </Button>
+                          </PermissionGuard>
+                          <PermissionGuard permission="products.delete">
+                            <Button variant="light" className="text-danger bg-danger-subtle border-0" onClick={() => setDeleteTarget(product)}>
+                              <Trash2 size={16} />
+                            </Button>
+                          </PermissionGuard>
                        </div>
                     </Card.Footer>
                   </Card>

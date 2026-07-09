@@ -4,7 +4,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/product-image', protect, authorize('staff'), upload.single('image'), (req, res) => {
+router.post('/product-image', protect, authorize('staff', 'create'), upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No image provided' });

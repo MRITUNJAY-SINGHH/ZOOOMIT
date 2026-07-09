@@ -7,6 +7,7 @@ import PageHeader from '@/components/common/PageHeader';
 import ActionBar from '@/components/common/ActionBar';
 import SearchBar from '@/components/common/SearchBar';
 import EmptyState from '@/components/common/EmptyState';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import InvoicePrintOut from './components/InvoicePrintOut';
 
 const STATUS_COLORS = {
@@ -107,7 +108,7 @@ export default function HistoryPage() {
 
       <Card>
         <Card.Body>
-          {loading ? <div className="p-4 text-center text-muted">Loading history...</div> : (
+          {loading ? <SkeletonTable rows={5} columns={5} /> : (
             <Table responsive hover className="align-middle mb-0">
               <thead>
                 <tr>

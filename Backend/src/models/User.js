@@ -2,6 +2,13 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
+const crudPermissions = {
+  view: { type: Boolean, default: false },
+  create: { type: Boolean, default: false },
+  edit: { type: Boolean, default: false },
+  delete: { type: Boolean, default: false }
+};
+
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -10,13 +17,17 @@ const userSchema = new mongoose.Schema({
   role: { type: String, enum: ['Admin', 'Staff', 'DeliveryBoy'], default: 'Staff' },
   status: { type: String, enum: ['Active', 'Inactive'], default: 'Active' },
   permissions: {
-    products: { type: Boolean, default: false },
-    inventory: { type: Boolean, default: false },
-    orders: { type: Boolean, default: false },
-    coupons: { type: Boolean, default: false },
-    pos: { type: Boolean, default: false },
-    reports: { type: Boolean, default: false },
-    payments: { type: Boolean, default: false }
+    products: crudPermissions,
+    inventory: crudPermissions,
+    orders: crudPermissions,
+    coupons: crudPermissions,
+    pos: crudPermissions,
+    reports: crudPermissions,
+    payments: crudPermissions,
+    staff: crudPermissions,
+    customers: crudPermissions,
+    suppliers: crudPermissions,
+    settings: crudPermissions
   },
   resetPasswordToken: String,
   resetPasswordExpire: Date

@@ -23,7 +23,8 @@ const settingsSchema = new mongoose.Schema({
   },
   
   lowStockThresholdDefault: { type: Number, default: 10 },
-  expiryAlertDays: { type: [Number], default: [30, 15, 10, 5] }
+  expiryAlertDays: { type: [Number], default: [30, 15, 10, 5] },
+  allowNegativeStock: { type: Boolean, default: false }
 }, { timestamps: true });
 
 const Settings = mongoose.model('Settings', settingsSchema);

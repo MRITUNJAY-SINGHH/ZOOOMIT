@@ -50,9 +50,10 @@ export default function NotificationsPage() {
     await markAsRead(item._id);
     
     if (['New Order', 'Cancelled Order', 'Returned Order', 'Refund Failure'].includes(item.type)) {
-      navigate('/ecommerce/orders');
+      navigate('/orders/all', { state: { viewOrderId: item.order?._id } });
     } else if (['Low Stock', 'Expiring Product', 'Stock Adjustment'].includes(item.type)) {
-      navigate('/ecommerce/products');
+      const productId = item.product?._id || item.batch?.product;
+      navigate('/catalog/products', { state: { viewProductId: productId } });
     }
   };
 

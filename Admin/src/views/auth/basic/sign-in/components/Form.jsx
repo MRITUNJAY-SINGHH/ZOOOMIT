@@ -8,8 +8,8 @@ const LoginForm = () => {
   const { login, loading, error } = useAuth()
   const [showPassword, setShowPassword] = useState(false)
   const [form, setForm] = useState({
-    email: 'admin@example.com',
-    password: 'password',
+    email: '',
+    password: '',
   })
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -28,7 +28,7 @@ const LoginForm = () => {
         <FormLabel>
           Email address <span className="text-danger">*</span>
         </FormLabel>
-        <FormControl type="email" placeholder="you@example.com" value={form.email} required onChange={handleChange} />
+        <FormControl name="email" type="email" placeholder="you@example.com" value={form.email} required onChange={handleChange} />
       </div>
       <div className="mb-3">
         <FormLabel>

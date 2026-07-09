@@ -3,6 +3,7 @@ import { Card, Row, Col, Table, Badge, Button, Modal, Form } from 'react-bootstr
 import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
+import { useAuthContext } from '@/context/useAuthContext';
 import SkeletonCard from '@/components/common/SkeletonCard';
 import PageHeader from '@/components/common/PageHeader';
 
@@ -18,6 +19,7 @@ const TIMELINE_ICONS = {
 };
 
 export default function OrderDetails({ orderId, onBack }) {
+  const { user } = useAuthContext();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [riders, setRiders] = useState([]);
@@ -32,7 +34,10 @@ export default function OrderDetails({ orderId, onBack }) {
     setLoading(true);
     try {
       const res = await api.get(`/orders/${orderId}`);
-      setOrder(res.data);
+      const timelineRes = await api.get(`/orders/${orderId}/timeline`);
+      const orderData = res.data;
+      orderData.timeline = timelineRes.data;
+      setOrder(orderData);
     } catch (e) { toast.error(e.message); }
     setLoading(false);
   };
@@ -181,11 +186,11 @@ export default function OrderDetails({ orderId, onBack }) {
               <h6 className="mb-0">Actions</h6>
             </Card.Header>
             <Card.Body className="d-flex gap-2 flex-wrap">
-              {order.status === 'Pending' && <Button variant="success" size="sm" onClick={() => updateStatus('Confirmed')}><Icon icon="lucide:check" className="me-1" width={14} />Confirm</Button>}
-              {order.status === 'Confirmed' && <Button variant="warning" size="sm" onClick={loadRiders}><Icon icon="lucide:user-plus" className="me-1" width={14} />Assign Rider</Button>}
+              {order.status === 'Pending' && user?.role !== 'DeliveryBoy' && <Button variant="success" size="sm" onClick={() => updateStatus('Confirmed')}><Icon icon="lucide:check" className="me-1" width={14} />Confirm</Button>}
+              {order.status === 'Confirmed' && user?.role !== 'DeliveryBoy' && <Button variant="warning" size="sm" onClick={loadRiders}><Icon icon="lucide:user-plus" className="me-1" width={14} />Assign Rider</Button>}
               {order.status === 'Assigned' && <Button variant="primary" size="sm" onClick={() => updateStatus('OutForDelivery')}><Icon icon="lucide:truck" className="me-1" width={14} />Out For Delivery</Button>}
               {order.status === 'OutForDelivery' && <Button variant="success" size="sm" onClick={() => updateStatus('Delivered')}><Icon icon="lucide:package-check" className="me-1" width={14} />Mark Delivered</Button>}
-              {['Pending', 'Confirmed', 'Assigned'].includes(order.status) && (
+              {['Pending', 'Confirmed', 'Assigned'].includes(order.status) && user?.role !== 'DeliveryBoy' && (
                 <Button variant="outline-danger" size="sm" onClick={() => setShowCancelModal(true)}>
                   <Icon icon="lucide:x-circle" className="me-1" width={14} />Cancel Order
                 </Button>
@@ -241,14 +246,14 @@ export default function OrderDetails({ orderId, onBack }) {
           </Card>
 
           {/* Rider */}
-          {order.rider && (
+          {order.assignedRider && (
             <Card className="mb-3">
               <Card.Header className="bg-transparent">
                 <h6 className="mb-0"><Icon icon="lucide:truck" className="me-2" width={16} />Delivery</h6>
               </Card.Header>
               <Card.Body>
-                <p className="mb-1 fw-medium">{order.rider.name}</p>
-                <p className="mb-0 text-muted small"><Icon icon="lucide:phone" width={12} className="me-1" />{order.rider.phone}</p>
+                <p className="mb-1 fw-medium">{order.assignedRider.name}</p>
+                <p className="mb-0 text-muted small"><Icon icon="lucide:phone" width={12} className="me-1" />{order.assignedRider.phone}</p>
               </Card.Body>
             </Card>
           )}

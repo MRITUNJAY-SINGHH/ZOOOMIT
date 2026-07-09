@@ -376,6 +376,43 @@ export const getSalesChart = async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
+export const getOrdersChart = async (req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const orders = await Order.aggregate([
+      { $match: { createdAt: { $gte: sevenDaysAgo } } },
+      { $group: {
+        _id: { 
+          date: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          type: "$orderType"
+        },
+        count: { $sum: 1 }
+      }}
+    ]);
+
+    const result = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(sevenDaysAgo);
+      d.setDate(d.getDate() + i);
+      const dateStr = d.toISOString().split('T')[0];
+      
+      const onlineObj = orders.find(o => o._id.date === dateStr && o._id.type === 'ONLINE');
+      const offlineObj = orders.find(o => o._id.date === dateStr && o._id.type === 'OFFLINE');
+
+      result.push({
+        _id: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        online: onlineObj ? onlineObj.count : 0,
+        offline: offlineObj ? offlineObj.count : 0
+      });
+    }
+
+    res.json(result);
+  } catch (error) { res.status(500).json({ message: error.message }); }
+};
+
 export const getTopSellingProducts = async (req, res) => {
   try {
     const products = await Order.aggregate([

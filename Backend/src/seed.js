@@ -32,6 +32,18 @@ const slugify = (value) =>
 const imageUrl = (query, index) =>
   `https://images.unsplash.com/photo-${index}?auto=format&fit=crop&w=900&q=80`;
 
+const fullPermissions = {
+  view: true, create: true, edit: true, delete: true
+};
+
+const viewOnly = {
+  view: true, create: false, edit: false, delete: false
+};
+
+const none = {
+  view: false, create: false, edit: false, delete: false
+};
+
 const users = [
   {
     name: 'Super Admin',
@@ -40,7 +52,11 @@ const users = [
     password: 'password',
     role: 'Admin',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: true, coupons: true, pos: true, reports: true, payments: true }
+    permissions: { 
+      products: fullPermissions, inventory: fullPermissions, orders: fullPermissions, 
+      coupons: fullPermissions, pos: fullPermissions, reports: fullPermissions, payments: fullPermissions,
+      staff: fullPermissions, customers: fullPermissions, suppliers: fullPermissions, settings: fullPermissions 
+    }
   },
   {
     name: 'Store Manager',
@@ -49,7 +65,11 @@ const users = [
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: true, coupons: true, pos: true, reports: true, payments: true }
+    permissions: { 
+      products: fullPermissions, inventory: fullPermissions, orders: fullPermissions, 
+      coupons: fullPermissions, pos: fullPermissions, reports: fullPermissions, payments: fullPermissions,
+      staff: fullPermissions, customers: fullPermissions, suppliers: fullPermissions, settings: fullPermissions 
+    }
   },
   {
     name: 'POS Cashier',
@@ -58,16 +78,40 @@ const users = [
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: true, reports: false, payments: false }
+    permissions: { 
+      products: { view: true, create: false, edit: false, delete: false }, 
+      inventory: none, 
+      orders: { view: true, create: true, edit: false, delete: false }, 
+      coupons: { view: true, create: false, edit: false, delete: false }, 
+      pos: fullPermissions, 
+      reports: none, 
+      payments: none,
+      staff: none, 
+      customers: { view: true, create: true, edit: true, delete: false }, 
+      suppliers: none, 
+      settings: none 
+    }
   },
   {
-    name: 'Inventory Staff',
+    name: 'Inventory Manager',
     email: 'inventory@example.com',
     phone: '9000000004',
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: false, coupons: false, pos: false, reports: false, payments: false }
+    permissions: { 
+      products: fullPermissions, 
+      inventory: fullPermissions, 
+      orders: none, 
+      coupons: none, 
+      pos: none, 
+      reports: none, 
+      payments: none,
+      staff: none, 
+      customers: none, 
+      suppliers: fullPermissions, 
+      settings: none 
+    }
   },
   {
     name: 'Report Analyst',
@@ -76,7 +120,19 @@ const users = [
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: false, reports: true, payments: true }
+    permissions: { 
+      products: viewOnly, 
+      inventory: viewOnly, 
+      orders: viewOnly, 
+      coupons: viewOnly, 
+      pos: viewOnly, 
+      reports: fullPermissions, 
+      payments: viewOnly,
+      staff: none, 
+      customers: viewOnly, 
+      suppliers: viewOnly, 
+      settings: none 
+    }
   },
   ...Array.from({ length: 6 }).map((_, index) => ({
     name: `Delivery Rider ${index + 1}`,
@@ -85,7 +141,11 @@ const users = [
     password: 'password',
     role: 'DeliveryBoy',
     status: index === 5 ? 'Inactive' : 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: false, reports: false, payments: false }
+    permissions: { 
+      products: none, inventory: none, orders: { view: true, create: false, edit: true, delete: false }, 
+      coupons: none, pos: none, reports: none, payments: none,
+      staff: none, customers: { view: true, create: false, edit: false, delete: false }, suppliers: none, settings: none
+    }
   }))
 ];
 

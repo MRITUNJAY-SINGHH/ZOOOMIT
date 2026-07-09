@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Row, Col, Table, Button, Form, InputGroup, Modal } from 'react-bootstrap';
+import { Card, Row, Col, Table, Button, Form, InputGroup, Modal, Spinner } from 'react-bootstrap';
 import { useLocation, useNavigate, useSearchParams } from 'react-router';
 import { fetchApi } from '@/utils/api';
 import PageHeader from '@/components/common/PageHeader';
@@ -18,6 +18,7 @@ export default function POSBilling() {
   const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [syncStatus, setSyncStatus] = useState('idle'); // idle, syncing, done
   
   const [holdModal, setHoldModal] = useState(false);
   const [holdName, setHoldName] = useState('');
@@ -32,13 +33,23 @@ export default function POSBilling() {
   useEffect(() => {
     if (barcodeRef.current) barcodeRef.current.focus();
     loadHeldBills();
+
+    const handleOnline = () => {
+      syncOfflineOrders();
+    };
+    window.addEventListener('online', handleOnline);
+    return () => window.removeEventListener('online', handleOnline);
   }, []);
 
   const loadHeldBills = async () => {
     try {
       const data = await fetchApi('/pos/hold');
-      setHeldBills(data);
-    } catch (e) { console.error(e); }
+      const localHolds = JSON.parse(localStorage.getItem('offline_holds') || '[]');
+      setHeldBills([...localHolds, ...data]);
+    } catch (e) { 
+      const localHolds = JSON.parse(localStorage.getItem('offline_holds') || '[]');
+      setHeldBills(localHolds);
+    }
   };
 
   const handleSearchChange = async (e) => {
@@ -173,26 +184,61 @@ export default function POSBilling() {
   const handleHoldBill = async () => {
     if (cart.length === 0) return alert('Cart empty');
     setLoading(true);
+
+    const payload = {
+      referenceName: holdName,
+      customer: customer ? customer._id : null,
+      items: cart,
+      totals: { subTotal: total, tax: 0, discount: 0, amount: total }
+    };
+
     try {
       await fetchApi('/pos/hold', {
         method: 'POST',
-        body: JSON.stringify({
-          referenceName: holdName,
-          customer: customer ? customer._id : null,
-          items: cart,
-          totals: { subTotal: total, tax: 0, discount: 0, amount: total }
-        })
+        body: JSON.stringify(payload)
       });
       setCart([]);
       setHoldModal(false);
       setHoldName('');
       loadHeldBills();
-    } catch (e) { alert(e.message); }
+    } catch (e) { 
+      if (!window.navigator.onLine || e.message.includes('Failed to fetch')) {
+        const localHolds = JSON.parse(localStorage.getItem('offline_holds') || '[]');
+        localHolds.push({ ...payload, _id: `local-hold-${Date.now()}`, isLocal: true });
+        localStorage.setItem('offline_holds', JSON.stringify(localHolds));
+        
+        setCart([]);
+        setHoldModal(false);
+        setHoldName('');
+        loadHeldBills();
+        toast.success('Bill held locally (Offline)');
+      } else {
+        alert(e.message); 
+      }
+    }
     setLoading(false);
   };
 
   const handleResumeBill = async (billId) => {
     setLoading(true);
+    
+    // Check if it's a local hold
+    if (billId.toString().startsWith('local-hold-')) {
+      const localHolds = JSON.parse(localStorage.getItem('offline_holds') || '[]');
+      const bill = localHolds.find(b => b._id === billId);
+      if (bill) {
+        setCart(bill.items);
+        // We might not have the full customer object, but we have the ID. 
+        // We'll skip setting full customer details for offline resume for simplicity, or just set it as null
+        setCustomer(null); 
+        const newHolds = localHolds.filter(b => b._id !== billId);
+        localStorage.setItem('offline_holds', JSON.stringify(newHolds));
+        loadHeldBills();
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const bill = await fetchApi(`/pos/hold/${billId}`);
       setCart(bill.items);
@@ -207,20 +253,22 @@ export default function POSBilling() {
   const checkout = async (paymentMethod) => {
     if (cart.length === 0) return alert('Cart is empty');
     setLoading(true);
-    try {
-      const payload = {
-        customer: customer ? customer._id : null,
-        customerSnapshot: { 
-          name: customerInfo.name || (customer ? customer.name : 'Walk-in'), 
-          phone: customerInfo.phone || (customer ? customer.phone : undefined),
-          email: customerInfo.email || undefined
-        },
-        customerAddress: customerInfo.address && (customerInfo.address.street || customerInfo.address.city) ? customerInfo.address : undefined,
-        items: cart,
-        subTotal: total, tax: 0, discount: 0, amount: total,
-        paymentMethod
-      };
 
+    const payload = {
+      customer: customer ? customer._id : null,
+      customerSnapshot: { 
+        name: customerInfo.name || (customer ? customer.name : 'Walk-in'), 
+        phone: customerInfo.phone || (customer ? customer.phone : undefined),
+        email: customerInfo.email || undefined
+      },
+      customerAddress: customerInfo.address && (customerInfo.address.street || customerInfo.address.city) ? customerInfo.address : undefined,
+      items: cart,
+      subTotal: total, tax: 0, discount: 0, amount: total,
+      paymentMethod,
+      offlineId: `offline-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+    };
+
+    try {
       const res = await fetchApi('/pos/checkout', { method: 'POST', body: JSON.stringify(payload) });
       
       setCart([]);
@@ -228,9 +276,59 @@ export default function POSBilling() {
       setCustomerInfo({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
       setInvoiceToPrint(res.invoice);
     } catch (error) {
-      alert(error.message);
+      if (!window.navigator.onLine || error.message.includes('Failed to fetch')) {
+        // Save to offline queue
+        const offlineOrders = JSON.parse(localStorage.getItem('offline_orders') || '[]');
+        const offlineInvoice = {
+          _id: `offline-${Date.now()}`,
+          invoiceNumber: `OFF-${Date.now()}`,
+          createdAt: new Date(),
+          customerSnapshot: { name: customerInfo.name || (customer ? customer.name : 'Walk-in') },
+          productSnapshot: cart,
+          totalsSnapshot: { subTotal: total, tax: 0, discount: 0, amount: total },
+          paymentMethod
+        };
+        offlineOrders.push({ payload, offlineInvoice });
+        localStorage.setItem('offline_orders', JSON.stringify(offlineOrders));
+        
+        setCart([]);
+        setCustomer(null);
+        setCustomerInfo({ name: '', phone: '', email: '', address: { street: '', city: '', state: '', zipCode: '' } });
+        setInvoiceToPrint(offlineInvoice);
+        toast.success('Saved Offline! Will sync when connection is restored.');
+      } else {
+        alert(error.message);
+      }
     }
     setLoading(false);
+  };
+
+  const syncOfflineOrders = async () => {
+    const offlineOrders = JSON.parse(localStorage.getItem('offline_orders') || '[]');
+    if (offlineOrders.length === 0) {
+      setSyncStatus('idle');
+      return;
+    }
+    
+    setSyncStatus('syncing');
+    
+    try {
+      const res = await fetchApi('/pos/sync', { method: 'POST', body: JSON.stringify({ offlineOrders }) });
+      
+      localStorage.setItem('offline_orders', JSON.stringify(res.failedOrders));
+      
+      if (res.failedOrders.length > 0) {
+        toast.error(`Synced ${res.successCount} orders, but ${res.failedOrders.length} failed. Check admin setting for Negative Stock.`);
+        setSyncStatus('idle');
+      } else {
+        toast.success(`Successfully synced all ${res.successCount} offline orders!`);
+        setSyncStatus('done');
+        setTimeout(() => setSyncStatus('idle'), 3000);
+      }
+    } catch (e) {
+      toast.error('Sync failed: ' + e.message);
+      setSyncStatus('idle');
+    }
   };
 
   if (invoiceToPrint) {
@@ -242,10 +340,25 @@ export default function POSBilling() {
       <PageHeader 
         title="POS Billing" 
         rightContent={
-          <>
-            <Button variant="secondary" className="me-2" onClick={() => navigate('/pos/history')}>History / Returns</Button>
+          <div className="d-flex align-items-center gap-2">
+            {JSON.parse(localStorage.getItem('offline_orders') || '[]').length > 0 && syncStatus === 'idle' && (
+              <Button variant="warning" className="text-dark" onClick={syncOfflineOrders}>
+                Pending Sync ({JSON.parse(localStorage.getItem('offline_orders') || '[]').length})
+              </Button>
+            )}
+            {syncStatus === 'syncing' && (
+              <Button variant="info" disabled>
+                <Spinner size="sm" className="me-2" /> Syncing...
+              </Button>
+            )}
+            {syncStatus === 'done' && (
+              <Button variant="success" disabled>
+                All Synced
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => navigate('/pos/history')}>History / Returns</Button>
             <Button variant="outline-danger" onClick={() => setClearCartModal(true)} disabled={cart.length === 0}>Clear Cart</Button>
-          </>
+          </div>
         }
       />
 

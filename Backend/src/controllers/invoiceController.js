@@ -196,3 +196,27 @@ export const bulkDeleteInvoices = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Download PDF for invoice
+// @route   GET /api/invoices/:id/pdf
+// @access  Private
+export const downloadInvoicePdf = async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id);
+    if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+
+    const Settings = (await import('../models/Settings.js')).default;
+    const settings = await Settings.findOne() || {};
+
+    const PdfService = (await import('../services/PdfService.js')).default;
+    const pdfPath = await PdfService.generateInvoice(invoice, settings);
+
+    res.download(pdfPath, `${invoice.invoiceNumber}.pdf`, (err) => {
+      if (err) console.error("PDF Download Error:", err);
+      import('fs').then(fs => fs.unlink(pdfPath, () => {}));
+    });
+  } catch (error) {
+    console.error("PDF Generation Error:", error);
+    res.status(500).json({ message: 'Could not generate PDF' });
+  }
+};

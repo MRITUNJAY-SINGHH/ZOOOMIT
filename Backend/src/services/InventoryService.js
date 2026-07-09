@@ -51,8 +51,22 @@ class InventoryService {
    * Reduce stock (Sale) - Uses FIFO based on expiry or batch creation
    */
   async reduceStockForSale(items, user, orderId, session = null) {
+    const { default: Settings } = await import('../models/Settings.js');
+    const settings = await Settings.findOne().session(session);
+    const allowNegativeStock = settings?.allowNegativeStock || false;
+
     for (const item of items) {
       const { productId, variantId, qty } = item;
+      
+      const product = await Product.findById(productId).session(session);
+      if (!product) throw new Error(`Product ${productId} not found`);
+
+      if (!allowNegativeStock) {
+        if (product.stock < qty) {
+          throw new Error(`Insufficient stock for ${product.name}. Available: ${product.stock}, Requested: ${qty}`);
+        }
+      }
+
       let remainingQtyToReduce = qty;
 
       const batches = await ProductBatch.find({ product: productId, stock: { $gt: 0 } })
@@ -85,8 +99,43 @@ class InventoryService {
         batchIndex++;
       }
 
-      if (remainingQtyToReduce > 0) {
-        console.warn(`Oversold product ${productId}. Missing ${remainingQtyToReduce} units.`);
+      // If we still need to reduce stock but allowNegativeStock is true,
+      // we might need to create a dummy batch or just accept that the Product stock will be negative.
+      // Since batches represent physical stock, they shouldn't usually be negative.
+      // However, for Kuiklo, we recalculate total stock by summing batches.
+      // If we don't reduce a batch, the Product stock won't go negative on recalculation!
+      // So if allowNegativeStock is true and remainingQtyToReduce > 0, we should artificially 
+      // reduce the most recent batch or a default batch to negative, so recalculation works.
+      
+      if (remainingQtyToReduce > 0 && allowNegativeStock) {
+         let batch = batches.length > 0 ? batches[batches.length - 1] : await ProductBatch.findOne({ product: productId }).session(session);
+         
+         if (!batch) {
+            // Create a dummy batch to hold the negative stock
+            batch = new ProductBatch({
+              product: productId,
+              batchNumber: `NEG-${Date.now()}`,
+              stock: 0,
+              costPrice: product.costPrice || 0
+            });
+         }
+         
+         batch.stock -= remainingQtyToReduce;
+         await batch.save({ session });
+
+         const log = new InventoryLog({
+          product: productId,
+          variant: variantId,
+          batch: batch._id,
+          type: 'SALE',
+          previousStock: batch.stock + remainingQtyToReduce,
+          quantityChanged: -remainingQtyToReduce,
+          newStock: batch.stock,
+          reason: `Order ${orderId} (Oversold)`,
+          user: user,
+          order: orderId
+        });
+        await log.save({ session });
       }
 
       await this.recalculateTotalStock(productId, variantId, session);

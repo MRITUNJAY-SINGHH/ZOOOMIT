@@ -5,15 +5,15 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.route('/stock-entry')
-  .post(protect, authorize('inventory'), addStockEntry);
+  .post(protect, authorize('inventory', 'create'), addStockEntry);
 
 router.route('/logs')
-  .get(protect, authorize('inventory'), getInventoryLogs);
+  .get(protect, authorize('inventory', 'view'), getInventoryLogs);
 
 router.route('/expiring')
-  .get(protect, authorize('inventory'), getExpiringProducts);
+  .get(protect, authorize('inventory', 'view'), getExpiringProducts);
 
 router.route('/low-stock')
-  .get(protect, authorize('inventory'), getLowStockProducts);
+  .get(protect, authorize('inventory', 'view'), getLowStockProducts);
 
 export default router;

@@ -2,6 +2,7 @@ import OrderService from '../services/OrderService.js';
 import InventoryService from '../services/InventoryService.js';
 import Order from '../models/Order.js';
 import mongoose from 'mongoose';
+import { clearReportsCache } from '../utils/cache.js';
 
 export const getOrders = async (req, res) => {
   try {
@@ -24,7 +25,19 @@ export const getOrders = async (req, res) => {
         query.$or.push({ customer: { $in: customers.map(c => c._id) } });
       }
     }
-    if (status) query.status = status;
+    if (status) {
+      if (['Pending', 'Refunded'].includes(status)) {
+        // These statuses exist in both order.status and paymentStatus
+        if (query.$or) {
+          query.$and = [ { $or: query.$or }, { $or: [{ status }, { paymentStatus: status }] } ];
+          delete query.$or;
+        } else {
+          query.$or = [{ status }, { paymentStatus: status }];
+        }
+      } else {
+        query.status = status;
+      }
+    }
     if (orderType) query.orderType = orderType;
     if (startDate || endDate) {
       query.createdAt = {};
@@ -53,7 +66,9 @@ export const getOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate('customer', 'name phone email addresses');
+    const order = await Order.findById(req.params.id)
+      .populate('customer', 'name phone email addresses')
+      .populate('assignedRider', 'name phone email');
     if (!order) return res.status(404).json({ message: 'Order not found' });
     res.json(order);
   } catch (error) {
@@ -102,6 +117,8 @@ export const createOrder = async (req, res) => {
     await session.commitTransaction();
     session.endSession();
 
+    clearReportsCache();
+
     // Out-of-band notification
     const { default: NotificationService } = await import('../services/NotificationService.js');
     await NotificationService.createNotification({
@@ -122,6 +139,7 @@ export const updateOrderStatus = async (req, res) => {
   try {
     const { status, note } = req.body;
     const order = await OrderService.updateOrderStatus(req.params.id, status, req.user._id, note);
+    clearReportsCache();
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -229,6 +247,62 @@ export const getOrderTimeline = async (req, res) => {
     const { default: OrderActivity } = await import('../models/OrderActivity.js');
     const activities = await OrderActivity.find({ order: req.params.id }).populate('user', 'name role').sort('timestamp');
     res.json(activities);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getMyDeliveries = async (req, res) => {
+  try {
+    const orders = await Order.find({ assignedRider: req.user._id })
+      .populate('customer', 'name phone email addresses')
+      .sort('-createdAt');
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateDeliveryStatus = async (req, res) => {
+  try {
+    const { status, rejectReason } = req.body;
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: 'Order not found' });
+    
+    // Ensure ownership
+    if (order.assignedRider?.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to update this delivery' });
+    }
+
+    const validStatuses = ['Accepted', 'Picked Up', 'Out For Delivery', 'Delivered', 'Rejected', 'Pending'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid delivery status' });
+    }
+
+    if (status === 'Rejected') {
+      order.status = 'Pending';
+      order.assignedRider = null;
+      await order.save();
+      
+      const { default: OrderService } = await import('../services/OrderService.js');
+      await OrderService.logActivity(order._id, 'Rejected', req.user._id, rejectReason || 'Rider rejected delivery');
+    } else {
+      order.status = status;
+      await order.save();
+      
+      const { default: OrderService } = await import('../services/OrderService.js');
+      await OrderService.logActivity(order._id, status, req.user._id, `Status updated by rider`);
+    }
+    
+    if (status === 'Delivered') {
+      order.paymentStatus = 'Paid';
+    }
+
+    await order.save();
+    clearReportsCache();
+
+    res.json({ message: 'Delivery status updated', order });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

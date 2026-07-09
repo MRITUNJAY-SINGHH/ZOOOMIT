@@ -58,7 +58,10 @@ class OrderService {
     const validTransitions = {
       'Pending': ['Confirmed', 'Cancelled'],
       'Confirmed': ['Assigned', 'Cancelled'],
-      'Assigned': ['OutForDelivery', 'Cancelled'],
+      'Assigned': ['Accepted', 'OutForDelivery', 'Cancelled'],
+      'Accepted': ['Picked Up', 'Cancelled'],
+      'Picked Up': ['Out For Delivery', 'Cancelled'],
+      'Out For Delivery': ['Delivered', 'Returned', 'Cancelled'],
       'OutForDelivery': ['Delivered', 'Returned', 'Cancelled'],
       'Delivered': ['Returned', 'Refunded'],
       'Cancelled': [],

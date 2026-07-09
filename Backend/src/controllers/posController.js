@@ -6,6 +6,60 @@ import Transaction from '../models/Transaction.js';
 import ProductBatch from '../models/ProductBatch.js';
 import InventoryLog from '../models/InventoryLog.js';
 import Product from '../models/Product.js';
+import { clearReportsCache } from '../utils/cache.js';
+
+// --- OFFLINE SYNC LOGIC ---
+
+export const posSync = async (req, res) => {
+  const { offlineOrders } = req.body;
+  if (!Array.isArray(offlineOrders)) return res.status(400).json({ message: 'offlineOrders must be an array' });
+
+  let successCount = 0;
+  let failedOrders = [];
+
+  for (const order of offlineOrders) {
+    try {
+      // Create a mock req/res object to reuse posCheckout
+      // This is a quick trick to reuse the logic without abstracting it yet
+      let responseData = null;
+      let statusCode = 200;
+      
+      const mockReq = { 
+        body: order.payload, 
+        user: req.user 
+      };
+      
+      const mockRes = {
+        status: (code) => { statusCode = code; return mockRes; },
+        json: (data) => { responseData = data; }
+      };
+
+      await posCheckout(mockReq, mockRes);
+
+      if (statusCode >= 200 && statusCode < 300) {
+        successCount++;
+      } else {
+        throw new Error(responseData?.message || 'Sync failed');
+      }
+    } catch (e) {
+      failedOrders.push({
+        ...order,
+        error: e.message
+      });
+    }
+  }
+
+  // Structured Logging
+  console.log(`[SYNC] Offline Queue Processed: ${successCount} Success, ${failedOrders.length} Failed.`);
+  if (failedOrders.length > 0) {
+    console.log(`[SYNC ERROR DETAILS]: `, failedOrders.map(f => f.error));
+  }
+
+  res.json({
+    successCount,
+    failedOrders
+  });
+};
 
 // --- HOLD BILL LOGIC ---
 
@@ -62,7 +116,25 @@ export const posCheckout = async (req, res) => {
   session.startTransaction();
 
   try {
-    let { customer, customerSnapshot, customerAddress, items, subTotal, tax, discount, amount, paymentMethod } = req.body;
+    let { customer, customerSnapshot, customerAddress, items, subTotal, tax, discount, amount, paymentMethod, offlineId } = req.body;
+
+    // Idempotency Check
+    if (offlineId) {
+      const existingOrder = await Order.findOne({ offlineId }).session(session);
+      if (existingOrder) {
+        // Already processed successfully previously (perhaps network timeout on frontend)
+        const invoice = await Invoice.findOne({ order: existingOrder._id }).session(session);
+        const transaction = await Transaction.findOne({ order: existingOrder._id }).session(session);
+        await session.abortTransaction();
+        session.endSession();
+        return res.status(200).json({ message: 'Idempotent checkout successful', order: existingOrder, invoice, transaction });
+      }
+    }
+
+    // Fetch Settings
+    const Settings = (await import('../models/Settings.js')).default;
+    const settings = await Settings.findOne().session(session);
+    const allowNegativeStock = settings ? settings.allowNegativeStock : false;
 
     // Check in my customer have this or not if not create that
     if (!customer && customerSnapshot && customerSnapshot.phone) {
@@ -110,7 +182,8 @@ export const posCheckout = async (req, res) => {
       discount,
       amount,
       status: 'Delivered', // POS is instant delivery
-      paymentStatus: 'Paid'
+      paymentStatus: 'Paid',
+      offlineId
     });
     await order.save({ session });
 
@@ -149,13 +222,18 @@ export const posCheckout = async (req, res) => {
       }
 
       if (remainingQtyToReduce > 0) {
-        throw new Error(`Insufficient stock for Product ID: ${productId}. Missing ${remainingQtyToReduce} units.`);
+        if (!allowNegativeStock) {
+          throw new Error(`Insufficient stock for Product ID: ${productId}. Missing ${remainingQtyToReduce} units.`);
+        }
+        
+        // If allowing negative stock, we need to reduce the product's overall stock directly 
+        // since batches ran out. We don't have a batch to reduce.
+        // We'll create a dummy negative batch log for tracking, or just update Product stock.
       }
 
       // Update total stock on Product
-      const productBatches = await ProductBatch.find({ product: productId }).session(session);
-      const totalProductStock = productBatches.reduce((acc, b) => acc + b.stock, 0);
-      await Product.findByIdAndUpdate(productId, { stock: totalProductStock }, { session });
+      // Instead of recalculating from batches, we just decrement from the current product stock
+      await Product.findByIdAndUpdate(productId, { $inc: { stock: -qty } }, { session });
     }
 
     // 4. Create Transaction
@@ -187,6 +265,8 @@ export const posCheckout = async (req, res) => {
     // COMMIT ALL
     await session.commitTransaction();
     session.endSession();
+    
+    clearReportsCache();
 
     res.status(201).json({
       message: 'Checkout successful',
@@ -283,6 +363,8 @@ export const posReturn = async (req, res) => {
           updatedOrder.paymentStatus = updatedTxn.paymentStatus;
           await updatedOrder.save();
         }
+        
+        clearReportsCache();
 
         return res.json({ message: 'Return processed. Razorpay refund requested.', refundAmount: totalRefundAmount, refundStatus: refundSuccess ? 'Processed' : 'Failed', invoice });
       }
@@ -309,6 +391,8 @@ export const posReturn = async (req, res) => {
         message: `Order ${order.orderNumber} had items returned.`,
         order: order._id
       });
+      
+      clearReportsCache();
 
       return res.json({ message: 'Return processed successfully', refundAmount: totalRefundAmount, invoice });
     }

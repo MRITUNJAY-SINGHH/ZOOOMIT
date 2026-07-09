@@ -19,10 +19,11 @@ const orderSchema = new mongoose.Schema({
   billNumber: { type: String, unique: true, sparse: true }, // Retail POS bill number (e.g. POS-2026-00001)
   orderType: { type: String, enum: ['ONLINE', 'OFFLINE'], required: true },
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' }, // Optional for walk-ins
+  offlineId: { type: String, unique: true, sparse: true }, // Idempotency key for offline POS syncing
   
   status: { 
     type: String, 
-    enum: ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'],
+    enum: ['Pending', 'Confirmed', 'Assigned', 'Accepted', 'Picked Up', 'OutForDelivery', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'],
     default: 'Pending'
   },
   paymentStatus: { 
@@ -58,8 +59,9 @@ const orderSchema = new mongoose.Schema({
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-orderSchema.index({ status: 1 });
-orderSchema.index({ createdAt: 1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ customer: 1, createdAt: -1 });
+orderSchema.index({ orderType: 1, createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);
 export default Order;

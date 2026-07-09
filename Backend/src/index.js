@@ -72,6 +72,32 @@ app.get('/', (req, res) => {
   res.send('Kuiklo API is running...');
 });
 
+import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
+
+app.get('/api/health', async (req, res) => {
+  let dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  
+  let smtpStatus = 'Configured';
+  if (!process.env.SMTP_HOST) smtpStatus = 'Not Configured';
+  
+  const healthCheck = {
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    db: dbStatus,
+    smtp: smtpStatus,
+    cloudinary: process.env.CLOUDINARY_URL ? 'Configured' : 'Not Configured',
+    razorpay: process.env.RAZORPAY_KEY_ID ? 'Configured' : 'Not Configured'
+  };
+
+  try {
+    res.status(dbStatus === 'Connected' ? 200 : 503).json(healthCheck);
+  } catch (error) {
+    healthCheck.message = error.message;
+    res.status(503).json(healthCheck);
+  }
+});
+
 app.use((err, req, res, next) => {
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode).json({

@@ -11,33 +11,22 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 import { useQuery } from '@tanstack/react-query';
 
 export default function OrdersOverviewChart() {
-  const { data: ordersData, isLoading: loading, error, refetch: loadData } = useQuery({
+  const { data: rowsData, isLoading: loading, error, refetch: loadData } = useQuery({
     queryKey: ['ordersChart'],
     queryFn: async () => {
-      const res = await api.get('/orders?page=1&limit=100');
-      return res.data?.data || [];
+      const res = await api.get('/reports/orders-chart');
+      return Array.isArray(res.data) ? res.data : [];
     }
   });
 
-  const orders = ordersData || [];
+  const chartRows = rowsData || [];
   const errorMessage = error?.message;
 
-  const chartRows = useMemo(() => {
-    const grouped = {};
-    orders.forEach((order) => {
-      const key = new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
-      grouped[key] ||= { online: 0, offline: 0 };
-      if (order.orderType === 'ONLINE') grouped[key].online += 1;
-      if (order.orderType === 'OFFLINE') grouped[key].offline += 1;
-    });
-    return Object.entries(grouped).slice(-7);
-  }, [orders]);
-
   const data = {
-    labels: chartRows.map(([label]) => label),
+    labels: chartRows.map((row) => row._id),
     datasets: [
-      { label: 'Online', data: chartRows.map(([, value]) => value.online), backgroundColor: 'rgb(59, 130, 246)', borderRadius: 4 },
-      { label: 'Offline', data: chartRows.map(([, value]) => value.offline), backgroundColor: 'rgb(16, 185, 129)', borderRadius: 4 },
+      { label: 'Online', data: chartRows.map((row) => row.online), backgroundColor: 'rgb(59, 130, 246)', borderRadius: 4 },
+      { label: 'Offline', data: chartRows.map((row) => row.offline), backgroundColor: 'rgb(16, 185, 129)', borderRadius: 4 },
     ],
   };
 
@@ -45,7 +34,7 @@ export default function OrdersOverviewChart() {
     <Card className="h-100">
       <Card.Body>
         <h2 className="kuiklo-section-title mb-3">Orders Overview</h2>
-        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : orders.length === 0 ? (
+        {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : chartRows.length === 0 ? (
           <EmptyState icon="lucide:shopping-bag" title="No order data" message="Order trends will appear when orders are created." />
         ) : (
           <div style={{ height: 280 }}>

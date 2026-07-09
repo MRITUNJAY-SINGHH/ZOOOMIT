@@ -9,25 +9,25 @@ const router = express.Router();
 
 router.route('/')
   .get(protect, getProducts)
-  .post(protect, authorize('products'), createProduct);
+  .post(protect, authorize('products', 'create'), createProduct);
 
 router.route('/bulk')
-  .post(protect, authorize('products'), bulkImportProducts)
-  .delete(protect, authorize('products'), bulkDeleteProducts);
+  .post(protect, authorize('products', 'create'), bulkImportProducts)
+  .delete(protect, authorize('products', 'delete'), bulkDeleteProducts);
 
 router.route('/barcode/:barcode')
-  .get(protect, authorize('pos'), searchProductByBarcode);
+  .get(protect, authorize('pos', 'view'), searchProductByBarcode);
 
 router.route('/:id')
   .get(protect, getProductById)
-  .put(protect, authorize('products'), updateProduct)
-  .delete(protect, authorize('products'), deleteProduct);
+  .put(protect, authorize('products', 'edit'), updateProduct)
+  .delete(protect, authorize('products', 'delete'), deleteProduct);
 
 router.route('/:id/variants')
-  .post(protect, authorize('products'), addVariant);
+  .post(protect, authorize('products', 'create'), addVariant);
 
 router.route('/:id/variants/:variantId')
-  .delete(protect, authorize('products'), deleteVariant);
+  .delete(protect, authorize('products', 'delete'), deleteVariant);
 
 router.route('/:id/batches')
   .get(protect, getProductBatches);

@@ -33,6 +33,8 @@ const productSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 productSchema.index({ baseSku: 1 });
+productSchema.index({ category: 1, isActive: 1 });
+productSchema.index({ name: 'text', brand: 'text', description: 'text' });
 
 const Product = mongoose.model('Product', productSchema);
 export default Product;

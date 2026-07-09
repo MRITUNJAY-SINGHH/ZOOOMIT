@@ -5,11 +5,11 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 const router = express.Router();
 
 router.route('/')
-  .get(protect, authorize('inventory'), getSuppliers)
-  .post(protect, authorize('inventory'), createSupplier);
+  .get(protect, authorize('inventory', 'view'), getSuppliers)
+  .post(protect, authorize('inventory', 'create'), createSupplier);
 
 router.route('/:id')
-  .put(protect, authorize('inventory'), updateSupplier)
-  .delete(protect, authorize('inventory'), deleteSupplier);
+  .put(protect, authorize('inventory', 'edit'), updateSupplier)
+  .delete(protect, authorize('inventory', 'delete'), deleteSupplier);
 
 export default router;
