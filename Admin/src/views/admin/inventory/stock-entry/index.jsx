@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Row, Col, Alert } from 'react-bootstrap';
-import { Plus, CheckCircle, PackagePlus } from 'lucide-react';
+import { Link } from 'react-router';
+import { Plus, CheckCircle, PackagePlus, ClipboardList } from 'lucide-react';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
+import InventoryStatCards from '@/components/inventory/InventoryStatCards';
 
 export default function StockEntry() {
   const [formData, setFormData] = useState({ 
@@ -41,6 +43,34 @@ export default function StockEntry() {
     }
   };
 
+  useEffect(() => {
+    const fetchBatches = async () => {
+      if (!formData.productId || !formData.supplierId) return;
+      try {
+        const res = await api.get(`/products/${formData.productId}/batches`);
+        const batches = res.data;
+        const matchingBatch = batches.find(b => (b.supplier?._id || b.supplier) === formData.supplierId);
+        
+        if (matchingBatch) {
+          let updated = false;
+          setFormData(prev => {
+            const next = { ...prev };
+            if (!next.batchNumber && matchingBatch.batchNumber) { next.batchNumber = matchingBatch.batchNumber; updated = true; }
+            if (!next.manufacturingDate && matchingBatch.manufacturingDate) { next.manufacturingDate = matchingBatch.manufacturingDate.substring(0, 10); updated = true; }
+            if (!next.expiryDate && matchingBatch.expiryDate) { next.expiryDate = matchingBatch.expiryDate.substring(0, 10); updated = true; }
+            return next;
+          });
+          if (updated) {
+            toast.success('Batch info autofilled from existing stock');
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch batches for autofill', e);
+      }
+    };
+    fetchBatches();
+  }, [formData.productId, formData.supplierId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault(); 
     setLoading(true); 
@@ -77,8 +107,15 @@ export default function StockEntry() {
           <h3 className="report-title mb-1">Stock Entry</h3>
           <p className="text-muted font-size-14 mb-0">Manually add stock to products and assign batch information.</p>
         </div>
+        <div className="report-header-right d-flex gap-3 align-items-center">
+          <Button as={Link} to="/inventory/logs" variant="outline-secondary" className="d-inline-flex align-items-center gap-2">
+            <ClipboardList size={16} /> View Logs
+          </Button>
+        </div>
       </div>
       
+      <InventoryStatCards />
+
       <Card className="report-section-card border-0 mt-2">
         <Card.Header className="bg-transparent border-bottom border-secondary-subtle pt-4 pb-3 px-4">
           <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
@@ -95,7 +132,7 @@ export default function StockEntry() {
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
               <Col md={6}>
-                <div className="bg-body-tertiary rounded-3 p-4 h-100 border border-secondary-subtle">
+                <div className="rounded-3 p-4 h-100 border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--bs-border-color)' }}>
                   <h6 className="fw-bold mb-4 text-uppercase tracking-wider font-size-13 text-muted">Product Details</h6>
                   
                   <Form.Group className="mb-4">
@@ -153,7 +190,7 @@ export default function StockEntry() {
               </Col>
               
               <Col md={6}>
-                <div className="bg-body-tertiary rounded-3 p-4 h-100 border border-secondary-subtle">
+                <div className="rounded-3 p-4 h-100 border" style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--bs-border-color)' }}>
                   <h6 className="fw-bold mb-4 text-uppercase tracking-wider font-size-13 text-muted">Stock Information</h6>
                   
                   <Row className="g-3 mb-4">
