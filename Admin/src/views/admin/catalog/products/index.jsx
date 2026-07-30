@@ -198,8 +198,8 @@ export default function ProductsList() {
         </Card.Body>
       </Card>
 
-      <Card className="border-0 shadow-sm">
-        <Card.Body className={viewMode === 'grid' ? 'bg-body-tertiary p-4 rounded' : 'p-0'}>
+      <Card className="border-0 shadow-sm bg-transparent">
+        <Card.Body className={viewMode === 'grid' ? 'p-4' : 'p-0'}>
           {loading ? (
             <div className="p-4"><SkeletonTable rows={limit} columns={10} /></div>
           ) : error ? (
@@ -219,9 +219,7 @@ export default function ProductsList() {
                     <th>Category</th>
                     <th className="text-end">Stock</th>
                     <th className="text-end">Price</th>
-                    <th className="text-end">Orders</th>
                     <th>Status</th>
-                    <th>Published</th>
                     <th className="text-center rounded-end">Actions</th>
                   </tr>
                 </thead>
@@ -234,34 +232,29 @@ export default function ProductsList() {
                       <td className="py-3">
                         <div className="d-flex align-items-center gap-3">
                           {product.featuredImage ? (
-                            <img src={product.featuredImage} alt="" width="44" height="44" className="rounded" style={{ objectFit: 'cover' }} />
+                            <img src={product.featuredImage} alt="" width="64" height="64" className="rounded-3 shadow-sm" style={{ objectFit: 'cover', transition: 'transform 0.3s ease' }} onMouseOver={e => e.currentTarget.style.transform='scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform='scale(1)'} />
                           ) : (
-                            <div className="bg-body-tertiary rounded d-flex align-items-center justify-content-center text-secondary" style={{ width: 44, height: 44 }}>
-                              <Image size={20} />
+                            <div className="bg-body-tertiary rounded-3 shadow-sm d-flex align-items-center justify-content-center text-secondary" style={{ width: 64, height: 64 }}>
+                              <Image size={24} />
                             </div>
                           )}
                           <div>
-                            <h6 className="mb-0 fw-bold text-body font-size-16">{product.name}</h6>
+                            <h5 className="mb-1 fw-bolder text-body" style={{ fontSize: '1.1rem' }}>{product.name}</h5>
+                            <small className="text-muted fw-medium">{product.brand || 'No Brand'}</small>
                           </div>
                         </div>
                       </td>
-                      <td className="text-muted font-size-13">{product.category?.name || 'Uncategorized'}</td>
+                      <td className="text-muted fw-medium font-size-14">{product.category?.name || 'Uncategorized'}</td>
                       <td className="text-end fw-bold text-body font-size-13">
                         {product.stock || 0}
                       </td>
                       <td className="text-end fw-bold text-body font-size-13">
                         {formatCurrency(product.sellingPrice)}
                       </td>
-                      <td className="text-end text-muted font-size-13">
-                        {getMockOrders(product._id)}
-                      </td>
                       <td>
-                         <span className={`badge ${product.isActive ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} px-2 py-1`}>
-                           {product.isActive ? 'Published' : 'Pending'}
+                         <span className={`badge rounded-pill border ${product.isActive ? 'bg-success-subtle text-success border-success-subtle' : 'bg-warning-subtle text-warning border-warning-subtle'} px-3 py-2 fw-bold shadow-sm`} style={{ letterSpacing: '0.5px' }}>
+                           {product.isActive ? 'PUBLISHED' : 'PENDING'}
                          </span>
-                      </td>
-                      <td className="text-muted font-size-12 fw-medium">
-                        {formatDate(product.createdAt)}
                       </td>
                       <td className="text-center">
                         <Button variant="light" size="sm" className="btn-icon me-1 text-secondary rounded-circle bg-body-secondary border-0" onClick={() => setViewTarget(product)} title="View">
@@ -285,56 +278,64 @@ export default function ProductsList() {
             </>
           ) : (
             // GRID VIEW
-            <Row className="g-3">
+            <Row className="g-4">
               {products.map((product) => (
                 <Col xl={3} lg={4} sm={6} key={product._id}>
-                  <Card className={`h-100 border-0 shadow-sm overflow-hidden ${selectedItems.includes(product._id) ? 'ring-2 ring-primary border border-primary' : ''}`}>
-                    <div className="position-absolute top-0 start-0 p-3 z-1">
+                  <Card 
+                    className={`h-100 border border-secondary-subtle shadow-sm overflow-hidden product-grid-card bg-transparent ${selectedItems.includes(product._id) ? 'ring-2 ring-primary border-primary' : ''}`} 
+                    style={{ transition: 'all 0.3s ease' }}
+                    onMouseOver={e => e.currentTarget.classList.add('shadow')} 
+                    onMouseOut={e => e.currentTarget.classList.remove('shadow')}
+                  >
+                    <div className="position-absolute top-0 start-0 p-3 z-3">
                       <Form.Check type="checkbox" className="shadow-sm fs-5" checked={selectedItems.includes(product._id)} onChange={() => handleSelectItem(product._id)} />
                     </div>
-                    <div className="position-absolute top-0 end-0 p-3 z-1">
-                      <span className={`badge ${product.isActive ? 'bg-success' : 'bg-warning'} px-2 py-1 shadow-sm`}>
-                         {product.isActive ? 'Published' : 'Pending'}
-                      </span>
-                    </div>
-                    <div className="bg-body-secondary d-flex align-items-center justify-content-center position-relative" style={{ height: '200px' }}>
+                    <div className="d-flex align-items-center justify-content-center position-relative overflow-hidden border-bottom border-secondary-subtle" style={{ height: '180px', backgroundColor: 'rgba(0,0,0,0.1)' }}>
                       {product.featuredImage ? (
-                        <img src={product.featuredImage} alt={product.name} className="w-100 h-100" style={{ objectFit: 'cover' }} />
+                        <img src={product.featuredImage} alt={product.name} className="w-100 h-100" style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }} onMouseOver={e => e.currentTarget.style.transform='scale(1.08)'} onMouseOut={e => e.currentTarget.style.transform='scale(1)'} />
                       ) : (
                         <PackageOpen size={48} className="text-secondary opacity-50" />
                       )}
                     </div>
-                    <Card.Body className="d-flex flex-column">
-                      <div className="mb-2 text-muted font-size-11 fw-bold text-uppercase tracking-wider">{product.category?.name || 'Uncategorized'}</div>
-                      <h5 className="mb-1 text-truncate fw-bold font-size-16" title={product.name}>{product.name}</h5>
-                      <div className="d-flex align-items-center gap-1 text-warning mb-3">
-                        {[...Array(5)].map((_, i) => (
-                           <Star key={i} size={14} fill={i < getMockRating(product._id) ? "currentColor" : "none"} stroke={i < getMockRating(product._id) ? "currentColor" : "#ccc"} />
-                        ))}
-                        <small className="text-muted ms-1 font-size-12">({getMockOrders(product._id)})</small>
+                    <Card.Body className="d-flex flex-column p-3">
+                      <div className="d-flex justify-content-between align-items-start mb-2">
+                        <span className="badge bg-primary-subtle text-primary rounded-pill font-size-11 px-2 py-1">{product.category?.name || 'Uncategorized'}</span>
+                        <div className="d-flex align-items-center gap-1 text-warning">
+                          <Star size={12} fill="currentColor" />
+                          <span className="text-muted font-size-11">{getMockRating(product._id)}.0</span>
+                        </div>
                       </div>
                       
-                      <div className="mt-auto d-flex align-items-end justify-content-between">
+                      <h5 className="mb-1 text-truncate fw-bold text-body" style={{ fontSize: '1.05rem' }} title={product.name}>{product.name}</h5>
+                      
+                      <p className="text-muted font-size-12 mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4' }}>
+                        {product.description || 'No description available for this product.'}
+                      </p>
+                      
+                      <div className="mt-auto bg-body-tertiary rounded-3 p-2 px-3 d-flex align-items-center justify-content-between border border-secondary-subtle">
                         <div>
-                          <div className="text-muted font-size-12 fw-medium mb-1">Price</div>
-                          <h5 className="mb-0 fw-bold">{formatCurrency(product.sellingPrice)}</h5>
+                          <div className="text-muted font-size-11 mb-0">Price</div>
+                          <h6 className="mb-0 fw-bold text-body">{formatCurrency(product.sellingPrice)}</h6>
                         </div>
-                        <div className="text-end">
-                          <div className="text-muted font-size-12 fw-medium mb-1">Stock</div>
-                          <h6 className="mb-0 fw-bold">{product.stock || 0}</h6>
+                        <div className="text-end border-start border-secondary-subtle ps-3">
+                          <div className="text-muted font-size-11 mb-0">Stock</div>
+                          <h6 className={`mb-0 fw-bold ${product.stock > 10 ? 'text-success' : 'text-danger'}`}>{product.stock || 0}</h6>
                         </div>
                       </div>
                     </Card.Body>
                     <Card.Footer className="bg-transparent border-top-0 pt-0 pb-3 px-3">
                        <div className="d-flex gap-2">
+                          <Button variant="light" className="bg-body-secondary border-0 d-flex align-items-center justify-content-center text-secondary p-2" style={{ width: '36px', height: '36px' }} onClick={() => setViewTarget(product)} title="View">
+                             <Eye size={15} />
+                          </Button>
                           <PermissionGuard permission="products.edit">
-                            <Button variant="light" className="flex-grow-1 text-primary d-flex align-items-center justify-content-center gap-2 bg-primary-subtle border-0 fw-medium" onClick={() => { setEditId(product._id); setViewState('form'); }}>
-                              <Edit size={16} /> Edit
+                            <Button variant="light" className="flex-grow-1 d-flex align-items-center justify-content-center gap-2 bg-body-secondary border-0 text-body fw-medium p-2 font-size-13" style={{ height: '36px' }} onClick={() => { setEditId(product._id); setViewState('form'); }}>
+                              <Edit size={14} /> Edit
                             </Button>
                           </PermissionGuard>
                           <PermissionGuard permission="products.delete">
-                            <Button variant="light" className="text-danger bg-danger-subtle border-0" onClick={() => setDeleteTarget(product)}>
-                              <Trash2 size={16} />
+                            <Button variant="light" className="bg-danger-subtle text-danger border-0 d-flex align-items-center justify-content-center p-2" style={{ width: '36px', height: '36px' }} onClick={() => setDeleteTarget(product)}>
+                              <Trash2 size={15} />
                             </Button>
                           </PermissionGuard>
                        </div>

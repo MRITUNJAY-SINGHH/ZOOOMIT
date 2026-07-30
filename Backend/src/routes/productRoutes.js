@@ -1,7 +1,7 @@
 import express from 'express';
 import { 
   getProducts, getProductById, createProduct, updateProduct, deleteProduct, bulkDeleteProducts,
-  searchProductByBarcode, addVariant, deleteVariant, getProductBatches, bulkImportProducts 
+  searchProductByBarcode, addVariant, updateVariant, deleteVariant, getProductBatches, bulkImportProducts 
 } from '../controllers/productController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -27,6 +27,7 @@ router.route('/:id/variants')
   .post(protect, authorize('products', 'create'), addVariant);
 
 router.route('/:id/variants/:variantId')
+  .put(protect, authorize('products', 'edit'), updateVariant)
   .delete(protect, authorize('products', 'delete'), deleteVariant);
 
 router.route('/:id/batches')

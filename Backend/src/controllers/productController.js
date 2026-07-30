@@ -129,6 +129,16 @@ export const addVariant = async (req, res) => {
   }
 };
 
+export const updateVariant = async (req, res) => {
+  try {
+    const variant = await ProductVariant.findByIdAndUpdate(req.params.variantId, req.body, { new: true });
+    if (!variant) return res.status(404).json({ message: 'Variant not found' });
+    res.json(variant);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const deleteVariant = async (req, res) => {
   try {
     await ProductVariant.findByIdAndDelete(req.params.variantId);
