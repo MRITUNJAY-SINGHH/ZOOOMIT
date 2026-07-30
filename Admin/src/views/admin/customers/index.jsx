@@ -162,9 +162,9 @@ export default function Customers() {
                       <td className="text-end fw-semibold">{formatCurrency(customer.totalSpent || 0)}</td>
                       <td className="text-muted">{formatDate(customer.createdAt)}</td>
                       <td className="text-end">
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => viewCustomer(customer._id)}><Eye size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openEditModal(customer)}><Edit size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => openDeleteModal(customer)}><Trash2 size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => viewCustomer(customer._id)}><Eye size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => openEditModal(customer)}><Edit size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn text-danger" onClick={() => openDeleteModal(customer)}><Trash2 size={20} /></Button>
                       </td>
                     </tr>
                   ))}
@@ -192,7 +192,7 @@ export default function Customers() {
                   <tr><th>Last Order</th><td>{selectedCustomer.stats?.lastOrderDate ? formatDate(selectedCustomer.stats.lastOrderDate) : '-'}</td></tr>
                 </tbody>
               </Table>
-              <h2 className="kuiklo-section-title mb-3">Order History</h2>
+              <h2 className="Zooom-section-title mb-3">Order History</h2>
               <Table responsive hover className="align-middle mb-0">
                 <thead><tr><th>Order</th><th>Date</th><th>Type</th><th>Status</th><th className="text-end">Amount</th></tr></thead>
                 <tbody>

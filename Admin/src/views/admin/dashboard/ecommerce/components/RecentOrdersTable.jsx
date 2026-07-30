@@ -25,7 +25,7 @@ export default function RecentOrdersTable() {
     <Card className="h-100">
       <Card.Body>
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <h2 className="kuiklo-section-title mb-0">Recent Orders</h2>
+          <h2 className="Zooom-section-title mb-0">Recent Orders</h2>
           <Link to="/orders/all" className="btn btn-primary btn-sm">View All</Link>
         </div>
         {loading ? <LoadingSkeleton rows={5} columns={5} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : orders.length === 0 ? (

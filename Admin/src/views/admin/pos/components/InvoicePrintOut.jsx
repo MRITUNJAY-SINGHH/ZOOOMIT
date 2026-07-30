@@ -117,7 +117,7 @@ export default function InvoicePrintOut({ invoice, onBack }) {
             ) : (
               <h2 className="mb-2 fw-bold text-uppercase" style={{ fontSize: '1.8rem', letterSpacing: '1px', color: '#f8fafc' }}>
                 <span style={{ color: '#ef4444', marginRight: '8px' }}>&#x276F;&#x276F;</span>
-                {settings.storeName || 'KUIKLO STORE'}
+                {settings.storeName || 'Zooom STORE'}
               </h2>
             )}
             <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5' }}>
@@ -257,7 +257,7 @@ export default function InvoicePrintOut({ invoice, onBack }) {
 
         {/* FOOTER */}
         <div style={{ borderTop: '1px solid #e2e8f0', padding: '25px 40px 40px 40px', fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
-          <div>{settings.invoiceFooter || 'Thank you for shopping with Kuiklo. Returns accepted as per store policy.'}</div>
+          <div>{settings.invoiceFooter || 'Thank you for shopping with Zooom. Returns accepted as per store policy.'}</div>
           {settings.storePhone && <div className="mt-1">Tel: {settings.storePhone}</div>}
         </div>
       </div>

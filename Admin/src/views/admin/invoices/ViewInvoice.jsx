@@ -74,13 +74,13 @@ export default function ViewInvoice() {
 
       <Row className="g-3">
         <Col xl={9}>
-          <Card id="invoice-print-area" className="kuiklo-invoice-document">
+          <Card id="invoice-print-area" className="Zooom-invoice-document">
             <Card.Body>
               <div className="d-flex flex-column flex-md-row justify-content-between gap-4 mb-4">
                 <div className="d-flex align-items-center gap-3">
-                  {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" className="kuiklo-invoice-logo" /> : <div className="kuiklo-invoice-logo-fallback">K</div>}
+                  {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" className="Zooom-invoice-logo" /> : <div className="Zooom-invoice-logo-fallback">K</div>}
                   <div>
-                    <h2 className="mb-1">{settings?.storeName || 'Kuiklo'}</h2>
+                    <h2 className="mb-1">{settings?.storeName || 'Zooom'}</h2>
                     <div className="text-muted">{settings?.address || 'Store address from settings'}</div>
                     <div className="text-muted">{settings?.storePhone || ''} {settings?.storeEmail ? `· ${settings.storeEmail}` : ''}</div>
                     {settings?.gstNumber && <div className="text-muted">GST: {settings.gstNumber}</div>}
@@ -94,9 +94,9 @@ export default function ViewInvoice() {
               </div>
 
               <Row className="g-3 mb-4">
-                <Col md={4}><div className="kuiklo-invoice-meta"><span>Date</span><strong>{formatDate(invoice.date)}</strong></div></Col>
-                <Col md={4}><div className="kuiklo-invoice-meta"><span>Due Date</span><strong>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</strong></div></Col>
-                <Col md={4}><div className="kuiklo-invoice-meta"><span>Payment</span><strong>{invoice.paymentMethod || '-'}</strong></div></Col>
+                <Col md={4}><div className="Zooom-invoice-meta"><span>Date</span><strong>{formatDate(invoice.date)}</strong></div></Col>
+                <Col md={4}><div className="Zooom-invoice-meta"><span>Due Date</span><strong>{invoice.dueDate ? formatDate(invoice.dueDate) : '-'}</strong></div></Col>
+                <Col md={4}><div className="Zooom-invoice-meta"><span>Payment</span><strong>{invoice.paymentMethod || '-'}</strong></div></Col>
               </Row>
 
               <Row className="g-3 mb-4">
@@ -138,23 +138,23 @@ export default function ViewInvoice() {
 
               <Row className="justify-content-end mb-4">
                 <Col md={5}>
-                  <div className="kuiklo-invoice-total-row"><span>Subtotal</span><strong>{formatCurrency(invoice.totalsSnapshot?.subTotal)}</strong></div>
-                  <div className="kuiklo-invoice-total-row"><span>Tax</span><strong>{formatCurrency(invoice.totalsSnapshot?.tax)}</strong></div>
-                  <div className="kuiklo-invoice-total-row"><span>Discount</span><strong>- {formatCurrency(invoice.totalsSnapshot?.discount)}</strong></div>
-                  <div className="kuiklo-invoice-grand-total text-primary"><span className="text-primary">Total</span><strong>{formatCurrency(invoice.totalsSnapshot?.amount)}</strong></div>
+                  <div className="Zooom-invoice-total-row"><span>Subtotal</span><strong>{formatCurrency(invoice.totalsSnapshot?.subTotal)}</strong></div>
+                  <div className="Zooom-invoice-total-row"><span>Tax</span><strong>{formatCurrency(invoice.totalsSnapshot?.tax)}</strong></div>
+                  <div className="Zooom-invoice-total-row"><span>Discount</span><strong>- {formatCurrency(invoice.totalsSnapshot?.discount)}</strong></div>
+                  <div className="Zooom-invoice-grand-total text-primary"><span className="text-primary">Total</span><strong>{formatCurrency(invoice.totalsSnapshot?.amount)}</strong></div>
                 </Col>
               </Row>
 
               <Row className="g-3">
                 <Col md={7}>
-                  <div className="kuiklo-invoice-box">
+                  <div className="Zooom-invoice-box">
                     <span>Terms & Notes</span>
                     <p>{settings?.termsAndConditions || 'Terms are managed from Settings.'}</p>
                     <p>{invoice.notes || settings?.invoiceFooter || 'Thank you for your business.'}</p>
                   </div>
                 </Col>
                 <Col md={5}>
-                  <div className="kuiklo-invoice-box">
+                  <div className="Zooom-invoice-box">
                     <span>Bank Details</span>
                     <p>{settings?.bankDetails?.bankName || '-'}</p>
                     <p>{settings?.bankDetails?.accountName || ''} {settings?.bankDetails?.accountNumber ? `· ${settings.bankDetails.accountNumber}` : ''}</p>
@@ -163,8 +163,8 @@ export default function ViewInvoice() {
                 </Col>
               </Row>
 
-              <div className="kuiklo-invoice-signature">
-                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" /> : <strong>{settings?.storeName || 'Kuiklo'}</strong>}
+              <div className="Zooom-invoice-signature">
+                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" /> : <strong>{settings?.storeName || 'Zooom'}</strong>}
                 <span>Authorized Signature</span>
               </div>
             </Card.Body>
@@ -172,7 +172,7 @@ export default function ViewInvoice() {
         </Col>
 
         <Col xl={3} className="d-print-none">
-          <Card className="kuiklo-section-card sticky-xl-top" style={{ top: 96 }}>
+          <Card className="Zooom-section-card sticky-xl-top" style={{ top: 96 }}>
             <Card.Body className="d-grid gap-2">
               <Button variant="outline-info" onClick={() => navigate(`/invoices/edit/${id}`)}><Edit size={20} />Edit</Button>
               <Button variant="primary" onClick={() => generatePremiumInvoicePDF(invoice, settings, 'print')}><Printer size={20} />Print</Button>

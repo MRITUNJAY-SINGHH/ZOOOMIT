@@ -39,7 +39,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div>
-        <PageHeader title="Dashboard" description="Welcome back to Kuiklo ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
+        <PageHeader title="Dashboard" description="Welcome back to Zooom ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
         <LoadingSkeleton type="cards" cards={8} />
       </div>
     );
@@ -48,7 +48,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <div>
-        <PageHeader title="Dashboard" description="Welcome back to Kuiklo ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
+        <PageHeader title="Dashboard" description="Welcome back to Zooom ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
         <ErrorState message={errorMessage} onRetry={loadDashboard} />
       </div>
     );
@@ -58,7 +58,7 @@ export default function Dashboard() {
     <div>
       <PageHeader
         title="Dashboard"
-        description="Welcome back to Kuiklo ERP."
+        description="Welcome back to Zooom ERP."
         breadcrumbs={[{ label: 'Dashboard' }]}
         rightContent={<Button variant="outline-secondary" onClick={() => loadDashboard(false)}>Refresh</Button>}
       />

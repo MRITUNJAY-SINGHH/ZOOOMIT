@@ -28,7 +28,7 @@ export default function StatusBadge({ status, variant, className = '' }) {
   const theme = variant || STATUS_VARIANTS[key] || 'secondary';
   
   return (
-    <Badge bg={`${theme}-subtle`} text={theme} className={`kuiklo-status-badge ${className}`}>
+    <Badge bg={`${theme}-subtle`} text={theme} className={`Zooom-status-badge ${className}`}>
       {label}
     </Badge>
   );

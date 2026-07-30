@@ -11,7 +11,7 @@ export default function StaffDashboard() {
     <div>
       <PageHeader
         title="Workspace"
-        description="Welcome back to Kuiklo ERP."
+        description="Welcome back to Zooom ERP."
         breadcrumbs={[{ label: 'Workspace' }]}
       />
 

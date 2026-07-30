@@ -102,7 +102,7 @@ class InventoryService {
       // If we still need to reduce stock but allowNegativeStock is true,
       // we might need to create a dummy batch or just accept that the Product stock will be negative.
       // Since batches represent physical stock, they shouldn't usually be negative.
-      // However, for Kuiklo, we recalculate total stock by summing batches.
+      // However, for Zooom, we recalculate total stock by summing batches.
       // If we don't reduce a batch, the Product stock won't go negative on recalculation!
       // So if allowNegativeStock is true and remainingQtyToReduce > 0, we should artificially 
       // reduce the most recent batch or a default batch to negative, so recalculation works.

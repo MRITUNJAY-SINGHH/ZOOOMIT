@@ -20,7 +20,7 @@ export const exportToPDF = (headers, dataRows, title, filename) => {
     startY: 20,
     theme: 'grid',
     headStyles: {
-      fillColor: [107, 94, 174], // #6b5eae (Kuiklo Primary Dark)
+      fillColor: [107, 94, 174], // #6b5eae (Zooom Primary Dark)
       textColor: [255, 255, 255],
       fontStyle: 'bold',
     },

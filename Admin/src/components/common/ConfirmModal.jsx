@@ -26,7 +26,7 @@ export default function ConfirmModal({
       </Modal.Header>
       <Modal.Body>
         <div className="d-flex gap-3">
-          <div className="kuiklo-modal-icon text-primary"><AlertCircle size={20} /></div>
+          <div className="Zooom-modal-icon text-primary"><AlertCircle size={20} /></div>
           <p className="mb-0 text-muted">{message}</p>
         </div>
       </Modal.Body>

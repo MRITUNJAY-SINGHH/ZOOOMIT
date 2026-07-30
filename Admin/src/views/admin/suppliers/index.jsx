@@ -111,8 +111,8 @@ export default function Suppliers() {
                       <td className="text-muted">{supplier.address || '-'}</td>
                       <td><StatusBadge status={supplier.status} /></td>
                       <td className="text-end">
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openModal(supplier)}><Edit size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => setDeleteTarget(supplier)}><Trash2 size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => openModal(supplier)}><Edit size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn text-danger" onClick={() => setDeleteTarget(supplier)}><Trash2 size={20} /></Button>
                       </td>
                     </tr>
                   ))}

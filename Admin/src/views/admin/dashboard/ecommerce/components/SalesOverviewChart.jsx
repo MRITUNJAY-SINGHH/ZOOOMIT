@@ -38,7 +38,7 @@ export default function SalesOverviewChart() {
   return (
     <Card className="h-100">
       <Card.Body>
-        <h2 className="kuiklo-section-title mb-3">Revenue Trend</h2>
+        <h2 className="Zooom-section-title mb-3">Revenue Trend</h2>
         {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : rows.length === 0 ? (
           <EmptyState icon="lucide:line-chart" title="No revenue data" message="Revenue trend will appear after paid orders are available." />
         ) : (

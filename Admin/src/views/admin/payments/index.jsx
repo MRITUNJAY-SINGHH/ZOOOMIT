@@ -73,7 +73,7 @@ export default function Payments() {
                       <td className="text-end fw-semibold">{formatCurrency(txn.amount)}</td>
                       <td><StatusBadge status={txn.paymentStatus} /></td>
                       <td>{txn.refundStatus && txn.refundStatus !== 'None' ? <StatusBadge status={`${txn.refundStatus} ${formatCurrency(txn.refundAmount)}`} variant={txn.refundStatus === 'Processed' ? 'info' : 'danger'} /> : '-'}</td>
-                      <td className="text-end"><Button variant="light" className="kuiklo-icon-btn" onClick={() => setSelectedTxn(txn)}><Eye size={20} /></Button></td>
+                      <td className="text-end"><Button variant="light" className="Zooom-icon-btn" onClick={() => setSelectedTxn(txn)}><Eye size={20} /></Button></td>
                     </tr>
                   ))}
                 </tbody>

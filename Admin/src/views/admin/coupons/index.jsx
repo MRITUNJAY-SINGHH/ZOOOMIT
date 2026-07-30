@@ -147,8 +147,8 @@ export default function Coupons() {
                       <td>{formatDate(coupon.expiryDate)}</td>
                       <td><StatusBadge status={coupon.status} /></td>
                       <td className="text-end">
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openModal(coupon)}><Edit size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => setDeleteTarget(coupon)}><Trash2 size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => openModal(coupon)}><Edit size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn text-danger" onClick={() => setDeleteTarget(coupon)}><Trash2 size={20} /></Button>
                       </td>
                     </tr>
                   ))}

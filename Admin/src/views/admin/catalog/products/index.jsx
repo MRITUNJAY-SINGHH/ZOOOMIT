@@ -227,7 +227,7 @@ export default function ProductsList() {
                 </thead>
                 <tbody>
                   {products.map((product) => (
-                    <tr key={product._id} className={selectedItems.includes(product._id) ? 'bg-primary-subtle' : ''} style={{ borderBottom: '1px solid var(--kuiklo-border-color)' }}>
+                    <tr key={product._id} className={selectedItems.includes(product._id) ? 'bg-primary-subtle' : ''} style={{ borderBottom: '1px solid var(--Zooom-border-color)' }}>
                       <td className="text-center px-4">
                         <Form.Check type="checkbox" checked={selectedItems.includes(product._id)} onChange={() => handleSelectItem(product._id)} className="fs-5" />
                       </td>

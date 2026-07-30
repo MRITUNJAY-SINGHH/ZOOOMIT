@@ -93,7 +93,7 @@ export default function Staff() {
                     <td><StatusBadge status={staff.role} variant={staff.role === 'Admin' ? 'warning' : 'info'} /></td>
                     <td><StatusBadge status={staff.status} /></td>
                     <td className="text-muted">{staff.role === 'Admin' ? 'All modules' : Object.entries(staff.permissions || {}).filter(([, value]) => value).map(([key]) => key).join(', ') || '-'}</td>
-                    <td className="text-end"><Button variant="light" className="kuiklo-icon-btn" onClick={() => openModal(staff)}><Edit size={20} /></Button></td>
+                    <td className="text-end"><Button variant="light" className="Zooom-icon-btn" onClick={() => openModal(staff)}><Edit size={20} /></Button></td>
                   </tr>
                 ))}
               </tbody>
@@ -115,7 +115,7 @@ export default function Staff() {
           </Row>
           {formData.role !== 'Admin' && (
             <div className="mt-4">
-              <h2 className="kuiklo-section-title mb-3"><Shield size={20} /> Module Permissions</h2>
+              <h2 className="Zooom-section-title mb-3"><Shield size={20} /> Module Permissions</h2>
               <Row className="g-2">
                 {Object.keys(permissions).map((key) => (
                   <Col md={4} key={key}>

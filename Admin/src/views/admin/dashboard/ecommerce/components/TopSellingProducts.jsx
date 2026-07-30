@@ -22,7 +22,7 @@ export default function TopSellingProducts() {
   return (
     <Card className="h-100">
       <Card.Body>
-        <h2 className="kuiklo-section-title mb-3">Top Selling Products</h2>
+        <h2 className="Zooom-section-title mb-3">Top Selling Products</h2>
         {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : products.length === 0 ? (
           <EmptyState icon="lucide:package-open" title="No sales data" message="Top selling products will appear here once orders are placed." />
         ) : (

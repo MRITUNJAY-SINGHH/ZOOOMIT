@@ -44,9 +44,9 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'Kuiklo ERP',
-        short_name: 'Kuiklo',
-        description: 'Kuiklo Point of Sale and ERP System',
+        name: 'Zooom ERP',
+        short_name: 'Zooom',
+        description: 'Zooom Point of Sale and ERP System',
         theme_color: '#ffffff',
         icons: [
           {

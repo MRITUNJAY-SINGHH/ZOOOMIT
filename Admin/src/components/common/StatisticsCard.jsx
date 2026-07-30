@@ -7,7 +7,7 @@ export default function StatisticsCard({ icon: Icon, title, value, helper, trend
 
   return (
     <Card 
-      className={`kuiklo-stat-card h-100 ${onClick ? 'cursor-pointer' : ''}`} 
+      className={`Zooom-stat-card h-100 ${onClick ? 'cursor-pointer' : ''}`} 
       onClick={onClick}
       style={onClick ? { cursor: 'pointer' } : {}}
     >
@@ -18,13 +18,13 @@ export default function StatisticsCard({ icon: Icon, title, value, helper, trend
             <h2 className="mb-0">{value ?? '-'}</h2>
           </div>
           {Icon && (
-            <div className={`kuiklo-stat-icon text-${variant} bg-${variant}-subtle`}>
+            <div className={`Zooom-stat-icon text-${variant} bg-${variant}-subtle`}>
               <Icon size={20} />
             </div>
           )}
         </div>
         {(helper || hasTrend) && (
-          <div className="kuiklo-stat-footer mt-3">
+          <div className="Zooom-stat-footer mt-3">
             {hasTrend && (
               <span className={trend >= 0 ? 'text-success' : 'text-danger'}>
                 {trend >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}

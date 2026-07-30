@@ -14,15 +14,15 @@ async function runTest() {
     // 1. Welcome Email
     await sendEmail({
       email: targetEmail,
-      subject: 'Welcome to Kuiklo ERP',
-      message: 'Hello! Welcome to Kuiklo ERP.',
+      subject: 'Welcome to Zooom ERP',
+      message: 'Hello! Welcome to Zooom ERP.',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #4CAF50;">Welcome to Kuiklo ERP!</h2>
+          <h2 style="color: #4CAF50;">Welcome to Zooom ERP!</h2>
           <p>Hello,</p>
           <p>Your account has been successfully created. We are excited to have you on board.</p>
           <br/>
-          <p>Best regards,<br/>The Kuiklo Team</p>
+          <p>Best regards,<br/>The Zooom Team</p>
         </div>
       `
     });
@@ -48,7 +48,7 @@ async function runTest() {
     // 3. Invoice / Order Email
     await sendEmail({
       email: targetEmail,
-      subject: 'Invoice #INV-2026-00001 from Kuiklo ERP',
+      subject: 'Invoice #INV-2026-00001 from Zooom ERP',
       message: 'Please find attached your invoice.',
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">

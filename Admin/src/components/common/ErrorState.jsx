@@ -4,7 +4,7 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function ErrorState({ title = 'Something went wrong', message = 'Failed to fetch data from the server.', onRetry }) {
   return (
-    <div className="kuiklo-state kuiklo-error-state text-center">
+    <div className="Zooom-state Zooom-error-state text-center">
       <AlertTriangle size={48} className="text-danger mb-3" />
       <h2>{title}</h2>
       <p className="text-muted">{message}</p>

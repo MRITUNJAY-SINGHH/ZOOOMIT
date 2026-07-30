@@ -33,7 +33,7 @@ export default function OrdersOverviewChart() {
   return (
     <Card className="h-100">
       <Card.Body>
-        <h2 className="kuiklo-section-title mb-3">Orders Overview</h2>
+        <h2 className="Zooom-section-title mb-3">Orders Overview</h2>
         {loading ? <LoadingSkeleton rows={5} columns={4} /> : error ? <ErrorState message={errorMessage} onRetry={loadData} /> : chartRows.length === 0 ? (
           <EmptyState icon="lucide:shopping-bag" title="No order data" message="Order trends will appear when orders are created." />
         ) : (

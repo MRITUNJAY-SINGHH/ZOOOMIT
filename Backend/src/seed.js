@@ -43,7 +43,6 @@ const viewOnly = {
 const none = {
   view: false, create: false, edit: false, delete: false
 };
-
 const users = [
   {
     name: 'Super Admin',
@@ -213,7 +212,7 @@ const productSeeds = [
 
 const coupons = [
   ['WELCOME10', 'Percentage', 10, 199, 100, 200],
-  ['KUIKLO50', 'Fixed', 50, 499, null, 150],
+  ['Zooom50', 'Fixed', 50, 499, null, 150],
   ['FRESH15', 'Percentage', 15, 799, 180, 80],
   ['DAIRY25', 'Fixed', 25, 199, null, 120],
   ['CLEAN20', 'Percentage', 20, 999, 250, 60],
@@ -624,13 +623,13 @@ const seedDatabase = async () => {
     await Settings.findOneAndUpdate(
       {},
       {
-        storeName: 'Kuiklo Supermart',
+        storeName: 'Zooom Supermart',
         storeLogo: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=400&q=80',
-        address: 'Kuiklo Supermart, Sector 18 Market, Noida, Uttar Pradesh 201301',
+        address: 'Zooom Supermart, Sector 18 Market, Noida, Uttar Pradesh 201301',
         gstNumber: '09AAACK1234A1Z5',
         invoicePrefixOnline: 'INV-2026-',
         invoicePrefixOffline: 'POS-2026-',
-        invoiceFooter: 'Thank you for shopping with Kuiklo. Returns accepted as per store policy.',
+        invoiceFooter: 'Thank you for shopping with Zooom. Returns accepted as per store policy.',
         lowStockThresholdDefault: 10,
         expiryAlertDays: [30, 15, 10, 5]
       },

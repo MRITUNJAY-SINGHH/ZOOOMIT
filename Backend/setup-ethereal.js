@@ -21,7 +21,7 @@ async function main() {
     SMTP_USER: testAccount.user,
     SMTP_PASS: testAccount.pass,
     FROM_EMAIL: testAccount.user,
-    FROM_NAME: 'Kuiklo System'
+    FROM_NAME: 'Zooom System'
   };
   
   for (const [key, value] of Object.entries(replacements)) {

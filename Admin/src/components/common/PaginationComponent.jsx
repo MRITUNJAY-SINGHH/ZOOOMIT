@@ -13,7 +13,7 @@ export default function PaginationComponent({
   if (totalPages <= 1 && !onPageSizeChange) return null;
 
   return (
-    <div className="kuiklo-pagination d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3 pt-3 border-top">
+    <div className="Zooom-pagination d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mt-3 pt-3 border-top">
       <div className="text-muted">
         Page {currentPage} of {totalPages || 1} · {totalRecords} records
       </div>

@@ -268,7 +268,7 @@ export default function CreateInvoice() {
                     <td><Form.Control className="text-end px-2" type="number" min="1" isInvalid={Boolean(validation[`qty-${index}`])} value={item.qty} onChange={(event) => updateItem(item.id, 'qty', event.target.value)} /></td>
                     <td><Form.Control className="text-end px-2" type="number" min="0" isInvalid={Boolean(validation[`price-${index}`])} value={item.price} onChange={(event) => updateItem(item.id, 'price', event.target.value)} /></td>
                     <td className="text-end fw-semibold">{formatCurrency(Number(item.qty || 0) * Number(item.price || 0))}</td>
-                    <td className="text-center"><Button variant="danger" size="sm" className="kuiklo-icon-btn" disabled={form.items.length === 1} onClick={() => setForm((prev) => ({ ...prev, items: prev.items.filter((row) => row.id !== item.id) }))}><Trash2 size={16} /></Button></td>
+                    <td className="text-center"><Button variant="danger" size="sm" className="Zooom-icon-btn" disabled={form.items.length === 1} onClick={() => setForm((prev) => ({ ...prev, items: prev.items.filter((row) => row.id !== item.id) }))}><Trash2 size={16} /></Button></td>
                   </tr>
                 ))}
               </tbody>
@@ -300,12 +300,12 @@ export default function CreateInvoice() {
         </Col>
 
         <Col xl={4}>
-          <Card className="kuiklo-section-card sticky-xl-top" style={{ top: 96 }}>
+          <Card className="Zooom-section-card sticky-xl-top" style={{ top: 96 }}>
             <Card.Body>
               <div className="d-flex align-items-center gap-3 mb-4">
-                {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" style={{ width: 56, height: 56, objectFit: 'contain' }} /> : <div className="kuiklo-modal-icon bg-primary-subtle text-primary">K</div>}
+                {settings?.storeLogo ? <img src={settings.storeLogo} alt="Store logo" style={{ width: 56, height: 56, objectFit: 'contain' }} /> : <div className="Zooom-modal-icon bg-primary-subtle text-primary">K</div>}
                 <div>
-                  <h2 className="kuiklo-section-title mb-1">{settings?.storeName || 'Kuiklo'}</h2>
+                  <h2 className="Zooom-section-title mb-1">{settings?.storeName || 'Zooom'}</h2>
                   <p className="text-muted mb-0">{settings?.gstNumber || 'GST details from settings'}</p>
                 </div>
               </div>

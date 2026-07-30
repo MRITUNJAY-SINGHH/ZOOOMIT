@@ -69,7 +69,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 
 app.get('/', (req, res) => {
-  res.send('Kuiklo API is running...');
+  res.send('Zooom API is running...');
 });
 
 import mongoose from 'mongoose';
