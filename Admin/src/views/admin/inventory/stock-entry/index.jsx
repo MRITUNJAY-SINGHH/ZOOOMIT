@@ -71,14 +71,16 @@ export default function StockEntry() {
   };
 
   return (
-    <div>
-      <PageHeader 
-        title="Stock Entry" 
-        description="Record new stock purchases and manage batch information securely." 
-      />
+    <div className="report-page">
+      <div className="report-header mb-4">
+        <div className="report-header-left">
+          <h3 className="report-title mb-1">Stock Entry</h3>
+          <p className="text-muted font-size-14 mb-0">Manually add stock to products and assign batch information.</p>
+        </div>
+      </div>
       
-      <Card className="border-0 shadow-sm mt-2">
-        <Card.Header className="bg-transparent border-bottom border-light pt-4 pb-3 px-4">
+      <Card className="report-section-card border-0 mt-2">
+        <Card.Header className="bg-transparent border-bottom border-secondary-subtle pt-4 pb-3 px-4">
           <h5 className="mb-0 fw-bold d-flex align-items-center gap-2">
             <PackagePlus size={20} className="text-primary" /> New Stock Batch
           </h5>
@@ -93,7 +95,7 @@ export default function StockEntry() {
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
               <Col md={6}>
-                <div className="bg-light rounded-3 p-4 h-100 border border-light">
+                <div className="bg-body-tertiary rounded-3 p-4 h-100 border border-secondary-subtle">
                   <h6 className="fw-bold mb-4 text-uppercase tracking-wider font-size-13 text-muted">Product Details</h6>
                   
                   <Form.Group className="mb-4">
@@ -151,7 +153,7 @@ export default function StockEntry() {
               </Col>
               
               <Col md={6}>
-                <div className="bg-light rounded-3 p-4 h-100 border border-light">
+                <div className="bg-body-tertiary rounded-3 p-4 h-100 border border-secondary-subtle">
                   <h6 className="fw-bold mb-4 text-uppercase tracking-wider font-size-13 text-muted">Stock Information</h6>
                   
                   <Row className="g-3 mb-4">
@@ -187,7 +189,7 @@ export default function StockEntry() {
                         <Form.Label className="fw-medium">Manufacturing Date</Form.Label>
                         <Form.Control 
                           type="date" 
-                          className="form-control-lg font-size-15 text-muted"
+                          className="form-control-lg font-size-15 text-body"
                           value={formData.manufacturingDate} 
                           onChange={e => setFormData({ ...formData, manufacturingDate: e.target.value })} 
                         />
@@ -198,7 +200,7 @@ export default function StockEntry() {
                         <Form.Label className="fw-medium">Expiry Date <span className="text-danger">*</span></Form.Label>
                         <Form.Control 
                           type="date" 
-                          className="form-control-lg font-size-15 text-muted"
+                          className="form-control-lg font-size-15 text-body"
                           value={formData.expiryDate} 
                           onChange={e => setFormData({ ...formData, expiryDate: e.target.value })} 
                           required 

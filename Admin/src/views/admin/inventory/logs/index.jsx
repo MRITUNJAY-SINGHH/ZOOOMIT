@@ -51,11 +51,16 @@ export default function InventoryLogs() {
   };
 
   return (
-    <div>
-      <PageHeader title="Inventory Logs" description="Track all stock movements: sales, purchases, returns, and adjustments." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Inventory' }, { label: 'Logs' }]} />
-      <Card>
-        <Card.Body>
-          <div className="bg-light p-3 rounded mb-3">
+    <div className="report-page">
+      <div className="report-header mb-4">
+        <div className="report-header-left">
+          <h3 className="report-title mb-1">Inventory Logs</h3>
+          <p className="text-muted font-size-14 mb-0">Track all stock movements: sales, purchases, returns, and adjustments.</p>
+        </div>
+      </div>
+      <Card className="report-section-card overflow-hidden">
+        <Card.Body className="p-0">
+          <div className="bg-body-secondary p-3 m-3 rounded">
             <Row className="g-2 align-items-end">
               <Col md={2}><Form.Label className="small mb-1">Start Date</Form.Label><Form.Control size="sm" type="date" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} /></Col>
               <Col md={2}><Form.Label className="small mb-1">End Date</Form.Label><Form.Control size="sm" type="date" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} /></Col>
@@ -69,24 +74,39 @@ export default function InventoryLogs() {
             <EmptyState icon="lucide:clipboard-list" title="No Logs Found" message="No inventory movements match the current filters." />
           ) : (
             <>
-              <Table responsive hover className="align-middle mb-0">
-                <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Batch / Supplier</th><th className="text-end">Stock Shift</th><th>Reason</th><th>Staff</th></tr></thead>
+              <Table className="report-table mb-0">
+                <thead className="custom-table-thead" style={{ 
+                  fontSize: '12px', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.5px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.03)'
+                }}>
+                  <tr>
+                    <th className="py-2 text-muted border-dashed ps-4">Date</th>
+                    <th className="py-2 text-muted border-dashed">Type</th>
+                    <th className="py-2 text-muted border-dashed">Product</th>
+                    <th className="py-2 text-muted border-dashed">Batch / Supplier</th>
+                    <th className="py-2 text-end text-muted border-dashed">Stock Shift</th>
+                    <th className="py-2 text-muted border-dashed">Reason</th>
+                    <th className="py-2 text-muted border-dashed pe-4">Staff</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {logs.map(log => (
                     <tr key={log._id}>
-                      <td className="text-muted small">{new Date(log.date).toLocaleString()}</td>
-                      <td><Badge bg={TYPE_BADGES[log.type] || 'secondary'}>{log.type}</Badge></td>
-                      <td><span className="fw-medium">{log.product?.name}</span>{log.product?.barcode && <small className="d-block text-muted">{log.product.barcode}</small>}</td>
-                      <td>{log.batch ? log.batch.batchNumber : 'N/A'}{log.batch?.supplier && <small className="d-block text-muted">{log.batch.supplier.name}</small>}</td>
-                      <td className="text-end"><span className={log.quantityChanged > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'}>{log.quantityChanged > 0 ? '+' : ''}{log.quantityChanged}</span><small className="d-block text-muted">→ {log.newStock}</small></td>
-                      <td className="text-muted small">{log.reason}</td>
-                      <td className="text-muted small">{log.user?.name || 'System'}</td>
+                      <td className="align-middle border-dashed text-muted small ps-4">{new Date(log.date).toLocaleString()}</td>
+                      <td className="align-middle border-dashed"><Badge bg={TYPE_BADGES[log.type] || 'secondary'} className="px-2 py-1 border-0">{log.type}</Badge></td>
+                      <td className="align-middle border-dashed"><span className="fw-medium font-size-15">{log.product?.name}</span>{log.product?.barcode && <small className="d-block text-muted">{log.product.barcode}</small>}</td>
+                      <td className="align-middle border-dashed">{log.batch ? log.batch.batchNumber : 'N/A'}{log.batch?.supplier && <small className="d-block text-muted">{log.batch.supplier.name}</small>}</td>
+                      <td className="align-middle border-dashed text-end"><span className={log.quantityChanged > 0 ? 'text-success fw-bold font-size-15' : 'text-danger fw-bold font-size-15'}>{log.quantityChanged > 0 ? '+' : ''}{log.quantityChanged}</span><small className="d-block text-muted">→ {log.newStock}</small></td>
+                      <td className="align-middle border-dashed text-muted small">{log.reason}</td>
+                      <td className="align-middle border-dashed text-muted small pe-4">{log.user?.name || 'System'}</td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
               {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                <div className="d-flex justify-content-between align-items-center p-3 border-top border-secondary-subtle bg-body-tertiary">
                   <span className="text-muted small">Page {currentPage} of {totalPages} ({totalRecords} entries)</span>
                   <div className="d-flex gap-2">
                     <Button variant="outline-secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</Button>

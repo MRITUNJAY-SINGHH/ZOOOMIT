@@ -43,87 +43,87 @@ export default function UpcomingExpiry() {
   );
 
   return (
-    <div>
-      <PageHeader 
-        title="Upcoming Expiry" 
-        description="Track batches nearing their expiration dates and manage accordingly." 
-      />
+    <div className="report-page">
+      <div className="report-header mb-4">
+        <div className="report-header-left">
+          <h3 className="report-title mb-1">Upcoming Expiry</h3>
+          <p className="text-muted font-size-14 mb-0">Track batches nearing their expiration dates and manage accordingly.</p>
+        </div>
+      </div>
 
       <InventoryStatCards />
 
-      {/* Premium Toolbar */}
-      <Card className="mb-3 border-0 shadow-sm">
-        <Card.Body className="p-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div className="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap">
-              <span className="text-muted fw-medium font-size-14 text-uppercase tracking-wider me-2">Timeframe</span>
-              
-              <Form.Select 
-                style={{ minWidth: '150px' }} 
-                value={activeKey} 
-                onChange={(e) => setActiveKey(e.target.value)}
-              >
-                {TABS.map(tab => (
-                  <option key={tab.key} value={tab.key}>{tab.label}</option>
-                ))}
-              </Form.Select>
-
-              <InputGroup style={{ maxWidth: '280px' }} className="ms-xl-2">
-                <InputGroup.Text className="bg-body-secondary border-0 text-muted"><Search size={16} /></InputGroup.Text>
-                <Form.Control 
-                  placeholder="Search products or batches..." 
-                  className="bg-body-secondary border-0 shadow-none" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </InputGroup>
+      <Card className="report-section-card mb-4 h-100">
+        <Card.Header className="d-flex justify-content-between align-items-center pb-0 border-0 pt-3">
+          <h5 className="mb-0">Expiring Batches</h5>
+          <div className="d-flex gap-2 align-items-center">
+            <Form.Select 
+              style={{ minWidth: '150px' }} 
+              value={activeKey} 
+              onChange={(e) => setActiveKey(e.target.value)}
+            >
+              {TABS.map(tab => (
+                <option key={tab.key} value={tab.key}>{tab.label}</option>
+              ))}
+            </Form.Select>
+            <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+              <Search size={18} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+              <input 
+                type="text" 
+                className="form-control report-search-input" 
+                placeholder="Search products or batches..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: '38px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--bs-border-color)' }}
+              />
             </div>
-            
-            <div className="d-flex align-items-center gap-2">
-              <Button variant="light" className="btn-icon bg-body-secondary border-0 text-secondary" onClick={() => loadExpiring(activeKey)} title="Refresh">
-                <RefreshCw size={16} />
-              </Button>
-            </div>
+            <Button variant="light" className="btn-icon bg-body-secondary border-0 text-secondary" onClick={() => loadExpiring(activeKey)} title="Refresh">
+              <RefreshCw size={16} />
+            </Button>
           </div>
-        </Card.Body>
-      </Card>
-
-      <Card className="border-0 shadow-sm overflow-hidden">
-        <Card.Body className="p-0">
-          {loading ? <SkeletonTable rows={5} columns={5} /> : filteredBatches.length === 0 ? (
+        </Card.Header>
+        <div style={{ overflowX: 'auto' }} className="pt-3 pb-2">
+          {loading ? (
+            <div className="p-3"><SkeletonTable rows={5} columns={5} /></div>
+          ) : filteredBatches.length === 0 ? (
             <div className="p-5">
               <EmptyState icon={CalendarDays} title="No Batches Found" message={`No batches ${activeKey === '0' ? 'have expired' : `expiring within ${activeKey} days`}.`} />
             </div>
           ) : (
-            <Table responsive hover className="align-middle mb-0 text-nowrap table-borderless table-centered">
-              <thead className="bg-body-tertiary border-bottom border-light">
-                <tr className="text-body text-uppercase font-size-13 fw-semibold tracking-wider">
-                  <th className="ps-4 py-3">Product Name</th>
-                  <th className="py-3">Batch Number</th>
-                  <th className="text-end py-3">Stock Remaining</th>
-                  <th className="py-3">Expiry Date</th>
-                  <th className="pe-4 py-3">Supplier</th>
+            <Table className="report-table mb-0">
+              <thead className="custom-table-thead" style={{ 
+                fontSize: '12px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.5px',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+              }}>
+                <tr>
+                  <th className="py-2 text-muted border-dashed ps-4">Product Name</th>
+                  <th className="py-2 text-muted border-dashed">Batch Number</th>
+                  <th className="py-2 text-end text-muted border-dashed">Stock Remaining</th>
+                  <th className="py-2 text-muted border-dashed">Expiry Date</th>
+                  <th className="py-2 text-muted border-dashed pe-4">Supplier</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredBatches.map(b => (
-                  <tr key={b._id} className="border-bottom border-light">
-                    <td className="ps-4">
-                      <h6 className="mb-0 fw-bold text-body font-size-15">{b.product?.name || 'Unknown Product'}</h6>
+                  <tr key={b._id}>
+                    <td className="align-middle border-dashed ps-4">
+                      <h6 className="mb-0 fw-medium text-body font-size-15">{b.product?.name || 'Unknown Product'}</h6>
                       {b.product?.barcode && <small className="text-muted font-size-13">Code: {b.product.barcode}</small>}
                     </td>
-                    <td>
+                    <td className="align-middle border-dashed">
                       <code className="text-secondary bg-secondary-subtle px-2 py-1 rounded font-size-13">{b.batchNumber || '-'}</code>
                     </td>
-                    <td className="text-end">
+                    <td className="align-middle border-dashed text-end">
                       <span className="fw-semibold font-size-15">{b.stock} units</span>
                     </td>
-                    <td>
+                    <td className="align-middle border-dashed">
                       <span className={`px-2 py-1 rounded font-size-13 fw-semibold ${activeKey === '0' ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning'}`}>
                         {b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : 'N/A'}
                       </span>
                     </td>
-                    <td className="pe-4 text-muted font-size-14">
+                    <td className="align-middle border-dashed pe-4 text-muted font-size-14">
                       {b.supplier?.name || '-'}
                     </td>
                   </tr>
@@ -131,7 +131,7 @@ export default function UpcomingExpiry() {
               </tbody>
             </Table>
           )}
-        </Card.Body>
+        </div>
       </Card>
     </div>
   );
