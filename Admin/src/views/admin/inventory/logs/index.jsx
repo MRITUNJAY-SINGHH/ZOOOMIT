@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Filter, Search, ArrowDownCircle, ArrowUpCircle, CornerUpLeft, RefreshCw, X } from 'lucide-react';
-import { Card, Table, Form, Row, Col, Button, Badge, Offcanvas } from 'react-bootstrap';
+import { Filter, Search, ArrowDownCircle, ArrowUpCircle, CornerUpLeft, RefreshCw, X, Eye } from 'lucide-react';
+import { Card, Table, Form, Row, Col, Button, Badge, Offcanvas, Modal } from 'react-bootstrap';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
@@ -21,6 +21,7 @@ export default function InventoryLogs() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [selectedLog, setSelectedLog] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -118,13 +119,13 @@ export default function InventoryLogs() {
                   backgroundColor: 'rgba(255, 255, 255, 0.03)'
                 }}>
                   <tr>
-                    <th className="py-2 text-muted border-dashed ps-4">Date</th>
-                    <th className="py-2 text-muted border-dashed">Type</th>
-                    <th className="py-2 text-muted border-dashed">Product</th>
-                    <th className="py-2 text-muted border-dashed">Batch / Supplier</th>
-                    <th className="py-2 text-end text-muted border-dashed">Stock Shift</th>
-                    <th className="py-2 text-muted border-dashed">Reason</th>
-                    <th className="py-2 text-muted border-dashed pe-4">Staff</th>
+                    <th className="py-2 text-muted border-dashed">DATE</th>
+                    <th className="py-2 text-muted border-dashed">PRODUCT</th>
+                    <th className="py-2 text-muted border-dashed">BATCH</th>
+                    <th className="py-2 text-end text-muted border-dashed">SHIFT</th>
+                    <th className="py-2 text-end text-muted border-dashed">STOCK</th>
+                    <th className="py-2 text-muted border-dashed">TYPE</th>
+                    <th className="py-2 text-center text-muted border-dashed">ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -132,28 +133,31 @@ export default function InventoryLogs() {
                     const badge = getBadgeStyle(log.type);
                     return (
                     <tr key={log._id}>
-                      <td className="align-middle border-dashed" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)' }}>{new Date(log.date).toLocaleString()}</td>
+                      <td className="align-middle border-dashed fw-medium" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)' }}>{new Date(log.date).toLocaleDateString()}</td>
                       <td className="align-middle border-dashed">
-                        <Badge bg={badge.bg} className="px-2 py-1 d-inline-flex align-items-center gap-1" style={{ borderRadius: '6px', fontSize: '11px', fontWeight: '600' }}>
-                          {badge.icon} {badge.text}
-                        </Badge>
-                      </td>
-                      <td className="align-middle border-dashed">
-                        <div style={{ fontSize: '14px', color: 'var(--bs-body-color)', fontWeight: '500' }}>{log.product?.name}</div>
-                        {log.product?.barcode && <div style={{ fontSize: '12px', color: 'var(--bs-secondary-color)' }}>{log.product.barcode}</div>}
+                        <div style={{ fontSize: '14px', color: 'var(--bs-body-color)', fontWeight: '500', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.product?.name}</div>
                       </td>
                       <td className="align-middle border-dashed">
                         <div style={{ fontSize: '14px', color: 'var(--bs-body-color)' }}>{log.batch ? log.batch.batchNumber : '-'}</div>
-                        {log.batch?.supplier && <div style={{ fontSize: '12px', color: 'var(--bs-secondary-color)' }}>{log.batch.supplier.name}</div>}
                       </td>
                       <td className="align-middle border-dashed text-end">
                         <div className={log.quantityChanged > 0 ? 'text-success fw-bold' : 'text-danger fw-bold'} style={{ fontSize: '14px' }}>
                           {log.quantityChanged > 0 ? '+' : ''}{log.quantityChanged}
                         </div>
-                        <div style={{ fontSize: '12px', color: 'var(--bs-secondary-color)' }}>→ {log.newStock}</div>
                       </td>
-                      <td className="align-middle border-dashed" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)' }}>{log.reason || '-'}</td>
-                      <td className="align-middle border-dashed pe-4" style={{ fontSize: '14px', color: 'var(--bs-body-color)' }}>{log.user?.name || 'System'}</td>
+                      <td className="align-middle border-dashed text-end">
+                        <div style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500' }}>{log.newStock}</div>
+                      </td>
+                      <td className="align-middle border-dashed">
+                        <Badge bg={badge.bg} className="px-2 py-1 d-inline-flex align-items-center gap-1" style={{ borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
+                          {badge.icon} {badge.text}
+                        </Badge>
+                      </td>
+                      <td className="align-middle border-dashed text-center">
+                        <button className="report-action-btn" title="View Details" onClick={() => setSelectedLog(log)}>
+                          <Eye size={17} />
+                        </button>
+                      </td>
                     </tr>
                     );
                   })}
@@ -178,7 +182,7 @@ export default function InventoryLogs() {
         show={showFilters} 
         onHide={() => setShowFilters(false)} 
         placement="end" 
-        style={{ width: '350px', backgroundColor: '#0f172a', borderLeft: '1px solid #1e293b', color: '#f8fafc', boxShadow: '-5px 0 25px rgba(0,0,0,0.5)' }}
+        style={{ width: '450px', backgroundColor: '#0f172a', borderLeft: '1px solid #1e293b', color: '#f8fafc', boxShadow: '-5px 0 25px rgba(0,0,0,0.5)' }}
       >
         <Offcanvas.Header className="border-bottom d-flex justify-content-between align-items-center" style={{ borderColor: '#1e293b' }}>
           <Offcanvas.Title className="fw-bold d-flex align-items-center gap-2 m-0" style={{ fontSize: '1rem' }}>
@@ -246,6 +250,61 @@ export default function InventoryLogs() {
           </Button>
         </Offcanvas.Body>
       </Offcanvas>
+
+      {/* Log Details Modal */}
+      <Modal show={!!selectedLog} onHide={() => setSelectedLog(null)} centered>
+        <Modal.Header closeButton className="border-bottom border-secondary-subtle">
+          <Modal.Title className="fw-bold fs-5">Log Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-4">
+          {selectedLog && (
+            <div className="d-flex flex-column gap-3">
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Time</Col>
+                <Col xs={8} className="fw-medium text-end">{new Date(selectedLog.date).toLocaleString()}</Col>
+              </Row>
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Type</Col>
+                <Col xs={8} className="fw-medium text-end">{selectedLog.type}</Col>
+              </Row>
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Product</Col>
+                <Col xs={8} className="fw-medium text-end">
+                  <div>{selectedLog.product?.name}</div>
+                  {selectedLog.product?.barcode && <div className="text-muted small">{selectedLog.product.barcode}</div>}
+                </Col>
+              </Row>
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Batch</Col>
+                <Col xs={8} className="fw-medium text-end">
+                  <div>{selectedLog.batch ? selectedLog.batch.batchNumber : '-'}</div>
+                  {selectedLog.batch?.supplier && <div className="text-muted small">{selectedLog.batch.supplier.name}</div>}
+                </Col>
+              </Row>
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Reason</Col>
+                <Col xs={8} className="fw-medium text-end">{selectedLog.reason || '-'}</Col>
+              </Row>
+              <Row>
+                <Col xs={4} className="text-muted small text-uppercase">Staff</Col>
+                <Col xs={8} className="fw-medium text-end">{selectedLog.user?.name || 'System'}</Col>
+              </Row>
+              <Row className="border-top border-secondary-subtle pt-3 mt-1">
+                <Col xs={6} className="text-center border-end border-secondary-subtle">
+                  <div className="text-muted small text-uppercase mb-1">Stock Shift</div>
+                  <div className={selectedLog.quantityChanged > 0 ? 'text-success fw-bold fs-5' : 'text-danger fw-bold fs-5'}>
+                    {selectedLog.quantityChanged > 0 ? '+' : ''}{selectedLog.quantityChanged}
+                  </div>
+                </Col>
+                <Col xs={6} className="text-center">
+                  <div className="text-muted small text-uppercase mb-1">Final Stock</div>
+                  <div className="fw-bold fs-5">{selectedLog.newStock}</div>
+                </Col>
+              </Row>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 }
