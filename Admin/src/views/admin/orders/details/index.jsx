@@ -9,13 +9,17 @@ import PageHeader from '@/components/common/PageHeader';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
+  Accepted: 'primary', 'Picked Up': 'info', 'Out For Delivery': 'secondary',
   OutForDelivery: 'secondary', Delivered: 'success', Cancelled: 'danger', Returned: 'dark',
+  Rejected: 'danger'
 };
 
 const TIMELINE_ICONS = {
   Pending: 'lucide:clock', Confirmed: 'lucide:check-circle', Assigned: 'lucide:user-check',
+  Accepted: 'lucide:thumbs-up', 'Picked Up': 'lucide:box', 'Out For Delivery': 'lucide:truck',
   OutForDelivery: 'lucide:truck', Delivered: 'lucide:package-check',
   Cancelled: 'lucide:x-circle', Returned: 'lucide:rotate-ccw',
+  Rejected: 'lucide:x-square'
 };
 
 export default function OrderDetails({ orderId, onBack }) {
@@ -33,8 +37,10 @@ export default function OrderDetails({ orderId, onBack }) {
   const loadOrder = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/orders/${orderId}`);
-      const timelineRes = await api.get(`/orders/${orderId}/timeline`);
+      const [res, timelineRes] = await Promise.all([
+        api.get(`/orders/${orderId}`),
+        api.get(`/orders/${orderId}/timeline`)
+      ]);
       const orderData = res.data;
       orderData.timeline = timelineRes.data;
       setOrder(orderData);
@@ -130,7 +136,7 @@ export default function OrderDetails({ orderId, onBack }) {
           {/* Order Items */}
           <Card className="mb-3">
             <Card.Header className="bg-transparent">
-              <h6 className="mb-0">Order Items</h6>
+              <h4 className="mb-0">Order Items</h4>
             </Card.Header>
             <Card.Body className="p-0">
               <Table responsive className="align-middle mb-0">
@@ -183,7 +189,7 @@ export default function OrderDetails({ orderId, onBack }) {
           {/* Actions */}
           <Card>
             <Card.Header className="bg-transparent">
-              <h6 className="mb-0">Actions</h6>
+              <h4 className="mb-0">Actions</h4>
             </Card.Header>
             <Card.Body className="d-flex gap-2 flex-wrap">
               {order.status === 'Pending' && user?.role !== 'DeliveryBoy' && <Button variant="success" size="sm" onClick={() => updateStatus('Confirmed')}><Icon icon="lucide:check" className="me-1" width={14} />Confirm</Button>}
@@ -207,7 +213,7 @@ export default function OrderDetails({ orderId, onBack }) {
           {/* Customer */}
           <Card className="mb-3">
             <Card.Header className="bg-transparent">
-              <h6 className="mb-0"><Icon icon="lucide:user" className="me-2" width={16} />Customer</h6>
+              <h4 className="mb-0"><Icon icon="lucide:user" className="me-2" width={20} />Customer</h4>
             </Card.Header>
             <Card.Body>
               {order.customer ? (
@@ -225,16 +231,23 @@ export default function OrderDetails({ orderId, onBack }) {
           {/* Payment */}
           <Card className="mb-3">
             <Card.Header className="bg-transparent">
-              <h6 className="mb-0"><Icon icon="lucide:credit-card" className="me-2" width={16} />Payment</h6>
+              <h4 className="mb-0"><Icon icon="lucide:credit-card" className="me-2" width={20} />Payment</h4>
             </Card.Header>
             <Card.Body>
               <div className="d-flex justify-content-between mb-2">
                 <span className="text-muted small">Method</span>
                 <span className="fw-medium">{order.paymentMethod || '-'}</span>
               </div>
-              <div className="d-flex justify-content-between mb-2">
+              <div className="d-flex justify-content-between mb-2 align-items-center">
                 <span className="text-muted small">Payment Status</span>
-                <Badge bg={order.paymentStatus === 'Paid' ? 'success' : 'warning'}>{order.paymentStatus || 'Pending'}</Badge>
+                <Badge 
+                  bg={order.paymentStatus === 'Paid' || order.paymentStatus === 'Success' ? 'success' : order.paymentStatus === 'Failed' ? 'danger' : 'warning'} 
+                  className="px-2 py-1 d-inline-flex align-items-center gap-1" 
+                  style={{ borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}
+                >
+                  <Icon icon={order.paymentStatus === 'Paid' || order.paymentStatus === 'Success' ? 'lucide:check-circle-2' : order.paymentStatus === 'Failed' ? 'lucide:x-circle' : 'lucide:clock'} width={13} />
+                  {order.paymentStatus || 'Pending'}
+                </Badge>
               </div>
               {order.refundStatus && order.refundStatus !== 'None' && (
                 <div className="d-flex justify-content-between">
@@ -249,7 +262,7 @@ export default function OrderDetails({ orderId, onBack }) {
           {order.assignedRider && (
             <Card className="mb-3">
               <Card.Header className="bg-transparent">
-                <h6 className="mb-0"><Icon icon="lucide:truck" className="me-2" width={16} />Delivery</h6>
+                <h4 className="mb-0"><Icon icon="lucide:truck" className="me-2" width={20} />Delivery</h4>
               </Card.Header>
               <Card.Body>
                 <p className="mb-1 fw-medium">{order.assignedRider.name}</p>
@@ -261,23 +274,33 @@ export default function OrderDetails({ orderId, onBack }) {
           {/* Timeline */}
           <Card>
             <Card.Header className="bg-transparent">
-              <h6 className="mb-0"><Icon icon="lucide:clock" className="me-2" width={16} />Timeline</h6>
+              <h4 className="mb-0"><Icon icon="lucide:clock" className="me-2" width={20} />Timeline</h4>
             </Card.Header>
             <Card.Body>
               {order.timeline && order.timeline.length > 0 ? (
-                <div className="timeline-alt">
+                <div style={{ position: 'relative', paddingLeft: '10px' }}>
+                  <div style={{ position: 'absolute', top: '15px', bottom: '15px', left: '26px', width: '2px', backgroundColor: 'var(--bs-border-color)' }}></div>
+                  
                   {order.timeline.map((event, idx) => (
-                    <div key={idx} className="d-flex mb-3">
-                      <div className="me-3 flex-shrink-0">
-                        <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32, backgroundColor: 'var(--bs-light)' }}>
+                    <div key={idx} className="d-flex mb-4" style={{ position: 'relative' }}>
+                      <div className="me-3 flex-shrink-0" style={{ zIndex: 1, backgroundColor: 'var(--bs-card-bg)' }}>
+                        <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 32, height: 32, backgroundColor: 'var(--bs-light)', border: '1px solid var(--bs-border-color)' }}>
                           <Icon icon={TIMELINE_ICONS[event.status] || 'lucide:circle'} width={14} className={`text-${STATUS_COLORS[event.status] || 'muted'}`} />
                         </div>
                       </div>
                       <div>
-                        <p className="mb-0 fw-medium small">{event.status}</p>
-                        <small className="text-muted">{event.note}</small>
-                        <br />
-                        <small className="text-muted">{new Date(event.timestamp).toLocaleString()}</small>
+                        <p className="mb-0 fw-bold" style={{ color: 'var(--bs-body-color)' }}>{event.status}</p>
+                        {event.note && <small className="text-muted d-block mt-1">{event.note}</small>}
+                        <small className="text-muted d-block mt-1">
+                          <Icon icon="lucide:clock" width={12} className="me-1" />
+                          {new Date(event.timestamp).toLocaleString()}
+                        </small>
+                        {event.user && (
+                          <small className="text-muted d-block mt-1">
+                            <Icon icon="lucide:user" width={12} className="me-1" />
+                            {event.user.name} ({event.user.role})
+                          </small>
+                        )}
                       </div>
                     </div>
                   ))}
