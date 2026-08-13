@@ -29,6 +29,7 @@ import couponRoutes from './routes/couponRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
 
 app.use(express.json());
 const corsOptions = {
@@ -66,6 +67,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/documents', documentRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 
 app.get('/', (req, res) => {

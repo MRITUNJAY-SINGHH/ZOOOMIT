@@ -91,7 +91,7 @@ export default function POSBilling() {
         handleSelectProduct(response.data);
       }
     } catch (err) {
-      alert(err.message || 'Product not found');
+      toast.error(err.message || 'Product not found');
     }
     setLoading(false);
   };
@@ -182,7 +182,7 @@ export default function POSBilling() {
 
   // --- HOLD BILL LOGIC ---
   const handleHoldBill = async () => {
-    if (cart.length === 0) return alert('Cart empty');
+    if (cart.length === 0) return toast.error('Cart empty');
     setLoading(true);
 
     const payload = {
@@ -213,7 +213,7 @@ export default function POSBilling() {
         loadHeldBills();
         toast.success('Bill held locally (Offline)');
       } else {
-        alert(e.message); 
+        toast.error(e.message); 
       }
     }
     setLoading(false);
@@ -245,13 +245,13 @@ export default function POSBilling() {
       setCustomer(bill.customer);
       await fetchApi(`/pos/hold/${billId}`, { method: 'DELETE' });
       loadHeldBills();
-    } catch (e) { alert(e.message); }
+    } catch (e) { toast.error(e.message); }
     setLoading(false);
   };
 
   // --- CHECKOUT LOGIC ---
   const checkout = async (paymentMethod) => {
-    if (cart.length === 0) return alert('Cart is empty');
+    if (cart.length === 0) return toast.error('Cart is empty');
     setLoading(true);
 
     const payload = {
@@ -297,7 +297,7 @@ export default function POSBilling() {
         setInvoiceToPrint(offlineInvoice);
         toast.success('Saved Offline! Will sync when connection is restored.');
       } else {
-        alert(error.message);
+        toast.error(error.message);
       }
     }
     setLoading(false);

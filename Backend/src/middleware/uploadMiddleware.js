@@ -13,10 +13,15 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'Zooom_uploads',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 1000, height: 1000, crop: 'limit', fetch_format: 'auto', quality: 'auto' }]
+  params: async (req, file) => {
+    const isSvg = file.mimetype === 'image/svg+xml';
+    
+    return {
+      folder: 'Zooom_uploads',
+   
+      format: isSvg ? 'svg' : undefined,
+      transformation: isSvg ? [] : [{ width: 1000, height: 1000, crop: 'limit', fetch_format: 'auto', quality: 'auto' }]
+    };
   }
 });
 

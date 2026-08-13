@@ -52,7 +52,7 @@ export default function Settings() {
 
     const loadToast = toast.loading('Uploading image...');
     try {
-      const res = await api.post('/upload/product-image', formData, {
+      const res = await api.post('/uploads/product-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSettings(prev => ({ ...prev, [fieldName]: res.data.url }));

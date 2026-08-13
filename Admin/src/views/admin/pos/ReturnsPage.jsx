@@ -6,6 +6,8 @@ import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
 import PageHeader from '@/components/common/PageHeader';
 import InvoicePrintOut from './components/InvoicePrintOut';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 export default function ReturnsPage() {
   const location = useLocation();
@@ -23,6 +25,7 @@ export default function ReturnsPage() {
   const [returnedInvoice, setReturnedInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (invoice && returnItems.length === 0) {
@@ -155,16 +158,24 @@ export default function ReturnsPage() {
     }));
   };
 
-  const processReturn = async () => {
+  const handleProcessReturnClick = () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
-    if (itemsToReturn.length === 0) return alert("Select quantities to return.");
+    if (itemsToReturn.length === 0) return toast.error("Select quantities to return.");
     if (!invoice.invoiceNumber && !invoice.billNumber && !invoice.orderNumber) {
       setError('Return processing requires an invoice number.');
       return;
     }
     
     const finalReason = reason === 'Other' ? customReason : reason;
-    if (reason === 'Other' && !finalReason.trim()) return alert('Please enter a custom reason');
+    if (reason === 'Other' && !finalReason.trim()) return toast.error('Please enter a custom reason');
+    
+    setShowConfirm(true);
+  };
+
+  const processReturn = async () => {
+    setShowConfirm(false);
+    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
+    const finalReason = reason === 'Other' ? customReason : reason;
 
     setLoading(true);
     setError(null);
@@ -177,7 +188,7 @@ export default function ReturnsPage() {
           reason: finalReason 
         })
       });
-      alert('Return processed successfully!');
+      toast.success('Return processed successfully!');
       if (response.invoice) {
         setReturnedInvoice(response.invoice);
       } else {
@@ -272,13 +283,23 @@ export default function ReturnsPage() {
             <div className="text-md-end">
               <div className="text-muted mb-1">Total Refund</div>
               <h4 className="mb-3 text-primary">{formatCurrency(totalRefund)}</h4>
-              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={processReturn} disabled={loading || totalRefund === 0}>
+              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={handleProcessReturnClick} disabled={loading || totalRefund === 0}>
                 {loading ? 'Processing...' : 'Process Return'}
               </Button>
             </div>
           </div>
         </Card.Body>
       </Card>
+
+      <ConfirmModal
+        show={showConfirm}
+        title="Confirm Return"
+        message={`Are you sure you want to process this return? A refund of ${formatCurrency(totalRefund)} will be recorded.`}
+        confirmLabel="Process Return"
+        confirmVariant="danger"
+        onCancel={() => setShowConfirm(false)}
+        onConfirm={processReturn}
+      />
     </div>
   );
 }

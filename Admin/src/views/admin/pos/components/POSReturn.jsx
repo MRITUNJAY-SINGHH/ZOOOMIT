@@ -3,6 +3,7 @@ import { Offcanvas, Table, Button, Form } from 'react-bootstrap';
 import { Icon } from '@/components/common/LucideIcon';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
+import { toast } from 'react-hot-toast';
 
 export default function POSReturn({ invoice, onBack, onComplete }) {
   const [returnItems, setReturnItems] = useState(
@@ -35,7 +36,7 @@ export default function POSReturn({ invoice, onBack, onComplete }) {
 
   const processReturn = async () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
-    if (itemsToReturn.length === 0) return alert("Select quantities to return.");
+    if (itemsToReturn.length === 0) return toast.error("Select quantities to return.");
     if (!invoice.invoiceNumber) {
       setError('Return processing requires an invoiceNumber. Add an invoice lookup by order endpoint before enabling POS returns from billing history.');
       return;

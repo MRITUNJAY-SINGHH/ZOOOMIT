@@ -9,6 +9,7 @@ import SearchBar from '@/components/common/SearchBar';
 import EmptyState from '@/components/common/EmptyState';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import InvoicePrintOut from './components/InvoicePrintOut';
+import { toast } from 'react-hot-toast';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
@@ -71,12 +72,12 @@ export default function HistoryPage() {
           };
           setInvoiceToPrint(dummyInvoice);
         } else {
-          alert("Order details not found.");
+          toast.error("Order details not found.");
         }
       }
     } catch (e) {
       console.error(e);
-      alert("Error fetching invoice or order details.");
+      toast.error("Error fetching invoice or order details.");
     }
   };
 

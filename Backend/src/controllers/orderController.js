@@ -83,10 +83,12 @@ export const createOrder = async (req, res) => {
   try {
     const { orderType, customer, items, subTotal, tax, discount, amount, paymentStatus } = req.body;
     
-    // Create order number
-    const prefix = orderType === 'ONLINE' ? 'INV-2026-' : 'POS-2026-';
-    const orderCount = await Order.countDocuments().session(session);
-    const orderNumber = `${prefix}${(orderCount + 1).toString().padStart(5, '0')}`;
+    // Create order number using Atomic Sequence
+    const Sequence = (await import('../models/Sequence.js')).default;
+    const seqType = orderType === 'ONLINE' ? 'Order' : 'POS';
+    const prefix = orderType === 'ONLINE' ? 'ORD-2026-' : 'POS-2026-';
+    const orderSeq = await Sequence.getNextValue(seqType, session);
+    const orderNumber = `${prefix}${orderSeq.toString().padStart(5, '0')}`;
 
     const orderData = {
       orderNumber,
@@ -209,6 +211,36 @@ export const cancelOrder = async (req, res) => {
     
     await order.save({ session });
 
+    // Find invoice to attach to CancelledDocument if it exists
+    const Invoice = (await import('../models/Invoice.js')).default;
+    const invoice = await Invoice.findOne({ order: order._id }).session(session);
+    if (invoice) {
+      invoice.isCancelled = true;
+      invoice.status = 'Cancelled';
+      await invoice.save({ session });
+    }
+
+    // Create CancelledDocument Audit Record
+    const Sequence = (await import('../models/Sequence.js')).default;
+    const CancelledDocument = (await import('../models/CancelledDocument.js')).default;
+
+    const canSeq = await Sequence.getNextValue('Cancel', session);
+    const documentNumber = `CAN-${new Date().getFullYear()}-${canSeq.toString().padStart(6, '0')}`;
+
+    const cancelDoc = new CancelledDocument({
+      documentNumber,
+      order: order._id,
+      invoice: invoice ? invoice._id : null,
+      originalInvoiceNumber: invoice ? invoice.invoiceNumber : null,
+      snapshot: { ...order.toObject() },
+      cancellationReason: reason,
+      cancelledBy: req.user._id,
+      refundStatus: order.orderType === 'ONLINE' && order.paymentStatus === 'Paid' ? 'Pending' : 'Not Required',
+      refundAmount: order.orderType === 'ONLINE' && order.paymentStatus === 'Paid' ? order.amount : 0
+    });
+
+    await cancelDoc.save({ session });
+
     // Commit BEFORE Razorpay
     await session.commitTransaction();
     session.endSession();
@@ -232,6 +264,12 @@ export const cancelOrder = async (req, res) => {
             // PaymentService internally adds to RefundQueue if failed
           }
           await freshOrder.save();
+          
+          const freshCancelDoc = await CancelledDocument.findOne({ order: order._id });
+          if (freshCancelDoc) {
+            freshCancelDoc.refundStatus = refundSuccess ? 'Completed' : 'Failed';
+            await freshCancelDoc.save();
+          }
         }
       }
     }

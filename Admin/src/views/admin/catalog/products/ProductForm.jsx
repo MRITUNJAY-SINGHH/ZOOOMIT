@@ -91,7 +91,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
         const form = new FormData();
         form.append('image', file);
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/uploads/product-image', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/uploads/product-image`, {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: form
@@ -129,7 +129,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
     
     try {
       const token = localStorage.getItem('token');
-      await fetch('http://localhost:5000/api/uploads/product-image', {
+      await fetch(`${import.meta.env.VITE_API_URL}/uploads/product-image`, {
         method: 'DELETE',
         headers: { 
           'Authorization': `Bearer ${token}`,

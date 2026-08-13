@@ -163,12 +163,13 @@ export const posCheckout = async (req, res) => {
     }
 
     // 1. Generate Numbers
-    const orderCount = await Order.countDocuments().session(session);
-    const orderNumber = `ORD-2026-${(orderCount + 1).toString().padStart(5, '0')}`;
+    const Sequence = (await import('../models/Sequence.js')).default;
+    const orderSeq = await Sequence.getNextValue('Order', session);
+    const orderNumber = `ORD-2026-${orderSeq.toString().padStart(5, '0')}`;
     
-    // Separate bill number logic (could just use a POS prefix counter)
-    const billCount = await Order.countDocuments({ orderType: 'OFFLINE' }).session(session);
-    const billNumber = `POS-2026-${(billCount + 1).toString().padStart(6, '0')}`;
+    // Separate bill number logic
+    const posSeq = await Sequence.getNextValue('POS', session);
+    const billNumber = `POS-2026-${posSeq.toString().padStart(6, '0')}`;
 
     // 2. Create Order
     const order = new Order({
@@ -250,8 +251,8 @@ export const posCheckout = async (req, res) => {
     await transaction.save({ session });
 
     // 5. Create Invoice
-    const invoiceCount = await Invoice.countDocuments().session(session);
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${(invoiceCount + 1).toString().padStart(6, '0')}`;
+    const invoiceSeq = await Sequence.getNextValue('Invoice', session);
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${invoiceSeq.toString().padStart(6, '0')}`;
     
     const invoice = new Invoice({
       invoiceNumber,
@@ -306,6 +307,7 @@ export const posReturn = async (req, res) => {
     }
 
     let totalRefundAmount = 0;
+    const returnedItemsSnapshot = [];
 
     for (const returnItem of itemsToReturn) {
       const { itemId, productId, qtyToReturn } = returnItem;
@@ -324,7 +326,17 @@ export const posReturn = async (req, res) => {
 
       // Update Order Item
       orderItem.returnedQty += qtyToReturn;
-      totalRefundAmount += (orderItem.price * qtyToReturn);
+      const amountForThisItem = orderItem.price * qtyToReturn;
+      totalRefundAmount += amountForThisItem;
+
+      returnedItemsSnapshot.push({
+        product: orderItem.product,
+        productName: orderItem.productName,
+        originalQty: orderItem.qty,
+        returnedQty: qtyToReturn,
+        price: orderItem.price,
+        amount: amountForThisItem
+      });
 
       // Restore Inventory
       if (orderItem.product) {
@@ -343,6 +355,28 @@ export const posReturn = async (req, res) => {
     await order.save({ session });
     await invoice.save({ session });
 
+    // Generate Return Document Audit Record
+    const Sequence = (await import('../models/Sequence.js')).default;
+    const ReturnDocument = (await import('../models/ReturnDocument.js')).default;
+    
+    const retSeq = await Sequence.getNextValue('Return', session);
+    const documentNumber = `RET-${new Date().getFullYear()}-${retSeq.toString().padStart(6, '0')}`;
+
+    const returnDoc = new ReturnDocument({
+      documentNumber,
+      order: order._id,
+      invoice: invoice._id,
+      originalInvoiceNumber: invoice.invoiceNumber,
+      returnedItems: returnedItemsSnapshot,
+      returnAmount: totalRefundAmount,
+      returnReason: reason,
+      processedBy: req.user._id,
+      refundStatus: 'Pending',
+      refundMethod: order.orderType === 'ONLINE' ? 'Source' : 'Cash'
+    });
+    
+    await returnDoc.save({ session });
+
     if (order.orderType === 'ONLINE' && ['Paid', 'PartiallyRefunded'].includes(order.paymentStatus)) {
       // Find the positive transaction
       const transaction = await Transaction.findOne({ order: order._id, amount: { $gt: 0 } }).session(session);
@@ -358,10 +392,17 @@ export const posReturn = async (req, res) => {
         // Update order status outside session based on Razorpay result
         const updatedOrder = await Order.findById(order._id);
         const updatedTxn = await Transaction.findById(transaction._id);
+        const updatedRetDoc = await ReturnDocument.findById(returnDoc._id);
+        
         if (updatedOrder && updatedTxn) {
           updatedOrder.refundStatus = refundSuccess ? 'Processed' : 'Failed';
           updatedOrder.paymentStatus = updatedTxn.paymentStatus;
           await updatedOrder.save();
+        }
+        
+        if (updatedRetDoc) {
+          updatedRetDoc.refundStatus = refundSuccess ? 'Completed' : 'Failed';
+          await updatedRetDoc.save();
         }
         
         clearReportsCache();
@@ -382,6 +423,9 @@ export const posReturn = async (req, res) => {
       });
       await refundTransaction.save({ session });
       
+      returnDoc.refundStatus = 'Completed';
+      await returnDoc.save({ session });
+
       await session.commitTransaction();
       session.endSession();
 
