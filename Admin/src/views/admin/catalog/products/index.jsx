@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Dropdown, Form, InputGroup, OverlayTrigger, Table, Tooltip, Row, Col, Modal, Spinner } from 'react-bootstrap';
-import { Edit, Eye, Image, Trash2, Upload, Plus, Search, Filter, Grid as GridIcon, List as ListIcon, Star, PackageOpen, LayoutGrid, List, Download } from 'lucide-react';
+import { usePageSize } from '@/hooks/usePageSize';
+import { Button, Card, Dropdown, Form, InputGroup, OverlayTrigger, Table, Tooltip, Row, Col, Modal, Spinner, Badge } from 'react-bootstrap';
+import { Edit, Eye, Image, Trash2, Upload, Plus, Search, Filter, Grid as GridIcon, List as ListIcon, Star, PackageOpen, LayoutGrid, List, Download, AlertTriangle } from 'lucide-react';
 import { fetchApi } from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import { useLocation } from 'react-router';
@@ -19,6 +20,7 @@ import PermissionGuard from '@/components/PermissionGuard';
 
 export default function ProductsList() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -30,9 +32,10 @@ export default function ProductsList() {
   // Filtering & Pagination
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit, setLimit] = useState(8);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [productTypeFilter, setProductTypeFilter] = useState('');
   
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -40,25 +43,43 @@ export default function ProductsList() {
   // Selection & Bulk Actions
   const location = useLocation();
   const [selectedItems, setSelectedItems] = useState([]);
-  const [deleteTarget, setDeleteTarget] = useState(null); // specific product obj OR 'bulk'
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [viewTarget, setViewTarget] = useState(location.state?.viewProductId ? { _id: location.state.viewProductId } : null);
 
   useEffect(() => {
+    loadCategories();
+  }, []);
+
+  useEffect(() => {
     if (viewState === 'list') loadProducts();
-  }, [viewState, currentPage, limit, search, categoryFilter, statusFilter]);
+  }, [viewState, currentPage, pageSize, search, categoryFilter, statusFilter, productTypeFilter]);
+
+  const loadCategories = async () => {
+    try {
+      const data = await fetchApi('/categories');
+      setCategories(data || []);
+    } catch (e) { console.error(e); }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams({ page: currentPage, limit, search, category: categoryFilter, status: statusFilter });
+      const params = new URLSearchParams({ 
+        page: currentPage, 
+        limit: pageSize, 
+        search, 
+        category: categoryFilter, 
+        status: statusFilter,
+        productType: productTypeFilter
+      });
       const res = await fetchApi(`/products?${params.toString()}`);
       const payload = res.data ? res : res;
       setProducts(payload.data || []);
       setTotalPages(payload.totalPages || 1);
       setTotalRecords(payload.total || 0);
-      setSelectedItems([]); // reset selection on load
+      setSelectedItems([]);
     } catch (e) {
       setError(e.message);
       toast.error('Failed to load products');
@@ -106,16 +127,12 @@ export default function ProductsList() {
     }
   };
 
-  // Mock functions for missing data in screenshot
-  const getMockRating = (id) => (parseInt(id.substring(id.length - 2), 16) % 5) + 1;
-  const getMockOrders = (id) => parseInt(id.substring(id.length - 3), 16);
-
   if (viewState === 'form') return <ProductForm productId={editId} onBack={() => setViewState('list')} onSave={() => setViewState('list')} />;
   if (viewState === 'import') return <BulkImport onBack={() => setViewState('list')} onComplete={() => setViewState('list')} />;
 
   return (
     <div>
-      <PageHeader title="Products" />
+      <PageHeader title="Products Catalog" />
 
       {/* Premium Toolbar */}
       <Card className="mb-3 border-0 shadow-sm">
@@ -123,13 +140,13 @@ export default function ProductsList() {
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
             
             {/* Search */}
-            <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ maxWidth: '400px' }}>
+            <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ maxWidth: '360px' }}>
               <InputGroup>
                 <InputGroup.Text className="bg-transparent text-muted">
                   <Search size={18} />
                 </InputGroup.Text>
                 <Form.Control
-                  placeholder="Search product name..."
+                  placeholder="Search product, brand, SKU..."
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                 />
@@ -140,22 +157,25 @@ export default function ProductsList() {
             <div className="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap overflow-auto hide-scrollbar pb-1 pb-md-0">
               <span className="text-muted fw-medium font-size-13 text-nowrap d-none d-xl-inline">Filter By:</span>
               
-              <Form.Select style={{ minWidth: '130px' }} value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                <option value="">Category</option>
-                <option value="electronics">Electronics</option>
-                <option value="fashion">Fashion</option>
+              <Form.Select style={{ minWidth: '140px' }} value={categoryFilter} onChange={(e) => { setCategoryFilter(e.target.value); setCurrentPage(1); }}>
+                <option value="">All Categories</option>
+                {categories.filter(c => !c.parentCategory).map(c => (
+                  <option key={c._id} value={c._id}>{c.name}</option>
+                ))}
+              </Form.Select>
+
+              <Form.Select style={{ minWidth: '130px' }} value={productTypeFilter} onChange={(e) => { setProductTypeFilter(e.target.value); setCurrentPage(1); }}>
+                <option value="">All Types</option>
+                <option value="WEIGHT">Weight (KG/G)</option>
+                <option value="VOLUME">Volume (LTR/ML)</option>
+                <option value="PIECE">Piece (PCS)</option>
+                <option value="PACK">Pack / Box</option>
               </Form.Select>
               
-              <Form.Select style={{ minWidth: '110px' }} value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+              <Form.Select style={{ minWidth: '110px' }} value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}>
                 <option value="">Status</option>
                 <option value="active">Published</option>
                 <option value="inactive">Pending</option>
-              </Form.Select>
-
-              <Form.Select style={{ minWidth: '70px' }} className="ms-xl-2" value={limit} onChange={(e) => setLimit(Number(e.target.value))}>
-                <option value="8">8</option>
-                <option value="16">16</option>
-                <option value="32">32</option>
               </Form.Select>
 
               {/* View Toggles */}
@@ -201,7 +221,7 @@ export default function ProductsList() {
       <Card className="border-0 shadow-sm bg-transparent">
         <Card.Body className={viewMode === 'grid' ? 'p-4' : 'p-0'}>
           {loading ? (
-            <div className="p-4"><SkeletonTable rows={limit} columns={10} /></div>
+            <div className="p-4"><SkeletonTable rows={pageSize} columns={8} /></div>
           ) : error ? (
             <div className="p-4"><ErrorState message={error} onRetry={loadProducts} /></div>
           ) : products.length === 0 ? (
@@ -216,9 +236,10 @@ export default function ProductsList() {
                       <Form.Check type="checkbox" checked={selectedItems.length === products.length && products.length > 0} onChange={handleSelectAll} className="fs-5" />
                     </th>
                     <th>Product</th>
-                    <th>Category</th>
-                    <th className="text-end">Stock</th>
-                    <th className="text-end">Price</th>
+                    <th>Category & Subcategory</th>
+                    <th className="text-end">Stock / Unit</th>
+                    <th className="text-end">Selling Price</th>
+                    <th>Tax</th>
                     <th>Status</th>
                     <th className="text-center rounded-end">Actions</th>
                   </tr>
@@ -232,29 +253,59 @@ export default function ProductsList() {
                       <td className="py-3">
                         <div className="d-flex align-items-center gap-3">
                           {product.featuredImage ? (
-                            <img src={product.featuredImage} alt="" width="64" height="64" className="rounded-3 shadow-sm" style={{ objectFit: 'cover', transition: 'transform 0.3s ease' }} onMouseOver={e => e.currentTarget.style.transform='scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform='scale(1)'} />
+                            <img src={product.featuredImage} alt="" width="56" height="56" className="rounded-3 shadow-sm" style={{ objectFit: 'cover' }} />
                           ) : (
-                            <div className="bg-body-tertiary rounded-3 shadow-sm d-flex align-items-center justify-content-center text-secondary" style={{ width: 64, height: 64 }}>
-                              <Image size={24} />
+                            <div className="bg-body-tertiary rounded-3 shadow-sm d-flex align-items-center justify-content-center text-secondary" style={{ width: 56, height: 56 }}>
+                              <Image size={22} />
                             </div>
                           )}
                           <div>
-                            <h5 className="mb-1 fw-bolder text-body" style={{ fontSize: '1.1rem' }}>{product.name}</h5>
-                            <small className="text-muted fw-medium">{product.brand || 'No Brand'}</small>
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <span className="fw-bolder text-body font-size-14">{product.name}</span>
+                              {product.needsReview && (
+                                <Badge bg="warning" className="text-dark d-flex align-items-center gap-1 font-size-10">
+                                  <AlertTriangle size={10} /> Needs Review
+                                </Badge>
+                              )}
+                              {product.hasExpiryTracking && (
+                                <Badge bg="info-subtle" className="text-info font-size-10 border border-info-subtle">
+                                  Perishable
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="d-flex align-items-center gap-2 text-muted font-size-12">
+                              <span>{product.brand || 'Unbranded'}</span>
+                              <span>•</span>
+                              <span className="font-monospace">{product.baseSku || product.barcode || '-'}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="text-muted fw-medium font-size-14">{product.category?.name || 'Uncategorized'}</td>
+                      <td>
+                        <div className="fw-medium font-size-13">{product.category?.name || 'Uncategorized'}</div>
+                        {product.subcategory && (
+                          <div className="text-muted font-size-11">↳ {product.subcategory.name}</div>
+                        )}
+                      </td>
                       <td className="text-end fw-bold text-body font-size-13">
-                        {product.stock || 0}
+                        <span className={product.stock <= (product.lowStockThreshold || 10) ? 'text-danger' : 'text-success'}>
+                          {product.stock || 0}
+                        </span>{' '}
+                        <span className="text-muted font-size-11">{product.baseUnit || 'PCS'}</span>
                       </td>
                       <td className="text-end fw-bold text-body font-size-13">
                         {formatCurrency(product.sellingPrice)}
+                        <span className="text-muted fw-normal font-size-11"> / {product.baseUnit || 'PCS'}</span>
                       </td>
                       <td>
-                         <span className={`badge rounded-pill border ${product.isActive ? 'bg-success-subtle text-success border-success-subtle' : 'bg-warning-subtle text-warning border-warning-subtle'} px-3 py-2 fw-bold shadow-sm`} style={{ letterSpacing: '0.5px' }}>
-                           {product.isActive ? 'PUBLISHED' : 'PENDING'}
-                         </span>
+                        <Badge bg="light" className="text-dark border">
+                          {product.taxRate || 0}% GST
+                        </Badge>
+                      </td>
+                      <td>
+                        <span className={`badge rounded-pill border ${product.isActive ? 'bg-success-subtle text-success border-success-subtle' : 'bg-warning-subtle text-warning border-warning-subtle'} px-2 py-1 fw-bold shadow-sm`} style={{ letterSpacing: '0.5px', fontSize: '10px' }}>
+                          {product.isActive ? 'PUBLISHED' : 'PENDING'}
+                        </span>
                       </td>
                       <td className="text-center">
                         <Button variant="light" size="sm" className="btn-icon me-1 text-secondary rounded-circle bg-body-secondary border-0" onClick={() => setViewTarget(product)} title="View">
@@ -281,18 +332,13 @@ export default function ProductsList() {
             <Row className="g-4">
               {products.map((product) => (
                 <Col xl={3} lg={4} sm={6} key={product._id}>
-                  <Card 
-                    className={`h-100 border border-secondary-subtle shadow-sm overflow-hidden product-grid-card bg-transparent ${selectedItems.includes(product._id) ? 'ring-2 ring-primary border-primary' : ''}`} 
-                    style={{ transition: 'all 0.3s ease' }}
-                    onMouseOver={e => e.currentTarget.classList.add('shadow')} 
-                    onMouseOut={e => e.currentTarget.classList.remove('shadow')}
-                  >
+                  <Card className="h-100 border border-secondary-subtle shadow-sm overflow-hidden bg-transparent">
                     <div className="position-absolute top-0 start-0 p-3 z-3">
                       <Form.Check type="checkbox" className="shadow-sm fs-5" checked={selectedItems.includes(product._id)} onChange={() => handleSelectItem(product._id)} />
                     </div>
-                    <div className="d-flex align-items-center justify-content-center position-relative overflow-hidden border-bottom border-secondary-subtle" style={{ height: '180px', backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                    <div className="d-flex align-items-center justify-content-center position-relative overflow-hidden border-bottom border-secondary-subtle" style={{ height: '180px', backgroundColor: 'rgba(0,0,0,0.05)' }}>
                       {product.featuredImage ? (
-                        <img src={product.featuredImage} alt={product.name} className="w-100 h-100" style={{ objectFit: 'cover', transition: 'transform 0.5s ease' }} onMouseOver={e => e.currentTarget.style.transform='scale(1.08)'} onMouseOut={e => e.currentTarget.style.transform='scale(1)'} />
+                        <img src={product.featuredImage} alt={product.name} className="w-100 h-100" style={{ objectFit: 'cover' }} />
                       ) : (
                         <PackageOpen size={48} className="text-secondary opacity-50" />
                       )}
@@ -300,26 +346,20 @@ export default function ProductsList() {
                     <Card.Body className="d-flex flex-column p-3">
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <span className="badge bg-primary-subtle text-primary rounded-pill font-size-11 px-2 py-1">{product.category?.name || 'Uncategorized'}</span>
-                        <div className="d-flex align-items-center gap-1 text-warning">
-                          <Star size={12} fill="currentColor" />
-                          <span className="text-muted font-size-11">{getMockRating(product._id)}.0</span>
-                        </div>
+                        <Badge bg="light" className="text-dark border font-size-11">{product.taxRate || 0}% GST</Badge>
                       </div>
                       
-                      <h5 className="mb-1 text-truncate fw-bold text-body" style={{ fontSize: '1.05rem' }} title={product.name}>{product.name}</h5>
-                      
-                      <p className="text-muted font-size-12 mb-3" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4' }}>
-                        {product.description || 'No description available for this product.'}
-                      </p>
+                      <h6 className="mb-1 text-truncate fw-bold text-body" title={product.name}>{product.name}</h6>
+                      <small className="text-muted mb-2">{product.brand || 'Unbranded'}</small>
                       
                       <div className="mt-auto bg-body-tertiary rounded-3 p-2 px-3 d-flex align-items-center justify-content-between border border-secondary-subtle">
                         <div>
                           <div className="text-muted font-size-11 mb-0">Price</div>
-                          <h6 className="mb-0 fw-bold text-body">{formatCurrency(product.sellingPrice)}</h6>
+                          <h6 className="mb-0 fw-bold text-body">{formatCurrency(product.sellingPrice)} <span className="font-size-11 fw-normal text-muted">/{product.baseUnit || 'PCS'}</span></h6>
                         </div>
                         <div className="text-end border-start border-secondary-subtle ps-3">
                           <div className="text-muted font-size-11 mb-0">Stock</div>
-                          <h6 className={`mb-0 fw-bold ${product.stock > 10 ? 'text-success' : 'text-danger'}`}>{product.stock || 0}</h6>
+                          <h6 className={`mb-0 fw-bold ${product.stock > 10 ? 'text-success' : 'text-danger'}`}>{product.stock || 0} {product.baseUnit || 'PCS'}</h6>
                         </div>
                       </div>
                     </Card.Body>
@@ -346,10 +386,10 @@ export default function ProductsList() {
             </Row>
           )}
           
-          {/* Pagination shared between List and Grid */}
+          {/* Pagination */}
           {!loading && !error && products.length > 0 && (
             <div className={viewMode === 'list' ? 'p-3 border-top' : 'mt-4'}>
-              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
             </div>
           )}
         </Card.Body>

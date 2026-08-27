@@ -11,8 +11,6 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    email: '',
     phone: ''
   });
   const [loading, setLoading] = useState(false);
@@ -21,8 +19,6 @@ export default function ProfilePage() {
     if (user) {
       setFormData({
         name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
         email: user.email || '',
         phone: user.phone || ''
       });

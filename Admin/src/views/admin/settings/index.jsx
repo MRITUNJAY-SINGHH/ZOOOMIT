@@ -222,6 +222,20 @@ export default function Settings() {
                     <h5 className="mb-0 fw-bold">Invoicing & Billing</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
+                    <h5 className="mb-4 fw-bolder text-primary text-uppercase" style={{ letterSpacing: '1.5px' }}>Tax & GST Configuration</h5>
+                    <div className="row g-4 mb-4 pb-4 border-bottom border-light">
+                      <div className="col-md-6">
+                        <Form.Label className="fw-medium text-muted small text-uppercase">Store-Wide Tax Mode</Form.Label>
+                        <Form.Select name="taxMode" value={settings.taxMode || 'INCLUSIVE'} onChange={handleChange}>
+                          <option value="INCLUSIVE">Tax Inclusive (Indian Retail Grocery MRP - Tax extracted from price)</option>
+                          <option value="EXCLUSIVE">Tax Exclusive (B2B Wholesale - Tax added on top of price)</option>
+                        </Form.Select>
+                        <Form.Text className="text-muted small">
+                          Determines how GST is computed across POS, Online Deliveries, and Invoices.
+                        </Form.Text>
+                      </div>
+                    </div>
+
                     <h5 className="mb-4 fw-bolder text-primary text-uppercase" style={{ letterSpacing: '1.5px' }}>Invoice Numbering</h5>
                     <div className="row g-4 mb-4 pb-4 border-bottom border-light">
                       <div className="col-md-6">
@@ -273,7 +287,7 @@ export default function Settings() {
               <Tab.Pane eventKey="alerts">
                 <Card className="mb-3 border-0 shadow-sm">
                   <Card.Header className="bg-transparent border-bottom border-light">
-                    <h5 className="mb-0 fw-bold">Inventory Alerts</h5>
+                    <h5 className="mb-0 fw-bold">Inventory Alerts & Rules</h5>
                   </Card.Header>
                   <Card.Body className="p-4">
                     <div className="row g-4">
@@ -286,6 +300,19 @@ export default function Settings() {
                         <Form.Label className="fw-medium text-muted small text-uppercase">Expiry Alert Days</Form.Label>
                         <Form.Control name="expiryAlertDays" value={settings.expiryAlertDays?.join(', ') || ''} onChange={handleArrayChange} placeholder="e.g. 30, 15, 10, 5" />
                         <Form.Text className="text-muted small">Comma separated days before expiry to alert.</Form.Text>
+                      </div>
+                      <div className="col-md-12">
+                        <Form.Check 
+                          type="switch"
+                          id="allowNegativeStockSwitch"
+                          label="Allow Negative Stock on Offline POS Sync"
+                          checked={!!settings.allowNegativeStock}
+                          onChange={e => setSettings({ ...settings, allowNegativeStock: e.target.checked })}
+                          className="fw-medium"
+                        />
+                        <Form.Text className="text-muted small">
+                          If enabled, offline orders can sync even if stock count reaches below zero before replenishment.
+                        </Form.Text>
                       </div>
                     </div>
                   </Card.Body>

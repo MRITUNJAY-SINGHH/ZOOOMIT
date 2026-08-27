@@ -1,5 +1,5 @@
 import express from 'express';
-import { getSalesReport, getInventoryReport, getPaymentsReport, getCustomerReport, getDashboardStats, getSalesChart, getOrdersChart, getTopSellingProducts } from '../controllers/reportController.js';
+import { getSalesReport, getInventoryReport, getPaymentsReport, getCustomerReport, getDashboardStats, getSalesChart, getOrdersChart, getTopSellingProducts, getRecentTransactions } from '../controllers/reportController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import { cacheMiddleware } from '../middleware/cacheMiddleware.js';
 
@@ -13,5 +13,6 @@ router.route('/customer').get(protect, authorize('reports', 'view'), cacheMiddle
 router.route('/sales-chart').get(protect, authorize('reports', 'view'), cacheMiddleware(300), getSalesChart);
 router.route('/orders-chart').get(protect, authorize('reports', 'view'), cacheMiddleware(300), getOrdersChart);
 router.route('/top-selling').get(protect, authorize('reports', 'view'), cacheMiddleware(300), getTopSellingProducts);
+router.route('/recent-transactions').get(protect, authorize('reports', 'view'), cacheMiddleware(60), getRecentTransactions);
 
 export default router;

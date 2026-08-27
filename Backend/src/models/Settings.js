@@ -10,6 +10,8 @@ const settingsSchema = new mongoose.Schema({
   
   authorizedSignature: { type: String },
   
+  taxMode: { type: String, enum: ['INCLUSIVE', 'EXCLUSIVE'], default: 'INCLUSIVE' },
+  
   invoicePrefixOnline: { type: String, default: 'INV-2026-' },
   invoicePrefixOffline: { type: String, default: 'POS-2026-' },
   invoiceFooter: { type: String, default: 'Thank you for shopping with us!' },

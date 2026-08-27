@@ -4,11 +4,13 @@ import { useLocation } from 'react-router';
 import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
+import { usePageSize } from '@/hooks/usePageSize';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
 import ActionBar from '@/components/common/ActionBar';
 import SearchBar from '@/components/common/SearchBar';
+import PaginationComponent from '@/components/common/PaginationComponent';
 import OrderDetails from '../details/index';
 
 const STATUS_COLORS = {
@@ -48,21 +50,22 @@ export default function OrdersList() {
   const [search, setSearch] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
+  const statusParam = ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(activeTab) ? activeTab : '';
+  const orderTypeParam = ['ONLINE', 'OFFLINE'].includes(activeTab) ? activeTab : '';
+
   useEffect(() => {
     if (!viewOrderId) loadOrders();
-  }, [viewOrderId, activeTab, currentPage, search]);
+  }, [viewOrderId, activeTab, currentPage, pageSize, search]);
 
   const loadOrders = async () => {
     setLoading(true);
     setError(null);
     try {
-      const statusParam = ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(activeTab) ? activeTab : '';
-      const orderTypeParam = ['ONLINE', 'OFFLINE'].includes(activeTab) ? activeTab : '';
-
-      const res = await api.get(`/orders?page=${currentPage}&limit=20&status=${statusParam}&orderType=${orderTypeParam}&search=${search}`);
+      const res = await api.get(`/orders?page=${currentPage}&limit=${pageSize}&status=${statusParam}&orderType=${orderTypeParam}&search=${search}`);
       const payload = res.data;
       setOrders(payload.data || payload);
       setTotalPages(payload.totalPages || 1);
@@ -180,19 +183,7 @@ export default function OrdersList() {
               </Table>
 
               {/* Pagination */}
-              <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                <span className="text-muted small">
-                  Showing page {currentPage} of {totalPages} ({totalRecords} total records)
-                </span>
-                <div className="d-flex gap-2">
-                  <Button variant="outline-secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
-                    <Icon icon="lucide:chevron-left" width={14} className="me-1" />Prev
-                  </Button>
-                  <Button variant="outline-secondary" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                    Next<Icon icon="lucide:chevron-right" width={14} className="ms-1" />
-                  </Button>
-                </div>
-              </div>
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
             </>
           )}
         </Card.Body>

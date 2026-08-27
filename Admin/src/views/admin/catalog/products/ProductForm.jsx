@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Tabs, Tab, Row, Col, Table, Spinner, Modal } from 'react-bootstrap';
+import { Card, Form, Button, Tabs, Tab, Row, Col, Table, Spinner, Modal, Badge } from 'react-bootstrap';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
-import { ArrowLeft, ArrowRight, Trash2, Edit, Plus, Upload, Image, LayoutGrid } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Trash2, Edit, Plus, Upload, Image, LayoutGrid, AlertCircle, ShieldCheck, Scale } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
 
@@ -12,12 +12,44 @@ export default function ProductForm({ productId, onBack, onSave }) {
   const isEdit = !!productId;
   
   const [formData, setFormData] = useState({
-    name: '', slug: '', category: '', baseSku: '', barcode: '',
-    mrp: 0, costPrice: 0, sellingPrice: 0, stock: 0, lowStockThreshold: 10,
-    isActive: true, featuredImage: '', galleryImages: []
+    name: '', 
+    slug: '', 
+    brand: '',
+    category: '', 
+    subcategory: '',
+    baseSku: '', 
+    barcode: '',
+    mrp: '', 
+    costPrice: '', 
+    sellingPrice: '', 
+    stock: 0, 
+    lowStockThreshold: 10,
+    
+    productType: 'PIECE',
+    baseUnit: 'PCS',
+    purchaseUnit: 'PCS',
+    purchaseToStockFactor: 1,
+    sellingUnit: 'PCS',
+    preferredSupplier: '',
+    
+    minSaleQty: 1,
+    maxSaleQty: 100,
+    qtyStep: 1,
+    
+    taxRate: 0,
+    hsnCode: '',
+    
+    hasExpiryTracking: false,
+    isFeatured: false,
+    isActive: true, 
+    needsReview: false,
+    featuredImage: '', 
+    galleryImages: []
   });
   
   const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [variants, setVariants] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,36 +58,69 @@ export default function ProductForm({ productId, onBack, onSave }) {
   const editor = useEditor({
     extensions: [StarterKit],
     content: '',
-    onUpdate: ({ editor }) => {
-      // Handled during submit via editor.getHTML()
-    }
+    onUpdate: ({ editor }) => {}
   });
 
   useEffect(() => {
     loadCategories();
+    loadSuppliers();
     if (isEdit) loadProduct();
   }, [productId]);
 
   const loadCategories = async () => {
     try {
       const data = await fetchApi('/categories');
-      setCategories(data);
+      setCategories(data || []);
     } catch (e) { console.error(e); }
   };
+
+  const loadSuppliers = async () => {
+    try {
+      const res = await fetchApi('/suppliers?limit=150');
+      setSuppliers(res.data || res || []);
+    } catch (e) { console.error(e); }
+  };
+
+  // Update subcategories when category changes
+  useEffect(() => {
+    if (formData.category && categories.length > 0) {
+      const subs = categories.filter(c => c.parentCategory && (c.parentCategory._id === formData.category || c.parentCategory === formData.category));
+      setSubcategories(subs);
+    } else {
+      setSubcategories([]);
+    }
+  }, [formData.category, categories]);
 
   const loadProduct = async () => {
     try {
       const res = await fetchApi(`/products/${productId}`);
+      const prod = res.product;
       setFormData({
-        ...res.product,
-        category: res.product.category?._id || res.product.category,
-        galleryImages: res.product.galleryImages?.length > 0 ? res.product.galleryImages : (res.product.featuredImage ? [res.product.featuredImage] : [])
+        ...prod,
+        category: prod.category?._id || prod.category || '',
+        subcategory: prod.subcategory?._id || prod.subcategory || '',
+        preferredSupplier: prod.preferredSupplier?._id || prod.preferredSupplier || '',
+        mrp: prod.mrp ?? '',
+        costPrice: prod.costPrice ?? '',
+        sellingPrice: prod.sellingPrice ?? '',
+        productType: prod.productType || 'PIECE',
+        baseUnit: prod.baseUnit || 'PCS',
+        purchaseUnit: prod.purchaseUnit || prod.baseUnit || 'PCS',
+        purchaseToStockFactor: prod.purchaseToStockFactor || 1,
+        sellingUnit: prod.sellingUnit || prod.baseUnit || 'PCS',
+        minSaleQty: prod.minSaleQty || 1,
+        maxSaleQty: prod.maxSaleQty || 100,
+        qtyStep: prod.qtyStep || 1,
+        taxRate: prod.taxRate ?? 0,
+        hsnCode: prod.hsnCode || '',
+        hasExpiryTracking: prod.hasExpiryTracking || false,
+        galleryImages: prod.galleryImages?.length > 0 ? prod.galleryImages : (prod.featuredImage ? [prod.featuredImage] : [])
       });
       setVariants(res.variants || []);
-      if (editor) editor.commands.setContent(res.product.description || '');
+      if (editor) editor.commands.setContent(prod.description || '');
       
       const batchRes = await fetchApi(`/products/${productId}/batches`);
-      setBatches(batchRes);
+      setBatches(batchRes || []);
     } catch (e) { console.error(e); }
   };
 
@@ -145,16 +210,20 @@ export default function ProductForm({ productId, onBack, onSave }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setLoading(true);
     try {
-      const payload = { ...formData, description: editor ? editor.getHTML() : '' };
+      const payload = { 
+        ...formData, 
+        needsReview: false, // Clearing needsReview on manual save
+        description: editor ? editor.getHTML() : '' 
+      };
       if (isEdit) {
         await fetchApi(`/products/${productId}`, { method: 'PUT', body: JSON.stringify(payload) });
-        toast.success('Product updated');
+        toast.success('Product updated successfully');
       } else {
         await fetchApi('/products', { method: 'POST', body: JSON.stringify(payload) });
-        toast.success('Product created');
+        toast.success('Product created successfully');
       }
       onSave();
     } catch (err) {
@@ -163,7 +232,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
     setLoading(false);
   };
 
-  const [newVariant, setNewVariant] = useState({ name: '', sku: '', sellingPrice: '' });
+  // --- VARIANT HANDLING ---
+  const [newVariant, setNewVariant] = useState({ 
+    name: '', 
+    sku: '', 
+    sellingPrice: '', 
+    conversionFactor: 1, 
+    conversionUnit: 'PCS' 
+  });
   const [editingVariantId, setEditingVariantId] = useState(null);
 
   const handleAddVariant = async () => {
@@ -176,14 +252,20 @@ export default function ProductForm({ productId, onBack, onSave }) {
         await fetchApi(`/products/${productId}/variants`, { method: 'POST', body: JSON.stringify(newVariant) });
         toast.success("Variant added");
       }
-      setNewVariant({ name: '', sku: '', sellingPrice: '' });
+      setNewVariant({ name: '', sku: '', sellingPrice: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
       setEditingVariantId(null);
       loadProduct(); 
     } catch (e) { toast.error(e.message); }
   };
 
   const handleEditVariant = (v) => {
-    setNewVariant({ name: v.name, sku: v.sku || '', sellingPrice: v.sellingPrice || '' });
+    setNewVariant({ 
+      name: v.name, 
+      sku: v.sku || '', 
+      sellingPrice: v.sellingPrice || '', 
+      conversionFactor: v.conversionFactor || 1, 
+      conversionUnit: v.conversionUnit || formData.baseUnit || 'PCS' 
+    });
     setEditingVariantId(v._id);
   };
 
@@ -201,15 +283,12 @@ export default function ProductForm({ productId, onBack, onSave }) {
     setVariantToDelete(null);
   };
 
-  const handleDeleteClick = (variantId) => {
-    setVariantToDelete(variantId);
-    setShowDeleteModal(true);
-  };
+  const parentCategories = categories.filter(c => !c.parentCategory);
 
   return (
     <div>
       <PageHeader 
-        title={isEdit ? 'Edit Product' : 'Add Product'} 
+        title={isEdit ? 'Edit Product' : 'Add New Product'} 
         rightContent={
           <div className="d-flex gap-2">
             <Button variant="outline-secondary" className="d-flex align-items-center gap-2 shadow-sm px-3 fw-medium bg-body" onClick={onBack}>
@@ -222,8 +301,18 @@ export default function ProductForm({ productId, onBack, onSave }) {
         } 
       />
 
+      {formData.needsReview && (
+        <div className="alert alert-warning d-flex align-items-center gap-3 mb-4 shadow-sm">
+          <AlertCircle size={20} className="text-warning flex-shrink-0" />
+          <div>
+            <strong>Migrated Product:</strong> Please verify the <strong>Unit of Measure</strong>, <strong>Product Type</strong>, and <strong>GST Rate</strong> before saving.
+          </div>
+        </div>
+      )}
+
       <Tabs defaultActiveKey="basic" className="mb-4">
-        <Tab eventKey="basic" title="Basic Info">
+        {/* TAB 1: BASIC & PRICING */}
+        <Tab eventKey="basic" title="General & Pricing">
           <Form onSubmit={handleSubmit}>
             <Row className="g-4">
               <Col xl={8}>
@@ -231,23 +320,56 @@ export default function ProductForm({ productId, onBack, onSave }) {
                 <Card className="border-0 shadow-sm mb-4">
                   <Card.Body className="p-4">
                     <h6 className="fw-bold mb-4">Basic Information</h6>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">Product Name</Form.Label>
-                      <Form.Control value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required className="py-2" />
-                    </Form.Group>
-                    <Row className="g-4 mb-4">
-                      <Col md={6}>
+                    
+                    <Row className="g-3 mb-3">
+                      <Col md={8}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Product Name *</Form.Label>
+                          <Form.Control 
+                            value={formData.name} 
+                            onChange={e => {
+                              const nameVal = e.target.value;
+                              setFormData({
+                                ...formData, 
+                                name: nameVal,
+                                slug: isEdit ? formData.slug : nameVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+                              });
+                            }} 
+                            required 
+                            className="py-2" 
+                          />
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Brand</Form.Label>
+                          <Form.Control value={formData.brand || ''} onChange={e => setFormData({...formData, brand: e.target.value})} placeholder="e.g. Amul, Tata, Madhur" className="py-2" />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+
+                    <Row className="g-3 mb-3">
+                      <Col md={4}>
                         <Form.Group>
                           <Form.Label className="fw-medium text-muted font-size-13 mb-1">Slug (URL)</Form.Label>
                           <Form.Control value={formData.slug} onChange={e => setFormData({...formData, slug: e.target.value})} required className="py-2" />
                         </Form.Group>
                       </Col>
-                      <Col md={6}>
+                      <Col md={4}>
                         <Form.Group>
-                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Category</Form.Label>
-                          <Form.Select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} required className="py-2">
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Category *</Form.Label>
+                          <Form.Select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value, subcategory: ''})} required className="py-2">
                             <option value="">Select Category</option>
-                            {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                            {parentCategories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={4}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Subcategory</Form.Label>
+                          <Form.Select value={formData.subcategory} onChange={e => setFormData({...formData, subcategory: e.target.value})} className="py-2" disabled={subcategories.length === 0}>
+                            <option value="">Select Subcategory</option>
+                            {subcategories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
                           </Form.Select>
                         </Form.Group>
                       </Col>
@@ -255,34 +377,46 @@ export default function ProductForm({ productId, onBack, onSave }) {
                     
                     <Form.Group>
                       <Form.Label className="fw-medium text-muted font-size-13 mb-1">Description</Form.Label>
-                      <div className="form-control p-3 border-secondary-subtle" style={{ minHeight: '200px' }}>
+                      <div className="form-control p-3 border-secondary-subtle" style={{ minHeight: '180px' }}>
                         <EditorContent editor={editor} />
                       </div>
                     </Form.Group>
                   </Card.Body>
                 </Card>
 
-                {/* Pricing Card */}
+                {/* Pricing & GST Card */}
                 <Card className="border-0 shadow-sm mb-4">
                   <Card.Body className="p-4">
-                    <h6 className="fw-bold mb-4">Pricing</h6>
-                    <Row className="g-4">
-                      <Col md={4}>
+                    <h6 className="fw-bold mb-4">Pricing & Taxation</h6>
+                    <Row className="g-3">
+                      <Col md={3}>
                         <Form.Group>
-                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">MRP</Form.Label>
-                          <Form.Control type="number" value={formData.mrp} onChange={e => setFormData({...formData, mrp: e.target.value})} className="py-2" />
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">MRP (₹)</Form.Label>
+                          <Form.Control type="number" step="0.01" value={formData.mrp} onChange={e => setFormData({...formData, mrp: e.target.value})} className="py-2" />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Group>
-                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Cost Price</Form.Label>
-                          <Form.Control type="number" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: e.target.value})} className="py-2" />
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Cost Price (₹)</Form.Label>
+                          <Form.Control type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: e.target.value})} className="py-2" />
                         </Form.Group>
                       </Col>
-                      <Col md={4}>
+                      <Col md={3}>
                         <Form.Group>
-                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Selling Price</Form.Label>
-                          <Form.Control type="number" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} required className="py-2" />
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Selling Price (₹) *</Form.Label>
+                          <Form.Control type="number" step="0.01" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} required className="py-2" />
+                        </Form.Group>
+                      </Col>
+                      <Col md={3}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">GST Tax Rate</Form.Label>
+                          <Form.Select value={formData.taxRate} onChange={e => setFormData({...formData, taxRate: Number(e.target.value)})} className="py-2">
+                            <option value="0">0% (Nil / Exempted)</option>
+                            <option value="5">5% GST</option>
+                            <option value="12">12% GST</option>
+                            <option value="18">18% GST</option>
+                            <option value="28">28% GST</option>
+                          </Form.Select>
                         </Form.Group>
                       </Col>
                     </Row>
@@ -298,58 +432,86 @@ export default function ProductForm({ productId, onBack, onSave }) {
                        <h6 className="fw-bold mb-0">Media Gallery</h6>
                        <input type="file" id="image-upload" multiple accept="image/*" className="d-none" onChange={handleUpload} disabled={uploading} />
                        <label htmlFor="image-upload" className={`btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm px-3 ${uploading ? 'disabled' : ''}`} style={{ cursor: 'pointer', borderWidth: '1.5px' }}>
-                         {uploading ? <Spinner size="sm" /> : <Upload size={14} />} {uploading ? 'Uploading...' : 'Upload'}
+                          <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload'}
                        </label>
                     </div>
-                    
-                    <div className="d-flex flex-wrap gap-2">
-                      {(formData.galleryImages || []).map((url, idx) => (
-                        <div key={idx} className="position-relative border rounded-3 overflow-hidden bg-body-secondary shadow-sm" style={{ width: 'calc(50% - 0.5rem)', aspectRatio: '1/1' }}>
-                          <img src={url} alt="Product" className="w-100 h-100" style={{ objectFit: 'cover' }} />
-                          {idx === 0 && <span className="position-absolute top-0 start-0 badge bg-primary m-2 font-size-10 shadow-sm">Cover</span>}
-                          
-                          <div className="position-absolute top-0 end-0 m-2">
-                            <Button variant="light" size="sm" className="p-0 rounded bg-body-tertiary text-danger shadow-sm border border-secondary-subtle d-flex align-items-center justify-content-center" style={{ width: '28px', height: '28px' }} onClick={() => removeImage(idx)}>
-                              <Trash2 size={14} />
-                            </Button>
-                          </div>
-                          
-                          <div className="position-absolute bottom-0 start-0 w-100 d-flex justify-content-between px-2" style={{ backgroundColor: 'rgba(0,0,0,0.85)', paddingBottom: '4px', paddingTop: '4px' }}>
-                            <Button variant="light" size="sm" className="p-0 bg-transparent text-white border-0" disabled={idx === 0} onClick={() => moveImage(idx, 'left')}>
-                              <ArrowLeft size={14} />
-                            </Button>
-                            <Button variant="light" size="sm" className="p-0 bg-transparent text-white border-0" disabled={idx === (formData.galleryImages?.length || 0) - 1} onClick={() => moveImage(idx, 'right')}>
-                              <ArrowRight size={14} />
-                            </Button>
-                          </div>
+
+                    {formData.galleryImages?.length > 0 ? (
+                      <div className="d-flex flex-column gap-3">
+                        <div className="position-relative border rounded p-2 bg-light text-center">
+                          <img src={formData.galleryImages[0]} alt="Featured" style={{ maxHeight: '200px', objectFit: 'contain' }} className="w-100 rounded" />
+                          <Badge bg="primary" className="position-absolute top-0 start-0 m-2">Featured / Primary</Badge>
                         </div>
-                      ))}
-                      {(!formData.galleryImages || formData.galleryImages.length === 0) && (
-                        <div className="w-100 text-muted font-size-13 fw-medium d-flex flex-column align-items-center justify-content-center border rounded-3 border-dashed bg-body-tertiary" style={{ height: '160px' }}>
-                           <Image size={28} className="mb-2 opacity-50" />
-                           No images uploaded
+                        <div className="d-flex flex-wrap gap-2">
+                          {formData.galleryImages.map((img, idx) => (
+                            <div key={idx} className="position-relative border rounded p-1" style={{ width: '60px', height: '60px' }}>
+                              <img src={img} alt="" className="w-100 h-100 object-fit-cover rounded" />
+                              <button type="button" className="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center" style={{ width: '18px', height: '18px' }} onClick={() => removeImage(idx)}>
+                                <Trash2 size={10} />
+                              </button>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-4 text-muted border border-dashed rounded">
+                        <Image size={32} className="mb-2 opacity-50" />
+                        <div>No images uploaded</div>
+                      </div>
+                    )}
                   </Card.Body>
                 </Card>
 
-                {/* Identifiers Card */}
+                {/* Status & Compliance Settings */}
                 <Card className="border-0 shadow-sm mb-4">
                   <Card.Body className="p-4">
-                    <h6 className="fw-bold mb-4">Inventory & Identifiers</h6>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">Base SKU</Form.Label>
-                      <Form.Control value={formData.baseSku} onChange={e => setFormData({...formData, baseSku: e.target.value})} className="py-2" />
+                    <h6 className="fw-bold mb-3">Status & Tracking</h6>
+                    
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">HSN Code</Form.Label>
+                      <Form.Control value={formData.hsnCode || ''} onChange={e => setFormData({...formData, hsnCode: e.target.value})} placeholder="e.g. 1701, 1006" className="py-2" />
                     </Form.Group>
-                    <Form.Group className="mb-4">
+
+                    <Form.Group className="mb-3">
                       <Form.Label className="fw-medium text-muted font-size-13 mb-1">Barcode</Form.Label>
-                      <Form.Control placeholder="Scan or Enter Barcode" value={formData.barcode} onChange={e => setFormData({...formData, barcode: e.target.value})} className="py-2" />
+                      <Form.Control value={formData.barcode || ''} onChange={e => setFormData({...formData, barcode: e.target.value})} placeholder="Scan or enter barcode" className="py-2" />
                     </Form.Group>
-                    <Form.Group>
-                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">Low Stock Alert At</Form.Label>
-                      <Form.Control type="number" value={formData.lowStockThreshold} onChange={e => setFormData({...formData, lowStockThreshold: e.target.value})} className="py-2" />
+
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">SKU</Form.Label>
+                      <Form.Control value={formData.baseSku || ''} onChange={e => setFormData({...formData, baseSku: e.target.value})} placeholder="Leave blank to auto-generate" className="py-2" />
                     </Form.Group>
+
+                    <div className="d-flex flex-column gap-3 pt-2 border-top">
+                      <Form.Check 
+                        type="switch" 
+                        id="expiry-switch"
+                        label={
+                          <div>
+                            <span className="fw-bold">Expiry Date Tracking</span>
+                            <div className="text-muted font-size-12">Mandatory expiry dates & FEFO for perishables (Milk, Bread, Curd). Disable for Sugar, Rice, Soaps.</div>
+                          </div>
+                        }
+                        checked={formData.hasExpiryTracking}
+                        onChange={e => setFormData({...formData, hasExpiryTracking: e.target.checked})}
+                      />
+
+                      <Form.Check 
+                        type="switch" 
+                        id="featured-switch"
+                        label="Featured Product (Show on homepage)"
+                        checked={formData.isFeatured}
+                        onChange={e => setFormData({...formData, isFeatured: e.target.checked})}
+                      />
+
+                      <Form.Check 
+                        type="switch" 
+                        id="active-switch"
+                        label="Publish / Active in POS & Online Store"
+                        checked={formData.isActive}
+                        onChange={e => setFormData({...formData, isActive: e.target.checked})}
+                      />
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>
@@ -357,74 +519,249 @@ export default function ProductForm({ productId, onBack, onSave }) {
           </Form>
         </Tab>
 
-        <Tab eventKey="variants" title="Variants" disabled={!isEdit}>
-          <Card className="border-0 shadow-sm">
+        {/* TAB 2: UNITS OF MEASURE & PACKAGING */}
+        <Tab eventKey="uom" title="Units & Quantity Rules">
+          <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h6 className="fw-bold mb-0">Product Variants</h6>
+              <div className="d-flex align-items-center gap-2 mb-4">
+                <Scale size={20} className="text-primary" />
+                <h6 className="fw-bold mb-0">Units of Measure & Commercial Procurement</h6>
               </div>
+
+              <Row className="g-4 mb-4">
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Product Type</Form.Label>
+                    <Form.Select value={formData.productType} onChange={e => setFormData({...formData, productType: e.target.value})} className="py-2">
+                      <option value="PIECE">PIECE (Unit count)</option>
+                      <option value="WEIGHT">WEIGHT (Loose/Bulk Grams/KG)</option>
+                      <option value="VOLUME">VOLUME (Loose/Bulk ML/LTR)</option>
+                      <option value="PACK">PACK (Packaged snacks/boxes)</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Base Inventory Unit *</Form.Label>
+                    <Form.Select value={formData.baseUnit} onChange={e => setFormData({...formData, baseUnit: e.target.value, sellingUnit: e.target.value})} className="py-2">
+                      <option value="KG">KG (Kilograms)</option>
+                      <option value="GM">GM (Grams)</option>
+                      <option value="LTR">LTR (Liters)</option>
+                      <option value="ML">ML (Milliliters)</option>
+                      <option value="PCS">PCS (Pieces)</option>
+                      <option value="PACK">PACK (Packets)</option>
+                      <option value="BOX">BOX (Boxes)</option>
+                      <option value="BAG">BAG (Bags/Sacks)</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Purchase Unit (Supplier)</Form.Label>
+                    <Form.Select value={formData.purchaseUnit} onChange={e => setFormData({...formData, purchaseUnit: e.target.value})} className="py-2">
+                      <option value="BAG">BAG (Sack)</option>
+                      <option value="BOX">BOX (Carton)</option>
+                      <option value="CRATE">CRATE</option>
+                      <option value="TIN">TIN</option>
+                      <option value="KG">KG</option>
+                      <option value="LTR">LTR</option>
+                      <option value="PCS">PCS</option>
+                      <option value="PACK">PACK</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">
+                      Purchase $\rightarrow$ Stock Factor
+                    </Form.Label>
+                    <Form.Control 
+                      type="number" 
+                      step="0.01" 
+                      value={formData.purchaseToStockFactor} 
+                      onChange={e => setFormData({...formData, purchaseToStockFactor: Number(e.target.value)})} 
+                      className="py-2" 
+                    />
+                    <Form.Text className="text-muted font-size-11">
+                      e.g. 1 {formData.purchaseUnit} = {formData.purchaseToStockFactor} {formData.baseUnit}
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Preferred Supplier (Primary Procurement Partner)</Form.Label>
+                    <Form.Select 
+                      value={formData.preferredSupplier} 
+                      onChange={e => setFormData({...formData, preferredSupplier: e.target.value || null})} 
+                      className="py-2"
+                    >
+                      <option value="">None (Auto-select from most recent inward batch)</option>
+                      {suppliers.map(s => (
+                        <option key={s._id} value={s._id}>
+                          {s.companyName || s.name} ({s.gstNumber || s.phone})
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Text className="text-muted font-size-11">
+                      Stock Entry will automatically prioritize this supplier for inward batches.
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <h6 className="fw-bold mb-3 pt-3 border-top">Online Store Quantity Rules</h6>
+              <Row className="g-4">
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Minimum Order Qty</Form.Label>
+                    <Form.Control 
+                      type="number" 
+                      step="0.01" 
+                      value={formData.minSaleQty} 
+                      onChange={e => setFormData({...formData, minSaleQty: Number(e.target.value)})} 
+                      className="py-2" 
+                    />
+                    <Form.Text className="text-muted font-size-11">Min quantity a customer can order ({formData.baseUnit})</Form.Text>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Maximum Order Qty</Form.Label>
+                    <Form.Control 
+                      type="number" 
+                      step="0.01" 
+                      value={formData.maxSaleQty} 
+                      onChange={e => setFormData({...formData, maxSaleQty: Number(e.target.value)})} 
+                      className="py-2" 
+                    />
+                    <Form.Text className="text-muted font-size-11">Max quantity limit per order ({formData.baseUnit})</Form.Text>
+                  </Form.Group>
+                </Col>
+
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Quantity Step Increment</Form.Label>
+                    <Form.Control 
+                      type="number" 
+                      step="0.01" 
+                      value={formData.qtyStep} 
+                      onChange={e => setFormData({...formData, qtyStep: Number(e.target.value)})} 
+                      className="py-2" 
+                    />
+                    <Form.Text className="text-muted font-size-11">e.g. 0.5 allows 0.5, 1.0, 1.5, 2.0 {formData.baseUnit}</Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        {/* TAB 3: VARIANTS */}
+        <Tab eventKey="variants" title={`Variants (${variants.length})`}>
+          <Card className="border-0 shadow-sm mb-4">
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-3">{editingVariantId ? 'Edit Variant' : 'Add Pack / Size Variant'}</h6>
               
-              <div className="mb-5">
-                <div className="d-flex flex-wrap gap-3 align-items-end">
-                  <Form.Group className="flex-grow-1">
-                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Variant Name</Form.Label>
-                    <Form.Control size="sm" className="py-2 font-size-14" placeholder="e.g. Red / Large" value={newVariant.name} onChange={e => setNewVariant({...newVariant, name: e.target.value})} />
-                  </Form.Group>
-                  <Form.Group style={{ width: '160px' }}>
-                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">SKU</Form.Label>
-                    <Form.Control size="sm" className="py-2 font-size-14" placeholder="SKU" value={newVariant.sku} onChange={e => setNewVariant({...newVariant, sku: e.target.value})} />
-                  </Form.Group>
-                  <Form.Group style={{ width: '160px' }}>
-                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Override Price</Form.Label>
-                    <Form.Control size="sm" className="py-2 font-size-14" type="number" placeholder="Price" value={newVariant.sellingPrice} onChange={e => setNewVariant({...newVariant, sellingPrice: e.target.value})} />
-                  </Form.Group>
-                  <Button size="sm" variant="primary" className="d-flex align-items-center gap-2 shadow-sm px-3 fw-medium py-2 font-size-14" onClick={handleAddVariant}>
-                    {editingVariantId ? <Edit size={16} /> : <Plus size={16} />} 
+              <Row className="g-3 align-items-end mb-4">
+                <Col md={3}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">Variant Name *</Form.Label>
+                  <Form.Control 
+                    value={newVariant.name} 
+                    onChange={e => setNewVariant({...newVariant, name: e.target.value})} 
+                    placeholder="e.g. 500 GM Pack, Box of 12" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">SKU</Form.Label>
+                  <Form.Control 
+                    value={newVariant.sku} 
+                    onChange={e => setNewVariant({...newVariant, sku: e.target.value})} 
+                    placeholder="Auto" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">Selling Price (₹)</Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    step="0.01"
+                    value={newVariant.sellingPrice} 
+                    onChange={e => setNewVariant({...newVariant, sellingPrice: e.target.value})} 
+                    placeholder="0.00" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">
+                    Conversion Factor
+                  </Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    step="0.001"
+                    value={newVariant.conversionFactor} 
+                    onChange={e => setNewVariant({...newVariant, conversionFactor: Number(e.target.value)})} 
+                    placeholder="e.g. 0.5" 
+                    className="py-2" 
+                  />
+                  <Form.Text className="text-muted font-size-11">
+                    Deduction per unit: {newVariant.conversionFactor} {formData.baseUnit}
+                  </Form.Text>
+                </Col>
+                <Col md={3} className="d-flex gap-2">
+                  <Button variant="primary" className="py-2 flex-grow-1" onClick={handleAddVariant}>
                     {editingVariantId ? 'Update Variant' : 'Add Variant'}
                   </Button>
                   {editingVariantId && (
-                    <Button size="sm" variant="outline-secondary" className="px-3 fw-medium py-2 font-size-14 bg-body" onClick={() => { setEditingVariantId(null); setNewVariant({ name: '', sku: '', sellingPrice: '' }); }}>
+                    <Button variant="outline-secondary" className="py-2" onClick={() => {
+                      setEditingVariantId(null);
+                      setNewVariant({ name: '', sku: '', sellingPrice: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
+                    }}>
                       Cancel
                     </Button>
                   )}
-                </div>
-              </div>
+                </Col>
+              </Row>
 
-              <Table responsive hover className="align-middle border text-nowrap rounded overflow-hidden mb-0">
-                <thead className="bg-body-secondary text-muted font-size-13 text-uppercase tracking-wider">
+              <Table responsive hover className="align-middle">
+                <thead className="table-light">
                   <tr>
-                    <th className="px-4 border-0 py-3">Variant Name</th>
-                    <th className="border-0 py-3">SKU</th>
-                    <th className="border-0 py-3">Price</th>
-                    <th className="border-0 py-3 text-center">Stock</th>
-                    <th className="px-4 border-0 py-3 text-end">Actions</th>
+                    <th>Variant Name</th>
+                    <th>SKU</th>
+                    <th>Selling Price</th>
+                    <th>Inventory Deduction Factor</th>
+                    <th className="text-end">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="border-top-0">
+                <tbody>
                   {variants.map(v => (
                     <tr key={v._id}>
-                      <td className="px-4 fw-medium text-body py-3 font-size-15">{v.name}</td>
-                      <td className="text-muted font-size-14">{v.sku || '-'}</td>
-                      <td className="fw-bold font-size-14">{formatCurrency(v.sellingPrice || formData.sellingPrice)}</td>
-                      <td className="text-center"><span className="badge bg-secondary-subtle text-secondary px-3 py-1 font-size-13">{v.stock || 0}</span></td>
-                      <td className="px-4 text-end">
-                         <Button variant="light" size="sm" className="btn-icon me-2 text-primary bg-primary-subtle border-0 rounded-circle" title="Edit Variant" style={{ width: '36px', height: '36px' }} onClick={() => handleEditVariant(v)}>
-                           <Edit size={16} />
-                         </Button>
-                         <Button variant="light" size="sm" className="btn-icon text-danger bg-danger-subtle border-0 rounded-circle" title="Delete Variant" style={{ width: '36px', height: '36px' }} onClick={() => handleDeleteClick(v._id)}>
-                           <Trash2 size={16} />
-                         </Button>
+                      <td className="fw-bold">{v.name}</td>
+                      <td className="text-muted">{v.sku}</td>
+                      <td>{formatCurrency(v.sellingPrice || 0)}</td>
+                      <td>
+                        <Badge bg="info" className="text-dark">
+                          1 variant = {v.conversionFactor || 1} {formData.baseUnit}
+                        </Badge>
+                      </td>
+                      <td className="text-end">
+                        <Button variant="link" size="sm" className="p-1 text-primary me-2" onClick={() => handleEditVariant(v)}>
+                          <Edit size={16} />
+                        </Button>
+                        <Button variant="link" size="sm" className="p-1 text-danger" onClick={() => handleDeleteClick(v._id)}>
+                          <Trash2 size={16} />
+                        </Button>
                       </td>
                     </tr>
                   ))}
                   {variants.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="text-center py-5 text-muted">
-                         <div className="d-flex flex-column align-items-center gap-3">
-                           <LayoutGrid size={32} className="opacity-50" />
-                           <span className="font-size-15 fw-medium">No variants created yet.</span>
-                         </div>
-                      </td>
+                      <td colSpan="5" className="text-center py-4 text-muted">No variants created. Product sells in base unit ({formData.baseUnit}).</td>
                     </tr>
                   )}
                 </tbody>
@@ -433,33 +770,56 @@ export default function ProductForm({ productId, onBack, onSave }) {
           </Card>
         </Tab>
 
-        <Tab eventKey="batches" title="Stock Batches" disabled={!isEdit}>
-          <Card className="border-0 shadow-sm">
+        {/* TAB 4: BATCHES & INVENTORY LOG */}
+        <Tab eventKey="batches" title={`Batches (${batches.length})`}>
+          <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="p-4">
-              <p className="text-muted mb-4 font-size-14">Batches are created via the Stock Entry module. This is a read-only view.</p>
-              <Table responsive className="align-middle border text-nowrap rounded overflow-hidden mb-0">
-                <thead className="bg-body-secondary text-muted font-size-12 text-uppercase tracking-wider">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h6 className="fw-bold mb-0">Active Inventory Batches</h6>
+                <Badge bg="secondary" className="px-3 py-2 fs-6">
+                  Total Aggregate Stock: {formData.stock} {formData.baseUnit}
+                </Badge>
+              </div>
+
+              <Table responsive hover className="align-middle">
+                <thead className="table-light">
                   <tr>
-                    <th className="px-4 border-0 py-3">Batch #</th>
-                    <th className="border-0 py-3">Supplier</th>
-                    <th className="border-0 py-3">Cost</th>
-                    <th className="border-0 py-3">Expiry Date</th>
-                    <th className="px-4 border-0 py-3 text-end">Stock</th>
+                    <th>Batch Number</th>
+                    <th>Supplier</th>
+                    <th>Stock Remaining</th>
+                    <th>Base Unit Cost</th>
+                    <th>Total Batch Cost</th>
+                    <th>Expiry Date</th>
+                    <th>Received Date</th>
                   </tr>
                 </thead>
-                <tbody className="border-top-0">
+                <tbody>
                   {batches.map(b => (
                     <tr key={b._id}>
-                      <td className="px-4 fw-medium text-body py-3">{b.batchNumber}</td>
-                      <td className="text-muted">{b.supplier?.name}</td>
-                      <td className="fw-bold">{formatCurrency(b.costPrice)}</td>
-                      <td className="text-muted font-size-13">{b.expiryDate ? new Date(b.expiryDate).toLocaleDateString() : 'N/A'}</td>
-                      <td className="px-4 text-end"><span className="badge bg-success-subtle text-success px-3 py-1 font-size-12">{b.stock}</span></td>
+                      <td className="fw-bold font-monospace">{b.batchNumber}</td>
+                      <td>{b.supplier?.companyName || b.supplier?.name || '-'}</td>
+                      <td>
+                        <span className="fw-bold text-success">{b.stock}</span> {b.unit || formData.baseUnit}
+                      </td>
+                      <td>{formatCurrency(b.unitCost || b.costPrice || 0)} / {b.unit || formData.baseUnit}</td>
+                      <td>{formatCurrency(b.totalCost || 0)}</td>
+                      <td>
+                        {b.expiryDate ? (
+                          new Date(b.expiryDate) < new Date() ? (
+                            <Badge bg="danger">Expired ({new Date(b.expiryDate).toLocaleDateString()})</Badge>
+                          ) : (
+                            <Badge bg="warning" className="text-dark">{new Date(b.expiryDate).toLocaleDateString()}</Badge>
+                          )
+                        ) : (
+                          <Badge bg="secondary">Non-Perishable</Badge>
+                        )}
+                      </td>
+                      <td className="text-muted font-size-12">{new Date(b.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}
                   {batches.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="text-center py-5 text-muted font-size-14 fw-medium">No active batches.</td>
+                      <td colSpan="7" className="text-center py-4 text-muted">No inventory batches recorded yet. Inward stock from the Stock Entry module.</td>
                     </tr>
                   )}
                 </tbody>
@@ -469,20 +829,17 @@ export default function ProductForm({ productId, onBack, onSave }) {
         </Tab>
       </Tabs>
 
+      {/* Delete Confirmation Modal */}
       <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
-        <Modal.Header closeButton className="border-bottom-0 pb-0">
-          <Modal.Title className="font-size-16 fw-bold">Delete Variant</Modal.Title>
+        <Modal.Header closeButton>
+          <Modal.Title>Delete Variant</Modal.Title>
         </Modal.Header>
-        <Modal.Body className="pt-2">
+        <Modal.Body>
           Are you sure you want to delete this variant? This action cannot be undone.
         </Modal.Body>
-        <Modal.Footer className="border-top-0 pt-0">
-          <Button variant="light" className="bg-body-secondary border-0" onClick={() => setShowDeleteModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={confirmDelete}>
-            Delete
-          </Button>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+          <Button variant="danger" onClick={confirmDelete}>Delete</Button>
         </Modal.Footer>
       </Modal>
     </div>

@@ -4,6 +4,7 @@ import ReturnDocument from '../models/ReturnDocument.js';
 import Settings from '../models/Settings.js';
 import PdfService from '../services/PdfService.js';
 import NotificationService from '../services/NotificationService.js';
+import { getInvoiceEmailTemplate, getCancelEmailTemplate, getReturnEmailTemplate } from '../utils/emailTemplates.js';
 
 // Helper to convert PDF stream to Buffer
 const streamToBuffer = async (stream) => {
@@ -94,7 +95,7 @@ export const emailInvoicePdf = async (req, res) => {
       to: email,
       subject: `Invoice ${invoice.invoiceNumber} from ${settings.storeName || 'Store'}`,
       text: `Please find attached your invoice ${invoice.invoiceNumber}.`,
-      html: `<h3>Thank you for your business!</h3><p>Your invoice <strong>${invoice.invoiceNumber}</strong> is attached to this email.</p>`,
+      html: getInvoiceEmailTemplate(invoice.invoiceNumber, settings.storeName),
       attachmentBuffer: pdfBuffer,
       attachmentName: `${invoice.invoiceNumber}.pdf`
     });
@@ -123,7 +124,7 @@ export const emailCancelledPdf = async (req, res) => {
       to: email,
       subject: `Cancellation ${cancelledDoc.documentNumber} from ${settings.storeName || 'Store'}`,
       text: `Please find attached your cancellation document ${cancelledDoc.documentNumber}.`,
-      html: `<h3>Cancellation Confirmation</h3><p>Your document <strong>${cancelledDoc.documentNumber}</strong> is attached to this email.</p>`,
+      html: getCancelEmailTemplate(cancelledDoc.documentNumber, settings.storeName),
       attachmentBuffer: pdfBuffer,
       attachmentName: `${cancelledDoc.documentNumber}.pdf`
     });
@@ -152,7 +153,7 @@ export const emailReturnPdf = async (req, res) => {
       to: email,
       subject: `Return Receipt ${returnDoc.documentNumber} from ${settings.storeName || 'Store'}`,
       text: `Please find attached your return receipt ${returnDoc.documentNumber}.`,
-      html: `<h3>Return Processed</h3><p>Your return receipt <strong>${returnDoc.documentNumber}</strong> is attached to this email.</p>`,
+      html: getReturnEmailTemplate(returnDoc.documentNumber, settings.storeName),
       attachmentBuffer: pdfBuffer,
       attachmentName: `${returnDoc.documentNumber}.pdf`
     });

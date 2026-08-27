@@ -1,31 +1,66 @@
 import mongoose from 'mongoose';
 
 const invoiceSchema = new mongoose.Schema({
-  invoiceNumber: { type: String, required: true, unique: true }, // e.g., INV-2026-00001 or POS-2026-00001
-  order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+  invoiceNumber: { type: String, required: true, unique: true },
+  date: { type: Date, default: Date.now },
   dueDate: { type: Date },
-  paymentMethod: { type: String },
+  
+  order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+  isCancelled: { type: Boolean, default: false },
+  
+  paymentMethod: { type: String, default: 'Cash' },
+  status: { type: String, enum: ['Paid', 'Unpaid', 'Partially Paid', 'Overdue', 'Cancelled'], default: 'Paid' },
   currency: { type: String, default: 'INR' },
-  status: { type: String, enum: ['Draft', 'Pending', 'Paid', 'Overdue', 'Cancelled'], default: 'Paid' },
-
-  // Snapshots to prevent breaking historical records if product details change
-  customerSnapshot: { type: Object, required: true }, // Name, Phone, Email
-  productSnapshot: { type: Array, required: true }, // [ { productName, sku, qty, price, total } ]
-  billingAddressSnapshot: { type: Object },
-  shippingAddressSnapshot: { type: Object },
-
-  totalsSnapshot: {
-    subTotal: { type: Number, required: true },
-    tax: { type: Number, required: true },
-    discount: { type: Number, required: true },
-    amount: { type: Number, required: true }
+  
+  // Snapshots
+  customerSnapshot: {
+    name: String,
+    phone: String,
+    email: String,
+    gstNumber: String
   },
-
-  isCancelled: { type: Boolean, default: false }, // To add watermark later
-  notes: { type: String },
-
-  date: { type: Date, default: Date.now }
+  billingAddressSnapshot: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
+  },
+  shippingAddressSnapshot: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String
+  },
+  productSnapshot: [{
+    productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+    productName: String,
+    sku: String,
+    unit: { type: String, default: 'PCS' },
+    hsnCode: String,
+    qty: Number,
+    price: Number,
+    taxRate: { type: Number, default: 0 },
+    taxableAmount: Number,
+    taxAmount: { type: Number, default: 0 },
+    total: Number
+  }],
+  totalsSnapshot: {
+    subTotal: Number,
+    taxableAmount: Number,
+    tax: Number,
+    cgst: Number,
+    sgst: Number,
+    igst: Number,
+    discount: Number,
+    amount: Number
+  },
+  
+  notes: String
 }, { timestamps: true });
+
+invoiceSchema.index({ date: -1 });
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 export default Invoice;

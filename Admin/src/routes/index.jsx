@@ -17,6 +17,8 @@ const Categories = lazy(() => import('@/views/admin/catalog/categories'))
 const Products = lazy(() => import('@/views/admin/catalog/products'))
 const InventoryOverview = lazy(() => import('@/views/admin/inventory/overview'))
 const StockEntry = lazy(() => import('@/views/admin/inventory/stock-entry'))
+const StockAdjustment = lazy(() => import('@/views/admin/inventory/adjustment'))
+const DamageWastage = lazy(() => import('@/views/admin/inventory/damage'))
 const LowStock = lazy(() => import('@/views/admin/inventory/low-stock'))
 const UpcomingExpiry = lazy(() => import('@/views/admin/inventory/upcoming-expiry'))
 const InventoryLogs = lazy(() => import('@/views/admin/inventory/logs'))
@@ -65,6 +67,8 @@ export const routes = [
           { path: '/catalog/import', element: <ProtectedRoute permission="products.create" />, children: [{ path: '', Component: BulkImportPage }] },
           { path: '/inventory/overview', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: InventoryOverview }] },
           { path: '/inventory/stock-entry', element: <ProtectedRoute permission="inventory.create" />, children: [{ path: '', Component: StockEntry }] },
+          { path: '/inventory/adjustment', element: <ProtectedRoute permission="inventory.create" />, children: [{ path: '', Component: StockAdjustment }] },
+          { path: '/inventory/damage', element: <ProtectedRoute permission="inventory.create" />, children: [{ path: '', Component: DamageWastage }] },
           { path: '/inventory/low-stock', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: LowStock }] },
           { path: '/inventory/upcoming-expiry', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: UpcomingExpiry }] },
           { path: '/inventory/logs', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: InventoryLogs }] },

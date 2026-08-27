@@ -1,15 +1,18 @@
 import OrderService from '../services/OrderService.js';
 import InventoryService from '../services/InventoryService.js';
 import Order from '../models/Order.js';
+import Settings from '../models/Settings.js';
+import CancelledDocument from '../models/CancelledDocument.js';
 import mongoose from 'mongoose';
 import { clearReportsCache } from '../utils/cache.js';
+import { roundTo, calculateTax } from '../utils/decimalUtils.js';
 
 export const getOrders = async (req, res) => {
   try {
-    let { page = 1, limit = 20, search = '', status, orderType, startDate, endDate } = req.query;
+    let { page = 1, limit = 50, search = '', status, orderType, startDate, endDate } = req.query;
     page = parseInt(page);
     limit = parseInt(limit);
-    if (limit > 100) limit = 100;
+    if (limit > 150) limit = 150;
 
     let query = {};
     if (search) {
@@ -17,17 +20,20 @@ export const getOrders = async (req, res) => {
         { orderNumber: { $regex: search, $options: 'i' } },
         { billNumber: { $regex: search, $options: 'i' } }
       ];
-      // Note: Searching by customer name requires aggregation or pre-fetching customer IDs.
-      // For simplicity, we just search orderNumber right now, but could expand.
       const { default: Customer } = await import('../models/Customer.js');
-      const customers = await Customer.find({ name: { $regex: search, $options: 'i' } }).select('_id');
+      const customers = await Customer.find({ 
+        $or: [
+          { name: { $regex: search, $options: 'i' } },
+          { phone: { $regex: search, $options: 'i' } }
+        ]
+      }).select('_id');
       if (customers.length > 0) {
         query.$or.push({ customer: { $in: customers.map(c => c._id) } });
       }
     }
-    if (status) {
+
+    if (status && status !== 'All') {
       if (['Pending', 'Refunded'].includes(status)) {
-        // These statuses exist in both order.status and paymentStatus
         if (query.$or) {
           query.$and = [ { $or: query.$or }, { $or: [{ status }, { paymentStatus: status }] } ];
           delete query.$or;
@@ -38,7 +44,9 @@ export const getOrders = async (req, res) => {
         query.status = status;
       }
     }
-    if (orderType) query.orderType = orderType;
+
+    if (orderType && orderType !== 'All') query.orderType = orderType;
+    
     if (startDate || endDate) {
       query.createdAt = {};
       if (startDate) query.createdAt.$gte = new Date(startDate);
@@ -47,8 +55,9 @@ export const getOrders = async (req, res) => {
 
     const total = await Order.countDocuments(query);
     const orders = await Order.find(query)
-      .populate('customer', 'name phone')
-      .sort('-createdAt')
+      .populate('customer', 'name phone email')
+      .populate('assignedRider', 'name phone')
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
 
@@ -81,34 +90,69 @@ export const createOrder = async (req, res) => {
   session.startTransaction();
 
   try {
-    const { orderType, customer, items, subTotal, tax, discount, amount, paymentStatus } = req.body;
+    const { orderType = 'ONLINE', customer, items, discount = 0, paymentStatus = 'Pending' } = req.body;
     
-    // Create order number using Atomic Sequence
+    // 1. Validate quantity rules, units, and fetch current product data
+    const validatedItems = await OrderService.validateOrderItems(items, session);
+
+    // 2. Fetch Settings for tax mode and numbering
+    const settings = await Settings.findOne().session(session) || {};
+    const taxMode = settings.taxMode || 'INCLUSIVE';
+
+    let computedSubTotal = 0;
+    let computedTaxable = 0;
+    let computedTax = 0;
+    let computedCgst = 0;
+    let computedSgst = 0;
+
+    for (const item of validatedItems) {
+      const taxCalc = calculateTax(item.price, item.qty, item.taxRate || 0, taxMode);
+      computedSubTotal = roundTo(computedSubTotal + (item.price * item.qty), 2);
+      computedTaxable = roundTo(computedTaxable + taxCalc.taxableAmount, 2);
+      computedTax = roundTo(computedTax + taxCalc.taxAmount, 2);
+      computedCgst = roundTo(computedCgst + taxCalc.cgst, 2);
+      computedSgst = roundTo(computedSgst + taxCalc.sgst, 2);
+
+      item.taxableAmount = taxCalc.taxableAmount;
+      item.taxAmount = taxCalc.taxAmount;
+      item.total = taxMode === 'EXCLUSIVE' ? taxCalc.totalAmount : roundTo(item.price * item.qty, 2);
+    }
+
+    const totalDiscount = Number(discount) || 0;
+    const finalAmount = taxMode === 'EXCLUSIVE'
+      ? roundTo(computedTaxable + computedTax - totalDiscount, 2)
+      : roundTo(computedSubTotal - totalDiscount, 2);
+
+    // 3. Create order number
     const Sequence = (await import('../models/Sequence.js')).default;
     const seqType = orderType === 'ONLINE' ? 'Order' : 'POS';
-    const prefix = orderType === 'ONLINE' ? 'ORD-2026-' : 'POS-2026-';
+    const prefix = orderType === 'ONLINE' ? (settings.invoicePrefixOnline || 'ORD-2026-') : (settings.invoicePrefixOffline || 'POS-2026-');
     const orderSeq = await Sequence.getNextValue(seqType, session);
     const orderNumber = `${prefix}${orderSeq.toString().padStart(5, '0')}`;
 
     const orderData = {
       orderNumber,
       orderType,
-      customer,
-      items,
-      subTotal,
-      tax,
-      discount,
-      amount,
+      customer: customer || null,
+      items: validatedItems,
+      subTotal: computedSubTotal,
+      taxableAmount: computedTaxable,
+      tax: computedTax,
+      cgst: computedCgst,
+      sgst: computedSgst,
+      igst: computedTax,
+      discount: totalDiscount,
+      amount: finalAmount,
       paymentStatus,
       status: orderType === 'OFFLINE' ? 'Delivered' : 'Pending'
     };
 
-    // Deduct stock safely within transaction
-    await InventoryService.reduceStockForSale(items, req.user._id, 'pending-order-id', session);
+    // 4. Deduct stock safely within transaction
+    await InventoryService.reduceStockForSale(validatedItems, req.user._id, 'pending-order-id', session);
 
     const order = await OrderService.createOrder(orderData, req.user._id, session);
 
-    // Now update the logs with the actual order ID
+    // 5. Update Inventory logs with actual order ID
     const { default: InventoryLog } = await import('../models/InventoryLog.js');
     await InventoryLog.updateMany(
       { order: 'pending-order-id', user: req.user._id },
@@ -133,7 +177,7 @@ export const createOrder = async (req, res) => {
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -144,7 +188,7 @@ export const updateOrderStatus = async (req, res) => {
     clearReportsCache();
     res.json(order);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -152,16 +196,7 @@ export const assignRider = async (req, res) => {
   try {
     const { riderId } = req.body;
     const order = await OrderService.assignRider(req.params.id, riderId, req.user._id);
-
-    // Send notification to the assigned rider
-    const { default: NotificationService } = await import('../services/NotificationService.js');
-    await NotificationService.createNotification({
-      type: 'Rider Assigned',
-      message: `You have been assigned order ${order.orderNumber}. Please accept or reject.`,
-      order: order._id,
-      targetUser: riderId
-    });
-
+    clearReportsCache();
     res.json(order);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -175,114 +210,62 @@ export const cancelOrder = async (req, res) => {
   try {
     const { reason } = req.body;
     const orderId = req.params.id;
+
     const order = await Order.findById(orderId).session(session);
-    
-    if (!order) {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    
-    // Customers can only cancel if Pending or Confirmed
-    const isAdmin = req.user.role === 'Admin' || req.user.role === 'Staff';
-    if (!isAdmin && order.status !== 'Pending' && order.status !== 'Confirmed') {
-      await session.abortTransaction();
-      session.endSession();
-      return res.status(400).json({ message: 'Order has already been processed and cannot be cancelled.' });
+    if (!order) throw new Error('Order not found');
+
+    if (['Delivered', 'Cancelled', 'Returned', 'Refunded'].includes(order.status)) {
+      throw new Error(`Cannot cancel an order with status ${order.status}`);
     }
 
-    // Update state to Cancelled
-    await OrderService.updateOrderStatus(orderId, 'Cancelled', req.user._id, reason, session);
-
-    // Restore Inventory safely within transaction
-    const InventoryService = (await import('../services/InventoryService.js')).default;
-    for (const item of order.items) {
-      await InventoryService.autoReturnStock(item.product, item.variant, item.qty, 'Order Cancelled', req.user._id, order._id, session);
-    }
-
+    order.status = 'Cancelled';
     order.cancelledBy = req.user._id;
     order.cancelledAt = new Date();
-    order.cancelReason = reason;
-    
-    // Default optimistic refund pending
-    if (order.orderType === 'ONLINE' && order.paymentStatus === 'Paid') {
-      order.refundStatus = 'Pending';
-    }
-    
+    order.cancelReason = reason || 'Admin cancelled order';
     await order.save({ session });
 
-    // Find invoice to attach to CancelledDocument if it exists
-    const Invoice = (await import('../models/Invoice.js')).default;
-    const invoice = await Invoice.findOne({ order: order._id }).session(session);
-    if (invoice) {
-      invoice.isCancelled = true;
-      invoice.status = 'Cancelled';
-      await invoice.save({ session });
+    // 1. Restore inventory for all items
+    for (const item of order.items) {
+      const restockQty = roundTo(item.qty - (item.returnedQty || 0), 3);
+      if (restockQty > 0) {
+        await InventoryService.returnStock(
+          item.product, 
+          item.variant, 
+          null, 
+          restockQty, 
+          `Cancelled Order: ${order.orderNumber}`, 
+          req.user._id, 
+          order._id, 
+          session
+        );
+      }
     }
 
-    // Create CancelledDocument Audit Record
+    // 2. Create Cancelled Document
     const Sequence = (await import('../models/Sequence.js')).default;
-    const CancelledDocument = (await import('../models/CancelledDocument.js')).default;
-
-    const canSeq = await Sequence.getNextValue('Cancel', session);
-    const documentNumber = `CAN-${new Date().getFullYear()}-${canSeq.toString().padStart(6, '0')}`;
+    const cancelSeq = await Sequence.getNextValue('CancelledDocument', session);
+    const documentNumber = `CAN-${new Date().getFullYear()}-${cancelSeq.toString().padStart(6, '0')}`;
 
     const cancelDoc = new CancelledDocument({
       documentNumber,
       order: order._id,
-      invoice: invoice ? invoice._id : null,
-      originalInvoiceNumber: invoice ? invoice.invoiceNumber : null,
-      snapshot: { ...order.toObject() },
-      cancellationReason: reason,
+      customerSnapshot: { name: 'Customer' },
+      items: order.items.map(i => ({ productName: i.productName, unit: i.unit, qty: i.qty, price: i.price, total: i.total })),
+      totalsSnapshot: { subTotal: order.subTotal, tax: order.tax, discount: order.discount, amount: order.amount },
+      reason: reason || 'Order Cancelled',
       cancelledBy: req.user._id,
-      refundStatus: order.orderType === 'ONLINE' && order.paymentStatus === 'Paid' ? 'Pending' : 'Not Required',
-      refundAmount: order.orderType === 'ONLINE' && order.paymentStatus === 'Paid' ? order.amount : 0
+      refundStatus: order.paymentStatus === 'Paid' ? 'Pending' : 'Completed'
     });
-
     await cancelDoc.save({ session });
 
-    // Commit BEFORE Razorpay
+    await OrderService.logActivity(order._id, 'Cancelled', req.user._id, `Order cancelled: ${reason || 'No reason provided'}`, false, session);
+
     await session.commitTransaction();
     session.endSession();
 
-    // Call Razorpay AFTER DB is safely committed
-    if (order.orderType === 'ONLINE' && order.paymentStatus === 'Paid') {
-      const { default: Transaction } = await import('../models/Transaction.js');
-      const { default: PaymentService } = await import('../services/PaymentService.js');
-      
-      const transaction = await Transaction.findOne({ order: order._id, paymentStatus: 'Paid' });
-      if (transaction) {
-        const refundSuccess = await PaymentService.processRefund(transaction._id, order.amount);
-        
-        const freshOrder = await Order.findById(order._id);
-        if (freshOrder) {
-          if (refundSuccess) {
-            freshOrder.refundStatus = 'Processed';
-            freshOrder.paymentStatus = 'Refunded';
-          } else {
-            freshOrder.refundStatus = 'Failed';
-            // PaymentService internally adds to RefundQueue if failed
-          }
-          await freshOrder.save();
-          
-          const freshCancelDoc = await CancelledDocument.findOne({ order: order._id });
-          if (freshCancelDoc) {
-            freshCancelDoc.refundStatus = refundSuccess ? 'Completed' : 'Failed';
-            await freshCancelDoc.save();
-          }
-        }
-      }
-    }
+    clearReportsCache();
 
-    const { default: NotificationService } = await import('../services/NotificationService.js');
-    await NotificationService.createNotification({
-      type: 'Cancelled Order',
-      message: `Order ${order.orderNumber} was cancelled.`,
-      order: order._id
-    });
-
-    const finalOrder = await Order.findById(orderId);
-    res.json({ message: 'Order cancelled successfully', order: finalOrder });
+    res.json({ message: 'Order cancelled successfully', order, cancelDoc });
   } catch (error) {
     await session.abortTransaction();
     session.endSession();
@@ -318,7 +301,6 @@ export const updateDeliveryStatus = async (req, res) => {
 
     if (!order) return res.status(404).json({ message: 'Order not found' });
     
-    // Ensure ownership
     if (order.assignedRider?.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to update this delivery' });
     }
@@ -332,24 +314,18 @@ export const updateDeliveryStatus = async (req, res) => {
       order.status = 'Pending';
       order.assignedRider = null;
       await order.save();
-      
-      const { default: OrderService } = await import('../services/OrderService.js');
       await OrderService.logActivity(order._id, 'Rejected', req.user._id, rejectReason || 'Rider rejected delivery');
     } else {
       order.status = status;
+      if (status === 'Delivered') {
+        order.paymentStatus = 'Paid';
+        order.deliveredAt = new Date();
+      }
       await order.save();
-      
-      const { default: OrderService } = await import('../services/OrderService.js');
       await OrderService.logActivity(order._id, status, req.user._id, `Status updated by rider`);
     }
-    
-    if (status === 'Delivered') {
-      order.paymentStatus = 'Paid';
-    }
 
-    await order.save();
     clearReportsCache();
-
     res.json({ message: 'Delivery status updated', order });
   } catch (error) {
     res.status(500).json({ message: error.message });

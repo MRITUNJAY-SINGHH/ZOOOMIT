@@ -121,14 +121,29 @@ export default function ViewInvoice() {
               </Row>
 
               <Table responsive className="align-middle mb-4">
-                <thead className="table-light text-dark"><tr><th className="py-3 px-3">#</th><th className="py-3 px-3">Item</th><th className="py-3 px-3">SKU</th><th className="text-end py-3 px-3">Qty</th><th className="text-end py-3 px-3">Rate</th><th className="text-end py-3 px-3">Amount</th></tr></thead>
+                <thead className="table-light text-dark">
+                  <tr>
+                    <th className="py-3 px-3">#</th>
+                    <th className="py-3 px-3">Item Description</th>
+                    <th className="py-3 px-3 text-center">HSN</th>
+                    <th className="text-center py-3 px-3">Qty / Unit</th>
+                    <th className="text-end py-3 px-3">Rate</th>
+                    <th className="text-end py-3 px-3">Amount</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {(invoice.productSnapshot || []).map((item, index) => (
                     <tr key={`${item.productName}-${index}`}>
                       <td className="px-3 fw-bold">{index + 1}</td>
-                      <td className="px-3 fw-bold">{item.productName}</td>
-                      <td className="px-3 text-muted">{item.sku || 'MANUAL'}</td>
-                      <td className="px-3 text-end">{item.qty}</td>
+                      <td className="px-3">
+                        <div className="fw-bold">{item.productName}</div>
+                        <div className="text-muted small">
+                          {item.sku && <span>SKU: {item.sku} • </span>}
+                          <span>GST: {item.taxRate || 0}%</span>
+                        </div>
+                      </td>
+                      <td className="px-3 text-center font-monospace text-muted">{item.hsnCode || '-'}</td>
+                      <td className="px-3 text-center fw-semibold">{item.qty} {item.unit || 'PCS'}</td>
                       <td className="px-3 text-end">{formatCurrency(item.price)}</td>
                       <td className="px-3 text-end fw-bold">{formatCurrency(item.total)}</td>
                     </tr>
@@ -137,11 +152,24 @@ export default function ViewInvoice() {
               </Table>
 
               <Row className="justify-content-end mb-4">
-                <Col md={5}>
-                  <div className="Zooom-invoice-total-row"><span>Subtotal</span><strong>{formatCurrency(invoice.totalsSnapshot?.subTotal)}</strong></div>
-                  <div className="Zooom-invoice-total-row"><span>Tax</span><strong>{formatCurrency(invoice.totalsSnapshot?.tax)}</strong></div>
-                  <div className="Zooom-invoice-total-row"><span>Discount</span><strong>- {formatCurrency(invoice.totalsSnapshot?.discount)}</strong></div>
-                  <div className="Zooom-invoice-grand-total text-primary"><span className="text-primary">Total</span><strong>{formatCurrency(invoice.totalsSnapshot?.amount)}</strong></div>
+                <Col md={6}>
+                  <div className="Zooom-invoice-total-row"><span>Gross Subtotal</span><strong>{formatCurrency(invoice.totalsSnapshot?.subTotal)}</strong></div>
+                  {invoice.totalsSnapshot?.taxableAmount > 0 && (
+                    <div className="Zooom-invoice-total-row"><span>Taxable Value</span><strong>{formatCurrency(invoice.totalsSnapshot.taxableAmount)}</strong></div>
+                  )}
+                  {invoice.totalsSnapshot?.cgst > 0 && (
+                    <div className="Zooom-invoice-total-row text-muted small"><span>• CGST</span><strong>{formatCurrency(invoice.totalsSnapshot.cgst)}</strong></div>
+                  )}
+                  {invoice.totalsSnapshot?.sgst > 0 && (
+                    <div className="Zooom-invoice-total-row text-muted small"><span>• SGST</span><strong>{formatCurrency(invoice.totalsSnapshot.sgst)}</strong></div>
+                  )}
+                  {invoice.totalsSnapshot?.tax > 0 && (
+                    <div className="Zooom-invoice-total-row"><span>Total GST</span><strong>{formatCurrency(invoice.totalsSnapshot?.tax)}</strong></div>
+                  )}
+                  {invoice.totalsSnapshot?.discount > 0 && (
+                    <div className="Zooom-invoice-total-row text-success"><span>Discount</span><strong>- {formatCurrency(invoice.totalsSnapshot?.discount)}</strong></div>
+                  )}
+                  <div className="Zooom-invoice-grand-total text-primary"><span className="text-primary">Total Amount Due</span><strong>{formatCurrency(invoice.totalsSnapshot?.amount)}</strong></div>
                 </Col>
               </Row>
 

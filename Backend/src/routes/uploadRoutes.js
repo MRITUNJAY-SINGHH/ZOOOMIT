@@ -4,7 +4,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/product-image', protect, authorize('staff', 'create'), upload.single('image'), (req, res) => {
+router.post('/product-image', protect, authorize('products', 'create'), upload.single('image'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No image provided' });
@@ -16,7 +16,7 @@ router.post('/product-image', protect, authorize('staff', 'create'), upload.sing
   }
 });
 
-router.delete('/product-image', protect, authorize('staff', 'create'), async (req, res) => {
+router.delete('/product-image', protect, authorize('products', 'create'), async (req, res) => {
   try {
     const { url } = req.body;
     if (!url) return res.status(400).json({ message: 'No URL provided' });

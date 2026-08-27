@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Spinner, ButtonGroup, Badge } from 'react-bootstrap';
+import { Button, Spinner, ButtonGroup, Badge, Modal, Form } from 'react-bootstrap';
 import { Printer, ArrowLeft, Download, Mail, FileText, Receipt } from 'lucide-react';
 import { formatCurrency } from '@/utils/format';
 import api from '@/utils/api';
@@ -9,16 +9,20 @@ import { toast } from 'react-hot-toast';
 export default function InvoicePrintOut({ invoice, onBack }) {
   const [settings, setSettings] = useState(null);
   const [printFormat, setPrintFormat] = useState('pos'); // 'pos' or 'a4'
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailInput, setEmailInput] = useState(invoice?.customerSnapshot?.email || '');
   const { user } = useAuthContext();
 
   useEffect(() => {
     // Fetch settings then print
-    api.get('/settings').then(res => {
-      setSettings(res.data);
-      setTimeout(() => {
-        window.print();
-      }, 500);
-    });
+    api.get('/settings')
+      .then(res => {
+        setSettings(res.data);
+        setTimeout(() => {
+          window.print();
+        }, 500);
+      })
+      .catch(console.error);
   }, []);
 
   if (!invoice || !settings) return (
@@ -45,13 +49,19 @@ export default function InvoicePrintOut({ invoice, onBack }) {
     }
   };
 
-  const handleSendEmail = async () => {
-    const email = prompt('Enter customer email to send the invoice to:', invoice.customerSnapshot?.email || '');
-    if (!email) return;
+  const handleSendEmailClick = () => {
+    setEmailInput(invoice?.customerSnapshot?.email || '');
+    setShowEmailModal(true);
+  };
+
+  const handleSendEmail = async (e) => {
+    e?.preventDefault();
+    if (!emailInput) return;
+    setShowEmailModal(false);
 
     const toastId = toast.loading('Sending email...');
     try {
-      await api.post(`/documents/invoice/${invoice._id || invoice.invoiceNumber}/email?format=${printFormat}`, { email });
+      await api.post(`/documents/invoice/${invoice._id || invoice.invoiceNumber}/email?format=${printFormat}`, { email: emailInput });
       toast.success('Email sent successfully.', { id: toastId });
     } catch (err) {
       console.error(err);
@@ -134,8 +144,9 @@ export default function InvoicePrintOut({ invoice, onBack }) {
             <tr style={{ borderBottom: '2px solid #333', color: '#333' }}>
               <th className="py-2 px-2 text-center" style={{ width: '5%' }}>No.</th>
               <th className="py-2 px-2 text-start">Description</th>
-              <th className="py-2 px-2 text-center" style={{ width: '10%' }}>Qty</th>
-              <th className="py-2 px-2 text-end" style={{ width: '15%' }}>Price</th>
+              <th className="py-2 px-2 text-center" style={{ width: '12%' }}>HSN</th>
+              <th className="py-2 px-2 text-center" style={{ width: '15%' }}>Qty / Unit</th>
+              <th className="py-2 px-2 text-end" style={{ width: '15%' }}>Rate</th>
               <th className="py-2 px-2 text-end" style={{ width: '15%' }}>Amount</th>
             </tr>
           </thead>
@@ -145,9 +156,15 @@ export default function InvoicePrintOut({ invoice, onBack }) {
                 <td className="py-3 px-2 text-center">{idx + 1}</td>
                 <td className="py-3 px-2">
                   <div style={{ fontWeight: '600', color: '#222' }}>{item.productName}</div>
-                  <div style={{ fontSize: '0.8rem', color: '#666' }}>{item.sku}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                    {item.sku && <span>SKU: {item.sku} • </span>}
+                    <span>GST: {item.taxRate || 0}%</span>
+                  </div>
                 </td>
-                <td className="py-3 px-2 text-center">{item.qty}</td>
+                <td className="py-3 px-2 text-center text-muted font-monospace">{item.hsnCode || '-'}</td>
+                <td className="py-3 px-2 text-center fw-medium">
+                  {item.qty} {item.unit || 'PCS'}
+                </td>
                 <td className="py-3 px-2 text-end">{formatCurrency(item.price)}</td>
                 <td className="py-3 px-2 text-end" style={{ fontWeight: '600' }}>{formatCurrency(item.total)}</td>
               </tr>
@@ -160,33 +177,55 @@ export default function InvoicePrintOut({ invoice, onBack }) {
           <div style={{ width: '45%' }}>
             <h6 className="fw-bold mb-2" style={{ color: '#333', fontSize: '1rem' }}>Payment Info</h6>
             <div style={{ fontSize: '0.9rem', color: '#555', marginBottom: '20px', lineHeight: '1.6' }}>
-              <div><strong>Method:</strong> {invoice.paymentMethod || 'Cash/Card'}</div>
+              <div><strong>Method:</strong> {invoice.paymentMethod || 'Cash'}</div>
               <div><strong>Status:</strong> {invoice.status || 'Paid'}</div>
               <div><strong>Cashier:</strong> {user?.name || 'Admin'}</div>
             </div>
             
-            <h6 className="fw-bold mb-2" style={{ color: '#333', fontSize: '1rem' }}>Notes</h6>
-            <div style={{ fontSize: '0.9rem', color: '#555' }}>
-              {invoice.notes || 'No additional notes.'}
+            <h6 className="fw-bold mb-2" style={{ color: '#333', fontSize: '1rem' }}>Notes & Terms</h6>
+            <div style={{ fontSize: '0.85rem', color: '#666', whiteSpace: 'pre-line' }}>
+              {invoice.notes || settings?.termsAndConditions || 'Thank you for your business!'}
             </div>
           </div>
           
-          <div style={{ width: '300px' }}>
+          <div style={{ width: '320px' }}>
             <div className="d-flex justify-content-between py-1" style={{ color: '#555' }}>
-              <span>Subtotal</span>
-              <span>{formatCurrency(invoice.totalsSnapshot.subTotal)}</span>
+              <span>Gross Total:</span>
+              <span>{formatCurrency(invoice.totalsSnapshot?.subTotal || 0)}</span>
             </div>
-            <div className="d-flex justify-content-between py-1" style={{ color: '#555' }}>
-              <span>Tax</span>
-              <span>{formatCurrency(invoice.totalsSnapshot.tax)}</span>
-            </div>
-            <div className="d-flex justify-content-between py-1" style={{ color: '#555' }}>
-              <span>Discount</span>
-              <span>{formatCurrency(invoice.totalsSnapshot.discount)}</span>
-            </div>
+            {invoice.totalsSnapshot?.taxableAmount > 0 && (
+              <div className="d-flex justify-content-between py-1" style={{ color: '#555' }}>
+                <span>Taxable Value:</span>
+                <span>{formatCurrency(invoice.totalsSnapshot.taxableAmount)}</span>
+              </div>
+            )}
+            {invoice.totalsSnapshot?.cgst > 0 && (
+              <div className="d-flex justify-content-between py-1 font-size-12" style={{ color: '#777' }}>
+                <span>• CGST:</span>
+                <span>{formatCurrency(invoice.totalsSnapshot.cgst)}</span>
+              </div>
+            )}
+            {invoice.totalsSnapshot?.sgst > 0 && (
+              <div className="d-flex justify-content-between py-1 font-size-12" style={{ color: '#777' }}>
+                <span>• SGST:</span>
+                <span>{formatCurrency(invoice.totalsSnapshot.sgst)}</span>
+              </div>
+            )}
+            {invoice.totalsSnapshot?.tax > 0 && (
+              <div className="d-flex justify-content-between py-1" style={{ color: '#555' }}>
+                <span>Total GST:</span>
+                <span>{formatCurrency(invoice.totalsSnapshot.tax)}</span>
+              </div>
+            )}
+            {invoice.totalsSnapshot?.discount > 0 && (
+              <div className="d-flex justify-content-between py-1 text-success">
+                <span>Discount:</span>
+                <span>-{formatCurrency(invoice.totalsSnapshot.discount)}</span>
+              </div>
+            )}
             <div className="d-flex justify-content-between py-2 mt-2 fw-bold align-items-center" style={{ borderTop: '2px solid #333', color: '#111' }}>
-              <span>Amount Due</span>
-              <span style={{ fontSize: '1.2rem' }}>{formatCurrency(invoice.totalsSnapshot.amount)}</span>
+              <span>Total Amount:</span>
+              <span style={{ fontSize: '1.3rem' }}>{formatCurrency(invoice.totalsSnapshot?.amount || 0)}</span>
             </div>
           </div>
         </div>
@@ -250,16 +289,19 @@ export default function InvoicePrintOut({ invoice, onBack }) {
         <thead>
           <tr style={{ borderBottom: '1px dashed #000' }}>
             <th className="py-1 text-start" style={{ width: '40%' }}>Item</th>
-            <th className="py-1 text-center" style={{ width: '15%' }}>Qty</th>
-            <th className="py-1 text-end" style={{ width: '20%' }}>Price</th>
-            <th className="py-1 text-end" style={{ width: '25%' }}>Total</th>
+            <th className="py-1 text-center" style={{ width: '20%' }}>Qty</th>
+            <th className="py-1 text-end" style={{ width: '18%' }}>Price</th>
+            <th className="py-1 text-end" style={{ width: '22%' }}>Total</th>
           </tr>
         </thead>
         <tbody>
           {invoice.productSnapshot.map((item, idx) => (
             <tr key={idx}>
-              <td className="py-1">{item.productName.substring(0, 15)}</td>
-              <td className="py-1 text-center">{item.qty}</td>
+              <td className="py-1">
+                <div>{item.productName.substring(0, 16)}</div>
+                {item.taxRate > 0 && <small style={{ fontSize: '0.7rem', color: '#555' }}>GST: {item.taxRate}%</small>}
+              </td>
+              <td className="py-1 text-center">{item.qty} <span style={{ fontSize: '0.7rem' }}>{item.unit || ''}</span></td>
               <td className="py-1 text-end">{item.price}</td>
               <td className="py-1 text-end">{item.total}</td>
             </tr>
@@ -349,7 +391,7 @@ export default function InvoicePrintOut({ invoice, onBack }) {
             </button>
 
             <button 
-              onClick={handleSendEmail} 
+              onClick={handleSendEmailClick} 
               className="btn btn-outline-secondary d-flex align-items-center gap-2 px-3 py-2 fw-semibold"
               style={{ whiteSpace: 'nowrap' }}
             >
@@ -407,6 +449,32 @@ export default function InvoicePrintOut({ invoice, onBack }) {
           .d-print-none { display: none !important; }
         }
       `}} />
+      {/* Email Modal */}
+      <Modal show={showEmailModal} onHide={() => setShowEmailModal(false)} centered>
+        <Form onSubmit={handleSendEmail}>
+          <Modal.Header closeButton>
+            <Modal.Title>Send Email</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form.Group>
+              <Form.Label>Customer Email</Form.Label>
+              <Form.Control 
+                type="email" 
+                value={emailInput} 
+                onChange={(e) => setEmailInput(e.target.value)} 
+                placeholder="customer@example.com"
+                required
+                autoFocus
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEmailModal(false)}>Cancel</Button>
+            <Button variant="primary" type="submit">Send Email</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
     </div>
   );
 }

@@ -14,6 +14,8 @@ export const menuItems = [
   { isTitle: true, label: 'Inventory', permission: 'inventory.view' },
   { icon: 'lucide:box', slug: 'inventory', label: 'Inventory', permission: 'inventory.view', children: [
       { url: '/inventory/stock-entry', slug: 'inventory-stock-entry', label: 'Stock Entry', icon: 'lucide:plus-square', permission: 'inventory.create' },
+      { url: '/inventory/adjustment', slug: 'inventory-adjustment', label: 'Stock Adjustment', icon: 'lucide:sliders-horizontal', permission: 'inventory.create' },
+      { url: '/inventory/damage', slug: 'inventory-damage', label: 'Damage / Wastage', icon: 'lucide:flame', permission: 'inventory.create' },
       { url: '/inventory/logs', slug: 'inventory-logs', label: 'Inventory Logs', icon: 'lucide:clipboard-list', permission: 'inventory.view' },
       { url: '/inventory/low-stock', slug: 'inventory-low-stock', label: 'Low Stock', icon: 'lucide:alert-triangle', permission: 'inventory.view' },
       { url: '/inventory/upcoming-expiry', slug: 'inventory-upcoming-expiry', label: 'Upcoming Expiry', icon: 'lucide:clock', permission: 'inventory.view' }

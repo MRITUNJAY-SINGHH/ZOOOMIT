@@ -14,7 +14,7 @@ router.get('/', protect, async (req, res) => {
   }
 });
 
-router.put('/', protect, authorize('staff', 'edit'), async (req, res) => {
+router.put('/', protect, authorize('settings', 'edit'), async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) settings = await Settings.create({});

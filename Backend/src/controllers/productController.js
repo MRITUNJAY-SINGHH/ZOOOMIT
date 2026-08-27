@@ -1,28 +1,50 @@
 import Product from '../models/Product.js';
 import ProductVariant from '../models/ProductVariant.js';
+import ProductBatch from '../models/ProductBatch.js';
 
 export const getProducts = async (req, res) => {
   try {
-    let { page = 1, limit = 20, search = '', status = '' } = req.query;
+    let { 
+      page = 1, 
+      limit = 20, 
+      search = '', 
+      status = '', 
+      category = '', 
+      subcategory = '', 
+      productType = '', 
+      hasExpiryTracking = '',
+      needsReview = ''
+    } = req.query;
+
     page = parseInt(page);
     limit = parseInt(limit);
-    if (limit > 100) limit = 100;
+    if (limit > 150) limit = 150;
 
     let query = {};
     if (status === 'active') query.isActive = true;
     if (status === 'inactive') query.isActive = false;
+    if (category) query.category = category;
+    if (subcategory) query.subcategory = subcategory;
+    if (productType) query.productType = productType;
+    if (hasExpiryTracking === 'true') query.hasExpiryTracking = true;
+    if (hasExpiryTracking === 'false') query.hasExpiryTracking = false;
+    if (needsReview === 'true') query.needsReview = true;
 
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { barcode: { $regex: search, $options: 'i' } },
-        { sku: { $regex: search, $options: 'i' } }
+        { baseSku: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
       ];
     }
 
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
-      .populate('category')
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
+      .populate('preferredSupplier', 'name companyName phone gstNumber')
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
       
@@ -40,7 +62,10 @@ export const getProducts = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id).populate('category');
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
+      .populate('preferredSupplier', 'name companyName contactPerson phone email gstNumber paymentTerms');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     const variants = await ProductVariant.find({ product: product._id });
@@ -51,8 +76,101 @@ export const getProductById = async (req, res) => {
   }
 };
 
+// --- PRODUCT SUPPLIER HISTORY & SMART PREFILL ---
+export const getProductSupplierHistory = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug')
+      .populate('preferredSupplier', 'name companyName contactPerson phone email gstNumber paymentTerms status');
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    // Fetch all batches for this product
+    const batches = await ProductBatch.find({ product: product._id })
+      .populate('supplier', 'name companyName contactPerson phone email gstNumber paymentTerms status')
+      .sort({ createdAt: -1 });
+
+    const supplierMap = new Map();
+
+    batches.forEach(batch => {
+      if (!batch.supplier) return;
+      const suppId = batch.supplier._id.toString();
+      if (!supplierMap.has(suppId)) {
+        supplierMap.set(suppId, {
+          supplier: batch.supplier,
+          isPreferred: product.preferredSupplier?._id?.toString() === suppId,
+          lastPurchaseQty: batch.purchaseQty || batch.stock,
+          lastPurchaseUnit: batch.purchaseUnit || batch.unit || product.purchaseUnit || product.baseUnit,
+          lastUnitCost: batch.purchaseUnitCost || batch.unitCost || product.costPrice || 0,
+          lastPurchaseDate: batch.createdAt,
+          totalBatchesCount: 1,
+          totalQuantitySupplied: batch.stock || 0
+        });
+      } else {
+        const existing = supplierMap.get(suppId);
+        existing.totalBatchesCount += 1;
+        existing.totalQuantitySupplied += (batch.stock || 0);
+      }
+    });
+
+    // If preferredSupplier exists but has no batches yet, add it
+    if (product.preferredSupplier && !supplierMap.has(product.preferredSupplier._id.toString())) {
+      supplierMap.set(product.preferredSupplier._id.toString(), {
+        supplier: product.preferredSupplier,
+        isPreferred: true,
+        lastPurchaseQty: 0,
+        lastPurchaseUnit: product.purchaseUnit || product.baseUnit || 'PCS',
+        lastUnitCost: product.costPrice || 0,
+        lastPurchaseDate: null,
+        totalBatchesCount: 0,
+        totalQuantitySupplied: 0
+      });
+    }
+
+    const suppliers = Array.from(supplierMap.values());
+
+    // Determine recommended supplier: Preferred first, else most recent batch supplier
+    let recommendedSupplier = null;
+    if (product.preferredSupplier) {
+      recommendedSupplier = product.preferredSupplier;
+    } else if (suppliers.length > 0) {
+      recommendedSupplier = suppliers[0].supplier;
+    }
+
+    // Context summary of the last purchase
+    let lastPurchaseSummary = null;
+    if (suppliers.length > 0 && suppliers[0].lastPurchaseDate) {
+      const topSupp = suppliers[0];
+      lastPurchaseSummary = {
+        supplierId: topSupp.supplier._id,
+        supplierName: topSupp.supplier.companyName || topSupp.supplier.name,
+        qty: topSupp.lastPurchaseQty,
+        unit: topSupp.lastPurchaseUnit,
+        unitCost: topSupp.lastUnitCost,
+        purchaseDate: topSupp.lastPurchaseDate,
+        factor: product.purchaseToStockFactor || 1,
+        isPreferred: topSupp.isPreferred
+      };
+    }
+
+    res.json({
+      product,
+      suppliers,
+      preferredSupplier: product.preferredSupplier,
+      recommendedSupplier,
+      lastPurchaseSummary
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const createProduct = async (req, res) => {
   try {
+    // Generate baseSku if not provided
+    if (!req.body.baseSku) {
+      req.body.baseSku = `SKU-${Date.now().toString().slice(-6)}`;
+    }
     const product = await Product.create(req.body);
     res.status(201).json(product);
   } catch (error) {
@@ -62,7 +180,9 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true })
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug');
     if (!product) return res.status(404).json({ message: 'Product not found' });
     res.json(product);
   } catch (error) {
@@ -76,6 +196,7 @@ export const deleteProduct = async (req, res) => {
     if (!product) return res.status(404).json({ message: 'Product not found' });
     
     await ProductVariant.deleteMany({ product: product._id });
+    await ProductBatch.deleteMany({ product: product._id });
     await Product.deleteOne({ _id: product._id });
     
     res.json({ message: 'Product removed' });
@@ -92,6 +213,7 @@ export const bulkDeleteProducts = async (req, res) => {
     }
     
     await ProductVariant.deleteMany({ product: { $in: productIds } });
+    await ProductBatch.deleteMany({ product: { $in: productIds } });
     await Product.deleteMany({ _id: { $in: productIds } });
     
     res.json({ message: 'Products removed successfully' });
@@ -104,12 +226,17 @@ export const bulkDeleteProducts = async (req, res) => {
 export const searchProductByBarcode = async (req, res) => {
   try {
     const { barcode } = req.params;
-    let product = await Product.findOne({ barcode }).populate('category');
+    let product = await Product.findOne({ barcode })
+      .populate('category', 'name slug')
+      .populate('subcategory', 'name slug');
     
     if (product) return res.json({ type: 'Product', data: product });
     
     // Check variants
-    const variant = await ProductVariant.findOne({ barcode }).populate('product');
+    const variant = await ProductVariant.findOne({ barcode }).populate({
+      path: 'product',
+      populate: [{ path: 'category' }, { path: 'subcategory' }]
+    });
     if (variant) return res.json({ type: 'Variant', data: variant.product, variantData: variant });
 
     res.status(404).json({ message: 'Barcode not found' });
@@ -151,8 +278,9 @@ export const deleteVariant = async (req, res) => {
 // --- BATCHES ---
 export const getProductBatches = async (req, res) => {
   try {
-    const { ProductBatch } = await import('../models/ProductBatch.js');
-    const batches = await ProductBatch.find({ product: req.params.id }).populate('supplier');
+    const batches = await ProductBatch.find({ product: req.params.id })
+      .populate('supplier', 'name companyName phone')
+      .sort({ createdAt: -1 });
     res.json(batches);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -161,7 +289,8 @@ export const getProductBatches = async (req, res) => {
 
 // --- BULK IMPORT ---
 export const bulkImportProducts = async (req, res) => {
-  const session = await (await import('mongoose')).startSession();
+  const mongoose = (await import('mongoose')).default;
+  const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
@@ -169,26 +298,25 @@ export const bulkImportProducts = async (req, res) => {
     let successCount = 0;
     let errorCount = 0;
     const errors = [];
-
-    // All or nothing approach within transaction, or we can just try/catch inside to collect errors
-    // If we want detailed errors but still save good ones, we have to save good ones and commit.
-    // If we want ALL or NOTHING, we throw on first error and abort.
-    // The user requested "Wrap bulk import inside transaction. Return detailed results."
     
     for (const pData of products) {
       try {
+        if (!pData.slug && pData.name) {
+          pData.slug = pData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + `-${Date.now().toString().slice(-4)}`;
+        }
+        if (!pData.baseSku) {
+          pData.baseSku = `SKU-${Date.now().toString().slice(-6)}`;
+        }
         const product = new Product(pData);
-        // Validating manually to catch schema errors before attempting save, or save could throw.
         await product.save({ session });
         successCount++;
       } catch (err) {
         errorCount++;
-        errors.push(`Row error: ${err.message}`);
+        errors.push(`Row error (${pData.name || 'Unknown'}): ${err.message}`);
       }
     }
 
     if (errorCount > 0 && successCount === 0) {
-      // Abort if literally nothing succeeded
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({ message: `Bulk import failed completely`, successCount, errorCount, errors });

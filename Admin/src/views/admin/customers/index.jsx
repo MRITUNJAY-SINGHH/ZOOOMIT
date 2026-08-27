@@ -10,6 +10,7 @@ import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import StatisticsCard from '@/components/common/StatisticsCard';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { formatCurrency, formatDate } from '@/utils/format';
@@ -21,6 +22,7 @@ export default function Customers() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -37,7 +39,7 @@ export default function Customers() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/customers?page=${currentPage}&limit=20&search=${search}`);
+      const res = await api.get(`/customers?page=${currentPage}&limit=${pageSize}&search=${search}`);
       setCustomers(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalRecords(res.data.total || 0);
@@ -49,7 +51,7 @@ export default function Customers() {
     }
   };
 
-  useEffect(() => { fetchCustomers(); }, [currentPage, search]);
+  useEffect(() => { fetchCustomers();  }, [currentPage, pageSize, search]);
 
   const viewCustomer = async (id) => {
     setDetailsLoading(true);
@@ -170,7 +172,7 @@ export default function Customers() {
                   ))}
                 </tbody>
               </Table>
-              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
             </>
           )}
         </Card.Body>

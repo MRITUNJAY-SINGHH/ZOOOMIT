@@ -7,14 +7,22 @@ export const cacheMiddleware = (duration = 300) => {
       return next();
     }
 
-    // Construct a unique cache key based on the URL
-    // e.g., report_/api/reports/dashboard
-    const key = `report_${req.originalUrl || req.url}`;
-    const cachedResponse = cache.get(key);
+    // Construct a unique cache key based on the URL (cleaning out refresh param)
+    const rawUrl = req.originalUrl || req.url;
+    const cleanUrl = rawUrl.replace(/[?&]refresh=(true|false)/g, '').replace(/\?$/, '');
+    const key = `report_${cleanUrl}`;
 
-    if (cachedResponse) {
-      console.log(`[CACHE HIT] ${key}`);
-      return res.json(cachedResponse);
+    // If client requested a fresh refresh, bypass cache and invalidate existing key
+    const isRefresh = req.query.refresh === 'true' || req.headers['x-refresh'] === 'true';
+    if (isRefresh) {
+      cache.del(key);
+      console.log(`[CACHE BYPASS & DEL] ${key}`);
+    } else {
+      const cachedResponse = cache.get(key);
+      if (cachedResponse) {
+        console.log(`[CACHE HIT] ${key}`);
+        return res.json(cachedResponse);
+      }
     }
 
     console.log(`[CACHE MISS] ${key}`);

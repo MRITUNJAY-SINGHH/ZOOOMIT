@@ -2,8 +2,18 @@ import React from 'react';
 import { Card } from 'react-bootstrap';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 
-export default function StatisticsCard({ icon: Icon, title, value, helper, trend, variant = 'primary', onClick }) {
+export default function StatisticsCard({ 
+  icon: Icon, 
+  title, 
+  value, 
+  helper, 
+  subtitle, 
+  trend, 
+  variant = 'primary', 
+  onClick 
+}) {
   const hasTrend = typeof trend === 'number';
+  const bottomText = subtitle || helper;
 
   return (
     <Card 
@@ -23,15 +33,15 @@ export default function StatisticsCard({ icon: Icon, title, value, helper, trend
             </div>
           )}
         </div>
-        {(helper || hasTrend) && (
+        {(bottomText || hasTrend) && (
           <div className="Zooom-stat-footer mt-3">
             {hasTrend && (
-              <span className={trend >= 0 ? 'text-success' : 'text-danger'}>
-                {trend >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
+              <span className={trend >= 0 ? 'text-success me-2' : 'text-danger me-2'}>
+                {trend >= 0 ? <TrendingUp size={16} className="me-1" /> : <TrendingDown size={16} className="me-1" />}
                 {Math.abs(trend)}%
               </span>
             )}
-            {helper && <span className="text-muted">{helper}</span>}
+            {bottomText && <span className="text-muted">{bottomText}</span>}
           </div>
         )}
       </Card.Body>

@@ -1,7 +1,8 @@
 import express from 'express';
 import { 
   getProducts, getProductById, createProduct, updateProduct, deleteProduct, bulkDeleteProducts,
-  searchProductByBarcode, addVariant, updateVariant, deleteVariant, getProductBatches, bulkImportProducts 
+  searchProductByBarcode, addVariant, updateVariant, deleteVariant, getProductBatches, bulkImportProducts,
+  getProductSupplierHistory
 } from '../controllers/productController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 
@@ -17,6 +18,9 @@ router.route('/bulk')
 
 router.route('/barcode/:barcode')
   .get(protect, authorize('pos', 'view'), searchProductByBarcode);
+
+router.route('/:id/supplier-history')
+  .get(protect, getProductSupplierHistory);
 
 router.route('/:id')
   .get(protect, getProductById)

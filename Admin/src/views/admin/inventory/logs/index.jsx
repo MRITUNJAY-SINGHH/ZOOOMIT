@@ -4,6 +4,8 @@ import { Card, Table, Form, Row, Col, Button, Badge, Offcanvas, Modal } from 're
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
 import PageHeader from '@/components/common/PageHeader';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
 import InventoryStatCards from '@/components/inventory/InventoryStatCards';
@@ -19,6 +21,7 @@ export default function InventoryLogs() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedLog, setSelectedLog] = useState(null);
@@ -34,12 +37,12 @@ export default function InventoryLogs() {
     init();
   }, []);
 
-  useEffect(() => { fetchLogs(); }, [currentPage]);
+  useEffect(() => { fetchLogs(); }, [currentPage, pageSize, filters.type]);
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const q = new URLSearchParams({ page: currentPage, limit: 20 });
+      const q = new URLSearchParams({ page: currentPage, limit: pageSize });
       if (filters.startDate) q.append('startDate', filters.startDate);
       if (filters.endDate) q.append('endDate', filters.endDate);
       if (filters.type) q.append('type', filters.type);
@@ -164,12 +167,8 @@ export default function InventoryLogs() {
                 </tbody>
               </Table>
               {totalPages > 1 && (
-                <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top" style={{ borderColor: 'var(--bs-border-color)' }}>
-                  <span className="text-muted font-size-14">Page {currentPage} of {totalPages} ({totalRecords} entries)</span>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-secondary" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>Prev</Button>
-                    <Button variant="outline-secondary" size="sm" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>Next</Button>
-                  </div>
+                <div className="px-4 pb-3">
+                  <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
                 </div>
               )}
             </>

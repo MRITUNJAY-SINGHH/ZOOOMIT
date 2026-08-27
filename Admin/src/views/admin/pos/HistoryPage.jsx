@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Badge } from 'react-bootstrap';
+import { Card, Table, Button, Badge, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
@@ -19,8 +19,9 @@ const STATUS_COLORS = {
 export default function HistoryPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [reprintingId, setReprintingId] = useState(null);
   const [invoiceToPrint, setInvoiceToPrint] = useState(null);
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export default function HistoryPage() {
   };
 
   const handleReprintClick = async (orderId) => {
+    setReprintingId(orderId);
     try {
       // First try to fetch the actual invoice
       const res = await fetchApi(`/invoices?order=${orderId}&limit=1`);
@@ -48,7 +50,7 @@ export default function HistoryPage() {
         // Fallback for old offline orders that don't have an Invoice document
         const orderData = await fetchApi(`/orders/${orderId}`);
         if (orderData) {
-          const dummyInvoice = {
+          const fallbackInvoice = {
             invoiceNumber: orderData.billNumber || orderData.orderNumber,
             createdAt: orderData.createdAt,
             customerSnapshot: { 
@@ -70,7 +72,7 @@ export default function HistoryPage() {
             },
             isCancelled: orderData.status === 'Cancelled' || orderData.status === 'Returned'
           };
-          setInvoiceToPrint(dummyInvoice);
+          setInvoiceToPrint(fallbackInvoice);
         } else {
           toast.error("Order details not found.");
         }
@@ -78,6 +80,8 @@ export default function HistoryPage() {
     } catch (e) {
       console.error(e);
       toast.error("Error fetching invoice or order details.");
+    } finally {
+      setReprintingId(null);
     }
   };
 
@@ -139,7 +143,14 @@ export default function HistoryPage() {
                     <td><Badge bg={STATUS_COLORS[order.status] || 'secondary'}>{order.status}</Badge></td>
                     <td className="text-end">
                       <div className="d-flex justify-content-end gap-2 flex-column flex-sm-row">
-                        <Button size="sm" variant="primary" onClick={() => handleReprintClick(order._id)}>Reprint</Button>
+                        <Button 
+                          size="sm" 
+                          variant="primary" 
+                          onClick={() => handleReprintClick(order._id)}
+                          disabled={reprintingId === order._id}
+                        >
+                          {reprintingId === order._id ? <Spinner size="sm" /> : 'Reprint'}
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="danger" 

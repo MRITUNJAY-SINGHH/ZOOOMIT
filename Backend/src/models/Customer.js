@@ -23,6 +23,8 @@ const customerSchema = new mongoose.Schema({
 
 customerSchema.index({ phone: 1 });
 customerSchema.index({ email: 1 });
+customerSchema.index({ name: 'text', email: 'text', phone: 'text' });
+customerSchema.index({ customerType: 1, status: 1 });
 
 const Customer = mongoose.model('Customer', customerSchema);
 export default Customer;
