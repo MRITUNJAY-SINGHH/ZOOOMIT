@@ -1,9 +1,25 @@
-// Placeholder utility for sending emails.
-// Replace with nodemailer or SendGrid in production.
+import nodemailer from 'nodemailer';
+
 const sendEmail = async (options) => {
-  console.log(`[Email Service Mock] Sending email to: ${options.email}`);
-  console.log(`[Email Service Mock] Subject: ${options.subject}`);
-  console.log(`[Email Service Mock] Message: \n${options.message}`);
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const mailOptions = {
+    from: `"Kuiklo" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
+    to: options.email,
+    subject: options.subject,
+    text: options.message,
+    html: options.html, // Support HTML emails if provided
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`[Email Service] Message sent: ${info.messageId}`);
 };
 
 export default sendEmail;

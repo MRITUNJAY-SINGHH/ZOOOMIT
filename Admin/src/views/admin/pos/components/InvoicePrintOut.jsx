@@ -27,58 +27,31 @@ export default function InvoicePrintOut({ invoice, onBack }) {
 
   const handleDownloadPDF = async () => {
     try {
-      const { jsPDF } = await import('jspdf');
-      const html2canvas = (await import('html2canvas')).default;
-      
-      const element = document.getElementById('invoice-content-to-print');
-      
-      // Temporarily enforce exact A4 width for the capture
-      const originalWidth = element.style.width;
-      const originalMaxWidth = element.style.maxWidth;
-      element.style.width = '794px';
-      element.style.maxWidth = '794px';
-      
-      const canvas = await html2canvas(element, { 
-        scale: 2, 
-        useCORS: true,
-        width: 794,
-        windowWidth: 794,
-        scrollX: 0,
-        scrollY: 0
+      // Backend generation is more reliable and looks better
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/invoices/${invoice._id}/pdf`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
-      // Revert width
-      element.style.width = originalWidth;
-      element.style.maxWidth = originalMaxWidth;
-      
-      // Export as JPEG with 80% quality
-      const imgData = canvas.toDataURL('image/jpeg', 0.8);
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      // Calculate total image height in mm at 100% width
-      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Print the image at 100% width
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      // If the invoice is very tall, naturally split into multiple pages
-      while (heightLeft > 0) {
-        position -= pageHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
-        heightLeft -= pageHeight;
+      if (!response.ok) {
+        throw new Error('Failed to download PDF');
       }
-
-      pdf.save(`${invoice.invoiceNumber}.pdf`);
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${invoice.invoiceNumber}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (err) {
       console.error(err);
-      alert('Failed to generate PDF. Make sure html2canvas and jspdf are installed.');
+      alert('Failed to generate PDF from backend.');
     }
   };
 

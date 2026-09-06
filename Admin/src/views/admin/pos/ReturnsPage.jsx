@@ -5,6 +5,7 @@ import { Icon } from '@/components/common/LucideIcon';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
 import PageHeader from '@/components/common/PageHeader';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import InvoicePrintOut from './components/InvoicePrintOut';
 
 export default function ReturnsPage() {
@@ -155,16 +156,29 @@ export default function ReturnsPage() {
     }));
   };
 
-  const processReturn = async () => {
+  const [confirmReturnModal, setConfirmReturnModal] = useState(false);
+
+  const totalRefund = returnItems.reduce((acc, i) => acc + (i.qtyToReturn * i.price), 0);
+
+  const confirmReturn = () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
     if (itemsToReturn.length === 0) return alert("Select quantities to return.");
+    
+    const finalReason = reason === 'Other' ? customReason : reason;
+    if (reason === 'Other' && !finalReason.trim()) return alert('Please enter a custom reason');
+    
+    setConfirmReturnModal(true);
+  };
+
+  const processReturn = async () => {
+    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
     if (!invoice.invoiceNumber && !invoice.billNumber && !invoice.orderNumber) {
       setError('Return processing requires an invoice number.');
+      setConfirmReturnModal(false);
       return;
     }
     
     const finalReason = reason === 'Other' ? customReason : reason;
-    if (reason === 'Other' && !finalReason.trim()) return alert('Please enter a custom reason');
 
     setLoading(true);
     setError(null);
@@ -187,9 +201,8 @@ export default function ReturnsPage() {
       setError(error.message);
     }
     setLoading(false);
+    setConfirmReturnModal(false);
   };
-
-  const totalRefund = returnItems.reduce((acc, i) => acc + (i.qtyToReturn * i.price), 0);
 
   if (returnedInvoice) {
     return <InvoicePrintOut invoice={returnedInvoice} onBack={() => navigate('/pos/history')} />;
@@ -272,13 +285,24 @@ export default function ReturnsPage() {
             <div className="text-md-end">
               <div className="text-muted mb-1">Total Refund</div>
               <h4 className="mb-3 text-primary">{formatCurrency(totalRefund)}</h4>
-              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={processReturn} disabled={loading || totalRefund === 0}>
+              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={confirmReturn} disabled={loading || totalRefund === 0}>
                 {loading ? 'Processing...' : 'Process Return'}
               </Button>
             </div>
           </div>
         </Card.Body>
       </Card>
+      
+      {/* ADD IMPORT IF MISSING AT TOP OR JUST RENDER IT */}
+      <ConfirmModal
+        show={confirmReturnModal}
+        title="Confirm Return"
+        message={\`Are you sure you want to process this return for \${formatCurrency(totalRefund)}?\`}
+        confirmLabel="Process Return"
+        confirmVariant="danger"
+        onCancel={() => setConfirmReturnModal(false)}
+        onConfirm={processReturn}
+      />
     </div>
   );
 }

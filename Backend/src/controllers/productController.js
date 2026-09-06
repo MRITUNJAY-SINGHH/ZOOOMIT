@@ -13,11 +13,21 @@ export const getProducts = async (req, res) => {
     if (status === 'inactive') query.isActive = false;
 
     if (search) {
+      // Find matching categories first
+      const Category = (await import('../models/Category.js')).default;
+      const matchingCategories = await Category.find({ name: { $regex: search, $options: 'i' } }).select('_id');
+      const categoryIds = matchingCategories.map(c => c._id);
+
       query.$or = [
         { name: { $regex: search, $options: 'i' } },
         { barcode: { $regex: search, $options: 'i' } },
-        { sku: { $regex: search, $options: 'i' } }
+        { baseSku: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
       ];
+
+      if (categoryIds.length > 0) {
+        query.$or.push({ category: { $in: categoryIds } });
+      }
     }
 
     const total = await Product.countDocuments(query);

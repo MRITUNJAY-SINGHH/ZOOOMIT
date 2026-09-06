@@ -196,3 +196,105 @@ export const bulkDeleteInvoices = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Generate PDF for Invoice
+// @route   GET /api/invoices/:id/pdf
+// @access  Private
+export const generateInvoicePdf = async (req, res) => {
+  try {
+    const invoice = await Invoice.findById(req.params.id).populate('order');
+    if (!invoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    // Attempt to dynamically load puppeteer to prevent crashing if not fully installed yet
+    let puppeteer;
+    try {
+      puppeteer = await import('puppeteer');
+    } catch (e) {
+      return res.status(500).json({ message: 'PDF generation library not installed properly.' });
+    }
+
+    // Generate minimal HTML for the invoice
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice ${invoice.invoiceNumber}</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .header h1 { margin: 0; font-size: 28px; }
+          .details { margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+          th { background-color: #f9f9f9; }
+          .text-right { text-align: right; }
+          .total-section { float: right; width: 300px; }
+          .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+          .total-row.grand { font-weight: bold; font-size: 1.2em; border-top: 2px solid #333; margin-top: 5px; padding-top: 10px; }
+          .clear { clear: both; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>INVOICE</h1>
+          <p>#${invoice.invoiceNumber}</p>
+        </div>
+        
+        <div class="details">
+          <strong>Billed To:</strong><br>
+          ${invoice.customerSnapshot?.name || 'Walk-in Customer'}<br>
+          ${invoice.customerSnapshot?.phone || ''}
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th class="text-right">Price</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${invoice.productSnapshot.map(item => `
+              <tr>
+                <td>${item.productName}</td>
+                <td>${item.qty}</td>
+                <td class="text-right">₹${item.price}</td>
+                <td class="text-right">₹${item.total}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div class="total-section">
+          <div class="total-row"><span>Subtotal:</span><span>₹${invoice.totalsSnapshot.subTotal}</span></div>
+          <div class="total-row"><span>Tax:</span><span>₹${invoice.totalsSnapshot.tax}</span></div>
+          <div class="total-row"><span>Discount:</span><span>₹${invoice.totalsSnapshot.discount}</span></div>
+          <div class="total-row grand"><span>Total:</span><span>₹${invoice.totalsSnapshot.amount}</span></div>
+        </div>
+        <div class="clear"></div>
+      </body>
+      </html>
+    `;
+
+    const browser = await puppeteer.default.launch({ headless: 'new', args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true });
+    await browser.close();
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=${invoice.invoiceNumber}.pdf`,
+      'Content-Length': pdfBuffer.length
+    });
+
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('PDF Gen error:', error);
+    res.status(500).json({ message: 'Failed to generate PDF' });
+  }
+};

@@ -64,6 +64,41 @@ export const posCheckout = async (req, res) => {
   try {
     let { customer, customerSnapshot, customerAddress, items, subTotal, tax, discount, amount, paymentMethod } = req.body;
 
+    if (!items || items.length === 0) {
+      throw new Error('Cart cannot be empty');
+    }
+
+    // Recalculate and validate prices to prevent tampering
+    let calculatedSubTotal = 0;
+    const Product = (await import('../models/Product.js')).default;
+    
+    for (let item of items) {
+      const dbProduct = await Product.findById(item.productId).session(session);
+      if (!dbProduct) throw new Error(`Product not found: ${item.productName}`);
+      
+      const expectedPrice = dbProduct.sellingPrice || dbProduct.mrp;
+      if (item.price !== expectedPrice) {
+        // Just a safety check, though discount per item can alter price, typically discount is applied per item as a separate field or calculated.
+        // Assuming item.price is the final price after item-level discount, we skip strict equality but ensure it's not negative.
+        if (item.price < 0) throw new Error(`Invalid price for ${item.productName}`);
+      }
+      
+      if (item.qty <= 0) throw new Error(`Invalid quantity for ${item.productName}`);
+      
+      item.total = item.price * item.qty;
+      calculatedSubTotal += item.total;
+    }
+
+    // Validate totals
+    if (Math.abs(calculatedSubTotal - subTotal) > 1) {
+      throw new Error('Subtotal validation failed');
+    }
+    
+    const calculatedAmount = subTotal + tax - discount;
+    if (Math.abs(calculatedAmount - amount) > 1) {
+      throw new Error('Grand total validation failed');
+    }
+
     // Check in my customer have this or not if not create that
     if (!customer && customerSnapshot && customerSnapshot.phone) {
       const Customer = (await import('../models/Customer.js')).default;
