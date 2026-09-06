@@ -6,6 +6,7 @@ import App from './App'
 import AppProvidersWrapper from './components/wrappers/AppProvidersWrapper'
 import { AuthProvider } from './context/useAuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import ErrorBoundary from './components/ErrorBoundary'
 
 const queryClient = new QueryClient()
 
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <AppProvidersWrapper>
           <QueryClientProvider client={queryClient}>
-            <App />
+            <ErrorBoundary>
+              <App />
+            </ErrorBoundary>
           </QueryClientProvider>
         </AppProvidersWrapper>
       </AuthProvider>

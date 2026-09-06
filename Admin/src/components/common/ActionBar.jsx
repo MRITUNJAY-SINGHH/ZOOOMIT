@@ -16,14 +16,14 @@ export default function ActionBar({ left, count, onRefresh, onExport, onAdd, add
   };
 
   return (
-    <Card className="kuiklo-action-card mb-3">
+    <Card className="Zooom-action-card mb-3">
       <Card.Body>
         <div className="d-flex flex-column flex-xl-row justify-content-between gap-3">
           <div className="d-flex flex-column flex-md-row flex-wrap align-items-md-center gap-2 flex-grow-1">
             {left}
           </div>
           <div className="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
-            {typeof count !== 'undefined' && <span className="kuiklo-record-count text-muted">{count} records</span>}
+            {typeof count !== 'undefined' && <span className="Zooom-record-count text-muted">{count} records</span>}
             {onRefresh && <Button variant="outline-secondary" onClick={handleRefresh}><RefreshCw size={20} className={isRefreshing ? 'spin-animation' : ''} /></Button>}
             {onExport && <Button variant="outline-secondary" onClick={onExport}><Download size={20} />Export</Button>}
             {onAdd && <Button variant="primary" onClick={onAdd}><Plus size={20} />{addLabel}</Button>}

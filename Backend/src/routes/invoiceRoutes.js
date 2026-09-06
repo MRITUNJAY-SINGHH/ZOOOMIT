@@ -13,17 +13,19 @@ import {
 const router = express.Router();
 
 router.route('/')
-  .get(protect, authorize('payments'), getInvoices)
-  .post(protect, authorize('payments'), createInvoice);
+  .get(protect, authorize('payments', 'view'), getInvoices)
+  .post(protect, authorize('payments', 'create'), createInvoice);
 
-router.post('/bulk-delete', protect, authorize('payments'), bulkDeleteInvoices);
+router.post('/bulk-delete', protect, authorize('payments', 'create'), bulkDeleteInvoices);
+
+// PDF routes moved to documentRoutes
 
 router.route('/:id/pdf')
   .get(protect, generateInvoicePdf);
 
 router.route('/:id')
-  .get(protect, authorize('payments'), getInvoiceById)
-  .put(protect, authorize('payments'), updateInvoice)
-  .delete(protect, authorize('payments'), deleteInvoice);
+  .get(protect, authorize('payments', 'view'), getInvoiceById)
+  .put(protect, authorize('payments', 'edit'), updateInvoice)
+  .delete(protect, authorize('payments', 'delete'), deleteInvoice);
 
 export default router;

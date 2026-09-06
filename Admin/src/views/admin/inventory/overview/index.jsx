@@ -55,7 +55,7 @@ function QuickStockModal({ show, onHide, selectedProduct, onSuccess }) {
         <Modal.Body>
           {selectedProduct && (
             <div className="mb-4 p-3 bg-body-secondary rounded d-flex align-items-center gap-3">
-              <div className="bg-white rounded p-2 border">
+              <div className="bg-body rounded p-2 border border-secondary-subtle">
                 <PackageOpen size={24} className="text-primary" />
               </div>
               <div>
@@ -163,78 +163,81 @@ export default function InventoryOverview() {
   };
 
   return (
-    <div>
-      <PageHeader 
-        title="Inventory Overview" 
-        description="Summary of your product stock, alerts, and recent inventory movements." 
-      />
+    <div className="report-page">
+      <div className="report-header mb-4">
+        <div className="report-header-left">
+          <h3 className="report-title mb-1">Inventory Overview</h3>
+          <p className="text-muted font-size-14 mb-0">Summary of your product stock, alerts, and recent inventory movements.</p>
+        </div>
+        <div className="report-header-right d-flex gap-3 align-items-center">
+          <Button as={Link} to="/inventory/stock-entry" variant="primary" className="d-inline-flex align-items-center gap-2">
+            <PackageOpen size={16} /> Advanced Stock Entry
+          </Button>
+        </div>
+      </div>
+
 
       <InventoryStatCards />
 
-      {/* Premium Toolbar */}
-      <Card className="mb-3 border shadow-sm">
-        <Card.Body className="p-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div className="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap">
-              <span className="text-muted fw-medium font-size-14 text-uppercase tracking-wider me-2">Recent Stock</span>
-              <InputGroup style={{ maxWidth: '280px' }}>
-                <InputGroup.Text className="bg-body-secondary border-0 text-muted"><Search size={16} /></InputGroup.Text>
-                <Form.Control 
-                  placeholder="Search products..." 
-                  className="bg-body-secondary border-0 shadow-none" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </InputGroup>
-            </div>
-            
-            <div className="d-flex align-items-center gap-2">
-              <Button as={Link} to="/inventory/stock-entry" variant="primary" className="d-flex align-items-center gap-2 shadow-sm fw-medium px-3">
-                <PackageOpen size={16} /> Advanced Stock Entry
-              </Button>
+      <Card className="report-section-card h-100 mb-4">
+        <Card.Header className="d-flex justify-content-between align-items-center pb-0 border-0 pt-3">
+          <h5 className="mb-0">Recent Stock</h5>
+          <div className="d-flex gap-2 align-items-center">
+            <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+              <Search size={18} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+              <input 
+                type="text" 
+                className="form-control report-search-input" 
+                placeholder="Search products..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: '38px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--bs-border-color)' }}
+              />
             </div>
           </div>
-        </Card.Body>
-      </Card>
-
-      <Card className="border shadow-sm overflow-hidden">
-        <Card.Body className="p-0">
+        </Card.Header>
+        <div style={{ overflowX: 'auto' }} className="pt-3 pb-2">
           {loading ? (
-            <SkeletonTable rows={5} columns={6} />
+            <div className="p-3"><SkeletonTable rows={5} columns={6} /></div>
           ) : (
-            <Table responsive hover className="align-middle mb-0 text-nowrap table-borderless table-centered">
-              <thead className="bg-body-tertiary border-bottom border-light">
-                <tr className="text-body text-uppercase font-size-13 fw-semibold tracking-wider">
-                  <th className="ps-4 py-3">Product Name</th>
-                  <th className="py-3">Category</th>
-                  <th className="py-3">Barcode / SKU</th>
-                  <th className="text-end py-3">Current Stock</th>
-                  <th className="text-end py-3">Selling Price</th>
-                  <th className="text-end pe-4 py-3">Action</th>
+            <Table className="report-table mb-0">
+              <thead className="custom-table-thead" style={{ 
+                fontSize: '12px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.5px',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+              }}>
+                <tr>
+                  <th className="py-2 text-muted border-dashed ps-4">Product Name</th>
+                  <th className="py-2 text-muted border-dashed">Category</th>
+                  <th className="py-2 text-muted border-dashed">Barcode / SKU</th>
+                  <th className="py-2 text-end text-muted border-dashed">Current Stock</th>
+                  <th className="py-2 text-end text-muted border-dashed">Selling Price</th>
+                  <th className="py-2 text-center text-muted border-dashed pe-4">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.length > 0 ? (
                   filteredProducts.map(p => (
-                    <tr key={p._id} className="border-bottom border-light">
-                      <td className="ps-4">
-                        <h6 className="mb-0 fw-bold text-body font-size-15">{p.name}</h6>
+                    <tr key={p._id}>
+                      <td className="align-middle border-dashed ps-4">
+                        <h6 className="mb-0 fw-medium text-body font-size-15">{p.name}</h6>
                       </td>
-                      <td>
+                      <td className="align-middle border-dashed">
                         <span className="text-muted font-size-14">{p.category?.name || '-'}</span>
                       </td>
-                      <td>
+                      <td className="align-middle border-dashed">
                         <code className="text-secondary bg-secondary-subtle px-2 py-1 rounded font-size-13">{p.barcode || p.baseSku || '-'}</code>
                       </td>
-                      <td className="text-end">
-                        <Badge bg={(p.stock || 0) <= (p.lowStockThreshold || 10) ? 'danger-subtle' : 'success-subtle'} text={(p.stock || 0) <= (p.lowStockThreshold || 10) ? 'danger' : 'success'} className="px-2 py-1 font-size-13 fw-semibold border border-light">
+                      <td className="align-middle border-dashed text-end">
+                        <Badge bg={(p.stock || 0) <= (p.lowStockThreshold || 10) ? 'danger-subtle' : 'success-subtle'} text={(p.stock || 0) <= (p.lowStockThreshold || 10) ? 'danger' : 'success'} className="px-2 py-1 font-size-13 fw-semibold border-0">
                           {p.stock || 0} units
                         </Badge>
                       </td>
-                      <td className="text-end">
-                        <span className="fw-bold text-success font-size-15">{formatCurrency(p.sellingPrice)}</span>
+                      <td className="align-middle border-dashed text-end">
+                        <span className="fw-semibold text-body font-size-14">{formatCurrency(p.sellingPrice)}</span>
                       </td>
-                      <td className="text-end pe-4">
+                      <td className="align-middle border-dashed text-center pe-4">
                         <Button variant="outline-primary" size="sm" className="d-inline-flex align-items-center gap-1 shadow-sm px-2 fw-medium" onClick={() => handleOpenModal(p)}>
                           <Plus size={14} /> Quick Add
                         </Button>
@@ -243,7 +246,7 @@ export default function InventoryOverview() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center py-5 text-muted">
+                    <td colSpan="6" className="text-center py-5 text-muted border-dashed">
                       No products found.
                     </td>
                   </tr>
@@ -251,7 +254,7 @@ export default function InventoryOverview() {
               </tbody>
             </Table>
           )}
-        </Card.Body>
+        </div>
       </Card>
       
       <QuickStockModal show={showModal} onHide={() => setShowModal(false)} selectedProduct={selectedProduct} onSuccess={handleSuccess} />

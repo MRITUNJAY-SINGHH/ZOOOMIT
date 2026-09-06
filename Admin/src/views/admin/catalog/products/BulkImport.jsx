@@ -5,6 +5,7 @@ import { fetchApi } from '@/utils/api';
 import { ArrowLeft, UploadCloud, FileText, CheckCircle, XCircle } from 'lucide-react';
 import PageHeader from '@/components/common/PageHeader';
 import { useNavigate } from 'react-router';
+import { toast } from 'react-hot-toast';
 
 export default function BulkImport() {
   const [loading, setLoading] = useState(false);
@@ -42,7 +43,7 @@ export default function BulkImport() {
 
   const processFile = (file) => {
     if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
-      alert("Please upload a valid CSV file.");
+      toast.error("Please upload a valid CSV file.");
       return;
     }
 
@@ -60,7 +61,7 @@ export default function BulkImport() {
           lowStockThreshold: parseInt(row.lowStockThreshold || 10)
         })).filter(p => p.name && p.category);
 
-        if (products.length === 0) return alert("No valid products found. Ensure 'name' and 'categoryId' columns exist.");
+        if (products.length === 0) return toast.error("No valid products found. Ensure 'name' and 'categoryId' columns exist.");
 
         setLoading(true);
         setProgress(20);
@@ -92,7 +93,7 @@ export default function BulkImport() {
             }, 1500);
           }
         } catch (err) {
-          alert("Import Error: " + err.message);
+          toast.error("Import Error: " + err.message);
           setProgress(0);
         }
         setLoading(false);

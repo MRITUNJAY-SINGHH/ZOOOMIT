@@ -4,7 +4,7 @@ import { protect, authorize } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', protect, authorize('coupons'), async (req, res) => {
+router.get('/', protect, authorize('coupons', 'view'), async (req, res) => {
   try {
     let { page = 1, limit = 20, search = '', status } = req.query;
     page = parseInt(page);
@@ -24,7 +24,7 @@ router.get('/', protect, authorize('coupons'), async (req, res) => {
   }
 });
 
-router.post('/', protect, authorize('coupons'), async (req, res) => {
+router.post('/', protect, authorize('coupons', 'create'), async (req, res) => {
   try {
     const coupon = await Coupon.create(req.body);
     res.status(201).json(coupon);
@@ -33,7 +33,7 @@ router.post('/', protect, authorize('coupons'), async (req, res) => {
   }
 });
 
-router.put('/:id', protect, authorize('coupons'), async (req, res) => {
+router.put('/:id', protect, authorize('coupons', 'edit'), async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!coupon) return res.status(404).json({ message: 'Coupon not found' });
@@ -43,7 +43,7 @@ router.put('/:id', protect, authorize('coupons'), async (req, res) => {
   }
 });
 
-router.delete('/:id', protect, authorize('coupons'), async (req, res) => {
+router.delete('/:id', protect, authorize('coupons', 'delete'), async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndDelete(req.params.id);
     if (!coupon) return res.status(404).json({ message: 'Coupon not found' });

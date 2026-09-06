@@ -7,6 +7,8 @@ import { formatCurrency } from '@/utils/format';
 import PageHeader from '@/components/common/PageHeader';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import InvoicePrintOut from './components/InvoicePrintOut';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 export default function ReturnsPage() {
   const location = useLocation();
@@ -24,6 +26,7 @@ export default function ReturnsPage() {
   const [returnedInvoice, setReturnedInvoice] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (invoice && returnItems.length === 0) {
@@ -156,6 +159,7 @@ export default function ReturnsPage() {
     }));
   };
 
+<<<<<<< HEAD
   const [confirmReturnModal, setConfirmReturnModal] = useState(false);
 
   const totalRefund = returnItems.reduce((acc, i) => acc + (i.qtyToReturn * i.price), 0);
@@ -172,6 +176,11 @@ export default function ReturnsPage() {
 
   const processReturn = async () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
+=======
+  const handleProcessReturnClick = () => {
+    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
+    if (itemsToReturn.length === 0) return toast.error("Select quantities to return.");
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
     if (!invoice.invoiceNumber && !invoice.billNumber && !invoice.orderNumber) {
       setError('Return processing requires an invoice number.');
       setConfirmReturnModal(false);
@@ -179,6 +188,18 @@ export default function ReturnsPage() {
     }
     
     const finalReason = reason === 'Other' ? customReason : reason;
+<<<<<<< HEAD
+=======
+    if (reason === 'Other' && !finalReason.trim()) return toast.error('Please enter a custom reason');
+    
+    setShowConfirm(true);
+  };
+
+  const processReturn = async () => {
+    setShowConfirm(false);
+    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
+    const finalReason = reason === 'Other' ? customReason : reason;
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
 
     setLoading(true);
     setError(null);
@@ -191,7 +212,7 @@ export default function ReturnsPage() {
           reason: finalReason 
         })
       });
-      alert('Return processed successfully!');
+      toast.success('Return processed successfully!');
       if (response.invoice) {
         setReturnedInvoice(response.invoice);
       } else {
@@ -285,13 +306,18 @@ export default function ReturnsPage() {
             <div className="text-md-end">
               <div className="text-muted mb-1">Total Refund</div>
               <h4 className="mb-3 text-primary">{formatCurrency(totalRefund)}</h4>
+<<<<<<< HEAD
               <Button variant="danger" className="w-100 fw-semibold px-4" onClick={confirmReturn} disabled={loading || totalRefund === 0}>
+=======
+              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={handleProcessReturnClick} disabled={loading || totalRefund === 0}>
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
                 {loading ? 'Processing...' : 'Process Return'}
               </Button>
             </div>
           </div>
         </Card.Body>
       </Card>
+<<<<<<< HEAD
       
       {/* ADD IMPORT IF MISSING AT TOP OR JUST RENDER IT */}
       <ConfirmModal
@@ -301,6 +327,16 @@ export default function ReturnsPage() {
         confirmLabel="Process Return"
         confirmVariant="danger"
         onCancel={() => setConfirmReturnModal(false)}
+=======
+
+      <ConfirmModal
+        show={showConfirm}
+        title="Confirm Return"
+        message={`Are you sure you want to process this return? A refund of ${formatCurrency(totalRefund)} will be recorded.`}
+        confirmLabel="Process Return"
+        confirmVariant="danger"
+        onCancel={() => setShowConfirm(false)}
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
         onConfirm={processReturn}
       />
     </div>

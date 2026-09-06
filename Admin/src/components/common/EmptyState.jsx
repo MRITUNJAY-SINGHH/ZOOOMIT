@@ -12,8 +12,8 @@ export default function EmptyState({ icon = 'lucide:inbox', title = 'No Data Fou
   const StateIcon = resolveIcon(icon);
 
   return (
-    <div className="kuiklo-state kuiklo-empty-state text-center">
-      <div className="kuiklo-state-icon mb-3">
+    <div className="Zooom-state Zooom-empty-state text-center">
+      <div className="Zooom-state-icon mb-3">
         <StateIcon size={48} />
       </div>
       <h2>{title}</h2>

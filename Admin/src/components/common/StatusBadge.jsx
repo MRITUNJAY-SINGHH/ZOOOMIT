@@ -13,7 +13,10 @@ const STATUS_VARIANTS = {
   delivered: 'success',
   confirmed: 'info',
   assigned: 'primary',
-  outfordelivery: 'secondary',
+  accepted: 'info',
+  rejected: 'danger',
+  pickedup: 'primary',
+  outfordelivery: 'warning',
   returned: 'dark',
   online: 'info',
   offline: 'secondary',
@@ -25,7 +28,7 @@ export default function StatusBadge({ status, variant, className = '' }) {
   const theme = variant || STATUS_VARIANTS[key] || 'secondary';
   
   return (
-    <Badge bg={`${theme}-subtle`} text={theme} className={`kuiklo-status-badge ${className}`}>
+    <Badge bg={`${theme}-subtle`} text={theme} className={`Zooom-status-badge ${className}`}>
       {label}
     </Badge>
   );

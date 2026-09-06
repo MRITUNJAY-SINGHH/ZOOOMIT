@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Card, Col, Form, Modal, Row, Table } from 'react-bootstrap';
-import { Edit, Mail, Phone, Trash2 } from 'lucide-react';
+import { Button, Card, Col, Form, Modal, Row, Table, Badge, Tabs, Tab } from 'react-bootstrap';
+import { Edit, Mail, Phone, Trash2, Building, CreditCard, MapPin, FileText } from 'lucide-react';
 import api from '@/utils/api';
 import PageHeader from '@/components/common/PageHeader';
 import ActionBar from '@/components/common/ActionBar';
@@ -11,9 +11,36 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import DeleteModal from '@/components/common/DeleteModal';
 import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import { toast } from 'react-hot-toast';
 
-const blankSupplier = { _id: null, name: '', phone: '', email: '', address: '', status: 'Active' };
+const blankSupplier = { 
+  _id: null, 
+  name: '', 
+  companyName: '', 
+  contactPerson: '',
+  phone: '', 
+  alternatePhone: '',
+  email: '', 
+  address: '', 
+  city: '',
+  state: '',
+  pincode: '',
+  gstNumber: '',
+  pan: '',
+  supplierCode: '',
+  paymentTerms: 'Immediate',
+  creditLimit: 0,
+  bankDetails: {
+    accountName: '',
+    accountNumber: '',
+    ifscCode: '',
+    bankName: '',
+    branch: ''
+  },
+  notes: '',
+  status: 'Active' 
+};
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState([]);
@@ -21,6 +48,7 @@ export default function Suppliers() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
@@ -32,7 +60,7 @@ export default function Suppliers() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/suppliers?page=${currentPage}&limit=20&search=${search}`);
+      const res = await api.get(`/suppliers?page=${currentPage}&limit=${pageSize}&search=${search}`);
       setSuppliers(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalRecords(res.data.total || 0);
@@ -44,16 +72,31 @@ export default function Suppliers() {
     }
   };
 
-  useEffect(() => { fetchSuppliers(); }, [currentPage, search]);
+  useEffect(() => { fetchSuppliers(); }, [currentPage, pageSize, search]);
 
   const openModal = (supplier = null) => {
-    setFormData(supplier || blankSupplier);
+    if (supplier) {
+      setFormData({
+        ...blankSupplier,
+        ...supplier,
+        bankDetails: {
+          ...blankSupplier.bankDetails,
+          ...(supplier.bankDetails || {})
+        }
+      });
+    } else {
+      setFormData(blankSupplier);
+    }
     setModalOpen(true);
   };
 
   const saveSupplier = async () => {
     if (!formData.name.trim()) {
-      toast.error('Supplier name is required');
+      toast.error('Supplier / Contact name is required');
+      return;
+    }
+    if (!formData.phone.trim()) {
+      toast.error('Phone number is required');
       return;
     }
     setSaving(true);
@@ -84,65 +127,222 @@ export default function Suppliers() {
 
   return (
     <div>
-      <PageHeader title="Suppliers" description="Manage vendor contacts and stock procurement partners." breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Suppliers' }]} />
+      <PageHeader 
+        title="Suppliers & B2B Vendors" 
+        description="Manage procurement partners, GSTIN profiles, payment terms and bank details." 
+        breadcrumbs={[{ label: 'Dashboard', path: '/dashboard' }, { label: 'Suppliers' }]} 
+      />
       <ActionBar
-        left={<SearchBar placeholder="Search suppliers..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />}
+        left={<SearchBar placeholder="Search suppliers by name, company, GST, phone..." value={search} onChange={(value) => { setSearch(value); setCurrentPage(1); }} />}
         count={totalRecords}
         onRefresh={fetchSuppliers}
         onAdd={() => openModal()}
         addLabel="Add Supplier"
       />
-      <Card>
+      <Card className="border-0 shadow-sm">
         <Card.Body>
           {loading ? <SkeletonTable rows={8} columns={6} /> : error ? <ErrorState message={error} onRetry={fetchSuppliers} /> : suppliers.length === 0 ? (
             <EmptyState icon="lucide:building-2" title="No suppliers found" message="Create suppliers before adding stock entries." actionLabel="Add Supplier" onAction={() => openModal()} />
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
-                <thead><tr><th>Supplier</th><th>Contact</th><th>Address</th><th>Status</th><th className="text-end">Actions</th></tr></thead>
+                <thead className="bg-light">
+                  <tr>
+                    <th>Vendor / Company</th>
+                    <th>Contact Person</th>
+                    <th>Phone & Email</th>
+                    <th>GSTIN</th>
+                    <th>Payment Terms</th>
+                    <th>Status</th>
+                    <th className="text-end">Actions</th>
+                  </tr>
+                </thead>
                 <tbody>
-                  {suppliers.map((supplier) => (
-                    <tr key={supplier._id}>
-                      <td className="fw-semibold">{supplier.name}</td>
+                  {suppliers.map(s => (
+                    <tr key={s._id}>
                       <td>
-                        <div className="text-muted d-flex align-items-center gap-2"><Phone size={20} />{supplier.phone || '-'}</div>
-                        {supplier.email && <div className="text-muted d-flex align-items-center gap-2"><Mail size={20} />{supplier.email}</div>}
+                        <div className="fw-bold text-body">{s.companyName || s.name}</div>
+                        {s.companyName && s.name !== s.companyName && (
+                          <small className="text-muted">{s.name}</small>
+                        )}
                       </td>
-                      <td className="text-muted">{supplier.address || '-'}</td>
-                      <td><StatusBadge status={supplier.status} /></td>
+                      <td className="text-muted font-size-13">{s.contactPerson || s.name || '-'}</td>
+                      <td>
+                        <div className="font-size-13 fw-medium">{s.phone}</div>
+                        {s.email && <div className="text-muted font-size-11">{s.email}</div>}
+                      </td>
+                      <td>
+                        {s.gstNumber ? (
+                          <code className="fw-bold text-dark font-size-12">{s.gstNumber}</code>
+                        ) : (
+                          <span className="text-muted font-size-12">Unregistered</span>
+                        )}
+                      </td>
+                      <td>
+                        <Badge bg="light" className="text-dark border font-size-11">
+                          {s.paymentTerms || 'Immediate'}
+                        </Badge>
+                      </td>
+                      <td><StatusBadge status={s.status} /></td>
                       <td className="text-end">
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openModal(supplier)}><Edit size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => setDeleteTarget(supplier)}><Trash2 size={20} /></Button>
+                        <Button variant="light" size="sm" className="me-1" onClick={() => openModal(s)}><Edit size={14} /></Button>
+                        <Button variant="light" size="sm" className="text-danger" onClick={() => setDeleteTarget(s)}><Trash2 size={14} /></Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
+              <div className="pt-3 border-top">
+                <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
+              </div>
             </>
           )}
         </Card.Body>
       </Card>
 
-      <Modal show={modalOpen} onHide={() => setModalOpen(false)} centered>
-        <Modal.Header closeButton><Modal.Title>{formData._id ? 'Edit Supplier' : 'Add Supplier'}</Modal.Title></Modal.Header>
+      {/* Complete B2B Vendor Modal */}
+      <Modal show={modalOpen} onHide={() => setModalOpen(false)} size="lg" centered>
+        <Modal.Header closeButton>
+          <Modal.Title>{formData._id ? 'Edit Supplier Profile' : 'Add New Supplier Profile'}</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
-          <Row className="g-3">
-            <Col md={12}><Form.Label>Name <span className="text-danger">*</span></Form.Label><Form.Control value={formData.name} onChange={(event) => setFormData({ ...formData, name: event.target.value })} /></Col>
-            <Col md={6}><Form.Label>Phone</Form.Label><Form.Control value={formData.phone || ''} onChange={(event) => setFormData({ ...formData, phone: event.target.value })} /></Col>
-            <Col md={6}><Form.Label>Email</Form.Label><Form.Control type="email" value={formData.email || ''} onChange={(event) => setFormData({ ...formData, email: event.target.value })} /></Col>
-            <Col md={12}><Form.Label>Address</Form.Label><Form.Control as="textarea" rows={3} value={formData.address || ''} onChange={(event) => setFormData({ ...formData, address: event.target.value })} /></Col>
-            <Col md={12}><Form.Label>Status</Form.Label><Form.Select value={formData.status} onChange={(event) => setFormData({ ...formData, status: event.target.value })}><option>Active</option><option>Inactive</option></Form.Select></Col>
-          </Row>
+          <Tabs defaultActiveKey="profile" className="mb-3">
+            <Tab eventKey="profile" title="Company & Contact">
+              <Row className="g-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Supplier / Vendor Name *</Form.Label>
+                    <Form.Control value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} placeholder="e.g. Reliance Retail Ventures" required />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Company Name</Form.Label>
+                    <Form.Control value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} placeholder="Registered company entity" />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Contact Person</Form.Label>
+                    <Form.Control value={formData.contactPerson} onChange={e => setFormData({ ...formData, contactPerson: e.target.value })} placeholder="Representative name" />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Primary Phone *</Form.Label>
+                    <Form.Control value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} placeholder="10-digit mobile" required />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Alternate Phone</Form.Label>
+                    <Form.Control value={formData.alternatePhone} onChange={e => setFormData({ ...formData, alternatePhone: e.target.value })} placeholder="Office / landline" />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Email Address</Form.Label>
+                    <Form.Control type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} placeholder="orders@vendor.example" />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Supplier Code</Form.Label>
+                    <Form.Control value={formData.supplierCode} onChange={e => setFormData({ ...formData, supplierCode: e.target.value })} placeholder="e.g. SUP-001" />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Tab>
+
+            <Tab eventKey="commercial" title="GST & Terms">
+              <Row className="g-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">GSTIN Number</Form.Label>
+                    <Form.Control value={formData.gstNumber} onChange={e => setFormData({ ...formData, gstNumber: e.target.value.toUpperCase() })} placeholder="15-digit GSTIN (e.g. 27AAAAA0000A1Z5)" />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">PAN Number</Form.Label>
+                    <Form.Control value={formData.pan} onChange={e => setFormData({ ...formData, pan: e.target.value.toUpperCase() })} placeholder="10-character PAN" />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Payment Terms</Form.Label>
+                    <Form.Select value={formData.paymentTerms} onChange={e => setFormData({ ...formData, paymentTerms: e.target.value })}>
+                      <option value="Immediate">Immediate / Advance</option>
+                      <option value="Net 15">Net 15 Days</option>
+                      <option value="Net 30">Net 30 Days</option>
+                      <option value="Net 60">Net 60 Days</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Credit Limit (₹)</Form.Label>
+                    <Form.Control type="number" value={formData.creditLimit} onChange={e => setFormData({ ...formData, creditLimit: Number(e.target.value) })} />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Address & City</Form.Label>
+                    <Form.Control as="textarea" rows={2} value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Warehouse or billing address..." />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Tab>
+
+            <Tab eventKey="banking" title="Bank Details & Notes">
+              <Row className="g-3">
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Account Name</Form.Label>
+                    <Form.Control value={formData.bankDetails?.accountName || ''} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, accountName: e.target.value } })} />
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Account Number</Form.Label>
+                    <Form.Control value={formData.bankDetails?.accountNumber || ''} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, accountNumber: e.target.value } })} />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">IFSC Code</Form.Label>
+                    <Form.Control value={formData.bankDetails?.ifscCode || ''} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, ifscCode: e.target.value.toUpperCase() } })} />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Bank Name</Form.Label>
+                    <Form.Control value={formData.bankDetails?.bankName || ''} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, bankName: e.target.value } })} />
+                  </Form.Group>
+                </Col>
+                <Col md={4}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Branch</Form.Label>
+                    <Form.Control value={formData.bankDetails?.branch || ''} onChange={e => setFormData({ ...formData, bankDetails: { ...formData.bankDetails, branch: e.target.value } })} />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium">Internal Notes</Form.Label>
+                    <Form.Control as="textarea" rows={2} value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} placeholder="Vendor notes, special discount terms, delivery lead times..." />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Tab>
+          </Tabs>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="outline-secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
-          <Button variant="primary" disabled={saving} onClick={saveSupplier}>{saving ? 'Saving...' : 'Save Supplier'}</Button>
+          <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancel</Button>
+          <Button variant="primary" onClick={saveSupplier} disabled={saving}>{saving ? 'Saving...' : 'Save Supplier'}</Button>
         </Modal.Footer>
       </Modal>
 
-      <DeleteModal show={Boolean(deleteTarget)} itemName={deleteTarget?.name || 'this supplier'} onCancel={() => setDeleteTarget(null)} onConfirm={deleteSupplier} />
+      <DeleteModal show={Boolean(deleteTarget)} itemName={deleteTarget?.name} onCancel={() => setDeleteTarget(null)} onConfirm={deleteSupplier} />
     </div>
   );
 }
-

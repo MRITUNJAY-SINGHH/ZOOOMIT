@@ -65,6 +65,7 @@ export const changePassword = async (req, res) => {
 
 import crypto from 'crypto';
 import sendEmail from '../utils/sendEmail.js';
+import { getResetPasswordTemplate } from '../utils/emailTemplates.js';
 
 // @desc    Forgot Password
 // @route   POST /api/auth/forgotpassword
@@ -85,7 +86,8 @@ export const forgotPassword = async (req, res) => {
       await sendEmail({
         email: user.email,
         subject: 'Password reset token',
-        message
+        message,
+        html: getResetPasswordTemplate(resetUrl, process.env.STORE_NAME || 'Zooom Supermart')
       });
       res.status(200).json({ message: 'Email sent' });
     } catch (err) {

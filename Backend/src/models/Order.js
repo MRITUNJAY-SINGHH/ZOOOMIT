@@ -3,26 +3,31 @@ import mongoose from 'mongoose';
 const orderItemSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
   variant: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductVariant' },
-  // Snapshots
   productName: { type: String, required: true },
-  productImage: { type: String }, // Added for image snapshot
+  productImage: { type: String },
   sku: { type: String },
   barcode: { type: String },
-  qty: { type: Number, required: true },
-  returnedQty: { type: Number, default: 0 }, // For partial returns
+  unit: { type: String, default: 'PCS' }, // e.g. KG, PCS, PACK
+  qty: { type: Number, required: true }, // Supports decimals (e.g. 1.20 KG)
+  returnedQty: { type: Number, default: 0 },
   price: { type: Number, required: true },
+  taxRate: { type: Number, default: 0 }, // GST %
+  taxableAmount: { type: Number },
+  taxAmount: { type: Number, default: 0 },
+  hsnCode: { type: String },
   total: { type: Number, required: true }
 });
 
 const orderSchema = new mongoose.Schema({
-  orderNumber: { type: String, required: true, unique: true }, // Main system order number
-  billNumber: { type: String, unique: true, sparse: true }, // Retail POS bill number (e.g. POS-2026-00001)
+  orderNumber: { type: String, required: true, unique: true },
+  billNumber: { type: String, unique: true, sparse: true },
   orderType: { type: String, enum: ['ONLINE', 'OFFLINE'], required: true },
-  customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' }, // Optional for walk-ins
+  customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+  offlineId: { type: String, unique: true, sparse: true },
   
   status: { 
     type: String, 
-    enum: ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'],
+    enum: ['Pending', 'Confirmed', 'Assigned', 'Accepted', 'Picked Up', 'OutForDelivery', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'],
     default: 'Pending'
   },
   paymentStatus: { 
@@ -39,7 +44,11 @@ const orderSchema = new mongoose.Schema({
   items: [orderItemSchema],
   
   subTotal: { type: Number, required: true },
-  tax: { type: Number, default: 0 },
+  taxableAmount: { type: Number, default: 0 },
+  tax: { type: Number, default: 0 }, // Total GST
+  cgst: { type: Number, default: 0 },
+  sgst: { type: Number, default: 0 },
+  igst: { type: Number, default: 0 },
   discount: { type: Number, default: 0 },
   amount: { type: Number, required: true }, // Final Total
   
@@ -51,15 +60,17 @@ const orderSchema = new mongoose.Schema({
   deliveredAt: { type: Date },
   
   // Cancellation Details
-  cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Or Customer if customer cancelled
+  cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   cancelledAt: { type: Date },
   cancelReason: { type: String },
   
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
-orderSchema.index({ status: 1 });
-orderSchema.index({ createdAt: 1 });
+orderSchema.index({ status: 1, createdAt: -1 });
+orderSchema.index({ paymentStatus: 1, createdAt: -1 });
+orderSchema.index({ customer: 1, createdAt: -1 });
+orderSchema.index({ orderType: 1, createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);
 export default Order;

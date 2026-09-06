@@ -29,8 +29,17 @@ const daysFromNow = (days) => {
 const slugify = (value) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-const imageUrl = (query, index) =>
-  `https://images.unsplash.com/photo-${index}?auto=format&fit=crop&w=900&q=80`;
+const fullPermissions = {
+  view: true, create: true, edit: true, delete: true
+};
+
+const viewOnly = {
+  view: true, create: false, edit: false, delete: false
+};
+
+const none = {
+  view: false, create: false, edit: false, delete: false
+};
 
 const users = [
   {
@@ -40,7 +49,11 @@ const users = [
     password: 'password',
     role: 'Admin',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: true, coupons: true, pos: true, reports: true, payments: true }
+    permissions: { 
+      products: fullPermissions, inventory: fullPermissions, orders: fullPermissions, 
+      coupons: fullPermissions, pos: fullPermissions, reports: fullPermissions, payments: fullPermissions,
+      staff: fullPermissions, customers: fullPermissions, suppliers: fullPermissions, settings: fullPermissions 
+    }
   },
   {
     name: 'Store Manager',
@@ -49,7 +62,11 @@ const users = [
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: true, coupons: true, pos: true, reports: true, payments: true }
+    permissions: { 
+      products: fullPermissions, inventory: fullPermissions, orders: fullPermissions, 
+      coupons: fullPermissions, pos: fullPermissions, reports: fullPermissions, payments: fullPermissions,
+      staff: fullPermissions, customers: fullPermissions, suppliers: fullPermissions, settings: fullPermissions 
+    }
   },
   {
     name: 'POS Cashier',
@@ -58,547 +75,498 @@ const users = [
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: true, reports: false, payments: false }
+    permissions: { 
+      products: { view: true, create: false, edit: false, delete: false }, 
+      inventory: none, 
+      orders: { view: true, create: true, edit: false, delete: false }, 
+      coupons: { view: true, create: false, edit: false, delete: false }, 
+      pos: fullPermissions, 
+      reports: none, 
+      payments: none,
+      staff: none, 
+      customers: { view: true, create: true, edit: true, delete: false }, 
+      suppliers: none, 
+      settings: none 
+    }
   },
   {
-    name: 'Inventory Staff',
+    name: 'Inventory Manager',
     email: 'inventory@example.com',
     phone: '9000000004',
     password: 'password',
     role: 'Staff',
     status: 'Active',
-    permissions: { products: true, inventory: true, orders: false, coupons: false, pos: false, reports: false, payments: false }
+    permissions: { 
+      products: fullPermissions, inventory: fullPermissions, orders: none, coupons: none, 
+      pos: none, reports: none, payments: none, staff: none, customers: none, suppliers: fullPermissions, settings: none 
+    }
   },
-  {
-    name: 'Report Analyst',
-    email: 'reports@example.com',
-    phone: '9000000005',
-    password: 'password',
-    role: 'Staff',
-    status: 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: false, reports: true, payments: true }
-  },
-  ...Array.from({ length: 6 }).map((_, index) => ({
+  ...Array.from({ length: 4 }).map((_, index) => ({
     name: `Delivery Rider ${index + 1}`,
     email: `rider${index + 1}@example.com`,
     phone: `900000001${index}`,
     password: 'password',
     role: 'DeliveryBoy',
-    status: index === 5 ? 'Inactive' : 'Active',
-    permissions: { products: false, inventory: false, orders: true, coupons: false, pos: false, reports: false, payments: false }
+    status: 'Active',
+    permissions: { 
+      products: none, inventory: none, orders: { view: true, create: false, edit: true, delete: false }, 
+      coupons: none, pos: none, reports: none, payments: none,
+      staff: none, customers: { view: true, create: false, edit: false, delete: false }, suppliers: none, settings: none
+    }
   }))
 ];
 
-const categoryNames = [
-  'Fresh Grocery',
-  'Dairy and Bakery',
-  'Beverages',
-  'Personal Care',
-  'Home Cleaning',
-  'Electronics',
-  'Kitchen Essentials',
-  'Baby Care',
-  'Pet Supplies',
-  'Health and Wellness'
+const categoryHierarchy = [
+  {
+    name: 'Fresh Grocery',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=900&q=80',
+    description: 'Fresh grains, staples, pulses and organic produce',
+    subcategories: ['Staples & Grains', 'Pulses & Daals', 'Edible Oils & Ghee', 'Spices & Masalas']
+  },
+  {
+    name: 'Dairy and Bakery',
+    image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80',
+    description: 'Fresh milk, butter, cheese, bread and bakery essentials',
+    subcategories: ['Milk & Cream', 'Breads & Buns', 'Cheese & Paneer', 'Eggs & Butter']
+  },
+  {
+    name: 'Beverages',
+    image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?auto=format&fit=crop&w=900&q=80',
+    description: 'Tea, coffee, fruit juices and carbonated soft drinks',
+    subcategories: ['Tea & Coffee', 'Cold Drinks & Juices', 'Energy Drinks', 'Mineral Water']
+  },
+  {
+    name: 'Snacks & Packaged Foods',
+    image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=900&q=80',
+    description: 'Biscuits, chips, namkeen, noodles and ready meals',
+    subcategories: ['Biscuits & Cookies', 'Chips & Crisps', 'Instant Noodles', 'Chocolates & Sweets']
+  },
+  {
+    name: 'Personal Care & Cleaning',
+    image: 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?auto=format&fit=crop&w=900&q=80',
+    description: 'Household soaps, detergents, shampoos and disinfectants',
+    subcategories: ['Soaps & Handwash', 'Hair & Skin Care', 'Laundry Detergents', 'Surface Cleaners']
+  }
 ];
 
-const suppliers = [
-  ['Reliance Fresh Distribution', '9876500001', 'orders@reliancefresh.example', 'Warehouse 12, Navi Mumbai, Maharashtra'],
-  ['Amul Dairy Depot', '9876500002', 'supply@amuldepot.example', 'Dairy Market Road, Anand, Gujarat'],
-  ['Hindustan Grocery Traders', '9876500003', 'sales@hgt.example', 'Azadpur Mandi, Delhi'],
-  ['TechNest Wholesale', '9876500004', 'partner@technest.example', 'Electronic City, Bengaluru, Karnataka'],
-  ['Urban Home Care Supply', '9876500005', 'billing@urbanhome.example', 'Industrial Area Phase 2, Chandigarh'],
-  ['GreenFarm Organics', '9876500006', 'hello@greenfarm.example', 'Organic Hub, Pune, Maharashtra'],
-  ['Metro FMCG Partners', '9876500007', 'ops@metrofmcg.example', 'BTM Layout, Bengaluru, Karnataka'],
-  ['Aarogya Wellness Supply', '9876500008', 'care@aarogya.example', 'MG Road, Indore, Madhya Pradesh'],
-  ['Little Steps Baby Products', '9876500009', 'orders@littlesteps.example', 'Sector 63, Noida, Uttar Pradesh'],
-  ['PetKart Distribution', '9876500010', 'support@petkart.example', 'Kukatpally, Hyderabad, Telangana']
+const supplierProfiles = [
+  {
+    name: 'Reliance Agro Wholesale',
+    companyName: 'Reliance Retail Ventures Ltd',
+    contactPerson: 'Mukesh Agrawal',
+    phone: '9876500001',
+    alternatePhone: '9876500099',
+    email: 'agro.orders@reliance.example',
+    address: 'Warehouse Complex 14, APMC Market',
+    city: 'Navi Mumbai',
+    state: 'Maharashtra',
+    country: 'India',
+    pincode: '400703',
+    gstNumber: '27AAACR1234F1Z5',
+    pan: 'AAACR1234F',
+    supplierCode: 'SUP-AGRO-001',
+    paymentTerms: 'Net 30',
+    creditLimit: 500000,
+    bankDetails: { accountName: 'Reliance Retail Agro', accountNumber: '001122334455', ifscCode: 'HDFC0000123', bankName: 'HDFC Bank', branch: 'Vashi' }
+  },
+  {
+    name: 'Amul Dairy Federation',
+    companyName: 'Gujarat Cooperative Milk Marketing Federation',
+    contactPerson: 'Ramesh Patel',
+    phone: '9876500002',
+    alternatePhone: '9876500098',
+    email: 'supply@amuldepot.example',
+    address: 'Amul Dairy Road, Anand',
+    city: 'Anand',
+    state: 'Gujarat',
+    country: 'India',
+    pincode: '388001',
+    gstNumber: '24AAACG5678K1Z2',
+    pan: 'AAACG5678K',
+    supplierCode: 'SUP-AMUL-002',
+    paymentTerms: 'Immediate',
+    creditLimit: 200000,
+    bankDetails: { accountName: 'Amul Depot Anand', accountNumber: '998877665544', ifscCode: 'SBIN0000456', bankName: 'State Bank of India', branch: 'Anand Main' }
+  },
+  {
+    name: 'Tata Consumer Goods Supply',
+    companyName: 'Tata Consumer Products Limited',
+    contactPerson: 'Sunil Verma',
+    phone: '9876500003',
+    email: 'sales@tataconsumer.example',
+    address: 'Plot 45, Industrial Area Phase 1',
+    city: 'Gurugram',
+    state: 'Haryana',
+    country: 'India',
+    pincode: '122016',
+    gstNumber: '06AAACT9012M1Z8',
+    pan: 'AAACT9012M',
+    supplierCode: 'SUP-TATA-003',
+    paymentTerms: 'Net 15',
+    creditLimit: 350000,
+    bankDetails: { accountName: 'Tata Consumer North', accountNumber: '554433221100', ifscCode: 'ICIC0000789', bankName: 'ICICI Bank', branch: 'Cyber City' }
+  },
+  {
+    name: 'Hindustan Unilever Depot',
+    companyName: 'Hindustan Unilever Limited',
+    contactPerson: 'Karan Mehra',
+    phone: '9876500004',
+    email: 'fmcg@hulsupply.example',
+    address: 'B-Block, Logix Park',
+    city: 'Noida',
+    state: 'Uttar Pradesh',
+    country: 'India',
+    pincode: '201301',
+    gstNumber: '09AAACH3456N1Z1',
+    pan: 'AAACH3456N',
+    supplierCode: 'SUP-HUL-004',
+    paymentTerms: 'Net 30',
+    creditLimit: 400000,
+    bankDetails: { accountName: 'HUL Distribution Hub', accountNumber: '776655443322', ifscCode: 'KKBK0000321', bankName: 'Kotak Mahindra Bank', branch: 'Sector 62' }
+  }
 ];
 
 const customers = [
-  ['Aarav Sharma', '9988001001', 'aarav.sharma@example.com', 'APP'],
-  ['Priya Nair', '9988001002', 'priya.nair@example.com', 'APP'],
-  ['Kabir Mehta', '9988001003', 'kabir.mehta@example.com', 'APP'],
-  ['Ananya Iyer', '9988001004', 'ananya.iyer@example.com', 'APP'],
-  ['Rohan Gupta', '9988001005', 'rohan.gupta@example.com', 'APP'],
-  ['Meera Singh', '9988001006', 'meera.singh@example.com', 'APP'],
-  ['Vikram Patel', '9988001007', 'vikram.patel@example.com', 'APP'],
-  ['Sneha Reddy', '9988001008', 'sneha.reddy@example.com', 'APP'],
-  ['Walk In Customer 1', '9988001009', '', 'WALK_IN'],
-  ['Walk In Customer 2', '9988001010', '', 'WALK_IN']
+  { name: 'Aarav Sharma', phone: '9988001001', email: 'aarav.sharma@example.com', customerType: 'APP', street: 'Flat 402, Green Heights', city: 'Mumbai', state: 'Maharashtra', zipCode: '400053' },
+  { name: 'Priya Nair', phone: '9988001002', email: 'priya.nair@example.com', customerType: 'APP', street: 'Villa 12, Palm Meadows', city: 'Bengaluru', state: 'Karnataka', zipCode: '560066' },
+  { name: 'Kabir Mehta', phone: '9988001003', email: 'kabir.mehta@example.com', customerType: 'APP', street: '14/B, Golf Course Road', city: 'Gurugram', state: 'Haryana', zipCode: '122002' },
+  { name: 'Ananya Iyer', phone: '9988001004', email: 'ananya.iyer@example.com', customerType: 'APP', street: '7th Cross, Indiranagar', city: 'Bengaluru', state: 'Karnataka', zipCode: '560038' },
+  { name: 'Rohan Gupta', phone: '9988001005', email: 'rohan.gupta@example.com', customerType: 'WALK_IN', street: 'Shop 4, Market Complex', city: 'Delhi', state: 'Delhi', zipCode: '110001' }
 ];
-
-const productSeeds = [
-  ['Organic Basmati Rice 5kg', 'GreenFarm', 'Fresh Grocery', 899, 610, 749, 45, 8, '8901000000011', 'Premium aged basmati rice with long grains and rich aroma.', 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=900&q=80'],
-  ['Aashirvaad Whole Wheat Atta 10kg', 'Aashirvaad', 'Fresh Grocery', 620, 440, 535, 38, 10, '8901000000012', 'Stone-ground whole wheat flour for soft chapatis.', 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&w=900&q=80'],
-  ['Amul Taaza Milk 1L', 'Amul', 'Dairy and Bakery', 72, 58, 66, 18, 20, '8901000000013', 'Fresh toned milk pouch for daily household use.', 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80'],
-  ['Britannia Brown Bread 400g', 'Britannia', 'Dairy and Bakery', 60, 42, 52, 12, 15, '8901000000014', 'Soft brown bread made with whole wheat flour.', 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80'],
-  ['Tata Tea Premium 1kg', 'Tata Tea', 'Beverages', 580, 395, 495, 28, 8, '8901000000015', 'Rich Assam tea blend packed for strong Indian chai.', 'https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?auto=format&fit=crop&w=900&q=80'],
-  ['Nescafe Classic Coffee 200g', 'Nescafe', 'Beverages', 720, 510, 625, 24, 6, '8901000000016', 'Instant coffee granules with bold aroma and taste.', 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?auto=format&fit=crop&w=900&q=80'],
-  ['Dove Daily Shine Shampoo 650ml', 'Dove', 'Personal Care', 699, 478, 599, 31, 7, '8901000000017', 'Gentle nourishing shampoo for daily hair care.', 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80'],
-  ['Dettol Liquid Handwash 900ml', 'Dettol', 'Personal Care', 299, 198, 249, 56, 12, '8901000000018', 'Antibacterial handwash refill for hygiene protection.', 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?auto=format&fit=crop&w=900&q=80'],
-  ['Harpic Bathroom Cleaner 1L', 'Harpic', 'Home Cleaning', 225, 145, 189, 42, 10, '8901000000019', 'Powerful bathroom disinfectant and stain remover.', 'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80'],
-  ['Surf Excel Matic Liquid 2L', 'Surf Excel', 'Home Cleaning', 480, 330, 415, 37, 10, '8901000000020', 'Laundry liquid detergent for washing machines.', 'https://images.unsplash.com/photo-1626806819282-2c1dc01a5e0c?auto=format&fit=crop&w=900&q=80'],
-  ['boAt Airdopes 141', 'boAt', 'Electronics', 4490, 1450, 1999, 19, 5, '8901000000021', 'Wireless earbuds with low latency and long playback.', 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=900&q=80'],
-  ['Philips LED Bulb 12W Pack of 4', 'Philips', 'Electronics', 720, 390, 549, 34, 8, '8901000000022', 'Energy efficient LED bulbs for home lighting.', 'https://images.unsplash.com/photo-1565814329452-e1efa11c5b89?auto=format&fit=crop&w=900&q=80'],
-  ['Prestige Non Stick Fry Pan 240mm', 'Prestige', 'Kitchen Essentials', 1295, 760, 999, 22, 5, '8901000000023', 'Durable non-stick fry pan for everyday cooking.', 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80'],
-  ['Cello Stainless Steel Bottle 1L', 'Cello', 'Kitchen Essentials', 799, 430, 649, 40, 8, '8901000000024', 'Leak-proof insulated steel water bottle.', 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&w=900&q=80'],
-  ['Pampers Baby Dry Pants M 76 Count', 'Pampers', 'Baby Care', 1499, 1040, 1299, 16, 5, '8901000000025', 'Absorbent baby diaper pants with overnight dryness.', 'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?auto=format&fit=crop&w=900&q=80'],
-  ['Himalaya Baby Lotion 400ml', 'Himalaya', 'Baby Care', 360, 235, 299, 29, 7, '8901000000026', 'Gentle moisturising lotion for baby skin.', 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=900&q=80'],
-  ['Pedigree Adult Dog Food 3kg', 'Pedigree', 'Pet Supplies', 840, 610, 735, 21, 6, '8901000000027', 'Complete dry food for adult dogs.', 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=900&q=80'],
-  ['Whiskas Tuna Cat Food 1.2kg', 'Whiskas', 'Pet Supplies', 560, 385, 485, 18, 5, '8901000000028', 'Balanced cat food with tuna flavour.', 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=900&q=80'],
-  ['Dabur Honey 1kg', 'Dabur', 'Health and Wellness', 499, 325, 429, 33, 8, '8901000000029', 'Pure honey for daily nutrition and wellness.', 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=900&q=80'],
-  ['Kapiva Apple Cider Vinegar 500ml', 'Kapiva', 'Health and Wellness', 399, 230, 329, 25, 6, '8901000000030', 'Raw apple cider vinegar with mother culture.', 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=900&q=80']
-];
-
-const coupons = [
-  ['WELCOME10', 'Percentage', 10, 199, 100, 200],
-  ['KUIKLO50', 'Fixed', 50, 499, null, 150],
-  ['FRESH15', 'Percentage', 15, 799, 180, 80],
-  ['DAIRY25', 'Fixed', 25, 199, null, 120],
-  ['CLEAN20', 'Percentage', 20, 999, 250, 60],
-  ['TECH300', 'Fixed', 300, 1999, null, 40],
-  ['BABY12', 'Percentage', 12, 699, 150, 70],
-  ['PET100', 'Fixed', 100, 899, null, 50],
-  ['HEALTH18', 'Percentage', 18, 599, 120, 90],
-  ['SUPER75', 'Fixed', 75, 749, null, 100]
-];
-
-const clearSeededData = async () => {
-  await Promise.all([
-    Category.deleteMany({ slug: { $in: categoryNames.map(slugify) } }),
-    Supplier.deleteMany({ email: { $in: suppliers.map((supplier) => supplier[2]) } }),
-    Customer.deleteMany({ phone: { $in: customers.map((customer) => customer[1]) } }),
-    Coupon.deleteMany({ code: { $in: coupons.map((coupon) => coupon[0]) } }),
-    Product.deleteMany({ barcode: { $in: productSeeds.map((product) => product[8]) } }),
-    ProductVariant.deleteMany({ sku: /^SEED-/ }),
-    ProductBatch.deleteMany({ batchNumber: /^BATCH-SEED-/ }),
-    Order.deleteMany({ orderNumber: /^SEED-ORD-/ }),
-    OrderActivity.deleteMany({ note: /^Seed/ }),
-    Transaction.deleteMany({ transactionId: /^SEED-TXN-/ }),
-    Invoice.deleteMany({ invoiceNumber: /^SEED-INV-/ }),
-    InventoryLog.deleteMany({ reason: /^Seed/ }),
-    HeldBill.deleteMany({ referenceName: /^Seed/ }),
-    Notification.deleteMany({ message: /^Seed/ })
-  ]);
-};
 
 const seedDatabase = async () => {
   try {
     await connectDB();
-    await clearSeededData();
+    console.log('🌱 Seeding fresh database with complete ERP & Retail configurations...');
 
-    const createdUsers = [];
-    for (const user of users) {
-      const existing = await User.findOne({ email: user.email });
-      if (existing) {
-        existing.set({ ...user, password: existing.password });
-        await existing.save();
-        createdUsers.push(existing);
-      } else {
-        createdUsers.push(await User.create(user));
-      }
-    }
-
-    const admin = createdUsers.find((user) => user.role === 'Admin');
-    const staff = createdUsers.find((user) => user.email === 'manager@example.com') || admin;
-    const riders = createdUsers.filter((user) => user.role === 'DeliveryBoy');
-
-    const createdCategories = await Category.insertMany(
-      categoryNames.map((name, index) => ({
-        name,
-        slug: slugify(name),
-        image: imageUrl(name, 1506806732259 + index),
-        status: 'Active'
-      }))
-    );
-    const categoryByName = new Map(createdCategories.map((category) => [category.name, category]));
-
-    const createdSuppliers = await Supplier.insertMany(
-      suppliers.map(([name, phone, email, address], index) => ({
-        name,
-        phone,
-        email,
-        address,
-        status: index === 9 ? 'Inactive' : 'Active'
-      }))
-    );
-
-    const createdCustomers = await Customer.insertMany(
-      customers.map(([name, phone, email, customerType], index) => ({
-        name,
-        phone,
-        email,
-        customerType,
-        status: index === 9 ? 'Inactive' : 'Active',
-        addresses: [{
-          label: index % 2 === 0 ? 'Home' : 'Office',
-          street: `${100 + index}, Market Street`,
-          city: ['Mumbai', 'Delhi', 'Bengaluru', 'Pune', 'Hyderabad'][index % 5],
-          state: ['Maharashtra', 'Delhi', 'Karnataka', 'Maharashtra', 'Telangana'][index % 5],
-          zipCode: `4000${index + 10}`,
-          country: 'India'
-        }]
-      }))
-    );
-
-    const createdProducts = await Product.insertMany(
-      productSeeds.map(([name, brand, categoryName, mrp, costPrice, sellingPrice, stock, lowStockThreshold, barcode, description, featuredImage], index) => ({
-        name,
-        slug: slugify(name),
-        tags: [brand, categoryName, index % 2 === 0 ? 'popular' : 'daily-use'],
-        brand,
-        category: categoryByName.get(categoryName)._id,
-        baseSku: `SEED-SKU-${String(index + 1).padStart(3, '0')}`,
-        barcode,
-        mrp,
-        costPrice,
-        sellingPrice,
-        description,
-        featuredImage,
-        galleryImages: [featuredImage],
-        stock,
-        lowStockThreshold,
-        isTrackInventory: true,
-        isFeatured: index < 8,
-        isActive: true,
-        sortOrder: index + 1
-      }))
-    );
-
-    const variantDocs = [];
-    const batchDocs = [];
-    const purchaseLogDocs = [];
-
-    createdProducts.forEach((product, index) => {
-      const variantStockA = Math.max(4, Math.floor(product.stock * 0.55));
-      const variantStockB = Math.max(3, product.stock - variantStockA);
-      variantDocs.push(
-        {
-          product: product._id,
-          name: index % 2 === 0 ? 'Standard Pack' : 'Regular',
-          sku: `SEED-${String(index + 1).padStart(3, '0')}-A`,
-          mrp: product.mrp,
-          costPrice: product.costPrice,
-          sellingPrice: product.sellingPrice,
-          stock: variantStockA,
-          attributes: [{ key: 'Pack', value: 'Standard' }],
-          isActive: true
-        },
-        {
-          product: product._id,
-          name: index % 2 === 0 ? 'Value Pack' : 'Family Pack',
-          sku: `SEED-${String(index + 1).padStart(3, '0')}-B`,
-          mrp: Math.round(product.mrp * 1.18),
-          costPrice: Math.round(product.costPrice * 1.14),
-          sellingPrice: Math.round(product.sellingPrice * 1.12),
-          stock: variantStockB,
-          attributes: [{ key: 'Pack', value: 'Value' }],
-          isActive: true
-        }
-      );
-
-      const supplier = createdSuppliers[index % createdSuppliers.length];
-      const batchOneStock = Math.max(2, Math.floor(product.stock * 0.6));
-      const batchTwoStock = product.stock - batchOneStock;
-      const expiryOffset = index % 5 === 0 ? -3 : 20 + index * 7;
-
-      batchDocs.push(
-        {
-          product: product._id,
-          batchNumber: `BATCH-SEED-${String(index + 1).padStart(3, '0')}-A`,
-          supplier: supplier._id,
-          stock: batchOneStock,
-          costPrice: product.costPrice,
-          manufacturingDate: daysFromNow(-90 - index),
-          expiryDate: daysFromNow(expiryOffset)
-        },
-        {
-          product: product._id,
-          batchNumber: `BATCH-SEED-${String(index + 1).padStart(3, '0')}-B`,
-          supplier: supplier._id,
-          stock: batchTwoStock,
-          costPrice: product.costPrice,
-          manufacturingDate: daysFromNow(-45 - index),
-          expiryDate: daysFromNow(120 + index * 10)
-        }
-      );
-    });
-
-    await ProductVariant.insertMany(variantDocs);
-    const createdBatches = await ProductBatch.insertMany(batchDocs);
-
-    createdProducts.forEach((product, index) => {
-      purchaseLogDocs.push({
-        product: product._id,
-        batch: createdBatches[index * 2]._id,
-        type: 'PURCHASE',
-        previousStock: 0,
-        quantityChanged: product.stock,
-        newStock: product.stock,
-        reason: `Seed opening stock for ${product.name}`,
-        user: staff._id,
-        date: daysFromNow(-20 + index)
-      });
-    });
-    await InventoryLog.insertMany(purchaseLogDocs);
-
-    const createdCoupons = await Coupon.insertMany(
-      coupons.map(([code, type, value, minimumOrderValue, maximumDiscount, usageLimit], index) => ({
-        code,
-        type,
-        value,
-        expiryDate: daysFromNow(30 + index * 9),
-        minimumOrderValue,
-        maximumDiscount,
-        usagePerUser: index % 3 === 0 ? 2 : 1,
-        usageLimit,
-        usedCount: index,
-        status: index === 9 ? 'Inactive' : 'Active'
-      }))
-    );
-
-    const orderDocs = [];
-    for (let index = 0; index < 15; index += 1) {
-      const customer = createdCustomers[index % createdCustomers.length];
-      const first = createdProducts[index % createdProducts.length];
-      const second = createdProducts[(index + 3) % createdProducts.length];
-      const firstQty = (index % 3) + 1;
-      const secondQty = (index % 2) + 1;
-      const items = [
-        {
-          product: first._id,
-          productName: first.name,
-          productImage: first.featuredImage,
-          sku: first.baseSku,
-          barcode: first.barcode,
-          qty: firstQty,
-          price: first.sellingPrice,
-          total: firstQty * first.sellingPrice
-        },
-        {
-          product: second._id,
-          productName: second.name,
-          productImage: second.featuredImage,
-          sku: second.baseSku,
-          barcode: second.barcode,
-          qty: secondQty,
-          price: second.sellingPrice,
-          total: secondQty * second.sellingPrice
-        }
-      ];
-      const subTotal = items.reduce((sum, item) => sum + item.total, 0);
-      const discount = index % 4 === 0 ? 75 : index % 5 === 0 ? 100 : 0;
-      const tax = Math.round(subTotal * 0.05);
-      const amount = subTotal + tax - discount;
-      const orderType = index % 3 === 0 ? 'OFFLINE' : 'ONLINE';
-      const statusCycle = ['Pending', 'Confirmed', 'Assigned', 'OutForDelivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded'];
-      const status = statusCycle[index % statusCycle.length];
-      const paymentStatus = ['Cancelled', 'Pending'].includes(status) ? 'Pending' : status === 'Refunded' ? 'Refunded' : status === 'Returned' ? 'PartiallyRefunded' : 'Paid';
-
-      orderDocs.push({
-        orderNumber: `SEED-ORD-${String(index + 1).padStart(5, '0')}`,
-        billNumber: orderType === 'OFFLINE' ? `SEED-POS-${String(index + 1).padStart(5, '0')}` : undefined,
-        orderType,
-        customer: customer._id,
-        status,
-        paymentStatus,
-        refundStatus: status === 'Refunded' ? 'Processed' : status === 'Cancelled' && orderType === 'ONLINE' ? 'Pending' : 'None',
-        items,
-        subTotal,
-        tax,
-        discount,
-        amount,
-        coupon: discount > 0 ? createdCoupons[index % createdCoupons.length]._id : undefined,
-        assignedRider: ['Assigned', 'OutForDelivery', 'Delivered'].includes(status) ? riders[index % riders.length]?._id : undefined,
-        assignedAt: ['Assigned', 'OutForDelivery', 'Delivered'].includes(status) ? daysFromNow(-index) : undefined,
-        deliveredAt: status === 'Delivered' ? daysFromNow(-index + 1) : undefined,
-        cancelledBy: status === 'Cancelled' ? admin._id : undefined,
-        cancelledAt: status === 'Cancelled' ? daysFromNow(-index + 1) : undefined,
-        cancelReason: status === 'Cancelled' ? 'Customer requested cancellation before dispatch.' : undefined,
-        date: daysFromNow(-index),
-        createdAt: daysFromNow(-index),
-        updatedAt: daysFromNow(-index)
-      });
-    }
-
-    const createdOrders = await Order.insertMany(orderDocs);
-
-    const invoiceDocs = [];
-    const transactionDocs = [];
-    const orderActivityDocs = [];
-    const saleLogDocs = [];
-
-    createdOrders.forEach((order, index) => {
-      invoiceDocs.push({
-        invoiceNumber: `SEED-INV-${String(index + 1).padStart(5, '0')}`,
-        order: order._id,
-        customerSnapshot: {
-          name: createdCustomers[index % createdCustomers.length].name,
-          phone: createdCustomers[index % createdCustomers.length].phone,
-          email: createdCustomers[index % createdCustomers.length].email
-        },
-        productSnapshot: order.items.map((item) => ({
-          productName: item.productName,
-          sku: item.sku,
-          qty: item.qty,
-          price: item.price,
-          total: item.total
-        })),
-        billingAddressSnapshot: createdCustomers[index % createdCustomers.length].addresses[0],
-        totalsSnapshot: {
-          subTotal: order.subTotal,
-          tax: order.tax,
-          discount: order.discount,
-          amount: order.amount
-        },
-        isCancelled: ['Cancelled', 'Returned', 'Refunded'].includes(order.status),
-        date: order.createdAt
-      });
-
-      transactionDocs.push({
-        transactionId: `SEED-TXN-${String(index + 1).padStart(6, '0')}`,
-        order: order._id,
-        orderType: order.orderType,
-        paymentMethod: order.orderType === 'OFFLINE' ? ['Cash', 'UPI', 'Card'][index % 3] : ['UPI', 'Card', 'NetBanking', 'Wallet'][index % 4],
-        paymentStatus: order.paymentStatus === 'Pending' ? 'Pending' : order.paymentStatus,
-        refundStatus: order.refundStatus,
-        amount: order.amount,
-        refundAmount: ['Refunded', 'PartiallyRefunded'].includes(order.paymentStatus) ? Math.round(order.amount * 0.35) : 0,
-        referenceNumber: `REF-SEED-${100000 + index}`,
-        razorpayOrderId: order.orderType === 'ONLINE' ? `order_seed_${index + 1}` : undefined,
-        razorpayPaymentId: order.orderType === 'ONLINE' && order.paymentStatus !== 'Pending' ? `pay_seed_${index + 1}` : undefined,
-        razorpayRefundId: order.refundStatus === 'Processed' ? `rfnd_seed_${index + 1}` : undefined,
-        paidAt: order.paymentStatus === 'Pending' ? undefined : order.createdAt
-      });
-
-      orderActivityDocs.push(
-        { order: order._id, status: 'Order Created', user: staff._id, system: false, note: `Seed order ${order.orderNumber} created`, timestamp: order.createdAt },
-        { order: order._id, status: order.paymentStatus === 'Pending' ? 'Order Created' : 'Payment Received', user: staff._id, system: true, note: `Seed payment status ${order.paymentStatus}`, timestamp: daysFromNow(-index + 0.1) }
-      );
-
-      if (['Delivered', 'Returned', 'Refunded'].includes(order.status)) {
-        orderActivityDocs.push({ order: order._id, status: 'Delivered', user: riders[index % riders.length]?._id, system: false, note: `Seed delivered order ${order.orderNumber}`, timestamp: daysFromNow(-index + 0.4) });
-      }
-      if (order.status === 'Cancelled') {
-        orderActivityDocs.push({ order: order._id, status: 'Cancelled', user: admin._id, system: false, note: `Seed cancelled order ${order.orderNumber}`, timestamp: daysFromNow(-index + 0.3) });
-      }
-
-      order.items.forEach((item) => {
-        saleLogDocs.push({
-          product: item.product,
-          type: 'SALE',
-          previousStock: 100,
-          quantityChanged: -item.qty,
-          newStock: 100 - item.qty,
-          reason: `Seed sale for ${order.orderNumber}`,
-          user: staff._id,
-          order: order._id,
-          date: order.createdAt
-        });
-      });
-    });
-
-    await Promise.all([
-      Invoice.insertMany(invoiceDocs),
-      Transaction.insertMany(transactionDocs),
-      OrderActivity.insertMany(orderActivityDocs),
-      InventoryLog.insertMany(saleLogDocs)
-    ]);
-
-    for (const customer of createdCustomers) {
-      const customerOrders = createdOrders.filter((order) => String(order.customer) === String(customer._id));
-      customer.totalOrders = customerOrders.length;
-      customer.totalSpent = customerOrders.reduce((sum, order) => sum + (order.paymentStatus === 'Pending' ? 0 : order.amount), 0);
-      await customer.save();
-    }
-
-    await HeldBill.insertMany(
-      Array.from({ length: 10 }).map((_, index) => {
-        const product = createdProducts[index % createdProducts.length];
-        return {
-          staffId: staff._id,
-          customer: createdCustomers[index % createdCustomers.length]._id,
-          referenceName: `Seed Hold Bill ${index + 1}`,
-          items: [{
-            productId: product._id,
-            productName: product.name,
-            sku: product.baseSku,
-            barcode: product.barcode,
-            price: product.sellingPrice,
-            qty: (index % 3) + 1,
-            total: product.sellingPrice * ((index % 3) + 1)
-          }],
-          totals: {
-            subTotal: product.sellingPrice * ((index % 3) + 1),
-            tax: 0,
-            discount: 0,
-            amount: product.sellingPrice * ((index % 3) + 1)
-          }
-        };
-      })
-    );
-
-    await Notification.insertMany([
-      ...createdProducts.slice(0, 4).map((product) => ({
-        type: 'Low Stock',
-        message: `Seed low stock alert for ${product.name}`,
-        product: product._id,
-        isRead: false
-      })),
-      ...createdBatches.slice(0, 4).map((batch) => ({
-        type: 'Expiring Product',
-        message: `Seed expiry alert for batch ${batch.batchNumber}`,
-        product: batch.product,
-        batch: batch._id,
-        isRead: false
-      })),
-      ...createdOrders.slice(0, 4).map((order) => ({
-        type: order.status === 'Cancelled' ? 'Cancelled Order' : 'New Order',
-        message: `Seed notification for ${order.orderNumber}`,
-        order: order._id,
-        isRead: false
-      }))
-    ]);
-
-    await Settings.findOneAndUpdate(
-      {},
-      {
-        storeName: 'Kuiklo Supermart',
-        storeLogo: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?auto=format&fit=crop&w=400&q=80',
-        address: 'Kuiklo Supermart, Sector 18 Market, Noida, Uttar Pradesh 201301',
-        gstNumber: '09AAACK1234A1Z5',
+    // 0. Settings
+    let settings = await Settings.findOne();
+    if (!settings) {
+      settings = new Settings({
+        storeName: 'Zooom Retail & Grocery ERP',
+        storePhone: '+91 9876543210',
+        storeEmail: 'support@zooom.example',
+        address: 'Main Retail Hub, Sector 18, Commercial Belt, New Delhi 110001',
+        gstNumber: '07AAAAA0000A1Z5',
+        taxMode: 'INCLUSIVE',
         invoicePrefixOnline: 'INV-2026-',
         invoicePrefixOffline: 'POS-2026-',
-        invoiceFooter: 'Thank you for shopping with Kuiklo. Returns accepted as per store policy.',
-        lowStockThresholdDefault: 10,
-        expiryAlertDays: [30, 15, 10, 5]
-      },
-      { upsert: true, new: true }
-    );
+        invoiceFooter: 'Thank you for shopping at Zooom! Save paper, shop fresh.',
+        allowNegativeStock: false
+      });
+      await settings.save();
+    }
 
-    console.log('Seed completed successfully.');
-    console.log('Login: admin@example.com / password');
-    console.log(`Users: ${createdUsers.length}`);
-    console.log(`Categories: ${createdCategories.length}`);
-    console.log(`Suppliers: ${createdSuppliers.length}`);
-    console.log(`Customers: ${createdCustomers.length}`);
-    console.log(`Products: ${createdProducts.length}`);
-    console.log(`Variants: ${variantDocs.length}`);
-    console.log(`Batches: ${createdBatches.length}`);
-    console.log(`Coupons: ${createdCoupons.length}`);
-    console.log(`Orders: ${createdOrders.length}`);
-    console.log(`Transactions: ${transactionDocs.length}`);
-    console.log(`Invoices: ${invoiceDocs.length}`);
-    console.log(`Inventory logs: ${purchaseLogDocs.length + saleLogDocs.length}`);
-    console.log('Database is ready for frontend testing.');
-    await mongoose.connection.close();
-    process.exit(0);
+    // 1. Users
+    const createdUsers = [];
+    for (const u of users) {
+      let existingUser = await User.findOne({ email: u.email });
+      if (!existingUser) {
+        existingUser = new User(u);
+        await existingUser.save();
+      }
+      createdUsers.push(existingUser);
+    }
+    const adminUser = createdUsers[0];
+
+    // 2. Categories & Subcategories
+    const categoryMap = {};
+    for (const catData of categoryHierarchy) {
+      let rootCat = await Category.findOne({ slug: slugify(catData.name) });
+      if (!rootCat) {
+        rootCat = new Category({
+          name: catData.name,
+          slug: slugify(catData.name),
+          image: catData.image,
+          description: catData.description,
+          parentCategory: null,
+          status: 'Active'
+        });
+        await rootCat.save();
+      }
+      categoryMap[catData.name] = { root: rootCat, subcategories: {} };
+
+      for (const subName of catData.subcategories) {
+        let subCat = await Category.findOne({ slug: slugify(subName) });
+        if (!subCat) {
+          subCat = new Category({
+            name: subName,
+            slug: slugify(subName),
+            description: `${subName} under ${catData.name}`,
+            parentCategory: rootCat._id,
+            status: 'Active'
+          });
+          await subCat.save();
+        }
+        categoryMap[catData.name].subcategories[subName] = subCat;
+      }
+    }
+
+    // 3. Suppliers
+    const createdSuppliers = [];
+    for (const sData of supplierProfiles) {
+      let sup = await Supplier.findOne({ phone: sData.phone });
+      if (!sup) {
+        sup = new Supplier(sData);
+        await sup.save();
+      }
+      createdSuppliers.push(sup);
+    }
+
+    // 4. Customers
+    const createdCustomers = [];
+    for (const cData of customers) {
+      let cust = await Customer.findOne({ phone: cData.phone });
+      if (!cust) {
+        cust = new Customer({
+          name: cData.name,
+          phone: cData.phone,
+          email: cData.email,
+          customerType: cData.customerType,
+          addresses: [{ label: 'Primary', street: cData.street, city: cData.city, state: cData.state, zipCode: cData.zipCode, country: 'India' }]
+        });
+        await cust.save();
+      }
+      createdCustomers.push(cust);
+    }
+
+    // 5. Rich Products Dataset
+    const productCatalog = [
+      {
+        name: 'Madhur Pure & Hygienic Sugar',
+        slug: 'madhur-pure-hygienic-sugar',
+        brand: 'Madhur',
+        category: categoryMap['Fresh Grocery'].root._id,
+        subcategory: categoryMap['Fresh Grocery'].subcategories['Staples & Grains']._id,
+        productType: 'WEIGHT',
+        baseUnit: 'KG',
+        purchaseUnit: 'BAG',
+        purchaseToStockFactor: 50, // 1 BAG = 50 KG
+        sellingUnit: 'KG',
+        minSaleQty: 0.5,
+        maxSaleQty: 25,
+        qtyStep: 0.5,
+        taxRate: 5,
+        hsnCode: '1701',
+        baseSku: 'SUGAR-001',
+        barcode: '8901000000001',
+        mrp: 65,
+        costPrice: 42,
+        sellingPrice: 60,
+        description: 'Sulphur-free refined crystalline sugar for daily sweetening.',
+        featuredImage: 'https://images.unsplash.com/photo-1581441363689-1f3c3c414635?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: false,
+        variants: [
+          { name: '500 GM Pack', sku: 'SUGAR-500GM', sellingPrice: 32, conversionFactor: 0.5, conversionUnit: 'KG' },
+          { name: '1 KG Pack', sku: 'SUGAR-1KG', sellingPrice: 60, conversionFactor: 1.0, conversionUnit: 'KG' },
+          { name: '5 KG Bag', sku: 'SUGAR-5KG', sellingPrice: 290, conversionFactor: 5.0, conversionUnit: 'KG' }
+        ],
+        initialBatch: { batchNumber: 'SUG-B1-2026', purchaseQty: 10, unitCost: 2100 } // 10 BAGs = 500 KG @ 2100/BAG = ₹42/KG
+      },
+      {
+        name: 'Daawat Rozana Basmati Rice',
+        slug: 'daawat-rozana-basmati-rice',
+        brand: 'Daawat',
+        category: categoryMap['Fresh Grocery'].root._id,
+        subcategory: categoryMap['Fresh Grocery'].subcategories['Staples & Grains']._id,
+        productType: 'WEIGHT',
+        baseUnit: 'KG',
+        purchaseUnit: 'BAG',
+        purchaseToStockFactor: 25, // 1 BAG = 25 KG
+        sellingUnit: 'KG',
+        minSaleQty: 1,
+        maxSaleQty: 50,
+        qtyStep: 1,
+        taxRate: 5,
+        hsnCode: '1006',
+        baseSku: 'RICE-001',
+        barcode: '8901000000002',
+        mrp: 140,
+        costPrice: 85,
+        sellingPrice: 120,
+        description: 'Aromatic long grain basmati rice for daily meals.',
+        featuredImage: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: false,
+        initialBatch: { batchNumber: 'RICE-B1-2026', purchaseQty: 8, unitCost: 2125 } // 8 BAGs = 200 KG @ 2125/BAG = ₹85/KG
+      },
+      {
+        name: 'Amul Taaza Homogenised Fresh Milk',
+        slug: 'amul-taaza-fresh-milk',
+        brand: 'Amul',
+        category: categoryMap['Dairy and Bakery'].root._id,
+        subcategory: categoryMap['Dairy and Bakery'].subcategories['Milk & Cream']._id,
+        productType: 'VOLUME',
+        baseUnit: 'LTR',
+        purchaseUnit: 'CRATE',
+        purchaseToStockFactor: 12, // 1 CRATE = 12 LTR
+        sellingUnit: 'LTR',
+        minSaleQty: 0.5,
+        maxSaleQty: 20,
+        qtyStep: 0.5,
+        taxRate: 0,
+        hsnCode: '0401',
+        baseSku: 'MILK-001',
+        barcode: '8901000000003',
+        mrp: 70,
+        costPrice: 56,
+        sellingPrice: 66,
+        description: 'Fresh toned homogenised pasteurised milk.',
+        featuredImage: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: true,
+        initialBatch: { batchNumber: 'MILK-B1-2026', purchaseQty: 10, unitCost: 672, expiryDate: daysFromNow(20) } // 10 Crates = 120 LTR
+      },
+      {
+        name: 'Britannia Daily Whole Wheat Bread',
+        slug: 'britannia-whole-wheat-bread',
+        brand: 'Britannia',
+        category: categoryMap['Dairy and Bakery'].root._id,
+        subcategory: categoryMap['Dairy and Bakery'].subcategories['Breads & Buns']._id,
+        productType: 'PACK',
+        baseUnit: 'PACK',
+        purchaseUnit: 'CRATE',
+        purchaseToStockFactor: 20,
+        sellingUnit: 'PACK',
+        minSaleQty: 1,
+        maxSaleQty: 10,
+        qtyStep: 1,
+        taxRate: 0,
+        hsnCode: '1905',
+        baseSku: 'BREAD-001',
+        barcode: '8901000000004',
+        mrp: 60,
+        costPrice: 42,
+        sellingPrice: 52,
+        description: 'Fresh wholesome brown wheat bread.',
+        featuredImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: true,
+        initialBatch: { batchNumber: 'BRD-B1-2026', purchaseQty: 5, unitCost: 840, expiryDate: daysFromNow(5) } // 5 Crates = 100 Packs
+      },
+      {
+        name: 'Thums Up Charged Carbonated Beverage 750ml',
+        slug: 'thums-up-beverage-750ml',
+        brand: 'Thums Up',
+        category: categoryMap['Beverages'].root._id,
+        subcategory: categoryMap['Beverages'].subcategories['Cold Drinks & Juices']._id,
+        productType: 'PIECE',
+        baseUnit: 'PCS',
+        purchaseUnit: 'BOX',
+        purchaseToStockFactor: 24, // 1 Box = 24 PCS
+        sellingUnit: 'PCS',
+        minSaleQty: 1,
+        maxSaleQty: 24,
+        qtyStep: 1,
+        taxRate: 28,
+        hsnCode: '2202',
+        baseSku: 'THUMS-001',
+        barcode: '8901000000005',
+        mrp: 45,
+        costPrice: 28,
+        sellingPrice: 40,
+        description: 'Strong spicy carbonated cola drink.',
+        featuredImage: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: true,
+        variants: [
+          { name: 'Box of 12 Bottles', sku: 'THUMS-BOX12', sellingPrice: 460, conversionFactor: 12, conversionUnit: 'PCS' }
+        ],
+        initialBatch: { batchNumber: 'THUM-B1-2026', purchaseQty: 5, unitCost: 672, expiryDate: daysFromNow(120) } // 5 Boxes = 120 PCS
+      },
+      {
+        name: 'Parle-G Original Glucose Biscuits',
+        slug: 'parle-g-glucose-biscuits',
+        brand: 'Parle',
+        category: categoryMap['Snacks & Packaged Foods'].root._id,
+        subcategory: categoryMap['Snacks & Packaged Foods'].subcategories['Biscuits & Cookies']._id,
+        productType: 'PACK',
+        baseUnit: 'PACK',
+        purchaseUnit: 'BOX',
+        purchaseToStockFactor: 48,
+        sellingUnit: 'PACK',
+        minSaleQty: 1,
+        maxSaleQty: 20,
+        qtyStep: 1,
+        taxRate: 18,
+        hsnCode: '1905',
+        baseSku: 'PARLE-001',
+        barcode: '8901000000006',
+        mrp: 35,
+        costPrice: 22,
+        sellingPrice: 30,
+        description: 'Iconic golden glucose biscuits rich in nutrition.',
+        featuredImage: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: true,
+        initialBatch: { batchNumber: 'PARL-B1-2026', purchaseQty: 5, unitCost: 1056, expiryDate: daysFromNow(180) } // 5 Boxes = 240 Packs
+      },
+      {
+        name: 'Vim Dishwash Bar 500g',
+        slug: 'vim-dishwash-bar-500g',
+        brand: 'Vim',
+        category: categoryMap['Personal Care & Cleaning'].root._id,
+        subcategory: categoryMap['Personal Care & Cleaning'].subcategories['Surface Cleaners']._id,
+        productType: 'PIECE',
+        baseUnit: 'PCS',
+        purchaseUnit: 'BOX',
+        purchaseToStockFactor: 30,
+        sellingUnit: 'PCS',
+        minSaleQty: 1,
+        maxSaleQty: 15,
+        qtyStep: 1,
+        taxRate: 18,
+        hsnCode: '3402',
+        baseSku: 'VIM-001',
+        barcode: '8901000000007',
+        mrp: 30,
+        costPrice: 18,
+        sellingPrice: 25,
+        description: 'Tough grease remover bar with lemon power.',
+        featuredImage: 'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80',
+        hasExpiryTracking: false,
+        initialBatch: { batchNumber: 'VIM-B1-2026', purchaseQty: 4, unitCost: 540 } // 4 Boxes = 120 PCS
+      }
+    ];
+
+    const InventoryService = (await import('./services/InventoryService.js')).default;
+
+    for (const p of productCatalog) {
+      let product = await Product.findOne({ barcode: p.barcode });
+      if (!product) {
+        const { variants, initialBatch, ...prodFields } = p;
+        product = new Product(prodFields);
+        await product.save();
+
+        if (variants && variants.length > 0) {
+          for (const v of variants) {
+            const variantDoc = new ProductVariant({ ...v, product: product._id });
+            await variantDoc.save();
+          }
+        }
+
+        if (initialBatch) {
+          await InventoryService.addStock({
+            productId: product._id,
+            supplierId: createdSuppliers[0]._id,
+            batchNumber: initialBatch.batchNumber,
+            quantity: initialBatch.purchaseQty,
+            unit: product.purchaseUnit,
+            unitCost: initialBatch.unitCost,
+            expiryDate: initialBatch.expiryDate || null,
+            user: adminUser._id,
+            note: 'Initial Seed Inventory Stock'
+          });
+        }
+      }
+    }
+
+    console.log('✅ Seed Database Finished successfully.');
   } catch (error) {
-    console.error('Seed failed:', error);
-    await mongoose.connection.close();
-    process.exit(1);
+    console.error('Seed Error:', error);
   }
 };
 
-seedDatabase();
+if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
+  (async () => {
+    await seedDatabase();
+    process.exit(0);
+  })();
+}
+
+export default seedDatabase;

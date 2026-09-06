@@ -12,6 +12,7 @@ import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import DeleteModal from '@/components/common/DeleteModal';
 import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { toast } from 'react-hot-toast';
 
@@ -35,6 +36,7 @@ export default function Coupons() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,7 +48,7 @@ export default function Coupons() {
     setLoading(true);
     setError(null);
     try {
-      const query = new URLSearchParams({ page: currentPage, limit: 20, search, ...(status ? { status } : {}) }).toString();
+      const query = new URLSearchParams({ page: currentPage, limit: pageSize, search, ...(status ? { status } : {}) }).toString();
       const res = await api.get(`/coupons?${query}`);
       setCoupons(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
@@ -59,7 +61,7 @@ export default function Coupons() {
     }
   };
 
-  useEffect(() => { fetchCoupons(); }, [currentPage, search, status]);
+  useEffect(() => { fetchCoupons(); }, [currentPage, pageSize, search, status]);
 
   const openModal = (coupon = null) => {
     setFormData(coupon ? { ...coupon, expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().slice(0, 10) : '' } : blankCoupon);
@@ -147,14 +149,14 @@ export default function Coupons() {
                       <td>{formatDate(coupon.expiryDate)}</td>
                       <td><StatusBadge status={coupon.status} /></td>
                       <td className="text-end">
-                        <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => openModal(coupon)}><Edit size={20} /></Button>
-                        <Button variant="light" className="kuiklo-icon-btn text-danger" onClick={() => setDeleteTarget(coupon)}><Trash2 size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => openModal(coupon)}><Edit size={20} /></Button>
+                        <Button variant="light" className="Zooom-icon-btn text-danger" onClick={() => setDeleteTarget(coupon)}><Trash2 size={20} /></Button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
             </>
           )}
         </Card.Body>

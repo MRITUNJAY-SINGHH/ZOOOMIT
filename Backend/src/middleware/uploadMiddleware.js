@@ -13,13 +13,19 @@ cloudinary.config({
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'kuiklo_uploads',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [{ width: 1000, height: 1000, crop: 'limit' }]
+  params: async (req, file) => {
+    const isSvg = file.mimetype === 'image/svg+xml';
+    
+    return {
+      folder: 'Zooom_uploads',
+   
+      format: isSvg ? 'svg' : undefined,
+      transformation: isSvg ? [] : [{ width: 1000, height: 1000, crop: 'limit', fetch_format: 'auto', quality: 'auto' }]
+    };
   }
 });
 
 const upload = multer({ storage });
 
+export const cloudinaryInstance = cloudinary;
 export default upload;

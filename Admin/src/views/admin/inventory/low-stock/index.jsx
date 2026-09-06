@@ -34,83 +34,85 @@ export default function LowStock() {
   );
 
   return (
-    <div>
-      <PageHeader 
-        title="Low Stock" 
-        description="Products whose stock has fallen below their individual thresholds." 
-      />
+    <div className="report-page">
+      <div className="report-header mb-4">
+        <div className="report-header-left">
+          <h3 className="report-title mb-1">Low Stock</h3>
+          <p className="text-muted font-size-14 mb-0">Products whose stock has fallen below their individual thresholds.</p>
+        </div>
+      </div>
 
       <InventoryStatCards />
 
-      {/* Premium Toolbar */}
-      <Card className="mb-3 border-0 shadow-sm">
-        <Card.Body className="p-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-            <div className="d-flex align-items-center gap-2 flex-wrap flex-md-nowrap">
-              <span className="text-muted fw-medium font-size-14 text-uppercase tracking-wider me-2">Alerts</span>
-              <InputGroup style={{ maxWidth: '280px' }}>
-                <InputGroup.Text className="bg-body-secondary border-0 text-muted"><Search size={16} /></InputGroup.Text>
-                <Form.Control 
-                  placeholder="Search low stock..." 
-                  className="bg-body-secondary border-0 shadow-none" 
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </InputGroup>
+      <Card className="report-section-card mb-4 h-100">
+        <Card.Header className="d-flex justify-content-between align-items-center pb-0 border-0 pt-3">
+          <h5 className="mb-0">Low Stock Alerts</h5>
+          <div className="d-flex gap-2 align-items-center">
+            <div className="report-search-wrap" style={{ width: '250px', position: 'relative' }}>
+              <Search size={18} className="search-icon" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--bs-secondary-color)' }} />
+              <input 
+                type="text" 
+                className="form-control report-search-input" 
+                placeholder="Search products..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: '38px', backgroundColor: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--bs-border-color)' }}
+              />
             </div>
-            
-            <div className="d-flex align-items-center gap-2">
-              <Button variant="light" className="btn-icon bg-body-secondary border-0 text-secondary" onClick={loadLowStock} title="Refresh">
-                <RefreshCw size={16} />
-              </Button>
-            </div>
+            <Button variant="light" className="btn-icon bg-body-secondary border-0 text-secondary" onClick={loadLowStock} title="Refresh">
+              <RefreshCw size={16} />
+            </Button>
           </div>
-        </Card.Body>
-      </Card>
-
-      <Card className="border-0 shadow-sm overflow-hidden">
-        <Card.Body className="p-0">
-          {loading ? <SkeletonTable rows={5} columns={6} /> : filteredProducts.length === 0 ? (
+        </Card.Header>
+        <div style={{ overflowX: 'auto' }} className="pt-3 pb-2">
+          {loading ? (
+            <div className="p-3"><SkeletonTable rows={5} columns={6} /></div>
+          ) : filteredProducts.length === 0 ? (
             <div className="p-5">
               <EmptyState icon={PackageOpen} title="No Low Stock Alerts" message="All products are above their stock thresholds." />
             </div>
           ) : (
-            <Table responsive hover className="align-middle mb-0 text-nowrap table-borderless table-centered">
-              <thead className="bg-body-tertiary border-bottom border-light">
-                <tr className="text-body text-uppercase font-size-13 fw-semibold tracking-wider">
-                  <th style={{width:50}} className="ps-4 py-3">Image</th>
-                  <th className="py-3">Product Name</th>
-                  <th className="py-3">Category</th>
-                  <th className="text-end py-3">Current Stock</th>
-                  <th className="text-end py-3">Threshold</th>
-                  <th className="text-end pe-4 py-3">Action</th>
+            <Table className="report-table mb-0">
+              <thead className="custom-table-thead" style={{ 
+                fontSize: '12px', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.5px',
+                backgroundColor: 'rgba(255, 255, 255, 0.03)'
+              }}>
+                <tr>
+                  <th style={{width:50}} className="py-2 text-muted border-dashed ps-4">Image</th>
+                  <th className="py-2 text-muted border-dashed">Product Name</th>
+                  <th className="py-2 text-muted border-dashed">Category</th>
+                  <th className="py-2 text-end text-muted border-dashed">Current Stock</th>
+                  <th className="py-2 text-end text-muted border-dashed">Threshold</th>
+                  <th className="py-2 text-center text-muted border-dashed pe-4">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredProducts.map(p => (
-                  <tr key={p._id} className="border-bottom border-light">
-                    <td className="ps-4">
+                  <tr key={p._id}>
+                    <td className="align-middle border-dashed ps-4">
                       {p.featuredImage ? (
                         <img src={p.featuredImage} alt="" width="40" height="40" className="rounded" style={{ objectFit: 'cover' }} />
                       ) : (
-                        <div className="bg-light rounded d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
+                        <div className="bg-body-secondary rounded d-flex align-items-center justify-content-center" style={{ width: 40, height: 40 }}>
                           <Image size={16} className="text-muted" />
                         </div>
                       )}
                     </td>
-                    <td>
-                      <h6 className="mb-0 fw-bold text-body font-size-15">{p.name}</h6>
+                    <td className="align-middle border-dashed">
+                      <h6 className="mb-0 fw-medium text-body font-size-15">{p.name}</h6>
                       {p.barcode && <small className="text-muted font-size-13">Code: {p.barcode}</small>}
                     </td>
-                    <td className="text-muted font-size-14">{p.category?.name || '-'}</td>
-                    <td className="text-end">
-                      <Badge bg={p.stock === 0 ? 'danger-subtle' : 'warning-subtle'} text={p.stock === 0 ? 'danger' : 'warning'} className="px-2 py-1 font-size-13 fw-semibold">
+                    <td className="align-middle border-dashed text-muted font-size-14">{p.category?.name || '-'}</td>
+                    <td className="align-middle border-dashed text-end">
+                      <Badge bg={p.stock === 0 ? 'danger-subtle' : 'warning-subtle'} text={p.stock === 0 ? 'danger' : 'warning'} className="px-2 py-1 font-size-13 fw-semibold border-0">
                         {p.stock} units
                       </Badge>
                     </td>
-                    <td className="text-end text-muted font-size-14">{p.lowStockThreshold} units</td>
-                    <td className="text-end pe-4">
-                      <Button as={Link} to={`/inventory/stock-entry`} variant="outline-primary" size="sm" className="d-inline-flex align-items-center gap-1 shadow-sm px-3 fw-medium">
+                    <td className="align-middle border-dashed text-end text-muted font-size-14">{p.lowStockThreshold} units</td>
+                    <td className="align-middle border-dashed text-center pe-4">
+                      <Button as={Link} to={`/inventory/stock-entry`} variant="outline-primary" size="sm" className="d-inline-flex align-items-center gap-1 shadow-sm px-2 fw-medium">
                         <Plus size={14} /> Restock
                       </Button>
                     </td>
@@ -119,7 +121,7 @@ export default function LowStock() {
               </tbody>
             </Table>
           )}
-        </Card.Body>
+        </div>
       </Card>
     </div>
   );

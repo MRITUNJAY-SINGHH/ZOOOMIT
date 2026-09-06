@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Badge, Form, Row, Col } from 'react-bootstrap';
+import { Card, Table, Button, Badge, Spinner } from 'react-bootstrap';
 import { useNavigate } from 'react-router';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
@@ -7,8 +7,9 @@ import PageHeader from '@/components/common/PageHeader';
 import ActionBar from '@/components/common/ActionBar';
 import SearchBar from '@/components/common/SearchBar';
 import EmptyState from '@/components/common/EmptyState';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import InvoicePrintOut from './components/InvoicePrintOut';
-import { Printer, RefreshCw, FileText } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
@@ -18,15 +19,9 @@ const STATUS_COLORS = {
 export default function HistoryPage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState(''); // '' | 'today' | 'week' | 'month'
-  
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalRecords, setTotalRecords] = useState(0);
-
+  const [reprintingId, setReprintingId] = useState(null);
   const [invoiceToPrint, setInvoiceToPrint] = useState(null);
+  const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,13 +32,13 @@ export default function HistoryPage() {
     setLoading(true);
     try {
       let query = `/orders?orderType=OFFLINE&page=${page}&limit=15`;
-      
+
       if (search) query += `&search=${search}`;
       if (statusFilter) query += `&status=${statusFilter}`;
-      
+
       if (dateFilter) {
         const today = new Date();
-        today.setHours(0,0,0,0);
+        today.setHours(0, 0, 0, 0);
         if (dateFilter === 'today') {
           query += `&startDate=${today.toISOString()}`;
         } else if (dateFilter === 'week') {
@@ -68,6 +63,7 @@ export default function HistoryPage() {
   };
 
   const handleReprintClick = async (orderId) => {
+    setReprintingId(orderId);
     try {
       // Fetch the actual invoice
       const res = await fetchApi(`/invoices?order=${orderId}&limit=1`);
@@ -77,39 +73,45 @@ export default function HistoryPage() {
         // Fallback for old offline orders
         const orderData = await fetchApi(`/orders/${orderId}`);
         if (orderData) {
+<<<<<<< HEAD
           const dummyInvoice = {
             _id: 'dummy',
+=======
+          const fallbackInvoice = {
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
             invoiceNumber: orderData.billNumber || orderData.orderNumber,
             createdAt: orderData.createdAt,
-            customerSnapshot: { 
-              name: orderData.customer?.name || 'Walk-In', 
-              phone: orderData.customer?.phone || '' 
+            customerSnapshot: {
+              name: orderData.customer?.name || 'Walk-In',
+              phone: orderData.customer?.phone || ''
             },
-            productSnapshot: orderData.items.map(i => ({ 
-              productName: i.productName, 
-              sku: i.sku || 'N/A', 
-              qty: i.qty, 
-              price: i.price, 
-              total: i.price * i.qty 
+            productSnapshot: orderData.items.map(i => ({
+              productName: i.productName,
+              sku: i.sku || 'N/A',
+              qty: i.qty,
+              price: i.price,
+              total: i.price * i.qty
             })),
-            totalsSnapshot: { 
-              subTotal: orderData.amount, 
-              tax: 0, 
-              discount: 0, 
-              amount: orderData.amount 
+            totalsSnapshot: {
+              subTotal: orderData.amount,
+              tax: 0,
+              discount: 0,
+              amount: orderData.amount
             },
             paymentMethod: orderData.paymentMethod || 'Cash/Card',
             status: orderData.status,
             isCancelled: orderData.status === 'Cancelled' || orderData.status === 'Returned'
           };
-          setInvoiceToPrint(dummyInvoice);
+          setInvoiceToPrint(fallbackInvoice);
         } else {
-          alert("Order details not found.");
+          toast.error("Order details not found.");
         }
       }
     } catch (e) {
       console.error(e);
-      alert("Error fetching invoice or order details.");
+      toast.error("Error fetching invoice or order details.");
+    } finally {
+      setReprintingId(null);
     }
   };
 
@@ -119,8 +121,8 @@ export default function HistoryPage() {
 
   return (
     <div>
-      <PageHeader 
-        title="POS Billing History" 
+      <PageHeader
+        title="POS Billing History"
         rightContent={
           <Button variant="primary" onClick={() => navigate('/pos')}>
             New POS Billing
@@ -132,10 +134,10 @@ export default function HistoryPage() {
         <Card.Body className="bg-light rounded">
           <Row className="g-3">
             <Col md={4}>
-              <SearchBar 
-                placeholder="Search Bill #, Customer..." 
-                value={search} 
-                onChange={setSearch} 
+              <SearchBar
+                placeholder="Search Bill #, Customer..."
+                value={search}
+                onChange={setSearch}
               />
             </Col>
             <Col md={3}>
@@ -163,74 +165,93 @@ export default function HistoryPage() {
         </Card.Body>
       </Card>
 
-      <Card className="shadow-sm border-0">
-        <Card.Body className="p-0">
-          {loading ? <div className="p-5 text-center text-muted">Loading history...</div> : (
-            <Table responsive hover className="align-middle mb-0">
-              <thead className="table-light">
-                <tr>
-                  <th className="ps-4">Bill #</th>
-                  <th>Date & Time</th>
-                  <th>Customer</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th className="text-end pe-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.length === 0 && (
-                  <tr>
-                    <td colSpan="6" className="text-center py-5">
-                      <EmptyState icon={<FileText size={48} />} title="No Bills Found" message="Try adjusting your search filters." />
-                    </td>
-                  </tr>
-                )}
-                {invoices.map(order => (
-                  <tr key={order._id}>
-                    <td className="ps-4 fw-medium text-primary">{order.billNumber || order.orderNumber}</td>
-                    <td>
-                      <div>{new Date(order.createdAt).toLocaleDateString()}</div>
-                      <div className="text-muted small">{new Date(order.createdAt).toLocaleTimeString()}</div>
-                    </td>
-                    <td>
-                      <div>{order.customer?.name || 'Walk-In'}</div>
-                      {order.customer?.phone && <div className="text-muted small">{order.customer.phone}</div>}
-                    </td>
-                    <td className="fw-bold">{formatCurrency(order.amount)}</td>
-                    <td><Badge bg={STATUS_COLORS[order.status] || 'secondary'}>{order.status}</Badge></td>
-                    <td className="text-end pe-4">
-                      <div className="d-flex justify-content-end gap-2">
-                        <Button size="sm" variant="outline-primary" onClick={() => handleReprintClick(order._id)}>
-                          <Printer size={14} className="me-1" /> Reprint
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline-danger" 
-                          onClick={() => navigate(`/pos/returns`, { state: { invoice: order } })} 
-                          disabled={order.status === 'Returned' || order.status === 'Cancelled'}
-                        >
-                          Return
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+<<<<<<< HEAD
+  <Card className="shadow-sm border-0">
+    <Card.Body className="p-0">
+      {loading ? <div className="p-5 text-center text-muted">Loading history...</div> : (
+=======
+      <Card>
+        <Card.Body>
+          {loading ? <SkeletonTable rows={5} columns={5} /> : (
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
+        <Table responsive hover className="align-middle mb-0">
+          <thead className="table-light">
+            <tr>
+              <th className="ps-4">Bill #</th>
+              <th>Date & Time</th>
+              <th>Customer</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th className="text-end pe-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.length === 0 && (
+              <tr>
+                <td colSpan="6" className="text-center py-5">
+                  <EmptyState icon={<FileText size={48} />} title="No Bills Found" message="Try adjusting your search filters." />
+                </td>
+              </tr>
+            )}
+            {invoices.map(order => (
+              <tr key={order._id}>
+                <td className="ps-4 fw-medium text-primary">{order.billNumber || order.orderNumber}</td>
+                <td>
+                  <div>{new Date(order.createdAt).toLocaleDateString()}</div>
+                  <div className="text-muted small">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                </td>
+                <td>
+                  <div>{order.customer?.name || 'Walk-In'}</div>
+                  {order.customer?.phone && <div className="text-muted small">{order.customer.phone}</div>}
+                </td>
+                <td className="fw-bold">{formatCurrency(order.amount)}</td>
+                <td><Badge bg={STATUS_COLORS[order.status] || 'secondary'}>{order.status}</Badge></td>
+<<<<<<< HEAD
+  <td className="text-end pe-4">
+    <div className="d-flex justify-content-end gap-2">
+      <Button size="sm" variant="outline-primary" onClick={() => handleReprintClick(order._id)}>
+        <Printer size={14} className="me-1" /> Reprint
+=======
+                    <td className="text-end">
+          <div className="d-flex justify-content-end gap-2 flex-column flex-sm-row">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={() => handleReprintClick(order._id)}
+              disabled={reprintingId === order._id}
+            >
+              {reprintingId === order._id ? <Spinner size="sm" /> : 'Reprint'}
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f
+            </Button>
+            <Button
+              size="sm"
+              variant="outline-danger"
+              onClick={() => navigate(`/pos/returns`, { state: { invoice: order } })}
+              disabled={order.status === 'Returned' || order.status === 'Cancelled'}
+            >
+              Return
+            </Button>
+          </div>
+        </td>
+      </tr>
                 ))}
-              </tbody>
-            </Table>
-          )}
-        </Card.Body>
-        {!loading && totalPages > 1 && (
-          <Card.Footer className="bg-white d-flex justify-content-between align-items-center p-3">
-            <div className="text-muted small">
-              Showing page {page} of {totalPages} ({totalRecords} records)
-            </div>
-            <div className="d-flex gap-2">
-              <Button size="sm" variant="outline-secondary" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
-              <Button size="sm" variant="outline-secondary" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
-            </div>
-          </Card.Footer>
-        )}
-      </Card>
-    </div>
+    </tbody>
+  </Table>
+          )
+}
+        </Card.Body >
+  {!loading && totalPages > 1 && (
+    <Card.Footer className="bg-white d-flex justify-content-between align-items-center p-3">
+      <div className="text-muted small">
+        Showing page {page} of {totalPages} ({totalRecords} records)
+      </div>
+      <div className="d-flex gap-2">
+        <Button size="sm" variant="outline-secondary" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</Button>
+        <Button size="sm" variant="outline-secondary" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</Button>
+      </div>
+    </Card.Footer>
+  )}
+      </Card >
+    </div >
   );
 }

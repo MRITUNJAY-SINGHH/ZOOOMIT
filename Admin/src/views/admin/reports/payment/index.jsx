@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { Row, Col, Card, Table, Spinner, Pagination, Dropdown, Button, Modal, Badge } from 'react-bootstrap';
+import { Row, Col, Card, Table, Spinner, Dropdown, Button, Modal, Badge } from 'react-bootstrap';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
@@ -15,11 +17,11 @@ export default function PaymentReport() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [selectedTxn, setSelectedTxn] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const { theme } = useLayoutContext();
   const navigate = useNavigate();
-  const perPage = 15;
 
   const isDark = useMemo(() => {
     if (theme === 'dark') return true;
@@ -79,7 +81,6 @@ export default function PaymentReport() {
     plugins: { legend: { display: false }, tooltip: { backgroundColor: tooltipBg, titleColor: tooltipTitle, bodyColor: tooltipBody, borderColor: tooltipBorder, borderWidth: 1, padding: 12, bodyFont: { size: 14 }, titleFont: { size: 14 }, callbacks: { label: (ctx) => `${ctx.label}: ₹${ctx.parsed.toLocaleString()}` } } }
   };
 
-  // Client-side search filter on transactions
   const filteredTransactions = useMemo(() => {
     const txns = data?.recentTransactions || [];
     if (!search) return txns;
@@ -94,8 +95,11 @@ export default function PaymentReport() {
     );
   }, [data?.recentTransactions, search]);
 
-  const totalPages = Math.ceil(filteredTransactions.length / perPage);
-  const paginated = filteredTransactions.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const totalPages = Math.ceil(filteredTransactions.length / pageSize);
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTransactions.slice(start, start + pageSize);
+  }, [filteredTransactions, currentPage, pageSize]);
 
   const methodIcon = (method) => {
     const map = {
@@ -113,7 +117,6 @@ export default function PaymentReport() {
 
   return (
     <div className="report-page">
-      {/* ──────── Header ──────── */}
       <div className="report-header">
         <div className="report-header-left">
           <h3 className="report-title">Payment Reports</h3>
@@ -136,7 +139,6 @@ export default function PaymentReport() {
         </div>
       </div>
 
-      {/* ──────── KPI Stat Cards ──────── */}
       <Row className="mb-4 g-3">
         {[
           { label: 'Total Payments', value: `₹${total.toLocaleString()}`, icon: 'lucide:wallet', bg: 'rgba(108, 92, 231, 0.2)', color: '#7c6fe0' },
@@ -162,7 +164,6 @@ export default function PaymentReport() {
         ))}
       </Row>
 
-      {/* ──────── Payment Method Breakdown + Doughnut ──────── */}
       <Row className="mb-4 g-3">
         <Col lg={7}>
           <Card className="report-section-card h-100">
@@ -222,7 +223,6 @@ export default function PaymentReport() {
         </Col>
       </Row>
 
-      {/* ──────── Recent Transactions Table ──────── */}
       <Card className="report-section-card">
         <Card.Header className="d-flex justify-content-between align-items-center pb-0 border-0">
           <h5 className="mb-0">Recent Transactions</h5>
@@ -303,27 +303,9 @@ export default function PaymentReport() {
           </Table>
         </div>
 
-        {/* Pagination */}
         {filteredTransactions.length > 0 && (
-          <div className="d-flex flex-wrap justify-content-between align-items-center px-4 py-3" style={{ borderTop: '1px solid var(--bs-border-color)' }}>
-            <span style={{ color: 'var(--bs-secondary-color)', fontSize: '0.9375rem' }}>
-              Showing {Math.min((currentPage - 1) * perPage + 1, filteredTransactions.length)} to {Math.min(currentPage * perPage, filteredTransactions.length)} of {filteredTransactions.length} results
-            </span>
-            <Pagination className="report-pagination mb-0">
-              <Pagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                <Icon icon="lucide:chevron-left" width={16} />
-              </Pagination.Prev>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                <Pagination.Item key={p} active={p === currentPage} onClick={() => setCurrentPage(p)}>{p}</Pagination.Item>
-              ))}
-              {totalPages > 5 && <Pagination.Ellipsis />}
-              {totalPages > 5 && (
-                <Pagination.Item onClick={() => setCurrentPage(totalPages)}>{totalPages}</Pagination.Item>
-              )}
-              <Pagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                <Icon icon="lucide:chevron-right" width={16} />
-              </Pagination.Next>
-            </Pagination>
+          <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top px-3 pb-3">
+            <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={filteredTransactions.length} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
           </div>
         )}
       </Card>

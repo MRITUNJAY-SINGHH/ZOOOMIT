@@ -25,10 +25,25 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('token');
   };
 
-  const hasPermission = (permission) => {
+  const hasPermission = (permissionPath) => {
     if (!user) return false;
     if (user.role === 'Admin') return true;
-    return user.permissions && user.permissions[permission];
+    
+    if (!user.permissions) return false;
+
+    const parts = permissionPath.split('.');
+    let current = user.permissions;
+    
+    for (const part of parts) {
+      if (current[part] === undefined) return false;
+      current = current[part];
+    }
+    
+    if (typeof current === 'object') {
+      return current.view === true;
+    }
+    
+    return current === true;
   };
 
   return (

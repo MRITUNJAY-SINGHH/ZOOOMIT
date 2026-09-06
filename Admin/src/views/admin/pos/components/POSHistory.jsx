@@ -3,6 +3,8 @@ import { Offcanvas, Table, Button, Badge } from 'react-bootstrap';
 import { fetchApi } from '@/utils/api';
 import { formatCurrency } from '@/utils/format';
 import POSReturn from './POSReturn';
+import InvoicePrintOut from './InvoicePrintOut';
+import { toast } from 'react-hot-toast';
 
 const STATUS_COLORS = {
   Pending: 'warning', Confirmed: 'info', Assigned: 'primary',
@@ -12,7 +14,9 @@ const STATUS_COLORS = {
 export default function POSHistory({ onClose, onReprint }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reprintingId, setReprintingId] = useState(null);
   const [returnInvoice, setReturnInvoice] = useState(null);
+  const [invoiceToPrint, setInvoiceToPrint] = useState(null);
 
   useEffect(() => {
     loadInvoices();
@@ -30,11 +34,41 @@ export default function POSHistory({ onClose, onReprint }) {
   };
 
   const handleReprintClick = async (orderId) => {
-    console.warn(`Invoice lookup endpoint is required before reprinting order ${orderId}.`);
+    setReprintingId(orderId);
+    try {
+      const res = await fetchApi(`/invoices?order=${orderId}&limit=1`);
+      if (res.invoices && res.invoices.length > 0) {
+        setInvoiceToPrint(res.invoices[0]);
+      } else {
+        const orderData = await fetchApi(`/orders/${orderId}`);
+        if (orderData) {
+          const fallbackInvoice = {
+            invoiceNumber: orderData.billNumber || orderData.orderNumber,
+            createdAt: orderData.createdAt,
+            customerSnapshot: { name: orderData.customer?.name || 'Walk-In', phone: orderData.customer?.phone || '' },
+            productSnapshot: orderData.items.map(i => ({ productName: i.productName, sku: i.sku || 'N/A', qty: i.qty, price: i.price, total: i.price * i.qty })),
+            totalsSnapshot: { subTotal: orderData.amount, tax: 0, discount: 0, amount: orderData.amount },
+            isCancelled: orderData.status === 'Cancelled' || orderData.status === 'Returned'
+          };
+          setInvoiceToPrint(fallbackInvoice);
+        } else {
+          toast.error("Order details not found.");
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error("Error fetching invoice details.");
+    } finally {
+      setReprintingId(null);
+    }
   };
 
   if (returnInvoice) {
     return <POSReturn invoice={returnInvoice} onBack={() => setReturnInvoice(null)} onComplete={loadInvoices} />;
+  }
+
+  if (invoiceToPrint) {
+    return <InvoicePrintOut invoice={invoiceToPrint} onBack={() => setInvoiceToPrint(null)} />;
   }
 
   return (
@@ -69,7 +103,14 @@ export default function POSHistory({ onClose, onReprint }) {
                   <td><Badge bg={STATUS_COLORS[order.status] || 'secondary'}>{order.status}</Badge></td>
                   <td className="pe-4 text-end">
                     <div className="d-flex justify-content-end gap-2 flex-column flex-sm-row">
-                      <Button size="sm" variant="outline-primary" onClick={() => handleReprintClick(order._id)}>Reprint</Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline-primary" 
+                        onClick={() => handleReprintClick(order._id)}
+                        disabled={reprintingId === order._id}
+                      >
+                        {reprintingId === order._id ? 'Loading...' : 'Reprint'}
+                      </Button>
                       <Button size="sm" variant="outline-danger" onClick={() => setReturnInvoice(order)} disabled={order.status === 'Returned'}>Return</Button>
                     </div>
                   </td>

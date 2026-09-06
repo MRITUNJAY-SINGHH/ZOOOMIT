@@ -4,7 +4,7 @@ import { Search } from 'lucide-react';
 
 export default function SearchBar({ value, onChange, placeholder = 'Search...', className = '', ...props }) {
   return (
-    <InputGroup className={`kuiklo-search ${className}`} {...props}>
+    <InputGroup className={`Zooom-search ${className}`} {...props}>
       <InputGroup.Text>
         <Search size={20} />
       </InputGroup.Text>

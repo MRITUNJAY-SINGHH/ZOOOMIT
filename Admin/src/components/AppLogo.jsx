@@ -1,6 +1,6 @@
-import logoBlack from '@/assets/images/logo-black.png'
-import logoSm from '@/assets/images/logo-sm.png'
-import logo from '@/assets/images/logo.png'
+import logoBlack from '@/assets/images/logo-black.svg'
+import logoSm from '@/assets/images/logo-sm.svg'
+import logo from '@/assets/images/logo.svg'
 import { Link } from 'react-router'
 const AppLogo = () => {
   return (

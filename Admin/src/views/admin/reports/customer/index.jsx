@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Row, Col, Card, Table, Spinner, Pagination, Dropdown, Offcanvas, Form, Button } from 'react-bootstrap';
+import { Row, Col, Card, Table, Spinner, Dropdown, Offcanvas, Form, Button } from 'react-bootstrap';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
@@ -64,9 +66,9 @@ export default function CustomerReport() {
   const [exportingPdf, setExportingPdf] = useState(false);
   
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [pageLoading, setPageLoading] = useState(false);
   const { theme } = useLayoutContext();
-  const perPage = 20;
 
   const isDark = useMemo(() => {
     if (theme === 'dark') return true;
@@ -133,15 +135,18 @@ export default function CustomerReport() {
   const totalCustomers = data?.summary?.totalCustomers || 0;
   const newCustomers = data?.summary?.newCustomers || 0;
   const returningCustomers = data?.summary?.returningCustomers || 0;
-  const allCustomers = data?.topCustomers || [];
+  const customers = data?.topCustomers || [];
 
-  const avgLifetimeValue = allCustomers.length > 0
-    ? Math.round(allCustomers.reduce((sum, c) => sum + c.totalSpent, 0) / allCustomers.length)
+  const avgLifetimeValue = customers.length > 0
+    ? Math.round(customers.reduce((sum, c) => sum + c.totalSpent, 0) / customers.length)
     : 0;
 
   // Pagination for table
-  const totalPages = Math.ceil(allCustomers.length / perPage);
-  const paginated = allCustomers.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const totalPages = Math.ceil(customers.length / pageSize);
+  const paginatedCustomers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return customers.slice(start, start + pageSize);
+  }, [customers, currentPage, pageSize]);
 
   // Theme-aware chart config
   const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
@@ -154,7 +159,7 @@ export default function CustomerReport() {
   // Export functionality
   const handleExport = useCallback((type) => {
     if (!data) return;
-    const rows = allCustomers.map(c => ({
+    const rows = customers.map(c => ({
       Name: c.customerName, Phone: c.customerPhone, Email: c.customerEmail,
       'Total Orders': c.orderCount, 'Total Spent': c.totalSpent,
       'Avg Order Value': c.orderCount > 0 ? Math.round(c.totalSpent / c.orderCount) : 0,
@@ -178,7 +183,7 @@ export default function CustomerReport() {
         setExportingPdf(false);
       }, 50);
     }
-  }, [data, allCustomers]);
+  }, [data, customers]);
 
   // Segment logic based on totalSpent/orderCount for the table badge
   const getSegmentBadge = (c) => {
@@ -400,9 +405,8 @@ export default function CustomerReport() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginated.map((cust, idx) => {
+                    {paginatedCustomers.map((cust, idx) => {
                       const avgOrder = cust.orderCount > 0 ? Math.round(cust.totalSpent / cust.orderCount) : 0;
-                      const badge = getSegmentBadge(cust);
                       return (
                         <tr key={idx}>
                           <td className="align-middle border-dashed">
@@ -434,7 +438,7 @@ export default function CustomerReport() {
                         </tr>
                       );
                     })}
-                    {paginated.length === 0 && (
+                    {paginatedCustomers.length === 0 && (
                       <tr><td colSpan="9" className="text-center py-5" style={{ color: 'var(--bs-secondary-color)' }}>No customer data found for the applied filters</td></tr>
                     )}
                   </tbody>
@@ -442,26 +446,9 @@ export default function CustomerReport() {
               </div>
             )}
             
-            {allCustomers.length > 0 && !loading && (
-              <div className="d-flex flex-wrap justify-content-between align-items-center px-4 py-3" style={{ borderTop: '1px solid var(--bs-border-color)' }}>
-                <span style={{ color: 'var(--bs-secondary-color)', fontSize: '0.9375rem' }}>
-                  Showing {Math.min((currentPage - 1) * perPage + 1, allCustomers.length)} to {Math.min(currentPage * perPage, allCustomers.length)} of {allCustomers.length} results
-                </span>
-                <Pagination className="report-pagination mb-0">
-                  <Pagination.Prev onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p => Math.max(1, p - 1)); setPageLoading(false); }, 300); }} disabled={currentPage === 1}>
-                    <Icon icon="lucide:chevron-left" width={16} />
-                  </Pagination.Prev>
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                    <Pagination.Item key={p} active={p === currentPage} onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p); setPageLoading(false); }, 300); }}>{p}</Pagination.Item>
-                  ))}
-                  {totalPages > 5 && <Pagination.Ellipsis />}
-                  {totalPages > 5 && (
-                    <Pagination.Item onClick={() => setCurrentPage(totalPages)}>{totalPages}</Pagination.Item>
-                  )}
-                  <Pagination.Next onClick={() => { setPageLoading(true); setTimeout(() => { setCurrentPage(p => Math.min(totalPages, p + 1)); setPageLoading(false); }, 300); }} disabled={currentPage === totalPages}>
-                    <Icon icon="lucide:chevron-right" width={16} />
-                  </Pagination.Next>
-                </Pagination>
+            {customers.length > 0 && !loading && (
+              <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top px-3">
+                <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={customers.length} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
               </div>
             )}
           </Card>

@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { Row, Col, Card, Table, Spinner, Dropdown, Button, Modal, Badge, Pagination } from 'react-bootstrap';
+import { Row, Col, Card, Table, Spinner, Dropdown, Button, Modal, Badge } from 'react-bootstrap';
+import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import Icon from '@/components/wrappers/Icon';
 import api from '@/utils/api';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
@@ -28,7 +30,7 @@ export default function InventoryReport() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const perPage = 15;
+  const [pageSize, setPageSize] = usePageSize(50);
 
   useEffect(() => {
     api.get('/reports/inventory').then(res => { setData(res.data); setLoading(false); }).catch(() => setLoading(false));
@@ -95,8 +97,11 @@ export default function InventoryReport() {
     );
   }, [data?.recentLogs, search]);
 
-  const totalPages = Math.ceil(filteredLogs.length / perPage);
-  const paginated = filteredLogs.slice((currentPage - 1) * perPage, currentPage * perPage);
+  const totalPages = Math.ceil(filteredLogs.length / pageSize);
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredLogs.slice(start, start + pageSize);
+  }, [filteredLogs, currentPage, pageSize]);
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -282,25 +287,8 @@ export default function InventoryReport() {
 
         {/* Pagination */}
         {filteredLogs.length > 0 && (
-          <div className="d-flex flex-wrap justify-content-between align-items-center px-4 py-3" style={{ borderTop: '1px solid var(--bs-border-color)' }}>
-            <span style={{ color: 'var(--bs-secondary-color)', fontSize: '0.9375rem' }}>
-              Showing {Math.min((currentPage - 1) * perPage + 1, filteredLogs.length)} to {Math.min(currentPage * perPage, filteredLogs.length)} of {filteredLogs.length} results
-            </span>
-            <Pagination className="report-pagination mb-0">
-              <Pagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                <Icon icon="lucide:chevron-left" width={16} />
-              </Pagination.Prev>
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => i + 1).map(p => (
-                <Pagination.Item key={p} active={p === currentPage} onClick={() => setCurrentPage(p)}>{p}</Pagination.Item>
-              ))}
-              {totalPages > 5 && <Pagination.Ellipsis />}
-              {totalPages > 5 && (
-                <Pagination.Item onClick={() => setCurrentPage(totalPages)}>{totalPages}</Pagination.Item>
-              )}
-              <Pagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                <Icon icon="lucide:chevron-right" width={16} />
-              </Pagination.Next>
-            </Pagination>
+          <div className="d-flex justify-content-between align-items-center mt-3 pt-3 border-top px-3">
+            <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={filteredLogs.length} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
           </div>
         )}
       </Card>

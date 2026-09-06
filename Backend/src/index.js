@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import connectDB from './config/db.js';
 
 // Load env vars
@@ -29,6 +30,8 @@ import couponRoutes from './routes/couponRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import documentRoutes from './routes/documentRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 app.use(express.json());
 const corsOptions = {
@@ -51,6 +54,17 @@ app.use(cors(corsOptions));
 app.use(helmet());
 app.use(morgan('dev'));
 
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+app.use('/api', apiLimiter);
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/customers', customerRoutes);
@@ -66,10 +80,38 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/search', searchRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 
 app.get('/', (req, res) => {
-  res.send('Kuiklo API is running...');
+  res.send('Zooom API is running...');
+});
+
+import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
+
+app.get('/api/health', async (req, res) => {
+  let dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+  
+  let smtpStatus = 'Configured';
+  if (!process.env.SMTP_HOST) smtpStatus = 'Not Configured';
+  
+  const healthCheck = {
+    uptime: process.uptime(),
+    timestamp: Date.now(),
+    db: dbStatus,
+    smtp: smtpStatus,
+    cloudinary: process.env.CLOUDINARY_URL ? 'Configured' : 'Not Configured',
+    razorpay: process.env.RAZORPAY_KEY_ID ? 'Configured' : 'Not Configured'
+  };
+
+  try {
+    res.status(dbStatus === 'Connected' ? 200 : 503).json(healthCheck);
+  } catch (error) {
+    healthCheck.message = error.message;
+    res.status(503).json(healthCheck);
+  }
 });
 
 app.use((err, req, res, next) => {

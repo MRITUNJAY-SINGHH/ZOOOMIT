@@ -21,20 +21,31 @@ export const fetchApi = async (endpoint, options = {}) => {
       headers,
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      if (response.status === 401 && data.message === 'Not authorized, token failed') {
+      if (response.status === 401) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
         window.location.href = '/auth/sign-in';
       }
+      
+      // Try to parse error as JSON, fallback to text
+      let data;
+      try {
+        data = await response.json();
+      } catch (e) {
+        data = { message: await response.text() };
+      }
+      
       const error = new Error(data.message || 'Something went wrong');
       error.response = { data };
       throw error;
     }
 
-    return data;
+    if (options.responseType === 'blob') {
+      return await response.blob();
+    }
+
+    return await response.json();
   } catch (error) {
     console.error(`API Error: ${error.message}`);
     throw error;

@@ -6,6 +6,7 @@ import clsx from 'clsx'
 import { Fragment, useCallback, useEffect, useState } from 'react'
 import { Collapse } from 'react-bootstrap'
 import { Link, useLocation } from 'react-router'
+import api from '@/utils/api'
 const MenuItemWithChildren = ({ item, openMenuKey, setOpenMenuKey, level = 0 }) => {
   const pathname = useLocation().pathname
   const isTopLevel = level === 0
@@ -79,7 +80,7 @@ const MenuItem = ({ item, level = 0 }) => {
 }
 const AppMenu = () => {
   const [openMenuKey, setOpenMenuKey] = useState(null)
-  const { hasPermission } = useAuthContext();
+  const { hasPermission, user } = useAuthContext();
   
   const scrollToActiveLink = () => {
     const activeItem = document.querySelector('.side-nav-link.active')
@@ -95,31 +96,59 @@ const AppMenu = () => {
     setTimeout(scrollToActiveLink, 150)
   }, [])
 
-  const getPermissionForMenu = (slug) => {
-    const map = {
-      'staff': 'staff',
-      'staff-delivery': 'staff',
-      'delivery-boys': 'delivery',
-      'customers': 'pos',
-      'suppliers': 'inventory',
-      'catalog': 'products',
-      'inventory': 'inventory',
-      'orders': 'orders',
-      'pos': 'pos',
-      'coupons': 'coupons',
-      'promotions': 'coupons',
-      'payments': 'payments',
-      'finance': 'payments',
-      'reports': 'reports'
-    };
-    return map[slug];
-  };
+  const [assignedCount, setAssignedCount] = useState(0);
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (user?.role === 'DeliveryBoy') {
+      const fetchCounts = async () => {
+        try {
+          const res = await api.get('/orders/delivery/my-orders');
+          const count = res.data.filter(o => o.status === 'Assigned').length;
+          
+          if (location.pathname === '/delivery/orders') {
+            localStorage.setItem('seenAssignedCount', count.toString());
+            setAssignedCount(0);
+          } else {
+            const seenCount = parseInt(localStorage.getItem('seenAssignedCount') || '0', 10);
+            if (count > seenCount) {
+              setAssignedCount(count - seenCount);
+            } else if (count < seenCount) {
+              localStorage.setItem('seenAssignedCount', count.toString());
+              setAssignedCount(0);
+            } else {
+              setAssignedCount(0);
+            }
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      };
+      fetchCounts();
+      const interval = setInterval(fetchCounts, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user, location.pathname]);
 
   const filteredMenuItems = menuItems.filter(item => {
-    if (item.isTitle || item.slug === 'dashboard' || item.slug === 'settings') return true;
-    const perm = getPermissionForMenu(item.slug);
-    if (!perm) return true;
-    return hasPermission(perm);
+    // If it has a specific roles array, check if user role matches
+    if (item.roles && user && !item.roles.includes(user.role)) return false;
+    
+    // If it should be hidden for specific roles
+    if (item.hideForRoles && user && item.hideForRoles.includes(user.role)) return false;
+
+    // If there is a permission requirement, check it
+    if (item.permission) {
+      return hasPermission(item.permission);
+    }
+
+    return true;
+  }).map(item => {
+    // Inject dynamic badge for delivery orders
+    if (item.slug === 'delivery-orders' && assignedCount > 0) {
+      return { ...item, badge: { text: assignedCount, className: 'bg-danger text-white' } };
+    }
+    return item;
   });
 
   return (

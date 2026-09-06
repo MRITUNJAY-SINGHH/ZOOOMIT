@@ -197,6 +197,7 @@ export const bulkDeleteInvoices = async (req, res) => {
   }
 };
 
+<<<<<<< HEAD
 // @desc    Generate PDF for Invoice
 // @route   GET /api/invoices/:id/pdf
 // @access  Private
@@ -298,3 +299,6 @@ export const generateInvoicePdf = async (req, res) => {
     res.status(500).json({ message: 'Failed to generate PDF' });
   }
 };
+=======
+// Old pdf method moved to pdfController.js
+>>>>>>> b0c33b866999113e91051b3065362eadae55829f

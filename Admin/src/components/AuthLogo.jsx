@@ -1,5 +1,5 @@
-import logoBlack from '@/assets/images/logo-black.png'
-import logo from '@/assets/images/logo.png'
+import logoBlack from '@/assets/images/logo-black.svg'
+import logo from '@/assets/images/logo.svg'
 import { Link } from 'react-router'
 const AuthLogo = () => {
   return (

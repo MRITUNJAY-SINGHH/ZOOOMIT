@@ -109,8 +109,8 @@ export default function DeliveryBoys() {
                     <td className="text-muted">{rider.email}</td>
                     <td><StatusBadge status={rider.status} /></td>
                     <td className="text-end">
-                      <Button variant="light" className="kuiklo-icon-btn me-1" onClick={() => viewStats(rider._id)}><BarChart3 size={20} /></Button>
-                      <Button variant="light" className="kuiklo-icon-btn" onClick={() => openModal(rider)}><Edit size={20} /></Button>
+                      <Button variant="light" className="Zooom-icon-btn me-1" onClick={() => viewStats(rider._id)}><BarChart3 size={20} /></Button>
+                      <Button variant="light" className="Zooom-icon-btn" onClick={() => openModal(rider)}><Edit size={20} /></Button>
                     </td>
                   </tr>
                 ))}

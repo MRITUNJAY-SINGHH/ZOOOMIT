@@ -6,10 +6,10 @@ const router = express.Router();
 
 router.route('/')
   .get(protect, getCategories)
-  .post(protect, authorize('products'), createCategory);
+  .post(protect, authorize('products', 'create'), createCategory);
 
 router.route('/:id')
-  .put(protect, authorize('products'), updateCategory)
-  .delete(protect, authorize('products'), deleteCategory);
+  .put(protect, authorize('products', 'edit'), updateCategory)
+  .delete(protect, authorize('products', 'delete'), deleteCategory);
 
 export default router;

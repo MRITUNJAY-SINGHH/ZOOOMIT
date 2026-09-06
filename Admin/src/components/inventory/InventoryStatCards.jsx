@@ -47,42 +47,69 @@ export default function InventoryStatCards() {
   }
 
   return (
-    <Row className="g-3 mb-3">
+    <Row className="g-3 mb-4">
       <Col md={4}>
-        <Card className="h-100 border shadow-sm">
-          <Card.Body className="d-flex align-items-center gap-3 p-4">
-            <div className="rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle" style={{ width: 56, height: 56 }}>
-              <Package size={26} className="text-primary" />
+        <Card 
+          className="report-stat-card h-100 p-3" 
+          style={{ transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <Card.Body className="d-flex align-items-center p-0">
+            <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Package size={24} />
             </div>
-            <div>
-              <div className="text-muted small fw-medium text-uppercase tracking-wider mb-1">Total Products</div>
-              <h3 className="mb-0 fw-bold">{stats?.totalProducts || 0}</h3>
+            <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+              <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.75rem', fontWeight: '700', lineHeight: 1 }}>
+                {stats?.totalProducts || 0}
+              </div>
+              <div className="stat-label text-truncate" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Total Products
+              </div>
             </div>
           </Card.Body>
         </Card>
       </Col>
       <Col md={4}>
-        <Card className="h-100 border shadow-sm">
-          <Card.Body className="d-flex align-items-center gap-3 p-4">
-            <div className="rounded-circle d-flex align-items-center justify-content-center bg-danger-subtle" style={{ width: 56, height: 56 }}>
-              <AlertTriangle size={26} className="text-danger" />
+        <Card 
+          className="report-stat-card h-100 p-3" 
+          style={{ transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <Card.Body className="d-flex align-items-center p-0">
+            <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: 'rgba(239, 68, 68, 0.2)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <AlertTriangle size={24} />
             </div>
-            <div>
-              <div className="text-muted small fw-medium text-uppercase tracking-wider mb-1">Low Stock</div>
-              <h3 className="mb-0 fw-bold text-danger">{stats?.lowStock || 0}</h3>
+            <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+              <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.75rem', fontWeight: '700', lineHeight: 1 }}>
+                {stats?.lowStock || 0}
+              </div>
+              <div className="stat-label text-truncate" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Low Stock
+              </div>
             </div>
           </Card.Body>
         </Card>
       </Col>
       <Col md={4}>
-        <Card className="h-100 border shadow-sm">
-          <Card.Body className="d-flex align-items-center gap-3 p-4">
-            <div className="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle" style={{ width: 56, height: 56 }}>
-              <Clock size={26} className="text-warning" />
+        <Card 
+          className="report-stat-card h-100 p-3" 
+          style={{ transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <Card.Body className="d-flex align-items-center p-0">
+            <div className="stat-icon rounded-circle me-3 flex-shrink-0" style={{ width: 48, height: 48, background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Clock size={24} />
             </div>
-            <div>
-              <div className="text-muted small fw-medium text-uppercase tracking-wider mb-1">Expiring Soon</div>
-              <h3 className="mb-0 fw-bold text-warning">{stats?.expiring || 0}</h3>
+            <div className="d-flex flex-column flex-grow-1 overflow-hidden">
+              <div className="stat-value text-truncate mb-2" style={{ fontSize: '1.75rem', fontWeight: '700', lineHeight: 1 }}>
+                {stats?.expiring || 0}
+              </div>
+              <div className="stat-label text-truncate" style={{ fontSize: '14px', color: 'var(--bs-secondary-color)', fontWeight: '500', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Expiring Soon
+              </div>
             </div>
           </Card.Body>
         </Card>

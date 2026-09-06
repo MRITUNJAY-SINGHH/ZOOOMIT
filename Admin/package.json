@@ -1,7 +1,7 @@
 {
-  "name": "kuiklo",
+  "name": "Zooom",
   "version": "8.0.0",
-  "description": "Kuiklo is a modern, responsive ERP and POS system.",
+  "description": "Zooom is a modern, responsive ERP and POS system.",
   "author": "MRITUNJAY SINGH",
   "scripts": {
     "dev": "vite",
@@ -18,7 +18,8 @@
     "globals": "^17.4.0",
     "sass": "1.77.6",
     "typescript-eslint": "^8.58.1",
-    "vite": "^7.3.2"
+    "vite": "^7.3.2",
+    "vite-plugin-pwa": "^1.3.0"
   },
   "dependencies": {
     "@iconify/react": "^6.0.2",

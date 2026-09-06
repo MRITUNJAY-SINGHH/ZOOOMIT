@@ -11,6 +11,7 @@ import SkeletonTable from '@/components/common/SkeletonTable';
 import EmptyState from '@/components/common/EmptyState';
 import ErrorState from '@/components/common/ErrorState';
 import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { toast } from 'react-hot-toast';
 
@@ -21,6 +22,7 @@ export default function Payments() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedTxn, setSelectedTxn] = useState(null);
@@ -29,7 +31,7 @@ export default function Payments() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/payments?page=${currentPage}&limit=20&search=${search}`);
+      const res = await api.get(`/payments?page=${currentPage}&limit=${pageSize}&search=${search}`);
       setTransactions(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
       setTotalRecords(res.data.total || 0);
@@ -41,7 +43,7 @@ export default function Payments() {
     }
   };
 
-  useEffect(() => { fetchTransactions(); }, [currentPage, search]);
+  useEffect(() => { fetchTransactions(); }, [currentPage, pageSize, search]);
 
   return (
     <div className="report-page pt-1">
@@ -73,12 +75,12 @@ export default function Payments() {
                       <td className="text-end fw-semibold">{formatCurrency(txn.amount)}</td>
                       <td><StatusBadge status={txn.paymentStatus} /></td>
                       <td>{txn.refundStatus && txn.refundStatus !== 'None' ? <StatusBadge status={`${txn.refundStatus} ${formatCurrency(txn.refundAmount)}`} variant={txn.refundStatus === 'Processed' ? 'info' : 'danger'} /> : '-'}</td>
-                      <td className="text-end"><Button variant="light" className="kuiklo-icon-btn" onClick={() => setSelectedTxn(txn)}><Eye size={20} /></Button></td>
+                      <td className="text-end"><Button variant="light" className="Zooom-icon-btn" onClick={() => setSelectedTxn(txn)}><Eye size={20} /></Button></td>
                     </tr>
                   ))}
                 </tbody>
               </Table>
-              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} />
+              <PaginationComponent currentPage={currentPage} totalPages={totalPages} totalRecords={totalRecords} onPageChange={setCurrentPage} pageSize={pageSize} onPageSizeChange={setPageSize} />
             </>
           )}
         </Card.Body>

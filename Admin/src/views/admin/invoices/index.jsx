@@ -14,6 +14,7 @@ import ErrorState from '@/components/common/ErrorState';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import DeleteModal from '@/components/common/DeleteModal';
 import PaginationComponent from '@/components/common/PaginationComponent';
+import { usePageSize } from '@/hooks/usePageSize';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { toast } from 'react-hot-toast';
 
@@ -26,7 +27,7 @@ export default function InvoicesList() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15);
+  const [pageSize, setPageSize] = usePageSize(50);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [selectedIds, setSelectedIds] = useState([]);
