@@ -32,6 +32,12 @@ const Payments = lazy(() => import('@/views/admin/payments'))
 const Invoices = lazy(() => import('@/views/admin/invoices'))
 const CreateInvoice = lazy(() => import('@/views/admin/invoices/CreateInvoice'))
 const ViewInvoice = lazy(() => import('@/views/admin/invoices/ViewInvoice'))
+
+const PurchaseOrders = lazy(() => import('@/views/admin/purchase/orders'))
+const PurchaseOrderForm = lazy(() => import('@/views/admin/purchase/orders/form'))
+const PurchaseEntryForm = lazy(() => import('@/views/admin/purchase/entry/form'))
+const PurchaseHistory = lazy(() => import('@/views/admin/purchase/history'))
+const PurchaseReturns = lazy(() => import('@/views/admin/purchase/returns'))
 const SalesReport = lazy(() => import('@/views/admin/reports/sales'))
 const InventoryReport = lazy(() => import('@/views/admin/reports/inventory'))
 const PaymentReport = lazy(() => import('@/views/admin/reports/payment'))
@@ -73,6 +79,16 @@ export const routes = [
           { path: '/inventory/upcoming-expiry', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: UpcomingExpiry }] },
           { path: '/inventory/logs', element: <ProtectedRoute permission="inventory.view" />, children: [{ path: '', Component: InventoryLogs }] },
           { path: '/orders/all', element: <ProtectedRoute permission="orders.view" />, children: [{ path: '', Component: OrdersAll }] },
+          { path: '/purchase/orders', element: <ProtectedRoute permission="purchase.view" />, children: [
+            { path: '', Component: PurchaseOrders },
+            { path: 'create', element: <ProtectedRoute permission="purchase.create" />, children: [{ path: '', Component: PurchaseOrderForm }] },
+            { path: 'edit/:id', element: <ProtectedRoute permission="purchase.edit" />, children: [{ path: '', Component: PurchaseOrderForm }] },
+          ] },
+          { path: '/purchase/entry', element: <ProtectedRoute permission="purchase.create" />, children: [
+            { path: '', Component: PurchaseEntryForm },
+          ] },
+          { path: '/purchase/history', element: <ProtectedRoute permission="purchase.view" />, children: [{ path: '', Component: PurchaseHistory }] },
+          { path: '/purchase/returns', element: <ProtectedRoute permission="purchase.return" />, children: [{ path: '', Component: PurchaseReturns }] },
           { path: '/pos', element: <ProtectedRoute permission="pos.view" />, children: [
             { path: 'history', Component: POSHistoryPage },
             { path: 'returns', Component: POSReturnsPage },

@@ -19,6 +19,7 @@ const productBatchSchema = new mongoose.Schema({
   purchaseUnit: { type: String }, // e.g. 'BAG'
   purchaseQty: { type: Number }, // e.g. 10
   purchaseUnitCost: { type: Number }, // e.g. ₹2100 / BAG
+  receivedMrp: { type: Number }, // MRP of the batch at time of receipt
   
   // Dates
   manufacturingDate: { type: Date },

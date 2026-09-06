@@ -19,6 +19,7 @@ class InventoryService {
     unit, 
     unitCost, 
     totalCost: customTotalCost, 
+    receivedMrp,
     manufacturingDate, 
     expiryDate, 
     user, 
@@ -83,6 +84,7 @@ class InventoryService {
         purchaseUnit: purchaseUnitName,
         purchaseQty,
         purchaseUnitCost,
+        receivedMrp,
         manufacturingDate: manufacturingDate ? new Date(manufacturingDate) : null,
         expiryDate: finalExpiryDate
       });
@@ -92,6 +94,7 @@ class InventoryService {
       batch.totalCost = roundTo((batch.totalCost || 0) + computedTotalCost, 2);
       batch.unitCost = divide(batch.totalCost, batch.stock, 2);
       batch.costPrice = batch.unitCost;
+      if (receivedMrp !== undefined) batch.receivedMrp = receivedMrp;
       if (finalExpiryDate) batch.expiryDate = finalExpiryDate;
       await batch.save({ session });
     }

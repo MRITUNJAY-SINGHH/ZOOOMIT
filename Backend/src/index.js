@@ -32,6 +32,7 @@ import paymentRoutes from './routes/paymentRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import documentRoutes from './routes/documentRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
+import purchaseRoutes from './routes/purchaseRoutes.js';
 
 app.use(express.json());
 const corsOptions = {
@@ -82,6 +83,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/purchase', purchaseRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 
 app.get('/', (req, res) => {
