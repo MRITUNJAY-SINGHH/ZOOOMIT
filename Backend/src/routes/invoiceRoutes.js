@@ -6,8 +6,7 @@ import {
   createInvoice,
   updateInvoice,
   deleteInvoice,
-  bulkDeleteInvoices,
-  generateInvoicePdf
+  bulkDeleteInvoices
 } from '../controllers/invoiceController.js';
 
 const router = express.Router();
@@ -19,9 +18,6 @@ router.route('/')
 router.post('/bulk-delete', protect, authorize('payments', 'create'), bulkDeleteInvoices);
 
 // PDF routes moved to documentRoutes
-
-router.route('/:id/pdf')
-  .get(protect, generateInvoicePdf);
 
 router.route('/:id')
   .get(protect, authorize('payments', 'view'), getInvoiceById)

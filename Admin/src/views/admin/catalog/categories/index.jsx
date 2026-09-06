@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Button, Form, Badge, Modal, InputGroup, Pagination, Row, Col } from 'react-bootstrap';
+import { Card, Table, Button, Form, Badge, Modal, InputGroup, Pagination, Row, Col, Tabs, Tab } from 'react-bootstrap';
 import { Icon } from '@/components/common/LucideIcon';
 import api from '@/utils/api';
 import { toast } from 'react-hot-toast';
@@ -18,6 +18,10 @@ export default function Categories() {
   const [showModal, setShowModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState('categories');
+  const [modalType, setModalType] = useState('category'); // 'category' or 'subcategory'
+
   const [formData, setFormData] = useState({ 
     _id: null, 
     name: '', 
@@ -41,7 +45,8 @@ export default function Categories() {
     finally { setLoading(false); }
   };
 
-  const handleOpenModal = (category = null, defaultParent = '') => {
+  const handleOpenModal = (category = null, defaultParent = '', type = 'category') => {
+    setModalType(type);
     if (category) { 
       setEditMode(true); 
       setFormData({
@@ -85,10 +90,11 @@ export default function Categories() {
 
   const handleSave = async () => {
     if (!formData.name) { toast.error('Name is required'); return; }
+    if (modalType === 'subcategory' && !formData.parentCategory) { toast.error('Parent Category is required'); return; }
     try {
       const payload = {
         ...formData,
-        parentCategory: formData.parentCategory || null,
+        parentCategory: modalType === 'subcategory' ? formData.parentCategory : null,
         slug: formData.slug || formData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
       };
       if (editMode) { 
@@ -116,26 +122,17 @@ export default function Categories() {
 
   // Group into Hierarchy
   const rootCategories = categories.filter(c => !c.parentCategory);
+  const subCategories = categories.filter(c => c.parentCategory);
   
-  // Flatten tree for display with child rows below parents
-  let displayList = [];
-  rootCategories.forEach(root => {
-    displayList.push({ ...root, isSub: false });
-    const subcats = categories.filter(c => c.parentCategory && (c.parentCategory._id === root._id || c.parentCategory === root._id));
-    subcats.forEach(sub => {
-      displayList.push({ ...sub, isSub: true, parentName: root.name });
-    });
+  // Format subcategories to include parentName for search and display
+  const formattedSubCategories = subCategories.map(sub => {
+    const parent = rootCategories.find(r => r._id === (sub.parentCategory?._id || sub.parentCategory));
+    return { ...sub, parentName: parent ? parent.name : 'Unknown Parent' };
   });
 
-  // Catch any orphaned subcategories
-  const categorizedIds = new Set(displayList.map(c => c._id));
-  categories.forEach(c => {
-    if (!categorizedIds.has(c._id)) {
-      displayList.push({ ...c, isSub: !!c.parentCategory });
-    }
-  });
+  const sourceData = activeTab === 'categories' ? rootCategories : formattedSubCategories;
 
-  const filteredData = displayList.filter(c => 
+  const filteredData = sourceData.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
     (c.parentName && c.parentName.toLowerCase().includes(search.toLowerCase()))
   );
@@ -154,24 +151,34 @@ export default function Categories() {
           <div className="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
             <InputGroup size="sm" style={{ maxWidth: '280px' }}>
               <InputGroup.Text className="bg-transparent text-muted"><Icon icon="lucide:search" width={14} /></InputGroup.Text>
-              <Form.Control placeholder="Search categories..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
+              <Form.Control placeholder={`Search ${activeTab}...`} value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
             </InputGroup>
             <div className="d-flex gap-2 align-items-center">
-              <span className="text-muted small">{categories.length} total categories</span>
+              <span className="text-muted small">{sourceData.length} total {activeTab}</span>
               <Button variant="outline-secondary" size="sm" onClick={fetchCategories}><Icon icon="lucide:refresh-cw" width={14} /></Button>
-              <Button variant="primary" size="sm" onClick={() => handleOpenModal()}><Icon icon="lucide:plus" width={14} className="me-1" />Add Category</Button>
+              {activeTab === 'categories' ? (
+                <Button variant="primary" size="sm" onClick={() => handleOpenModal(null, '', 'category')}><Icon icon="lucide:plus" width={14} className="me-1" />Add Category</Button>
+              ) : (
+                <Button variant="primary" size="sm" onClick={() => handleOpenModal(null, '', 'subcategory')}><Icon icon="lucide:plus" width={14} className="me-1" />Add Subcategory</Button>
+              )}
             </div>
           </div>
-          {loading ? <SkeletonTable rows={5} columns={6} /> : currentData.length === 0 ? (
-            <EmptyState icon="lucide:folder" title="No Categories Found" actionLabel="Add Category" onAction={() => handleOpenModal()} />
+          
+          <Tabs activeKey={activeTab} onSelect={(k) => { setActiveTab(k); setCurrentPage(1); setSearch(''); }} className="mb-3">
+            <Tab eventKey="categories" title="Categories" />
+            <Tab eventKey="subcategories" title="Subcategories" />
+          </Tabs>
+
+          {loading ? <SkeletonTable rows={5} columns={5} /> : currentData.length === 0 ? (
+            <EmptyState icon="lucide:folder" title={`No ${activeTab} Found`} actionLabel={activeTab === 'categories' ? 'Add Category' : 'Add Subcategory'} onAction={() => handleOpenModal(null, '', activeTab === 'categories' ? 'category' : 'subcategory')} />
           ) : (
             <>
               <Table responsive hover className="align-middle mb-0">
                 <thead className="bg-light">
                   <tr>
                     <th style={{ width: 60 }}>Image</th>
-                    <th>Category Name</th>
-                    <th>Type</th>
+                    <th>Name</th>
+                    {activeTab === 'subcategories' && <th>Parent Category</th>}
                     <th>Slug</th>
                     <th>Status</th>
                     <th className="text-end">Actions</th>
@@ -179,7 +186,7 @@ export default function Categories() {
                 </thead>
                 <tbody>
                   {currentData.map(c => (
-                    <tr key={c._id} className={c.isSub ? 'bg-body-tertiary' : ''}>
+                    <tr key={c._id}>
                       <td>
                         {c.image ? (
                           <img src={c.image} alt={c.name} width="36" height="36" className="rounded" style={{ objectFit: 'cover' }} />
@@ -190,33 +197,17 @@ export default function Categories() {
                         )}
                       </td>
                       <td>
-                        <div className={`d-flex align-items-center gap-2 ${c.isSub ? 'ps-4' : ''}`}>
-                          {c.isSub && <span className="text-muted">↳</span>}
-                          <span className={c.isSub ? 'fw-normal text-body' : 'fw-bold text-primary'}>{c.name}</span>
-                        </div>
+                        <span className="fw-bold text-primary">{c.name}</span>
                       </td>
-                      <td>
-                        {c.isSub ? (
-                          <Badge bg="secondary" className="font-size-11">Subcategory of {c.parentName || 'Parent'}</Badge>
-                        ) : (
-                          <Badge bg="primary-subtle" className="text-primary font-size-11">Parent Category</Badge>
-                        )}
-                      </td>
+                      {activeTab === 'subcategories' && (
+                        <td>
+                          <Badge bg="secondary" className="font-size-11">{c.parentName}</Badge>
+                        </td>
+                      )}
                       <td className="text-muted"><code className="small">{c.slug}</code></td>
                       <td><Badge bg={c.status === 'Active' ? 'success' : 'danger'}>{c.status}</Badge></td>
                       <td className="text-end">
-                        {!c.isSub && (
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm" 
-                            className="me-2 py-0 px-2 font-size-11" 
-                            onClick={() => handleOpenModal(null, c._id)}
-                            title="Add Subcategory"
-                          >
-                            + Subcategory
-                          </Button>
-                        )}
-                        <Button variant="light" size="sm" className="me-1" onClick={() => handleOpenModal(c)}><Icon icon="lucide:edit" width={14} /></Button>
+                        <Button variant="light" size="sm" className="me-1" onClick={() => handleOpenModal(c, '', activeTab === 'categories' ? 'category' : 'subcategory')}><Icon icon="lucide:edit" width={14} /></Button>
                         <Button variant="light" size="sm" className="text-danger" onClick={() => setDeleteTarget(c)}><Icon icon="lucide:trash-2" width={14} /></Button>
                       </td>
                     </tr>
@@ -245,12 +236,12 @@ export default function Categories() {
       {/* Add / Edit Category Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{editMode ? 'Edit Category' : 'Create Category / Subcategory'}</Modal.Title>
+          <Modal.Title>{editMode ? (modalType === 'category' ? 'Edit Category' : 'Edit Subcategory') : (modalType === 'category' ? 'Create Category' : 'Create Subcategory')}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
             <Form.Group className="mb-3">
-              <Form.Label className="fw-medium">Category Name *</Form.Label>
+              <Form.Label className="fw-medium">{modalType === 'category' ? 'Category Name' : 'Subcategory Name'} *</Form.Label>
               <Form.Control 
                 value={formData.name} 
                 onChange={e => setFormData({
@@ -263,21 +254,24 @@ export default function Categories() {
               />
             </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label className="fw-medium">Parent Category (Optional)</Form.Label>
-              <Form.Select 
-                value={formData.parentCategory} 
-                onChange={e => setFormData({ ...formData, parentCategory: e.target.value })}
-              >
-                <option value="">None (Top-Level Parent Category)</option>
-                {rootCategories.filter(r => r._id !== formData._id).map(r => (
-                  <option key={r._id} value={r._id}>{r.name}</option>
-                ))}
-              </Form.Select>
-              <Form.Text className="text-muted font-size-11">
-                Select a parent if this is a subcategory.
-              </Form.Text>
-            </Form.Group>
+            {modalType === 'subcategory' && (
+              <Form.Group className="mb-3">
+                <Form.Label className="fw-medium">Parent Category *</Form.Label>
+                <Form.Select 
+                  value={formData.parentCategory} 
+                  onChange={e => setFormData({ ...formData, parentCategory: e.target.value })}
+                  required
+                >
+                  <option value="">Select Parent Category</option>
+                  {rootCategories.filter(r => r._id !== formData._id).map(r => (
+                    <option key={r._id} value={r._id}>{r.name}</option>
+                  ))}
+                </Form.Select>
+                <Form.Text className="text-muted font-size-11">
+                  Required. Select the parent category for this subcategory.
+                </Form.Text>
+              </Form.Group>
+            )}
 
             <Form.Group className="mb-3">
               <Form.Label className="fw-medium">Slug (URL identifier)</Form.Label>

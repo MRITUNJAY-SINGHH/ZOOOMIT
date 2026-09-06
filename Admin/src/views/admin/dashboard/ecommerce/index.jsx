@@ -179,7 +179,7 @@ export default function Dashboard() {
             )}
 
             <Button 
-              variant="outline-secondary" 
+              variant="secondary" 
               size="sm" 
               onClick={handleManualRefresh}
               disabled={isRefreshing}
@@ -207,7 +207,7 @@ export default function Dashboard() {
                 {actionCenter.pendingOrdersCount > 0 && (
                   <Link
                     to="/orders/all?status=Pending"
-                    className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
+                    className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
                     style={{ fontSize: '0.8rem', borderRadius: '6px' }}
                   >
                     <ShoppingBag size={14} />
@@ -218,7 +218,7 @@ export default function Dashboard() {
                 {actionCenter.criticalLowStockCount > 0 && (
                   <Link
                     to="/inventory/low-stock"
-                    className="btn btn-sm btn-outline-warning d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
+                    className="btn btn-sm btn-warning d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
                     style={{ fontSize: '0.8rem', borderRadius: '6px' }}
                   >
                     <AlertCircle size={14} />
@@ -229,7 +229,7 @@ export default function Dashboard() {
                 {actionCenter.pendingRefundsCount > 0 && (
                   <Link
                     to="/reports/payments"
-                    className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
+                    className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
                     style={{ fontSize: '0.8rem', borderRadius: '6px' }}
                   >
                     <RotateCcw size={14} />
@@ -240,7 +240,7 @@ export default function Dashboard() {
                 {actionCenter.failedPaymentsCount > 0 && (
                   <Link
                     to="/reports/payments"
-                    className="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
+                    className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1 py-1 px-2 fw-semibold"
                     style={{ fontSize: '0.8rem', borderRadius: '6px' }}
                   >
                     <AlertCircle size={14} />
@@ -303,11 +303,6 @@ export default function Dashboard() {
                 </Button>
               </PermissionGuard>
 
-              <PermissionGuard permission="customers.create">
-                <Button as={Link} to="/customers" variant="secondary" size="sm" className="d-inline-flex align-items-center gap-1 py-1 px-3 fw-medium">
-                  <Users size={15} /> Add Customer
-                </Button>
-              </PermissionGuard>
             </div>
           </div>
         </Card.Body>

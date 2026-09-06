@@ -8,7 +8,7 @@ import PageHeader from '@/components/common/PageHeader';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import InvoicePrintOut from './components/InvoicePrintOut';
 import { toast } from 'react-hot-toast';
-import ConfirmModal from '@/components/common/ConfirmModal';
+
 
 export default function ReturnsPage() {
   const location = useLocation();
@@ -159,28 +159,9 @@ export default function ReturnsPage() {
     }));
   };
 
-<<<<<<< HEAD
-  const [confirmReturnModal, setConfirmReturnModal] = useState(false);
-
-  const totalRefund = returnItems.reduce((acc, i) => acc + (i.qtyToReturn * i.price), 0);
-
-  const confirmReturn = () => {
-    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
-    if (itemsToReturn.length === 0) return alert("Select quantities to return.");
-    
-    const finalReason = reason === 'Other' ? customReason : reason;
-    if (reason === 'Other' && !finalReason.trim()) return alert('Please enter a custom reason');
-    
-    setConfirmReturnModal(true);
-  };
-
-  const processReturn = async () => {
-    const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
-=======
   const handleProcessReturnClick = () => {
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
     if (itemsToReturn.length === 0) return toast.error("Select quantities to return.");
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
     if (!invoice.invoiceNumber && !invoice.billNumber && !invoice.orderNumber) {
       setError('Return processing requires an invoice number.');
       setConfirmReturnModal(false);
@@ -188,8 +169,6 @@ export default function ReturnsPage() {
     }
     
     const finalReason = reason === 'Other' ? customReason : reason;
-<<<<<<< HEAD
-=======
     if (reason === 'Other' && !finalReason.trim()) return toast.error('Please enter a custom reason');
     
     setShowConfirm(true);
@@ -199,7 +178,6 @@ export default function ReturnsPage() {
     setShowConfirm(false);
     const itemsToReturn = returnItems.filter(i => i.qtyToReturn > 0);
     const finalReason = reason === 'Other' ? customReason : reason;
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
 
     setLoading(true);
     setError(null);
@@ -306,28 +284,13 @@ export default function ReturnsPage() {
             <div className="text-md-end">
               <div className="text-muted mb-1">Total Refund</div>
               <h4 className="mb-3 text-primary">{formatCurrency(totalRefund)}</h4>
-<<<<<<< HEAD
-              <Button variant="danger" className="w-100 fw-semibold px-4" onClick={confirmReturn} disabled={loading || totalRefund === 0}>
-=======
               <Button variant="danger" className="w-100 fw-semibold px-4" onClick={handleProcessReturnClick} disabled={loading || totalRefund === 0}>
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
                 {loading ? 'Processing...' : 'Process Return'}
               </Button>
             </div>
           </div>
         </Card.Body>
       </Card>
-<<<<<<< HEAD
-      
-      {/* ADD IMPORT IF MISSING AT TOP OR JUST RENDER IT */}
-      <ConfirmModal
-        show={confirmReturnModal}
-        title="Confirm Return"
-        message={\`Are you sure you want to process this return for \${formatCurrency(totalRefund)}?\`}
-        confirmLabel="Process Return"
-        confirmVariant="danger"
-        onCancel={() => setConfirmReturnModal(false)}
-=======
 
       <ConfirmModal
         show={showConfirm}
@@ -336,7 +299,6 @@ export default function ReturnsPage() {
         confirmLabel="Process Return"
         confirmVariant="danger"
         onCancel={() => setShowConfirm(false)}
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
         onConfirm={processReturn}
       />
     </div>

@@ -73,12 +73,7 @@ export default function HistoryPage() {
         // Fallback for old offline orders
         const orderData = await fetchApi(`/orders/${orderId}`);
         if (orderData) {
-<<<<<<< HEAD
-          const dummyInvoice = {
-            _id: 'dummy',
-=======
           const fallbackInvoice = {
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
             invoiceNumber: orderData.billNumber || orderData.orderNumber,
             createdAt: orderData.createdAt,
             customerSnapshot: {
@@ -165,15 +160,9 @@ export default function HistoryPage() {
         </Card.Body>
       </Card>
 
-<<<<<<< HEAD
-  <Card className="shadow-sm border-0">
-    <Card.Body className="p-0">
-      {loading ? <div className="p-5 text-center text-muted">Loading history...</div> : (
-=======
       <Card>
         <Card.Body>
           {loading ? <SkeletonTable rows={5} columns={5} /> : (
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
         <Table responsive hover className="align-middle mb-0">
           <thead className="table-light">
             <tr>
@@ -206,12 +195,6 @@ export default function HistoryPage() {
                 </td>
                 <td className="fw-bold">{formatCurrency(order.amount)}</td>
                 <td><Badge bg={STATUS_COLORS[order.status] || 'secondary'}>{order.status}</Badge></td>
-<<<<<<< HEAD
-  <td className="text-end pe-4">
-    <div className="d-flex justify-content-end gap-2">
-      <Button size="sm" variant="outline-primary" onClick={() => handleReprintClick(order._id)}>
-        <Printer size={14} className="me-1" /> Reprint
-=======
                     <td className="text-end">
           <div className="d-flex justify-content-end gap-2 flex-column flex-sm-row">
             <Button
@@ -221,7 +204,6 @@ export default function HistoryPage() {
               disabled={reprintingId === order._id}
             >
               {reprintingId === order._id ? <Spinner size="sm" /> : 'Reprint'}
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
             </Button>
             <Button
               size="sm"

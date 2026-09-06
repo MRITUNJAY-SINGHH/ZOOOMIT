@@ -109,54 +109,6 @@ export const posCheckout = async (req, res) => {
   try {
     let resultPayload;
 
-<<<<<<< HEAD
-    if (!items || items.length === 0) {
-      throw new Error('Cart cannot be empty');
-    }
-
-    // Recalculate and validate prices to prevent tampering
-    let calculatedSubTotal = 0;
-    const Product = (await import('../models/Product.js')).default;
-    
-    for (let item of items) {
-      const dbProduct = await Product.findById(item.productId).session(session);
-      if (!dbProduct) throw new Error(`Product not found: ${item.productName}`);
-      
-      const expectedPrice = dbProduct.sellingPrice || dbProduct.mrp;
-      if (item.price !== expectedPrice) {
-        // Just a safety check, though discount per item can alter price, typically discount is applied per item as a separate field or calculated.
-        // Assuming item.price is the final price after item-level discount, we skip strict equality but ensure it's not negative.
-        if (item.price < 0) throw new Error(`Invalid price for ${item.productName}`);
-      }
-      
-      if (item.qty <= 0) throw new Error(`Invalid quantity for ${item.productName}`);
-      
-      item.total = item.price * item.qty;
-      calculatedSubTotal += item.total;
-    }
-
-    // Validate totals
-    if (Math.abs(calculatedSubTotal - subTotal) > 1) {
-      throw new Error('Subtotal validation failed');
-    }
-    
-    const calculatedAmount = subTotal + tax - discount;
-    if (Math.abs(calculatedAmount - amount) > 1) {
-      throw new Error('Grand total validation failed');
-    }
-
-    // Check in my customer have this or not if not create that
-    if (!customer && customerSnapshot && customerSnapshot.phone) {
-      const Customer = (await import('../models/Customer.js')).default;
-      let existingCustomer = await Customer.findOne({ phone: customerSnapshot.phone }).session(session);
-      
-      if (existingCustomer) {
-        customer = existingCustomer._id;
-        // Check if existing customer has this address, if not we could add it
-        if (customerAddress && existingCustomer.addresses.length === 0) {
-          existingCustomer.addresses.push({ label: 'Billing/Shipping', ...customerAddress });
-          await existingCustomer.save({ session });
-=======
     await session.withTransaction(async () => {
       let { customer, customerSnapshot, customerAddress, items, discount = 0, paymentMethod = 'Cash', offlineId } = req.body;
 
@@ -171,7 +123,6 @@ export const posCheckout = async (req, res) => {
           const invoice = await Invoice.findOne({ order: existingOrder._id }).session(session);
           const transaction = await Transaction.findOne({ order: existingOrder._id }).session(session);
           throw { isIdempotent: true, order: existingOrder, invoice, transaction };
->>>>>>> b0c33b866999113e91051b3065362eadae55829f
         }
       }
 

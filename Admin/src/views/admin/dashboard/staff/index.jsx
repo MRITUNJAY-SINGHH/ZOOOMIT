@@ -27,12 +27,6 @@ export default function StaffDashboard() {
             <ShoppingBag size={20} className="me-2" /> Create Order
           </Button>
         </PermissionGuard>
-        
-        <PermissionGuard permission="customers.create">
-          <Button as={Link} to="/customers" variant="outline-primary">
-            <Users size={20} className="me-2" /> Add Customer
-          </Button>
-        </PermissionGuard>
       </div>
 
       <Row className="g-3">
