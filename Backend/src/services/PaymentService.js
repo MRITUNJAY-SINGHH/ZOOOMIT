@@ -1,4 +1,5 @@
 import Razorpay from 'razorpay';
+import crypto from 'crypto';
 import Transaction from '../models/Transaction.js';
 import Order from '../models/Order.js';
 
@@ -82,6 +83,52 @@ class PaymentService {
       });
       return false;
     }
+  }
+
+  /**
+   * Create Razorpay Order for Checkout
+   * @param {{ amount: number, receipt: string, notes?: object }} options
+   */
+  async createRazorpayOrder({ amount, receipt, notes = {} }) {
+    if (!this.razorpay) {
+      // In dev mode without keys, return a mock order
+      if (process.env.NODE_ENV !== 'production' && !process.env.RAZORPAY_KEY_ID) {
+        return {
+          id: `order_mock_${Date.now()}`,
+          amount: Math.round(amount * 100),
+          currency: 'INR',
+          receipt: receipt,
+          status: 'created'
+        };
+      }
+      throw new Error('Payment gateway not configured');
+    }
+
+    const options = {
+      amount: Math.round(amount * 100), // convert to paise
+      currency: 'INR',
+      receipt: receipt || `rcpt_${Date.now()}`,
+      notes
+    };
+
+    return await this.razorpay.orders.create(options);
+  }
+
+  /**
+   * Authoritative backend verification of Razorpay payment signature
+   */
+  verifyPaymentSignature({ razorpayOrderId, razorpayPaymentId, signature }) {
+    const secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!secret) {
+      if (process.env.NODE_ENV !== 'production') return true;
+      throw new Error('Payment gateway secret not configured');
+    }
+
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`);
+    const generatedSignature = hmac.digest('hex');
+
+    return generatedSignature === signature;
   }
 }
 

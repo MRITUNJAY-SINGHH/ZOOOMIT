@@ -25,12 +25,12 @@ export const posSync = async (req, res) => {
     try {
       let responseData = null;
       let statusCode = 200;
-      
-      const mockReq = { 
-        body: order.payload, 
-        user: req.user 
+
+      const mockReq = {
+        body: order.payload,
+        user: req.user
       };
-      
+
       const mockRes = {
         status: (code) => { statusCode = code; return mockRes; },
         json: (data) => { responseData = data; }
@@ -134,7 +134,7 @@ export const posCheckout = async (req, res) => {
       if (!customer && customerSnapshot && customerSnapshot.phone) {
         const Customer = (await import('../models/Customer.js')).default;
         let existingCustomer = await Customer.findOne({ phone: customerSnapshot.phone }).session(session);
-        
+
         if (existingCustomer) {
           customer = existingCustomer._id;
           if (customerAddress && existingCustomer.addresses.length === 0) {
@@ -198,7 +198,7 @@ export const posCheckout = async (req, res) => {
       }
 
       const totalDiscount = Number(discount) || 0;
-      const finalAmount = taxMode === 'EXCLUSIVE' 
+      const finalAmount = taxMode === 'EXCLUSIVE'
         ? roundTo(computedTaxable + computedTax - totalDiscount, 2)
         : roundTo(computedSubTotal - totalDiscount, 2);
 
@@ -206,7 +206,7 @@ export const posCheckout = async (req, res) => {
       const Sequence = (await import('../models/Sequence.js')).default;
       const orderSeq = await Sequence.getNextValue('Order', session);
       const orderNumber = `ORD-2026-${orderSeq.toString().padStart(5, '0')}`;
-      
+
       const posSeq = await Sequence.getNextValue('POS', session);
       const prefixOffline = settings.invoicePrefixOffline || 'POS-2026-';
       const billNumber = `${prefixOffline}${posSeq.toString().padStart(6, '0')}`;
@@ -322,7 +322,7 @@ export const posReturn = async (req, res) => {
 
     await session.withTransaction(async () => {
       const { orderId, returnItems, reason, refundMethod } = req.body;
-      
+
       const order = await Order.findById(orderId).session(session);
       if (!order) throw new Error('Order not found');
 
@@ -350,13 +350,13 @@ export const posReturn = async (req, res) => {
 
         // Restock inventory batch
         await InventoryService.returnStock(
-          orderItem.product, 
-          orderItem.variant, 
-          null, 
-          returnQty, 
-          `POS Return: ${order.orderNumber}`, 
-          req.user._id, 
-          order._id, 
+          orderItem.product,
+          orderItem.variant,
+          null,
+          returnQty,
+          `POS Return: ${order.orderNumber}`,
+          req.user._id,
+          order._id,
           session
         );
 
@@ -373,7 +373,7 @@ export const posReturn = async (req, res) => {
       // Check if full return or partial return
       const totalOriginalQty = order.items.reduce((acc, i) => acc + i.qty, 0);
       const totalReturnedQty = order.items.reduce((acc, i) => acc + (i.returnedQty || 0), 0);
-      
+
       if (totalReturnedQty >= totalOriginalQty) {
         order.status = 'Returned';
         order.paymentStatus = 'Refunded';

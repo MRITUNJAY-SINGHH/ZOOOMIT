@@ -54,6 +54,33 @@ const orderSchema = new mongoose.Schema({
   
   coupon: { type: mongoose.Schema.Types.ObjectId, ref: 'Coupon' },
   
+  // Shipping / Delivery Address
+  shippingAddress: {
+    label: { type: String, default: 'Home' },
+    street: { type: String },
+    landmark: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipCode: { type: String },
+    country: { type: String, default: 'India' },
+    formattedAddress: { type: String },
+    contactName: { type: String },
+    contactPhone: { type: String }
+  },
+
+  // Payment Tracking
+  paymentMethod: { type: String, enum: ['Cash', 'Online', 'COD', 'Razorpay'], default: 'COD' },
+  razorpayOrderId: { type: String },
+  razorpayPaymentId: { type: String },
+
+  // Secure Delivery OTP
+  deliveryOtp: {
+    hash: { type: String },
+    expiresAt: { type: Date },
+    attempts: { type: Number, default: 0 },
+    verifiedAt: { type: Date }
+  },
+  
   // Rider Assignment
   assignedRider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   assignedAt: { type: Date },
@@ -61,6 +88,7 @@ const orderSchema = new mongoose.Schema({
   
   // Cancellation Details
   cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  cancelledByCustomer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
   cancelledAt: { type: Date },
   cancelReason: { type: String },
   
