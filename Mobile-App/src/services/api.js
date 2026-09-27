@@ -188,9 +188,18 @@ export const StorefrontAPI = {
     try {
       return await api.post(`/orders/${id}/cancel`, { reason });
     } catch (error) {
-      const target = SAMPLE_ORDERS.find((o) => o._id === id);
-      if (target) target.status = 'Cancelled';
-      return { data: { success: true, message: 'Order cancelled successfully' } };
+      const target = SAMPLE_ORDERS.find(
+        (o) =>
+          o._id === id ||
+          o.orderNumber === id ||
+          (id && typeof id === 'string' && (o._id.includes(id) || id.includes(o.orderNumber || '')))
+      );
+      if (target) {
+        target.status = 'Cancelled';
+        target.cancelledAt = new Date().toISOString();
+        target.cancelReason = reason || 'Cancelled by customer';
+      }
+      return { data: { success: true, message: 'Order cancelled successfully', data: target } };
     }
   },
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,24 @@ import {
   TextInput,
   ActivityIndicator,
   Linking,
-  Platform
+  Platform,
+  BackHandler
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import Constants from 'expo-constants';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useAnimatedReaction,
+  interpolate,
+  Extrapolation,
+  runOnJS
+} from 'react-native-reanimated';
 import {
+  ArrowLeft,
   Settings,
   ShoppingBag,
   MapPin,
@@ -47,6 +59,7 @@ import { haptics } from '../../services/haptics';
 
 export default function ProfileScreen() {
   const { customer, token, logout, refreshProfile } = useAuth();
+  const pageContentRef = useRef(null);
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -57,6 +70,17 @@ export default function ProfileScreen() {
   const [showFavoritesModal, setShowFavoritesModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  useEffect(() => {
+    if (!showLogoutModal && !showDeleteModal) return;
+    const backAction = () => {
+      setShowLogoutModal(false);
+      setShowDeleteModal(false);
+      return true;
+    };
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
+    return () => backHandler.remove();
+  }, [showLogoutModal, showDeleteModal]);
 
   const [editName, setEditName] = useState(customer?.name || '');
   const [editEmail, setEditEmail] = useState(customer?.email || '');
@@ -73,7 +97,120 @@ export default function ProfileScreen() {
   const rawPhone = customer?.phone ? customer.phone.toString().replace(/\D/g, '') : '';
   const formattedPhone = rawPhone.length >= 10
     ? `+91 ${rawPhone.slice(-10, -5)} ${rawPhone.slice(-5)}`
-    : rawPhone ? `+91 ${rawPhone}` : '+91 ••••• •••••';
+    : rawPhone ? `+91 ${rawPhone}` : '+91 99999 99999';
+
+  const displayName = customer?.name || 'Kuiklo User 9999';
+
+  const insets = useSafeAreaInsets();
+  const COMPACT_HEADER_HEIGHT = insets.top + 56;
+  const EXPANDED_BANNER_HEIGHT = insets.top + 215;
+  const SCROLL_DISTANCE = EXPANDED_BANNER_HEIGHT - COMPACT_HEADER_HEIGHT;
+  const HEADER_OVERLAP = 24;
+
+  const scrollY = useSharedValue(0);
+  const [isCompactVisible, setIsCompactVisible] = useState(false);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    }
+  });
+
+  useAnimatedReaction(
+    () => scrollY.value > SCROLL_DISTANCE * 0.55,
+    (visible, prev) => {
+      if (visible !== prev) {
+        runOnJS(setIsCompactVisible)(visible);
+      }
+    }
+  );
+
+  const headerAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, -SCROLL_DISTANCE],
+      Extrapolation.CLAMP
+    );
+    return {
+      transform: [{ translateY }]
+    };
+  });
+
+  const imageAnimatedStyle = useAnimatedStyle(() => {
+    const scale = interpolate(
+      scrollY.value,
+      [-150, 0],
+      [1.3, 1],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [-150, 0, SCROLL_DISTANCE],
+      [-20, 0, SCROLL_DISTANCE * 0.35],
+      Extrapolation.CLAMP
+    );
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.9],
+      [1, 0.35],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      transform: [{ translateY }, { scale }]
+    };
+  });
+
+  const identityAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.6],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.6],
+      [0, -22],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      transform: [{ translateY }]
+    };
+  });
+
+  const settingsBtnAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.45],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity
+    };
+  });
+
+  const compactHeaderAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_DISTANCE * 0.55, SCROLL_DISTANCE],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [SCROLL_DISTANCE * 0.55, SCROLL_DISTANCE],
+      [-8, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      transform: [{ translateY }]
+    };
+  });
 
   const handleOpenEditProfile = () => {
     setEditName(customer?.name || '');
@@ -167,16 +304,83 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.screenContainer}>
-      {/* Full Background Banner Header */}
-      <View style={styles.bannerHeaderWrap}>
-        <Image
+      <BlurTargetView
+        ref={pageContentRef}
+        style={[
+          styles.mainPageWrap,
+          (showLogoutModal || showDeleteModal) && styles.pageContentBlurred
+        ]}
+      >
+        {/* Top Yellow Underlay for seamless pull-down overscroll */}
+        <View style={styles.topYellowUnderlay} />
+
+      {/* Sticky Compact Header (appears when collapsed) */}
+      <Animated.View
+        style={[
+          styles.compactHeaderBar,
+          { height: COMPACT_HEADER_HEIGHT, paddingTop: insets.top },
+          compactHeaderAnimatedStyle
+        ]}
+        pointerEvents={isCompactVisible ? 'auto' : 'none'}
+      >
+        <Pressable
+          style={styles.compactBackBtn}
+          onPress={() => {
+            haptics.selection();
+            if (router.canGoBack()) {
+              router.back();
+            } else {
+              router.push('/(tabs)');
+            }
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
+          <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
+        </Pressable>
+
+        <View style={styles.compactTitleCol}>
+          <Text style={styles.compactNameText} numberOfLines={1}>
+            {displayName}
+          </Text>
+          <Text style={styles.compactPhoneText} numberOfLines={1}>
+            {formattedPhone}
+          </Text>
+        </View>
+
+        <Pressable
+          style={styles.compactSettingsBtn}
+          onPress={handleOpenEditProfile}
+          accessibilityRole="button"
+          accessibilityLabel="Settings"
+        >
+          <Settings size={18} color={colors.textPrimary} strokeWidth={2.4} />
+        </Pressable>
+      </Animated.View>
+
+      {/* Parallax Collapsing Yellow Banner Header */}
+      <Animated.View
+        style={[
+          styles.bannerHeaderWrap,
+          { height: EXPANDED_BANNER_HEIGHT },
+          headerAnimatedStyle
+        ]}
+        pointerEvents="box-none"
+      >
+        <Animated.Image
           source={require('../../../assets/images/profile_header.jpg')}
-          style={styles.bannerBgImage}
+          style={[styles.bannerBgImage, imageAnimatedStyle]}
           resizeMode="cover"
         />
 
-        <SafeAreaView edges={['top']} style={styles.bannerSafeArea}>
-          <View style={styles.headerTopBar}>
+        <View
+          style={[
+            styles.bannerContentWrap,
+            { paddingTop: insets.top + 8, paddingBottom: HEADER_OVERLAP + 12 }
+          ]}
+        >
+          {/* Top Bar with Settings */}
+          <Animated.View style={[styles.headerTopBar, settingsBtnAnimatedStyle]}>
             <View style={{ flex: 1 }} />
             <Pressable
               style={({ pressed }) => [
@@ -189,12 +393,13 @@ export default function ProfileScreen() {
             >
               <Settings size={18} color={colors.textPrimary} strokeWidth={2.4} />
             </Pressable>
-          </View>
+          </Animated.View>
 
-          <View style={styles.customerInfoOverlay}>
+          {/* Large User Identity */}
+          <Animated.View style={[styles.customerInfoOverlay, identityAnimatedStyle]}>
             <Text style={styles.greetingText}>Hello,</Text>
             <Text style={styles.customerName} numberOfLines={1}>
-              {customer?.name || 'Rohit Sharma'}
+              {displayName}
             </Text>
             <Text style={styles.customerPhone}>
               {formattedPhone}
@@ -205,14 +410,19 @@ export default function ProfileScreen() {
               </View>
               <Text style={styles.verifiedText}>Verified</Text>
             </View>
-          </View>
-        </SafeAreaView>
-      </View>
+          </Animated.View>
+        </View>
+      </Animated.View>
 
-      {/* Main Content Body with Smooth Curved Transition */}
-      <ScrollView 
-        style={styles.bodyScrollView} 
-        contentContainerStyle={styles.bodyScrollContent}
+      {/* Main Content Body with Smooth Curved Layer Transition */}
+      <Animated.ScrollView
+        style={styles.bodyScrollView}
+        contentContainerStyle={[
+          styles.bodyScrollContent,
+          { paddingTop: EXPANDED_BANNER_HEIGHT - HEADER_OVERLAP }
+        ]}
+        scrollEventThrottle={16}
+        onScroll={scrollHandler}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.whiteCardContainer}>
@@ -387,7 +597,8 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
+      </BlurTargetView>
 
       {/* --- MODAL 1: Edit Profile (Personal Information) --- */}
       <Modal
@@ -885,16 +1096,21 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 8: Logout Confirmation --- */}
-      <Modal
-        visible={showLogoutModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowLogoutModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowLogoutModal(false)} />
-          <View style={styles.alertCard}>
+      {/* --- IN-SCREEN MODAL 8: Logout Confirmation --- */}
+      {showLogoutModal && (
+        <View style={styles.inScreenModalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+            blurMethod="dimezisBlurView"
+            blurTarget={pageContentRef}
+          />
+          <Pressable
+            style={styles.modalBackdropBlurOverlay}
+            onPress={() => setShowLogoutModal(false)}
+          />
+          <View style={styles.logoutCard}>
             <View style={styles.alertIconCircle}>
               <LogOut size={26} color={colors.error} strokeWidth={2.4} />
             </View>
@@ -927,18 +1143,23 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      )}
 
-      {/* --- MODAL 9: Delete Account Policy --- */}
-      <Modal
-        visible={showDeleteModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDeleteModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowDeleteModal(false)} />
-          <View style={styles.alertCard}>
+      {/* --- IN-SCREEN MODAL 9: Delete Account Policy --- */}
+      {showDeleteModal && (
+        <View style={styles.inScreenModalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+            blurMethod="dimezisBlurView"
+            blurTarget={pageContentRef}
+          />
+          <Pressable
+            style={styles.modalBackdropBlurOverlay}
+            onPress={() => setShowDeleteModal(false)}
+          />
+          <View style={styles.logoutCard}>
             <View style={[styles.alertIconCircle, { backgroundColor: '#FEE2E2' }]}>
               <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
             </View>
@@ -960,7 +1181,7 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </View>
-      </Modal>
+      )}
     </View>
   );
 }
@@ -1018,11 +1239,74 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white
   },
-  bannerHeaderWrap: {
+  topYellowUnderlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 350,
+    backgroundColor: colors.primary
+  },
+  compactHeaderBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     backgroundColor: colors.primary,
-    height: 228,
-    position: 'relative',
-    overflow: 'hidden'
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5A900',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    zIndex: 100
+  },
+  compactBackBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10
+  },
+  compactTitleCol: {
+    flex: 1,
+    justifyContent: 'center'
+  },
+  compactNameText: {
+    fontSize: 15,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    letterSpacing: -0.2
+  },
+  compactPhoneText: {
+    fontSize: 11,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary,
+    opacity: 0.85,
+    marginTop: 1
+  },
+  compactSettingsBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10
+  },
+  bannerHeaderWrap: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.primary,
+    overflow: 'hidden',
+    zIndex: 1
   },
   bannerBgImage: {
     position: 'absolute',
@@ -1033,17 +1317,15 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%'
   },
-  bannerSafeArea: {
+  bannerContentWrap: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    justifyContent: 'space-between',
-    paddingBottom: spacing.xl
+    justifyContent: 'space-between'
   },
   headerTopBar: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingTop: spacing.xs
+    alignItems: 'center'
   },
   settingsBtn: {
     width: 38,
@@ -1056,11 +1338,10 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   customerInfoOverlay: {
-    maxWidth: '56%',
-    paddingBottom: spacing.xs
+    maxWidth: '58%'
   },
   greetingText: {
-    fontSize: 16,
+    fontSize: 15,
     fontFamily: typography.family.medium,
     color: colors.textPrimary,
     marginBottom: 2
@@ -1104,10 +1385,8 @@ const styles = StyleSheet.create({
   },
   bodyScrollView: {
     flex: 1,
-    backgroundColor: colors.white,
-    marginTop: -20,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28
+    backgroundColor: 'transparent',
+    zIndex: 2
   },
   bodyScrollContent: {
     paddingBottom: 40
@@ -1116,7 +1395,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingTop: spacing.lg
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    paddingTop: spacing.lg,
+    minHeight: 800
   },
   quickActionsGrid: {
     flexDirection: 'row',
@@ -1642,6 +1924,54 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     height: 90
   },
+  mainPageWrap: {
+    flex: 1,
+    backgroundColor: colors.white,
+    position: 'relative'
+  },
+  pageContentBlurred: {
+    ...Platform.select({
+      web: {
+        filter: 'blur(10px)',
+        transform: [{ scale: 0.985 }],
+        transition: 'filter 0.25s ease, transform 0.25s ease, opacity 0.25s ease',
+        opacity: 0.8
+      },
+      ios: {
+        opacity: 0.8
+      },
+      android: {
+        opacity: 0.8
+      }
+    })
+  },
+  inScreenModalOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 9999,
+    elevation: 9999,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg
+  },
+  centeredModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg
+  },
+  modalBackdropBlurOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.28)'
+  },
+  logoutCard: {
+    width: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderLight
+  },
   alertCard: {
     backgroundColor: colors.white,
     borderRadius: 24,
@@ -1649,7 +1979,7 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xl,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   alertIconCircle: {
     width: 54,
@@ -1683,8 +2013,8 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 48,
     borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: colors.border,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: colors.white

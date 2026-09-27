@@ -1528,11 +1528,11 @@ export const cancelOrder = async (req, res) => {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    // Only Pending or Confirmed orders can be cancelled by the customer
-    const cancellableStatuses = ['Pending', 'Confirmed'];
-    if (!cancellableStatuses.includes(order.status)) {
+    // Delivered, already Cancelled, or Returned orders cannot be cancelled
+    const nonCancellableStatuses = ['Delivered', 'Cancelled', 'Returned'];
+    if (nonCancellableStatuses.includes(order.status)) {
       return res.status(400).json({
-        message: `Order cannot be cancelled because it is already '${order.status}'. Please contact customer support.`
+        message: `Order cannot be cancelled because it is already '${order.status}'.`
       });
     }
 

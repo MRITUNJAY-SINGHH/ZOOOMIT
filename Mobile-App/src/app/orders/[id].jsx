@@ -9,16 +9,18 @@ import {
   Image,
   Linking,
   Modal,
-  Alert
+  Alert,
+  TextInput
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Headphones,
   Check,
   X,
+  XCircle,
   Phone,
   Package,
   ShoppingBag,
@@ -38,12 +40,25 @@ import { useCart } from '../../context/CartContext';
 import { ErrorState } from '../../components/ErrorState';
 import { haptics } from '../../services/haptics';
 
+const CANCEL_REASONS = [
+  'Placed order by mistake',
+  'Delivery time is taking too long',
+  'Want to change delivery address',
+  'Want to modify or add items',
+  'Found items somewhere else',
+  'Other reason'
+];
+
 export default function OrderDetailsScreen() {
   const params = useLocalSearchParams();
   const id = params?.id;
   const { refreshCart } = useCart();
 
+  const queryClient = useQueryClient();
   const [showHelpSheet, setShowHelpSheet] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedReason, setSelectedReason] = useState(CANCEL_REASONS[0]);
+  const [customReason, setCustomReason] = useState('');
   const [isReordering, setIsReordering] = useState(false);
   const [reorderSuccessModal, setReorderSuccessModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -93,30 +108,37 @@ export default function OrderDetailsScreen() {
     }
   };
 
-  const handleCancelOrder = () => {
-    Alert.alert(
-      'Cancel Order',
-      'Are you sure you want to cancel this order? Any payments made will be refunded to your account.',
-      [
-        { text: 'Keep Order', style: 'cancel' },
-        {
-          text: 'Cancel Order',
-          style: 'destructive',
-          onPress: async () => {
-            setIsCancelling(true);
-            try {
-              await StorefrontAPI.cancelOrder(order._id, 'Cancelled by customer');
-              haptics.notificationSuccess();
-              refetch();
-            } catch (e) {
-              Alert.alert('Unable to cancel', e.response?.data?.message || 'Order is already being dispatched');
-            } finally {
-              setIsCancelling(false);
-            }
-          }
-        }
-      ]
-    );
+  const handleConfirmCancel = async () => {
+    if (!order?._id) return;
+    setIsCancelling(true);
+    const finalReason = selectedReason === 'Other reason' && customReason.trim()
+      ? customReason.trim()
+      : selectedReason;
+
+    try {
+      await StorefrontAPI.cancelOrder(order._id, finalReason);
+      queryClient.setQueryData(['order-details', id], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          status: 'Cancelled',
+          cancelledAt: new Date().toISOString(),
+          cancelReason: finalReason
+        };
+      });
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      setShowCancelModal(false);
+      haptics.notificationSuccess();
+      Alert.alert(
+        'Order Cancelled',
+        'Your order has been cancelled successfully. Any applicable payment will be refunded to your account.',
+        [{ text: 'OK', onPress: () => refetch() }]
+      );
+    } catch (e) {
+      Alert.alert('Unable to cancel', e.response?.data?.message || 'Something went wrong while cancelling this order.');
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   const openSupportWithTopic = (topic) => {
@@ -131,7 +153,8 @@ export default function OrderDetailsScreen() {
   const isDelivered = order.status === 'Delivered';
   const isCancelled = order.status === 'Cancelled' || order.status === 'Returned';
   const isProcessing = !isDelivered && !isCancelled;
-  const isCancellable = ['Pending', 'Confirmed'].includes(order.status);
+  // Can cancel in any phase prior to delivery
+  const isCancellable = !isDelivered && !isCancelled;
 
   const baseDate = new Date(order.createdAt || Date.now());
   const formatStepTime = (minOffset) => {
@@ -422,6 +445,21 @@ export default function OrderDetailsScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionHeaderTitle}>Need Help with this Order?</Text>
 
+          {isCancellable && (
+            <>
+              <HelpTopicRow
+                icon={<XCircle size={18} color={colors.error} />}
+                title="Cancel this order"
+                titleColor={colors.error}
+                onPress={() => {
+                  haptics.selection();
+                  setShowCancelModal(true);
+                }}
+              />
+              <View style={styles.dividerLine} />
+            </>
+          )}
+
           <HelpTopicRow
             icon={<Package size={18} color={colors.black} />}
             title="I haven't received my order"
@@ -478,19 +516,20 @@ export default function OrderDetailsScreen() {
 
         {!isDelivered && !isCancelled && (
           <>
-            {isCancellable && (
-              <Pressable
-                style={[styles.secondaryBarBtn, { borderColor: colors.error }]}
-                onPress={handleCancelOrder}
-                disabled={isCancelling}
-              >
-                {isCancelling ? (
-                  <ActivityIndicator size="small" color={colors.error} />
-                ) : (
-                  <Text style={[styles.secondaryBarText, { color: colors.error }]}>Cancel Order</Text>
-                )}
-              </Pressable>
-            )}
+            <Pressable
+              style={[styles.secondaryBarBtn, { borderColor: '#FCA5A5' }]}
+              onPress={() => {
+                haptics.selection();
+                setShowCancelModal(true);
+              }}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <ActivityIndicator size="small" color={colors.error} />
+              ) : (
+                <Text style={[styles.secondaryBarText, { color: colors.error }]}>Cancel Order</Text>
+              )}
+            </Pressable>
 
             <Pressable
               style={styles.primaryBarBtn}
@@ -543,6 +582,18 @@ export default function OrderDetailsScreen() {
             </View>
 
             <View style={styles.sheetTopicsList}>
+              {isCancellable && (
+                <HelpSheetOption
+                  icon={<XCircle size={18} color={colors.error} />}
+                  title="Cancel this order"
+                  titleColor={colors.error}
+                  onPress={() => {
+                    setShowHelpSheet(false);
+                    setShowCancelModal(true);
+                  }}
+                />
+              )}
+
               <HelpSheetOption
                 icon={<Package size={18} color={colors.black} />}
                 title="I haven't received my order"
@@ -595,6 +646,129 @@ export default function OrderDetailsScreen() {
         </View>
       </Modal>
 
+      {/* Cancellation Confirmation & Reason Selection Modal */}
+      <Modal
+        visible={showCancelModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          if (!isCancelling) setShowCancelModal(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={styles.modalBackdrop}
+            onPress={() => {
+              if (!isCancelling) setShowCancelModal(false);
+            }}
+          />
+          <View style={styles.cancelModalCard}>
+            <View style={styles.sheetGrabHandle} />
+
+            <View style={styles.sheetHeaderRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sheetTitle}>Cancel Order</Text>
+                <Text style={styles.sheetSubtitle}>
+                  Order #{order.orderNumber} • ₹{order.amount?.toFixed(2)}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setShowCancelModal(false)}
+                style={styles.sheetCloseBtn}
+                disabled={isCancelling}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.cancelSectionTitle}>Why do you want to cancel?</Text>
+
+            <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+              {CANCEL_REASONS.map((reason) => {
+                const isSelected = selectedReason === reason;
+                return (
+                  <Pressable
+                    key={reason}
+                    style={[
+                      styles.cancelReasonItem,
+                      isSelected && styles.cancelReasonItemSelected
+                    ]}
+                    onPress={() => {
+                      haptics.selection();
+                      setSelectedReason(reason);
+                    }}
+                  >
+                    <View
+                      style={[
+                        styles.cancelRadioCircle,
+                        isSelected && styles.cancelRadioCircleSelected
+                      ]}
+                    >
+                      {isSelected && <View style={styles.cancelRadioInner} />}
+                    </View>
+                    <Text
+                      style={[
+                        styles.cancelReasonText,
+                        isSelected && styles.cancelReasonTextSelected
+                      ]}
+                    >
+                      {reason}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+
+              {selectedReason === 'Other reason' && (
+                <TextInput
+                  style={styles.cancelCustomInput}
+                  placeholder="Tell us the reason (optional)..."
+                  placeholderTextColor={colors.textMuted}
+                  value={customReason}
+                  onChangeText={setCustomReason}
+                  maxLength={120}
+                />
+              )}
+            </ScrollView>
+
+            {/* Refund Info Notice */}
+            <View style={styles.refundInfoCard}>
+              <AlertCircle size={18} color="#D97706" style={{ marginRight: 10, marginTop: 2 }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.refundInfoTitle}>Refund Information</Text>
+                <Text style={styles.refundInfoDesc}>
+                  {order.paymentMethod?.toLowerCase().includes('cash')
+                    ? 'No advance payment was taken for Cash on Delivery. Order will be cancelled without charges.'
+                    : `₹${order.amount?.toFixed(2)} will be initiated for refund immediately to your original payment method.`}
+                </Text>
+              </View>
+            </View>
+
+            {/* Modal Actions */}
+            <View style={styles.cancelModalActions}>
+              <Pressable
+                style={styles.keepOrderBtn}
+                onPress={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+              >
+                <Text style={styles.keepOrderBtnText}>Keep Order</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.confirmCancelBtn}
+                onPress={handleConfirmCancel}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Text style={styles.confirmCancelBtnText}>Confirm Cancel</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Reorder Confirmation Modal */}
       <Modal
         visible={reorderSuccessModal}
@@ -638,7 +812,7 @@ export default function OrderDetailsScreen() {
   );
 }
 
-function HelpTopicRow({ icon, title, onPress }) {
+function HelpTopicRow({ icon, title, onPress, titleColor }) {
   return (
     <Pressable
       style={({ pressed }) => [
@@ -648,13 +822,13 @@ function HelpTopicRow({ icon, title, onPress }) {
       onPress={onPress}
     >
       <View style={styles.helpTopicIconWrap}>{icon}</View>
-      <Text style={styles.helpTopicTitle}>{title}</Text>
-      <ChevronRight size={16} color={colors.textSecondary} />
+      <Text style={[styles.helpTopicTitle, titleColor ? { color: titleColor } : null]}>{title}</Text>
+      <ChevronRight size={16} color={titleColor || colors.textSecondary} />
     </Pressable>
   );
 }
 
-function HelpSheetOption({ icon, title, onPress }) {
+function HelpSheetOption({ icon, title, onPress, titleColor }) {
   return (
     <Pressable
       style={({ pressed }) => [
@@ -664,8 +838,8 @@ function HelpSheetOption({ icon, title, onPress }) {
       onPress={onPress}
     >
       <View style={styles.sheetOptionIconWrap}>{icon}</View>
-      <Text style={styles.sheetOptionTitle}>{title}</Text>
-      <ChevronRight size={16} color={colors.textSecondary} />
+      <Text style={[styles.sheetOptionTitle, titleColor ? { color: titleColor } : null]}>{title}</Text>
+      <ChevronRight size={16} color={titleColor || colors.textSecondary} />
     </Pressable>
   );
 }
@@ -1267,5 +1441,134 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: typography.family.medium,
     color: colors.textSecondary
+  },
+  cancelModalCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.xl,
+    paddingTop: 12,
+    paddingBottom: 34,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    maxHeight: '90%'
+  },
+  cancelSectionTitle: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginTop: 4,
+    marginBottom: spacing.sm
+  },
+  cancelReasonItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
+    marginBottom: 8
+  },
+  cancelReasonItemSelected: {
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A'
+  },
+  cancelRadioCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  cancelRadioCircleSelected: {
+    borderColor: colors.black,
+    backgroundColor: colors.black
+  },
+  cancelRadioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.white
+  },
+  cancelReasonText: {
+    fontSize: 13,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary,
+    flex: 1
+  },
+  cancelReasonTextSelected: {
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  cancelCustomInput: {
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textPrimary,
+    backgroundColor: colors.softBackground,
+    marginBottom: 8
+  },
+  refundInfoCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    borderRadius: 14,
+    padding: 12,
+    marginTop: 8,
+    marginBottom: spacing.lg
+  },
+  refundInfoTitle: {
+    fontSize: 13,
+    fontFamily: typography.family.bold,
+    color: '#92400E'
+  },
+  refundInfoDesc: {
+    fontSize: 11,
+    fontFamily: typography.family.regular,
+    color: '#B45309',
+    marginTop: 2,
+    lineHeight: 16
+  },
+  cancelModalActions: {
+    flexDirection: 'row',
+    gap: 12
+  },
+  keepOrderBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  keepOrderBtnText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  confirmCancelBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#DC2626',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  confirmCancelBtnText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.white
   }
 });
