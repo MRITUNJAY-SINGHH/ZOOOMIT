@@ -30,7 +30,6 @@ export default function AddressesScreen() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  // Form state
   const [label, setLabel] = useState('Home');
   const [street, setStreet] = useState('');
   const [landmark, setLandmark] = useState('');
@@ -141,7 +140,6 @@ export default function AddressesScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: spacing.xl, paddingBottom: spacing['4xl'] }}>
-      {/* Top Action */}
       {!showAddForm && (
         <TouchableOpacity 
           style={styles.addBtn}
@@ -151,19 +149,17 @@ export default function AddressesScreen() {
           }}
           activeOpacity={0.8}
         >
-          <Plus size={20} color={colors.primary} style={{ marginRight: spacing.sm }} />
+          <Plus size={20} color={colors.black} style={{ marginRight: spacing.sm }} />
           <Text style={styles.addBtnText}>Add New Address</Text>
         </TouchableOpacity>
       )}
 
-      {/* Add / Edit Form */}
       {showAddForm && (
         <View style={styles.formCard}>
           <Text style={styles.formTitle}>
             {editingId ? 'Edit Address' : 'Add New Delivery Address'}
           </Text>
 
-          {/* Label selector */}
           <Text style={styles.labelTitle}>Address Type:</Text>
           <View style={styles.typeRow}>
             {['Home', 'Work', 'Other'].map((type) => (
@@ -172,8 +168,8 @@ export default function AddressesScreen() {
                 style={[styles.typePill, label === type && styles.typePillActive]}
                 onPress={() => setLabel(type)}
               >
-                {type === 'Home' && <Home size={14} color={label === type ? '#fff' : colors.textSecondary} style={{ marginRight: 4 }} />}
-                {type === 'Work' && <Briefcase size={14} color={label === type ? '#fff' : colors.textSecondary} style={{ marginRight: 4 }} />}
+                {type === 'Home' && <Home size={14} color={label === type ? colors.black : colors.textSecondary} style={{ marginRight: 4 }} />}
+                {type === 'Work' && <Briefcase size={14} color={label === type ? colors.black : colors.textSecondary} style={{ marginRight: 4 }} />}
                 <Text style={[styles.typePillText, label === type && styles.typePillTextActive]}>
                   {type}
                 </Text>
@@ -215,13 +211,12 @@ export default function AddressesScreen() {
             </View>
           </View>
 
-          {/* Make Default checkbox */}
           <TouchableOpacity 
             style={styles.checkboxRow}
             onPress={() => setIsDefault(!isDefault)}
           >
             <View style={[styles.checkbox, isDefault && styles.checkboxActive]}>
-              {isDefault && <Check size={14} color="#fff" />}
+              {isDefault && <Check size={14} color={colors.black} />}
             </View>
             <Text style={styles.checkboxLabel}>Make this my default delivery address</Text>
           </TouchableOpacity>
@@ -236,24 +231,24 @@ export default function AddressesScreen() {
             <AppButton
               title={editingId ? 'Update' : 'Save Address'}
               onPress={handleSaveAddress}
-              isLoading={formLoading}
+              loading={formLoading}
+              variant="primary"
               style={{ flex: 1 }}
             />
           </View>
         </View>
       )}
 
-      {/* Saved Addresses List */}
       <Text style={styles.sectionTitle}>Saved Addresses</Text>
 
       {isLoading ? (
-        <ActivityIndicator size="small" color={colors.primary} style={{ marginTop: spacing.md }} />
+        <ActivityIndicator size="small" color={colors.black} style={{ marginTop: spacing.md }} />
       ) : addresses && addresses.length > 0 ? (
         addresses.map((addr) => (
           <View key={addr._id} style={styles.addressCard}>
             <View style={styles.addressHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <MapPin size={18} color={colors.primary} style={{ marginRight: 6 }} />
+                <MapPin size={18} color={colors.black} style={{ marginRight: 6 }} />
                 <Text style={styles.addressLabel}>{addr.label}</Text>
                 {addr.isDefault && (
                   <View style={styles.defaultBadge}>
@@ -302,41 +297,42 @@ export default function AddressesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     padding: spacing.lg,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: colors.primary,
+    borderColor: colors.border,
     marginBottom: spacing.xl
   },
   addBtnText: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
-    color: colors.primary
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
   },
   formCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     padding: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.xl
   },
   formTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.md
   },
   labelTitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary,
     marginBottom: spacing.xs + 2
   },
@@ -348,12 +344,12 @@ const styles = StyleSheet.create({
   typePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: 6,
     paddingHorizontal: spacing.md,
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceSubtle
+    backgroundColor: colors.softBackground
   },
   typePillActive: {
     backgroundColor: colors.primary,
@@ -361,11 +357,12 @@ const styles = StyleSheet.create({
   },
   typePillText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary
   },
   typePillTextActive: {
-    color: '#fff',
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontFamily: typography.family.bold
   },
   checkboxRow: {
     flexDirection: 'row',
@@ -380,7 +377,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.sm
+    marginRight: spacing.sm,
+    backgroundColor: colors.white
   },
   checkboxActive: {
     backgroundColor: colors.primary,
@@ -388,18 +386,19 @@ const styles = StyleSheet.create({
   },
   checkboxLabel: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary
   },
   sectionTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.md
   },
   addressCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     padding: spacing.lg,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.md
@@ -412,33 +411,38 @@ const styles = StyleSheet.create({
   },
   addressLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   defaultBadge: {
-    backgroundColor: colors.primarySubtle,
+    backgroundColor: colors.primarySoft,
     paddingVertical: 2,
     paddingHorizontal: spacing.xs + 2,
     borderRadius: radius.xs,
-    marginLeft: spacing.sm
+    marginLeft: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
   },
   defaultBadgeText: {
     fontSize: 9,
-    fontWeight: typography.weight.bold,
-    color: colors.primary
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
   },
   addressStreet: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     marginBottom: 2
   },
   addressLandmark: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginBottom: 2
   },
   addressCity: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   },
   setDefaultBtn: {
@@ -447,15 +451,17 @@ const styles = StyleSheet.create({
   },
   setDefaultText: {
     fontSize: typography.size.xs,
-    color: colors.primary,
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontFamily: typography.family.bold,
+    textDecorationLine: 'underline'
   },
   emptyBox: {
-    padding: spacing['2xl'],
+    padding: spacing.xxl,
     alignItems: 'center'
   },
   emptyText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     textAlign: 'center'
   }

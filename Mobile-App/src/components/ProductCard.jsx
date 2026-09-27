@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { Plus } from 'lucide-react-native';
-import { colors, radius, spacing, typography, shadows } from '../constants/theme';
+import { colors, radius, spacing, typography } from '../constants/theme';
 import { QuantityStepper } from './QuantityStepper';
 import { useCart } from '../context/CartContext';
 import { router } from 'expo-router';
@@ -52,9 +52,8 @@ export const ProductCard = ({ product, onPress }) => {
     <TouchableOpacity
       style={styles.card}
       onPress={handleCardPress}
-      activeOpacity={0.9}
+      activeOpacity={0.88}
     >
-      {/* Product Image */}
       <View style={styles.imageWrapper}>
         <Image
           source={{ uri: product.featuredImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400' }}
@@ -74,7 +73,6 @@ export const ProductCard = ({ product, onPress }) => {
         )}
       </View>
 
-      {/* Product Info */}
       <View style={styles.info}>
         {product.brand && (
           <Text style={styles.brand} numberOfLines={1}>{product.brand}</Text>
@@ -82,7 +80,6 @@ export const ProductCard = ({ product, onPress }) => {
         <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         <Text style={styles.unit}>{unit}</Text>
 
-        {/* Price & Action Row */}
         <View style={styles.bottomRow}>
           <View style={styles.priceContainer}>
             <Text style={styles.price}>₹{product.sellingPrice}</Text>
@@ -91,7 +88,6 @@ export const ProductCard = ({ product, onPress }) => {
             )}
           </View>
 
-          {/* Stepper or Add Button */}
           {currentQty > 0 ? (
             <QuantityStepper
               quantity={currentQty}
@@ -110,7 +106,7 @@ export const ProductCard = ({ product, onPress }) => {
               disabled={isOutOfStock}
               activeOpacity={0.8}
             >
-              <Plus size={16} color={colors.primary} />
+              <Plus size={16} color={colors.black} />
               <Text style={styles.addButtonText}>ADD</Text>
             </TouchableOpacity>
           )}
@@ -122,21 +118,20 @@ export const ProductCard = ({ product, onPress }) => {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     padding: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.sm,
     marginBottom: spacing.md,
     overflow: 'hidden'
   },
   imageWrapper: {
     width: '100%',
     height: 120,
-    borderRadius: radius.lg,
+    borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     position: 'relative'
   },
   image: {
@@ -153,24 +148,26 @@ const styles = StyleSheet.create({
     borderRadius: radius.xs
   },
   discountText: {
-    color: '#fff',
+    color: colors.black,
     fontSize: typography.size.xs - 1,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold
   },
   outOfStockOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
     justifyContent: 'center',
     alignItems: 'center'
   },
   outOfStockText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textSecondary,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: radius.sm
+    borderRadius: radius.sm,
+    borderWidth: 1,
+    borderColor: colors.border
   },
   info: {
     marginTop: spacing.xs + 2
@@ -178,18 +175,19 @@ const styles = StyleSheet.create({
   brand: {
     fontSize: typography.size.xs,
     color: colors.textMuted,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     textTransform: 'uppercase'
   },
   name: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     marginTop: 2,
     minHeight: 36
   },
   unit: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2
   },
@@ -204,31 +202,30 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   mrp: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     textDecorationLine: 'line-through'
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xs + 1,
-    paddingHorizontal: spacing.md,
-    borderRadius: radius.md,
-    backgroundColor: colors.primarySubtle,
-    borderWidth: 1,
-    borderColor: colors.primaryLight
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: colors.primary
   },
   disabledButton: {
     opacity: 0.4
   },
   addButtonText: {
     fontSize: typography.size.xs + 1,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontFamily: typography.family.bold,
+    color: colors.black,
     marginLeft: 2
   }
 });

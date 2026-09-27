@@ -29,7 +29,7 @@ export const EmptyState = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: spacing['2xl'],
+    padding: spacing.xxl,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%'
@@ -38,20 +38,23 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg
   },
   title: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs + 2,
     textAlign: 'center'
   },
   description: {
     fontSize: typography.size.md,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.xl,

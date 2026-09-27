@@ -1,281 +1,1038 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TouchableOpacity, 
-  KeyboardAvoidingView, 
-  Platform, 
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+  ActivityIndicator,
+  Dimensions,
+  ImageBackground,
   ScrollView,
-  Image
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { Lock, Smartphone, ArrowRight, AlertCircle } from 'lucide-react-native';
-import { colors, typography, spacing, radius, shadows } from '../../constants/theme';
-import { AppInput } from '../../components/AppInput';
-import { AppButton } from '../../components/AppButton';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  withTiming,
+  FadeIn
+} from 'react-native-reanimated';
+import { ArrowLeft, ArrowRight, X, AlertCircle, ChevronDown, Check, RefreshCw } from 'lucide-react-native';
+import { colors, typography, spacing } from '../../constants/theme';
+import { StorefrontAPI } from '../../services/api';
+import { haptics } from '../../services/haptics';
 import { useAuth } from '../../context/AuthContext';
 
-export default function LoginScreen() {
-  const { login } = useAuth();
-  const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
+const { height } = Dimensions.get('window');
+
+export default function MobileLoginScreen() {
+  const { loginWithOtp } = useAuth();
+
+  // Phone input states
+  const [phone, setPhone] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const inputRef = useRef(null);
 
-  const canSubmit = identifier.trim().length > 0 && password.length > 0;
+  // Reanimated values for phone screen
+  const btnScale = useSharedValue(1);
+  const inputScale = useSharedValue(1);
+  const isComplete = phone.trim().length === 10;
 
-  const handleLogin = async () => {
-    if (!identifier.trim() || !password) {
-      setErrorMessage('Please enter your phone number or email and password');
+  // Half-screen OTP verification states
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verifyError, setVerifyError] = useState('');
+  const [resendCount, setResendCount] = useState(24);
+  const [isResending, setIsResending] = useState(false);
+  const [devOtp, setDevOtp] = useState('');
+  const [resendFeedback, setResendFeedback] = useState('');
+
+  const otpInputRef = useRef(null);
+  const shakeX = useSharedValue(0);
+  const verifyBtnScale = useSharedValue(1);
+
+  // Resend timer countdown
+  useEffect(() => {
+    if (!showVerifyModal || resendCount <= 0) return;
+    const interval = setInterval(() => {
+      setResendCount((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showVerifyModal, resendCount]);
+
+  const handlePhoneChange = (text) => {
+    const cleaned = text.replace(/\D/g, '').slice(0, 10);
+    setPhone(cleaned);
+    if (errorMessage) setErrorMessage('');
+
+    if (cleaned.length === 10 && phone.length < 10) {
+      haptics.impactLight();
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    inputScale.value = withSpring(1.01, { damping: 14, stiffness: 200 });
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    inputScale.value = withSpring(1, { damping: 14, stiffness: 200 });
+  };
+
+  const animatedInputStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: inputScale.value }]
+  }));
+
+  const handlePressIn = () => {
+    if (!isComplete || isLoading) return;
+    btnScale.value = withSpring(0.98, { damping: 18, stiffness: 300 });
+  };
+
+  const handlePressOut = () => {
+    btnScale.value = withSpring(1, { damping: 18, stiffness: 300 });
+  };
+
+  const animatedBtnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: btnScale.value }]
+  }));
+
+  // Shake animation for incorrect OTP
+  const triggerErrorShake = () => {
+    haptics.notificationError();
+    shakeX.value = withSequence(
+      withTiming(-12, { duration: 50 }),
+      withTiming(12, { duration: 50 }),
+      withTiming(-8, { duration: 50 }),
+      withTiming(8, { duration: 50 }),
+      withTiming(-4, { duration: 50 }),
+      withTiming(4, { duration: 50 }),
+      withTiming(0, { duration: 50 })
+    );
+  };
+
+  const animatedBoxesStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: shakeX.value }]
+  }));
+
+  const handleVerifyPressIn = () => {
+    if (otp.length !== 6 || isVerifying) return;
+    verifyBtnScale.value = withSpring(0.98, { damping: 18, stiffness: 300 });
+  };
+
+  const handleVerifyPressOut = () => {
+    verifyBtnScale.value = withSpring(1, { damping: 18, stiffness: 300 });
+  };
+
+  const animatedVerifyBtnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: verifyBtnScale.value }]
+  }));
+
+  // Submit phone -> Open Half Screen Verify instantly
+  const handleContinue = async () => {
+    if (!isComplete) {
+      triggerShake();
+      setErrorMessage('Please enter a valid 10-digit mobile number');
+      inputRef.current?.focus();
       return;
     }
+    if (isLoading) return;
 
+    Keyboard.dismiss();
     setIsLoading(true);
     setErrorMessage('');
+    haptics.impactLight();
+
     try {
-      await login({ login: identifier.trim(), password });
-      router.replace('/(tabs)');
-    } catch (e) {
-      setErrorMessage(e.response?.data?.message || 'Invalid credentials. Please check and try again.');
+      const res = await StorefrontAPI.sendOtp(phone);
+      setDevOtp(res?.devOtp || '');
+      setResendFeedback(res?.devOtp ? `Testing OTP: ${res.devOtp}` : '');
+      setOtp('');
+      setVerifyError('');
+      setResendCount(24);
+      setShowVerifyModal(true);
+      setTimeout(() => {
+        otpInputRef.current?.focus();
+      }, 350);
+    } catch (err) {
+      haptics.notificationError();
+      const message = err.response?.data?.message || 'Failed to send verification code. Please try again.';
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Verify OTP submission
+  const handleVerifyOtp = async (codeToVerify) => {
+    const code = codeToVerify || otp;
+    if (code.length !== 6 || isVerifying || isVerified) return;
+
+    Keyboard.dismiss();
+    setIsVerifying(true);
+    setVerifyError('');
+
+    try {
+      await loginWithOtp(phone, code);
+      setIsVerifying(false);
+      setIsVerified(true);
+      haptics.notificationSuccess();
+
+      setTimeout(() => {
+        setShowVerifyModal(false);
+        router.replace('/(tabs)');
+      }, 300);
+    } catch (err) {
+      setIsVerifying(false);
+      const msg = err.response?.data?.message || err.message || 'The OTP you entered is incorrect. Please try again.';
+      setVerifyError(msg);
+      triggerErrorShake();
+      otpInputRef.current?.focus();
+    }
+  };
+
+  const handleOtpChange = (text) => {
+    if (isVerified || isVerifying) return;
+    const cleaned = text.replace(/\D/g, '').slice(0, 6);
+    setOtp(cleaned);
+    if (verifyError) setVerifyError('');
+
+    if (cleaned.length > otp.length) {
+      haptics.selection();
+    }
+
+    if (cleaned.length === 6) {
+      handleVerifyOtp(cleaned);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (resendCount > 0 || isResending) return;
+
+    setIsResending(true);
+    setVerifyError('');
+    haptics.impactLight();
+
+    try {
+      const res = await StorefrontAPI.sendOtp(phone);
+      setResendCount(24);
+      setDevOtp(res?.devOtp || '');
+      setResendFeedback(
+        res?.devOtp ? `Testing OTP: ${res.devOtp}` : 'New verification code sent!'
+      );
+      setOtp('');
+      otpInputRef.current?.focus();
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to resend code. Please try again.';
+      setVerifyError(msg);
+      haptics.notificationError();
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleBack = () => {
+    haptics.impactLight();
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView 
-        style={styles.keyboardView}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Top Hero Brand Header */}
-          <Animated.View 
-            entering={FadeInDown.duration(400)}
-            style={styles.heroSection}
+    <ImageBackground
+      source={require('../../../assets/images/auth/auth_phone_bg.jpg')}
+      style={styles.bgImage}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <KeyboardAvoidingView
+            style={styles.keyboardView}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
-            <View style={styles.imageWrapper}>
-              <Image
-                source={require('../../../assets/images/auth/auth_groceries.jpg')}
-                style={styles.heroImage}
-                resizeMode="contain"
-              />
-            </View>
-            <Text style={styles.brandTitle}>Welcome to Kuiklo</Text>
-            <Text style={styles.brandSubtitle}>Fresh groceries delivered to your door</Text>
-          </Animated.View>
-
-          {/* Solid Elevated Login Card */}
-          <Animated.View 
-            entering={FadeInDown.duration(450).delay(100)}
-            style={styles.card}
-          >
-            {Boolean(errorMessage) && (
-              <Animated.View entering={FadeInUp.duration(200)} style={styles.errorBox}>
-                <AlertCircle size={16} color={colors.error} style={{ marginRight: spacing.xs }} />
-                <Text style={styles.errorBoxText}>{errorMessage}</Text>
+            <ScrollView 
+              contentContainerStyle={styles.scrollContainer}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <Animated.View 
+                entering={FadeIn.duration(300)} 
+                style={styles.navBar}
+              >
+                <Pressable
+                  onPress={handleBack}
+                  style={styles.backButton}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Go back"
+                >
+                  <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
+                </Pressable>
               </Animated.View>
-            )}
 
-            <AppInput
-              label="Phone Number or Email"
-              placeholder="e.g. 9876543210 or name@example.com"
-              value={identifier}
-              onChangeText={(text) => {
-                setIdentifier(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              clearable
-              leftIcon={<Smartphone size={18} />}
-            />
+              <View style={styles.heroSpacer} />
 
-            <AppInput
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errorMessage) setErrorMessage('');
-              }}
-              secureTextEntry
-              leftIcon={<Lock size={18} />}
-            />
+              <View style={styles.cardContent}>
+                <Animated.View entering={FadeIn.delay(50).duration(300)}>
+                  <Text style={styles.title}>What's your mobile number?</Text>
+                  <Text style={styles.subtitle}>
+                    We'll send you a verification code to continue.
+                  </Text>
+                </Animated.View>
 
-            {/* Forgot Password */}
-            <TouchableOpacity 
-              style={styles.forgotBtn}
-              onPress={() => router.push('/(auth)/forgot-password')}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
+                {Boolean(errorMessage) && (
+                  <Animated.View 
+                    entering={FadeIn.duration(200)} 
+                    style={styles.errorBox}
+                  >
+                    <AlertCircle size={16} color={colors.error} style={{ marginRight: spacing.xs }} />
+                    <Text style={styles.errorText}>{errorMessage}</Text>
+                  </Animated.View>
+                )}
 
-            {/* Primary Sign In Button */}
-            <AppButton
-              title="Sign In"
-              onPress={handleLogin}
-              isLoading={isLoading}
-              disabled={!canSubmit && !isLoading}
-              size="lg"
-              style={styles.submitBtn}
-            />
+                {/* Wrap layout animation in outer Animated.View to avoid transform conflict */}
+                <Animated.View entering={FadeIn.duration(300)}>
+                  <Animated.View 
+                    style={[
+                      styles.inputCard,
+                      isFocused && styles.inputCardFocused,
+                      isComplete && styles.inputCardComplete,
+                      Boolean(errorMessage) && styles.inputCardError,
+                      animatedInputStyle
+                    ]}
+                  >
+                    <View style={styles.countryPill}>
+                      <Text style={styles.flagEmoji}>🇮🇳</Text>
+                      <Text style={styles.countryCode}>+91</Text>
+                      <ChevronDown size={14} color={colors.textSecondary} style={{ marginLeft: 2 }} />
+                      <View style={styles.dividerPipe} />
+                    </View>
 
-            {/* Guest Exploration Option */}
-            <TouchableOpacity 
-              style={styles.guestBtn}
-              onPress={() => router.replace('/(tabs)')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.guestText}>Continue as Guest</Text>
-              <ArrowRight size={14} color={colors.textSecondary} style={{ marginLeft: 4 }} />
-            </TouchableOpacity>
-          </Animated.View>
+                    <TextInput
+                      ref={inputRef}
+                      style={styles.phoneInput}
+                      value={phone}
+                      onChangeText={handlePhoneChange}
+                      placeholder="98765 43210"
+                      placeholderTextColor={colors.textMuted}
+                      keyboardType="phone-pad"
+                      maxLength={10}
+                      autoFocus={true}
+                      onFocus={handleFocus}
+                      onBlur={handleBlur}
+                      selectionColor={colors.primaryDark}
+                      accessibilityLabel="Mobile number input"
+                    />
 
-          {/* Footer: Signup Link */}
-          <Animated.View 
-            entering={FadeInDown.duration(450).delay(200)}
-            style={styles.footer}
+                    {phone.length > 0 && (
+                      <Pressable
+                        onPress={() => {
+                          setPhone('');
+                          if (errorMessage) setErrorMessage('');
+                          inputRef.current?.focus();
+                        }}
+                        style={styles.clearBtn}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
+                        <X size={14} color={colors.textSecondary} strokeWidth={2.4} />
+                      </Pressable>
+                    )}
+                  </Animated.View>
+                </Animated.View>
+
+                {isComplete && !errorMessage && (
+                  <Animated.View 
+                    entering={FadeIn.duration(200)}
+                    style={styles.validFeedbackRow}
+                  >
+                    <View style={styles.validCheckCircle}>
+                      <Check size={11} color={colors.white} strokeWidth={3.5} />
+                    </View>
+                    <Text style={styles.validFeedbackText}>Looks good!</Text>
+                  </Animated.View>
+                )}
+
+                {/* Wrap layout animation in outer Animated.View to avoid transform conflict */}
+                <Animated.View 
+                  entering={FadeIn.duration(300)} 
+                  style={styles.ctaWrapper}
+                >
+                  <Animated.View style={animatedBtnStyle}>
+                    <Pressable
+                      style={({ pressed }) => [
+                        styles.ctaButton,
+                        {
+                          backgroundColor: pressed ? colors.primaryDark : colors.primary
+                        }
+                      ]}
+                      onPressIn={handlePressIn}
+                      onPressOut={handlePressOut}
+                      onPress={handleContinue}
+                      accessibilityRole="button"
+                      accessibilityLabel="Continue"
+                    >
+                      {isLoading ? (
+                        <ActivityIndicator size="small" color={colors.black} />
+                      ) : (
+                        <>
+                          <Text style={styles.ctaText}>
+                            Continue
+                          </Text>
+                          <View style={styles.ctaIconCircle}>
+                            <ArrowRight 
+                              size={18} 
+                              color="#FFFFFF" 
+                              strokeWidth={2.8} 
+                            />
+                          </View>
+                        </>
+                      )}
+                    </Pressable>
+                  </Animated.View>
+                </Animated.View>
+
+                <View style={styles.legalContainer}>
+                  <Text style={styles.legalNotice}>
+                    By continuing, you agree to our{' '}
+                    <Text 
+                      style={styles.legalLink}
+                      onPress={() => {
+                        haptics.selection();
+                        router.push('/privacy');
+                      }}
+                    >
+                      Privacy Policy
+                    </Text>
+                    {' and '}
+                    <Text 
+                      style={styles.legalLink}
+                      onPress={() => {
+                        haptics.selection();
+                        router.push('/terms');
+                      }}
+                    >
+                      Terms of Use
+                    </Text>
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
+
+      {/* Half-Screen Verification Bottom Sheet */}
+      <Modal
+        visible={showVerifyModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowVerifyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <TouchableWithoutFeedback onPress={() => setShowVerifyModal(false)}>
+            <View style={styles.modalBackdrop} />
+          </TouchableWithoutFeedback>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            style={styles.sheetContainer}
           >
-            <Text style={styles.footerText}>New to Kuiklo? </Text>
-            <TouchableOpacity 
-              onPress={() => router.push('/(auth)/signup')}
-              activeOpacity={0.7}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Text style={styles.signupLink}>Create an Account</Text>
-            </TouchableOpacity>
-          </Animated.View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+            <View style={styles.halfScreenCard}>
+              {/* Drag Handle */}
+              <View style={styles.dragHandleBar} />
+
+              {/* Sheet Header */}
+              <View style={styles.sheetHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetTitle}>Verify your number</Text>
+                  <View style={styles.sheetPhoneRow}>
+                    <Text style={styles.sheetPhoneText}>
+                      Sent to +91 {phone.slice(0, 5)} {phone.slice(5)}
+                    </Text>
+                    <Pressable 
+                      onPress={() => setShowVerifyModal(false)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Change mobile number"
+                    >
+                      <Text style={styles.sheetChangeText}>Change</Text>
+                    </Pressable>
+                  </View>
+                </View>
+
+                <Pressable
+                  onPress={() => setShowVerifyModal(false)}
+                  style={styles.sheetCloseBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Close verification"
+                >
+                  <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+                </Pressable>
+              </View>
+
+              {/* Dev Mode Test OTP banner */}
+              {Boolean(resendFeedback) && !verifyError && (
+                <Pressable 
+                  onPress={() => {
+                    if (devOtp) {
+                      setOtp(devOtp);
+                      handleVerifyOtp(devOtp);
+                    }
+                  }}
+                  style={styles.feedbackBanner}
+                >
+                  <Text style={styles.feedbackText}>
+                    {resendFeedback} {devOtp ? '• Tap to auto-fill' : ''}
+                  </Text>
+                </Pressable>
+              )}
+
+              {/* Error banner */}
+              {Boolean(verifyError) && (
+                <View style={styles.errorBox}>
+                  <AlertCircle size={16} color={colors.error} style={{ marginRight: spacing.xs }} />
+                  <Text style={styles.errorText}>{verifyError}</Text>
+                </View>
+              )}
+
+              {/* 6 OTP Boxes */}
+              <Animated.View style={[styles.boxesContainer, animatedBoxesStyle]}>
+                {[0, 1, 2, 3, 4, 5].map((index) => {
+                  const digit = otp[index] || '';
+                  const isCurrent = index === otp.length;
+                  const isFilled = Boolean(digit);
+                  const isErr = Boolean(verifyError);
+
+                  return (
+                    <Pressable
+                      key={index}
+                      onPress={() => otpInputRef.current?.focus()}
+                      style={[
+                        styles.otpBox,
+                        isCurrent && styles.otpBoxActive,
+                        isFilled && styles.otpBoxFilled,
+                        isErr && styles.otpBoxError
+                      ]}
+                    >
+                      <Text style={[styles.otpDigit, isErr && styles.otpDigitError]}>
+                        {digit}
+                      </Text>
+                      {isCurrent && !isErr && !digit && (
+                        <View style={styles.cursor} />
+                      )}
+                    </Pressable>
+                  );
+                })}
+              </Animated.View>
+
+              {/* Hidden OTP input */}
+              <TextInput
+                ref={otpInputRef}
+                value={otp}
+                onChangeText={handleOtpChange}
+                keyboardType="number-pad"
+                maxLength={6}
+                textContentType="oneTimeCode"
+                autoComplete="sms-otp"
+                style={styles.hiddenInput}
+                accessibilityLabel="OTP 6-digit input"
+              />
+
+              {/* Resend Countdown row */}
+              <View style={styles.resendRow}>
+                <View style={styles.timerCircle}>
+                  <Text style={styles.timerCircleText}>
+                    {resendCount > 0 ? `${resendCount}s` : '0s'}
+                  </Text>
+                </View>
+                <View style={styles.resendTextCol}>
+                  <Text style={styles.resendPrompt}>Didn't receive the code?</Text>
+                  {resendCount > 0 ? (
+                    <Text style={styles.resendCountdownActive}>
+                      Resend in {resendCount}s
+                    </Text>
+                  ) : (
+                    <Pressable 
+                      onPress={handleResendOtp}
+                      disabled={isResending}
+                      style={styles.resendClickable}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      accessibilityRole="button"
+                      accessibilityLabel="Resend OTP"
+                    >
+                      {isResending ? (
+                        <ActivityIndicator size="small" color={colors.black} style={{ marginRight: 6 }} />
+                      ) : (
+                        <RefreshCw size={13} color={colors.black} style={{ marginRight: 4 }} />
+                      )}
+                      <Text style={styles.resendClickableText}>Resend OTP</Text>
+                    </Pressable>
+                  )}
+                </View>
+              </View>
+
+              {/* Primary Yellow CTA Button on Verify Screen */}
+              <View style={styles.sheetCtaWrapper}>
+                <Animated.View style={animatedVerifyBtnStyle}>
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.sheetCtaButton,
+                      {
+                        backgroundColor: pressed ? colors.primaryDark : colors.primary
+                      }
+                    ]}
+                    onPressIn={handleVerifyPressIn}
+                    onPressOut={handleVerifyPressOut}
+                    onPress={() => {
+                      if (otp.length < 6) {
+                        setVerifyError('Please enter the complete 6-digit OTP');
+                        triggerErrorShake();
+                        otpInputRef.current?.focus();
+                        return;
+                      }
+                      handleVerifyOtp(otp);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityLabel="Verify & Continue"
+                  >
+                    {isVerifying ? (
+                      <View style={styles.verifyingRow}>
+                        <ActivityIndicator size="small" color={colors.black} style={{ marginRight: 8 }} />
+                        <Text style={styles.sheetCtaText}>Verifying code...</Text>
+                      </View>
+                    ) : (
+                      <>
+                        <Text style={styles.sheetCtaText}>Verify & Continue</Text>
+                        <View style={styles.ctaIconCircle}>
+                          <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.8} />
+                        </View>
+                      </>
+                    )}
+                  </Pressable>
+                </Animated.View>
+              </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  bgImage: {
     flex: 1,
-    backgroundColor: colors.background
+    width: '100%',
+    height: '100%'
+  },
+  safeArea: {
+    flex: 1
   },
   keyboardView: {
     flex: 1
   },
-  scrollContent: {
+  scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg
+    justifyContent: 'space-between',
+    paddingBottom: spacing.lg
   },
-  heroSection: {
-    alignItems: 'center',
-    marginBottom: spacing.xl
+  navBar: {
+    paddingVertical: spacing.md
   },
-  imageWrapper: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.surfaceSubtle,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  heroImage: {
-    width: '90%',
-    height: '90%'
-  },
-  brandTitle: {
-    fontSize: typography.size['2xl'],
-    fontFamily: typography.family?.bold || undefined,
-    fontWeight: typography.weight.bold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 4
-  },
-  brandSubtitle: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family?.regular || undefined,
-    color: colors.textSecondary,
-    textAlign: 'center'
-  },
-  card: {
-    backgroundColor: colors.surface,
-    padding: spacing.xl,
-    borderRadius: radius['2xl'],
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.border,
-    ...shadows.sm
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  heroSpacer: {
+    height: height * 0.32
+  },
+  cardContent: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingTop: spacing.xs
+  },
+  title: {
+    fontSize: 27,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    lineHeight: 34,
+    marginBottom: 6
+  },
+  subtitle: {
+    fontSize: 14,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.lg
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.errorSubtle,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: 12,
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.error
   },
-  errorBoxText: {
+  errorText: {
     flex: 1,
     color: colors.error,
     fontSize: typography.size.xs,
-    fontFamily: typography.family?.medium || undefined,
-    fontWeight: typography.weight.medium
+    fontFamily: typography.family.medium
   },
-  forgotBtn: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.lg
+  inputCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 16,
+    paddingHorizontal: spacing.md,
+    height: 54
   },
-  forgotText: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family?.medium || undefined,
-    color: colors.primary,
-    fontWeight: typography.weight.semibold
+  inputCardFocused: {
+    borderColor: colors.primary,
+    borderWidth: 1.5
   },
-  submitBtn: {
+  inputCardComplete: {
+    borderColor: colors.primary
+  },
+  inputCardError: {
+    borderColor: colors.error
+  },
+  countryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: spacing.sm
+  },
+  flagEmoji: {
+    fontSize: 18,
+    marginRight: 4
+  },
+  countryCode: {
+    fontSize: 16,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
+  },
+  dividerPipe: {
+    width: 1,
+    height: 24,
+    backgroundColor: colors.border,
+    marginLeft: spacing.sm
+  },
+  phoneInput: {
+    flex: 1,
+    fontSize: 18,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary,
+    paddingHorizontal: spacing.sm,
+    height: '100%',
+    letterSpacing: 1
+  },
+  clearBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: colors.softBackground,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  validFeedbackRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.sm,
+    paddingLeft: spacing.xs,
+    marginBottom: spacing.xs
+  },
+  validCheckCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  validFeedbackText: {
+    fontSize: 12,
+    fontFamily: typography.family.semibold,
+    color: colors.success
+  },
+  ctaWrapper: {
+    width: '100%',
+    marginTop: spacing.md,
+    marginBottom: spacing.sm
+  },
+  ctaButton: {
+    height: 54,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    position: 'relative'
+  },
+  ctaText: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  ctaIconCircle: {
+    position: 'absolute',
+    right: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.black,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  legalContainer: {
+    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    alignSelf: 'center'
+  },
+  legalNotice: {
+    fontSize: 11,
+    fontFamily: typography.family.medium,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 16
+  },
+  legalLink: {
+    textDecorationLine: 'underline',
+    color: '#FFFFFF',
+    fontFamily: typography.family.bold
+  },
+
+  // Half-Screen Modal Styles
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+  },
+  modalBackdrop: {
+    flex: 1
+  },
+  sheetContainer: {
     width: '100%'
   },
-  guestBtn: {
+  halfScreenCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? spacing.xxl : spacing.xl
+  },
+  dragHandleBar: {
+    width: 42,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: spacing.md
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md
+  },
+  sheetTitle: {
+    fontSize: 22,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    lineHeight: 28,
+    marginBottom: 2
+  },
+  sheetPhoneRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    marginTop: spacing.sm
+    gap: spacing.xs
   },
-  guestText: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family?.medium || undefined,
-    color: colors.textSecondary,
-    fontWeight: typography.weight.medium
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    paddingBottom: spacing.sm
-  },
-  footerText: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family?.regular || undefined,
+  sheetPhoneText: {
+    fontSize: 14,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary
   },
-  signupLink: {
+  sheetChangeText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.primaryDark
+  },
+  sheetCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.softBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: spacing.sm
+  },
+  feedbackBanner: {
+    backgroundColor: colors.primarySoft,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: 12,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
+  },
+  feedbackText: {
+    color: colors.textPrimary,
+    fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
+    textAlign: 'center'
+  },
+  boxesContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.md
+  },
+  otpBox: {
+    width: 48,
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative'
+  },
+  otpBoxActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    transform: [{ scale: 1.03 }]
+  },
+  otpBoxFilled: {
+    borderColor: colors.border,
+    backgroundColor: colors.white
+  },
+  otpBoxError: {
+    borderColor: colors.error,
+    backgroundColor: colors.errorSubtle
+  },
+  otpDigit: {
+    fontSize: 22,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  otpDigitError: {
+    color: colors.error
+  },
+  cursor: {
+    position: 'absolute',
+    bottom: 10,
+    width: 14,
+    height: 2,
+    backgroundColor: colors.primary,
+    borderRadius: 1
+  },
+  hiddenInput: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    opacity: 0.01
+  },
+  resendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md
+  },
+  timerCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    backgroundColor: colors.primarySoft,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  timerCircleText: {
+    fontSize: 12,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  resendTextCol: {
+    justifyContent: 'center'
+  },
+  resendPrompt: {
+    fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary
+  },
+  resendCountdownActive: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family?.bold || undefined,
-    color: colors.primary,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
+  },
+  resendClickable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2
+  },
+  resendClickableText: {
+    fontSize: typography.size.sm,
+    fontFamily: typography.family.bold,
+    color: colors.black,
+    textDecorationLine: 'underline'
+  },
+  sheetCtaWrapper: {
+    width: '100%',
+    marginTop: spacing.xs
+  },
+  sheetCtaButton: {
+    height: 54,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    position: 'relative'
+  },
+  sheetCtaText: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  verifyingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });

@@ -23,7 +23,6 @@ export const AuthProvider = ({ children }) => {
       if (storedToken && storedCustomer) {
         setToken(storedToken);
         setCustomer(storedCustomer);
-        // Silently fetch fresh profile from backend
         try {
           const res = await StorefrontAPI.getProfile();
           if (res.data) {
@@ -31,7 +30,6 @@ export const AuthProvider = ({ children }) => {
             await authStorage.setCustomer(res.data);
           }
         } catch (e) {
-          // Keep cached profile if offline
         }
       }
     } catch (e) {
@@ -50,8 +48,27 @@ export const AuthProvider = ({ children }) => {
     await authStorage.setToken(newToken);
     await authStorage.setCustomer(customerData);
 
-    // Invalidate stale queries
     queryClient.invalidateQueries();
+  };
+
+  const loginWithOtp = async (phone, otp) => {
+    const res = await StorefrontAPI.verifyOtp(phone, otp);
+    const newToken = res.token || res.data?.token;
+    const customerData = res.customer || res.data?.customer;
+
+    if (!newToken) {
+      throw new Error(res.message || 'Authentication failed');
+    }
+
+    setToken(newToken);
+    setCustomer(customerData);
+    await authStorage.setToken(newToken);
+    if (customerData) {
+      await authStorage.setCustomer(customerData);
+    }
+
+    queryClient.invalidateQueries();
+    return res;
   };
 
   const register = async (data) => {
@@ -68,12 +85,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // 1. Clear SecureStore tokens
       await authStorage.clearAuth();
       setToken(null);
       setCustomer(null);
-
-      // 2. Clear React Query customer-specific cached data to prevent cross-account leak
       queryClient.clear();
     } catch (e) {
       console.error('Logout error:', e);
@@ -94,7 +108,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ customer, token, isLoading, login, register, logout, refreshProfile }}>
+    <AuthContext.Provider value={{ customer, token, isLoading, login, register, loginWithOtp, logout, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );

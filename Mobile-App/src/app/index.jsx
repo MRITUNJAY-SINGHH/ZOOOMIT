@@ -1,140 +1,252 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, ImageBackground, Dimensions } from 'react-native';
 import { router } from 'expo-router';
-import { ShoppingBag, Zap } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  FadeIn
+} from 'react-native-reanimated';
+import { ArrowRight } from 'lucide-react-native';
 import { colors, typography, spacing } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { haptics } from '../services/haptics';
 
-export default function SplashScreen() {
+const { width } = Dimensions.get('window');
+
+export default function IndexScreen() {
   const { token, isLoading } = useAuth();
-  const scaleAnim = useRef(new Animated.Value(0.85)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const btnScale = useSharedValue(1);
 
   useEffect(() => {
-    // Smooth intro animation
-    Animated.parallel([
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 700,
-        useNativeDriver: true
-      }),
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        friction: 6,
-        tension: 40,
-        useNativeDriver: true
-      })
-    ]).start();
-
-    // After animation and auth check, navigate
     if (!isLoading) {
-      const timer = setTimeout(() => {
-        if (token) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/(auth)/login');
-        }
-      }, 1600);
-
-      return () => clearTimeout(timer);
+      if (token) {
+        router.replace('/(tabs)');
+      }
+      SplashScreen.hideAsync().catch(() => {});
     }
   }, [isLoading, token]);
 
+  const animatedBtnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: btnScale.value }]
+  }));
+
+  const handlePressIn = () => {
+    btnScale.value = withSpring(0.98, { damping: 18, stiffness: 300 });
+  };
+
+  const handlePressOut = () => {
+    btnScale.value = withSpring(1, { damping: 18, stiffness: 300 });
+  };
+
+  const handleContinue = () => {
+    haptics.impactLight();
+    router.push('/(auth)/login');
+  };
+
+  if (isLoading || token) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <Animated.View 
-        style={[
-          styles.content,
-          {
-            opacity: opacityAnim,
-            transform: [{ scale: scaleAnim }]
-          }
-        ]}
-      >
-        {/* Brand Icon Circle */}
-        <View style={styles.iconCircle}>
-          <ShoppingBag size={54} color="#ffffff" strokeWidth={2.2} />
-          <View style={styles.zapBadge}>
-            <Zap size={18} color="#ffffff" fill="#ffffff" />
-          </View>
+    <ImageBackground
+      source={require('../../assets/images/auth/auth_splash_bg.jpg')}
+      style={styles.bgImage}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+        <View style={styles.topSection}>
+          <Animated.View 
+            entering={FadeIn.duration(400)} 
+            style={styles.logoRow}
+          >
+            <View style={styles.logoWrapper}>
+              <Text style={styles.brandTitle}>Kuiklo</Text>
+              <View style={styles.leafIconBadge}>
+                <Text style={styles.leafEmoji}>🍃</Text>
+              </View>
+            </View>
+          </Animated.View>
+
+          <Animated.View 
+            entering={FadeIn.delay(100).duration(400)}
+            style={styles.textWrapper}
+          >
+            <Text style={styles.headline}>Fresh groceries.{"\n"}Fast delivery.</Text>
+            <Text style={styles.subtext}>Everything you need, delivered to your door.</Text>
+          </Animated.View>
         </View>
 
-        {/* Brand Name */}
-        <Text style={styles.brandTitle}>KUIKLO</Text>
-        
-        {/* Tagline */}
-        <View style={styles.taglineBadge}>
-          <Text style={styles.taglineText}>⚡ 15-Min Superfast Delivery</Text>
-        </View>
-      </Animated.View>
+        <View style={styles.middleSpacer} />
 
-      {/* Footer info */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Fresh Groceries • Daily Essentials • Best Prices</Text>
-      </View>
-    </View>
+        <View style={styles.bottomSection}>
+          <Animated.View 
+            entering={FadeIn.delay(150).duration(400)}
+            style={styles.ctaWrapper}
+          >
+            <Animated.View style={animatedBtnStyle}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.ctaButton,
+                  { backgroundColor: pressed ? colors.primaryDark : colors.primary }
+                ]}
+                onPressIn={handlePressIn}
+                onPressOut={handlePressOut}
+                onPress={handleContinue}
+                accessibilityRole="button"
+                accessibilityLabel="Continue with Mobile"
+              >
+                <Text style={styles.ctaText}>Continue with Mobile</Text>
+                <View style={styles.ctaIconCircle}>
+                  <ArrowRight size={18} color="#FFFFFF" strokeWidth={2.8} />
+                </View>
+              </Pressable>
+            </Animated.View>
+          </Animated.View>
+
+          <Animated.View 
+            entering={FadeIn.delay(200).duration(400)} 
+            style={styles.legalContainer}
+          >
+            <Text style={styles.legalNotice}>
+              By continuing, you agree to our{' '}
+              <Text 
+                style={styles.legalLink}
+                onPress={() => {
+                  haptics.selection();
+                  router.push('/privacy');
+                }}
+              >
+                Privacy Policy
+              </Text>
+              {' and '}
+              <Text 
+                style={styles.legalLink}
+                onPress={() => {
+                  haptics.selection();
+                  router.push('/terms');
+                }}
+              >
+                Terms of Use
+              </Text>
+            </Text>
+          </Animated.View>
+        </View>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  bgImage: {
     flex: 1,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl
+    width: '100%',
+    height: '100%'
   },
-  content: {
-    alignItems: 'center'
+  safeContainer: {
+    flex: 1,
+    justifyContent: 'space-between'
   },
-  iconCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-    position: 'relative'
+  topSection: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg
   },
-  zapBadge: {
-    position: 'absolute',
-    bottom: -4,
-    right: -4,
-    backgroundColor: colors.accent,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
+  logoRow: {
+    marginBottom: spacing.md
+  },
+  logoWrapper: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: colors.primary
+    position: 'relative',
+    alignSelf: 'flex-start'
   },
   brandTitle: {
-    fontSize: typography.size['4xl'],
-    fontWeight: typography.weight.heavy,
-    color: '#ffffff',
-    letterSpacing: 4,
+    fontSize: 40,
+    fontFamily: typography.family.extraBold,
+    color: colors.textPrimary,
+    letterSpacing: -0.5
+  },
+  leafIconBadge: {
+    position: 'absolute',
+    top: -8,
+    left: 52
+  },
+  leafEmoji: {
+    fontSize: 22
+  },
+  textWrapper: {
+    marginTop: spacing.xs
+  },
+  headline: {
+    fontSize: 34,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    lineHeight: 40,
+    marginBottom: 8
+  },
+  subtext: {
+    fontSize: 15,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    lineHeight: 22,
+    maxWidth: width * 0.8
+  },
+  middleSpacer: {
+    flex: 1
+  },
+  bottomSection: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
+    alignItems: 'center'
+  },
+  ctaWrapper: {
+    width: '100%',
     marginBottom: spacing.sm
   },
-  taglineBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    paddingVertical: 6,
+  ctaButton: {
+    height: 54,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    borderRadius: 20
+    position: 'relative'
   },
-  taglineText: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: '#ffffff'
+  ctaText: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.black
   },
-  footer: {
+  ctaIconCircle: {
     position: 'absolute',
-    bottom: spacing['3xl']
+    right: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.black,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
-  footerText: {
-    color: 'rgba(255, 255, 255, 0.75)',
-    fontSize: typography.size.xs,
-    fontWeight: typography.weight.medium
+  legalContainer: {
+    alignItems: 'center',
+    marginTop: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+  },
+  legalNotice: {
+    fontSize: 11,
+    fontFamily: typography.family.medium,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 16
+  },
+  legalLink: {
+    textDecorationLine: 'underline',
+    color: '#FFFFFF',
+    fontFamily: typography.family.bold
   }
 });

@@ -1,49 +1,48 @@
 export const colors = {
-  // Brand Identity (Kuiklo Emerald & Mint)
-  primary: '#059669',       // Emerald 600 - Main Brand
-  primaryLight: '#10b981',  // Emerald 500 - Hover / Accents
-  primaryDark: '#047857',   // Emerald 700 - Pressed states
-  primarySubtle: '#ecfdf5', // Emerald 50 - Background highlights
+  primary: '#FFC928',
+  primaryDark: '#E5A900',
+  primaryLight: '#FFF4C7',
+  primarySoft: '#FFF9E8',
+  primarySubtle: '#FFF9E8',
 
-  // Secondary & Accents
-  secondary: '#0284c7',     // Sky 600
-  secondarySubtle: '#f0f9ff',
-  accent: '#f59e0b',        // Amber 500 - Deals / Stars / Badges
-  accentSubtle: '#fffbeb',
+  secondary: '#111827',
+  secondarySubtle: '#F8F9FA',
+  accent: '#FFC928',
+  accentSubtle: '#FFF9E8',
 
-  // Semantic Feedback
-  success: '#16a34a',
-  successSubtle: '#f0fdf4',
-  warning: '#ea580c',
-  warningSubtle: '#fff7ed',
-  error: '#dc2626',
-  errorSubtle: '#fef2f2',
-  info: '#2563eb',
+  success: '#16A34A',
+  successSubtle: '#F0FDF4',
+  warning: '#F59E0B',
+  warningSubtle: '#FFFBEB',
+  error: '#DC2626',
+  errorSubtle: '#FEF2F2',
+  info: '#2563EB',
 
-  // Neutral Palette & Surfaces
-  background: '#f8fafc',    // Slate 50 - App Background
-  surface: '#ffffff',       // Pure White Card
-  surfaceElevated: '#ffffff',
-  surfaceSubtle: '#f1f5f9', // Slate 100 - Inputs / Inactive pills
+  background: '#FFFFFF',
+  softBackground: '#F8F9FA',
+  surface: '#FFFFFF',
+  surfaceElevated: '#FFFFFF',
+  surfaceSubtle: '#F8F9FA',
 
-  // Text Hierarchy
-  textPrimary: '#0f172a',   // Slate 900 - Headings
-  textSecondary: '#475569', // Slate 600 - Subtitles & body
-  textMuted: '#94a3b8',     // Slate 400 - Placeholders / Captions
-  textInverse: '#ffffff',
+  textPrimary: '#111827',
+  textSecondary: '#667085',
+  textMuted: '#98A2B3',
+  textInverse: '#FFFFFF',
 
-  // Borders & Dividers
-  border: '#e2e8f0',        // Slate 200
-  borderSubtle: '#f1f5f9',
-  borderFocus: '#059669',
+  border: '#E5E7EB',
+  borderLight: '#EAECF0',
+  borderSubtle: '#F8F9FA',
+  borderFocus: '#FFC928',
 
-  // Badges & Statuses
-  badgePending: '#fef3c7',
-  badgePendingText: '#d97706',
-  badgeConfirmed: '#e0f2fe',
-  badgeConfirmedText: '#0284c7',
-  badgeDelivered: '#dcfce7',
-  badgeDeliveredText: '#15803d',
-  badgeCancelled: '#fee2e2',
-  badgeCancelledText: '#b91c1c'
+  white: '#FFFFFF',
+  black: '#111111',
+
+  badgePending: '#FFF4C7',
+  badgePendingText: '#B45309',
+  badgeConfirmed: '#E0F2FE',
+  badgeConfirmedText: '#0284C7',
+  badgeDelivered: '#DCFCE7',
+  badgeDeliveredText: '#15803D',
+  badgeCancelled: '#FEE2E2',
+  badgeCancelledText: '#DC2626'
 };

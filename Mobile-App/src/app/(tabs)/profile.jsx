@@ -1,343 +1,1753 @@
-import React from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  Alert 
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Image,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  Linking,
+  Platform
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { 
-  User, 
-  MapPin, 
-  Bell, 
-  HelpCircle, 
-  LogOut, 
-  ChevronRight, 
+import Constants from 'expo-constants';
+import {
+  Settings,
   ShoppingBag,
-  ShieldCheck
+  MapPin,
+  Heart,
+  CreditCard,
+  Crown,
+  ChevronRight,
+  User,
+  Bell,
+  Headphones,
+  Info,
+  LogOut,
+  Check,
+  X,
+  Mail,
+  Phone,
+  ShieldCheck,
+  FileText,
+  MessageSquare,
+  Star,
+  ExternalLink,
+  Trash2,
+  AlertCircle
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
-import { AppButton } from '../../components/AppButton';
+import { StorefrontAPI } from '../../services/api';
+import { haptics } from '../../services/haptics';
 
 export default function ProfileScreen() {
-  const { customer, token, logout } = useAuth();
+  const { customer, token, logout, refreshProfile } = useAuth();
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showKuikloPlusModal, setShowKuikloPlusModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showAboutModal, setShowAboutModal] = useState(false);
+  const [showPaymentsModal, setShowPaymentsModal] = useState(false);
+  const [showFavoritesModal, setShowFavoritesModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const [editName, setEditName] = useState(customer?.name || '');
+  const [editEmail, setEditEmail] = useState(customer?.email || '');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [editSuccess, setEditSuccess] = useState(false);
+
+  const [feedbackRating, setFeedbackRating] = useState(5);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [feedbackSent, setFeedbackSent] = useState(false);
+
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
+
+  const rawPhone = customer?.phone ? customer.phone.toString().replace(/\D/g, '') : '';
+  const formattedPhone = rawPhone.length >= 10
+    ? `+91 ${rawPhone.slice(-10, -5)} ${rawPhone.slice(-5)}`
+    : rawPhone ? `+91 ${rawPhone}` : '+91 ••••• •••••';
+
+  const handleOpenEditProfile = () => {
+    setEditName(customer?.name || '');
+    setEditEmail(customer?.email || '');
+    setEditError('');
+    setEditSuccess(false);
+    haptics.selection();
+    setShowEditProfileModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editName.trim()) {
+      setEditError('Please enter your full name');
+      haptics.notificationError();
+      return;
+    }
+
+    setIsSavingProfile(true);
+    setEditError('');
+
+    try {
+      await StorefrontAPI.updateProfile({
+        name: editName.trim(),
+        email: editEmail.trim()
+      });
+      await refreshProfile();
+      setEditSuccess(true);
+      haptics.notificationSuccess();
+      setTimeout(() => {
+        setShowEditProfileModal(false);
+        setEditSuccess(false);
+      }, 700);
+    } catch (err) {
+      setEditError(err.response?.data?.message || err.message || 'Failed to update profile');
+      haptics.notificationError();
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleConfirmLogout = async () => {
+    haptics.impactMedium();
+    setShowLogoutModal(false);
+    await logout();
+    router.replace('/(auth)/login');
+  };
+
+  const handleOpenWhatsApp = () => {
+    haptics.selection();
+    Linking.openURL('https://wa.me/919876543210?text=Hello%20Kuiklo%20Support').catch(() => {});
+  };
+
+  const handleOpenEmail = () => {
+    haptics.selection();
+    Linking.openURL('mailto:support@kuiklo.com?subject=Kuiklo%20Support%20Request').catch(() => {});
+  };
 
   if (!token) {
     return (
-      <View style={styles.container}>
-        <View style={styles.guestContainer}>
-          <View style={styles.guestIconCircle}>
-            <User size={48} color={colors.primary} />
+      <SafeAreaView style={styles.guestSafeArea} edges={['top']}>
+        <ScrollView contentContainerStyle={styles.guestScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.guestHeaderIllustration}>
+            <Image
+              source={require('../../../assets/images/profile_header.jpg')}
+              style={styles.guestHeroImage}
+              resizeMode="cover"
+            />
           </View>
-          <Text style={styles.guestTitle}>Welcome to Kuiklo</Text>
-          <Text style={styles.guestSubtitle}>
-            Sign in to manage your addresses, view order history, and access quick customer support.
-          </Text>
-          <AppButton
-            title="Sign In / Register"
-            onPress={() => router.push('/(auth)/login')}
-            size="lg"
-            style={{ width: '100%' }}
-          />
-        </View>
-      </View>
+          <View style={styles.guestCard}>
+            <Text style={styles.guestGreeting}>Welcome to Kuiklo</Text>
+            <Text style={styles.guestSubtitle}>
+              Sign in to manage your grocery orders, saved addresses, exclusive coupons, and lightning-fast delivery tracking.
+            </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary }
+              ]}
+              onPress={() => {
+                haptics.impactLight();
+                router.push('/(auth)/login');
+              }}
+            >
+              <Text style={styles.primaryCtaText}>Sign In / Continue with Mobile</Text>
+            </Pressable>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     );
   }
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out of Kuiklo?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive', 
-          onPress: async () => {
-            await logout();
-            router.replace('/(auth)/login');
-          }
-        }
-      ]
-    );
-  };
-
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Profile Header */}
-      <View style={styles.header}>
-        <View style={styles.avatarCircle}>
-          <Text style={styles.avatarText}>
-            {customer?.name ? customer.name.charAt(0).toUpperCase() : 'U'}
-          </Text>
+    <View style={styles.screenContainer}>
+      {/* Full Background Banner Header */}
+      <View style={styles.bannerHeaderWrap}>
+        <Image
+          source={require('../../../assets/images/profile_header.jpg')}
+          style={styles.bannerBgImage}
+          resizeMode="cover"
+        />
+
+        <SafeAreaView edges={['top']} style={styles.bannerSafeArea}>
+          <View style={styles.headerTopBar}>
+            <View style={{ flex: 1 }} />
+            <Pressable
+              style={({ pressed }) => [
+                styles.settingsBtn,
+                { backgroundColor: pressed ? colors.primaryLight : colors.white }
+              ]}
+              onPress={handleOpenEditProfile}
+              accessibilityRole="button"
+              accessibilityLabel="Settings"
+            >
+              <Settings size={18} color={colors.textPrimary} strokeWidth={2.4} />
+            </Pressable>
+          </View>
+
+          <View style={styles.customerInfoOverlay}>
+            <Text style={styles.greetingText}>Hello,</Text>
+            <Text style={styles.customerName} numberOfLines={1}>
+              {customer?.name || 'Rohit Sharma'}
+            </Text>
+            <Text style={styles.customerPhone}>
+              {formattedPhone}
+            </Text>
+            <View style={styles.verifiedPill}>
+              <View style={styles.verifiedCheckBadge}>
+                <Check size={9} color={colors.white} strokeWidth={3.5} />
+              </View>
+              <Text style={styles.verifiedText}>Verified</Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      </View>
+
+      {/* Main Content Body with Smooth Curved Transition */}
+      <ScrollView 
+        style={styles.bodyScrollView} 
+        contentContainerStyle={styles.bodyScrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.whiteCardContainer}>
+          {/* Quick Actions Row: My Orders, Addresses, Favorites, Payments */}
+          <View style={styles.quickActionsGrid}>
+            <QuickActionButton
+              icon={<ShoppingBag size={22} color={colors.black} strokeWidth={2.2} />}
+              label="My Orders"
+              onPress={() => {
+                haptics.selection();
+                router.push('/(tabs)/orders');
+              }}
+            />
+            <QuickActionButton
+              icon={<MapPin size={22} color={colors.black} strokeWidth={2.2} />}
+              label="Addresses"
+              onPress={() => {
+                haptics.selection();
+                router.push('/addresses');
+              }}
+            />
+            <QuickActionButton
+              icon={<Heart size={22} color={colors.black} strokeWidth={2.2} />}
+              label="Favorites"
+              onPress={() => {
+                haptics.selection();
+                setShowFavoritesModal(true);
+              }}
+            />
+            <QuickActionButton
+              icon={<CreditCard size={22} color={colors.black} strokeWidth={2.2} />}
+              label="Payments"
+              onPress={() => {
+                haptics.selection();
+                setShowPaymentsModal(true);
+              }}
+            />
+          </View>
+
+          {/* Kuiklo Plus Highlight Card */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.highlightCard,
+              { backgroundColor: pressed ? '#FFF3D4' : colors.primarySoft }
+            ]}
+            onPress={() => {
+              haptics.impactLight();
+              setShowKuikloPlusModal(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Kuiklo Plus"
+          >
+            <View style={styles.crownCircle}>
+              <Crown size={22} color="#D97706" strokeWidth={2.4} />
+            </View>
+            <View style={styles.highlightTextCol}>
+              <Text style={styles.highlightTitle}>Kuiklo Plus</Text>
+              <Text style={styles.highlightSubtitle}>
+                Exclusive offers, free delivery and more
+              </Text>
+            </View>
+            <ChevronRight size={18} color={colors.textSecondary} strokeWidth={2.2} />
+          </Pressable>
+
+          {/* Section 1: Main Account Actions */}
+          <View style={styles.menuGroupCard}>
+            <MenuItemRow
+              icon={<User size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Personal Information"
+              subtitle="View and update your details"
+              onPress={handleOpenEditProfile}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItemRow
+              icon={<Bell size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Notifications"
+              subtitle="Manage your preferences"
+              onPress={() => {
+                haptics.selection();
+                router.push('/notifications');
+              }}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItemRow
+              icon={<Headphones size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Help & Support"
+              subtitle="Get support, FAQs and contact us"
+              onPress={() => {
+                haptics.selection();
+                setShowHelpModal(true);
+              }}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItemRow
+              icon={<Info size={20} color={colors.black} strokeWidth={2.2} />}
+              title="About Kuiklo"
+              subtitle="App version, policies and more"
+              onPress={() => {
+                haptics.selection();
+                setShowAboutModal(true);
+              }}
+            />
+          </View>
+
+          {/* Section 2: Feedback & Ratings */}
+          <View style={styles.menuGroupCard}>
+            <MenuItemRow
+              icon={<MessageSquare size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Give Feedback"
+              subtitle="Share your suggestions to improve Kuiklo"
+              onPress={() => {
+                haptics.selection();
+                setShowFeedbackModal(true);
+              }}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItemRow
+              icon={<ShieldCheck size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Privacy Policy"
+              subtitle="Learn how we protect your personal data"
+              onPress={() => {
+                haptics.selection();
+                router.push('/privacy');
+              }}
+            />
+            <View style={styles.itemDivider} />
+            <MenuItemRow
+              icon={<FileText size={20} color={colors.black} strokeWidth={2.2} />}
+              title="Terms & Conditions"
+              subtitle="Service agreement and delivery policies"
+              onPress={() => {
+                haptics.selection();
+                router.push('/terms');
+              }}
+            />
+          </View>
+
+          {/* Log Out Button */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.logoutPillButton,
+              { backgroundColor: pressed ? '#FEF2F2' : colors.white }
+            ]}
+            onPress={() => {
+              haptics.impactLight();
+              setShowLogoutModal(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Log Out"
+          >
+            <LogOut size={18} color={colors.error} strokeWidth={2.4} style={{ marginRight: 8 }} />
+            <Text style={styles.logoutPillText}>Log Out</Text>
+          </Pressable>
+
+          {/* Discrete Account Deletion Notice */}
+          <Pressable
+            style={styles.deleteAccountRow}
+            onPress={() => {
+              haptics.selection();
+              setShowDeleteModal(true);
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Delete Account"
+          >
+            <Text style={styles.deleteAccountText}>Delete Account</Text>
+          </Pressable>
+
+          {/* App Version Footer */}
+          <View style={styles.footerBrandRow}>
+            <Text style={styles.footerVersionText}>
+              Kuiklo Grocery • Version {appVersion}
+            </Text>
+          </View>
         </View>
-        <Text style={styles.name}>{customer?.name || 'Kuiklo Customer'}</Text>
-        <Text style={styles.phone}>{customer?.phone}</Text>
-        {Boolean(customer?.email) && (
-          <Text style={styles.email}>{customer?.email}</Text>
+      </ScrollView>
+
+      {/* --- MODAL 1: Edit Profile (Personal Information) --- */}
+      <Modal
+        visible={showEditProfileModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEditProfileModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowEditProfileModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Personal Information</Text>
+              <Pressable
+                onPress={() => setShowEditProfileModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            {Boolean(editError) && (
+              <View style={styles.modalAlertError}>
+                <AlertCircle size={15} color={colors.error} style={{ marginRight: 6 }} />
+                <Text style={styles.modalAlertErrorText}>{editError}</Text>
+              </View>
+            )}
+
+            {editSuccess && (
+              <View style={styles.modalAlertSuccess}>
+                <Check size={15} color={colors.success} style={{ marginRight: 6 }} />
+                <Text style={styles.modalAlertSuccessText}>Profile updated successfully!</Text>
+              </View>
+            )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <View style={styles.inputBox}>
+                <User size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
+                <TextInput
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="Your Name"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.modalTextInput}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <View style={styles.inputBox}>
+                <Mail size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
+                <TextInput
+                  value={editEmail}
+                  onChangeText={setEditEmail}
+                  placeholder="name@example.com"
+                  placeholderTextColor={colors.textMuted}
+                  style={styles.modalTextInput}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Registered Mobile Number</Text>
+              <View style={[styles.inputBox, styles.inputBoxDisabled]}>
+                <Phone size={18} color={colors.textMuted} style={{ marginRight: 10 }} />
+                <Text style={styles.disabledInputText}>{formattedPhone}</Text>
+                <View style={styles.verifiedBadgeInline}>
+                  <Check size={11} color={colors.success} strokeWidth={3} />
+                  <Text style={styles.verifiedInlineText}>Verified</Text>
+                </View>
+              </View>
+              <Text style={styles.inputNote}>Mobile number is authenticated via secure OTP</Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.md }
+              ]}
+              onPress={handleSaveProfile}
+              disabled={isSavingProfile}
+            >
+              {isSavingProfile ? (
+                <ActivityIndicator size="small" color={colors.black} />
+              ) : (
+                <Text style={styles.primaryCtaText}>Save Changes</Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 2: Kuiklo Plus Benefits --- */}
+      <Modal
+        visible={showKuikloPlusModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowKuikloPlusModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowKuikloPlusModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Crown size={24} color="#D97706" strokeWidth={2.6} />
+                <Text style={styles.modalTitle}>Kuiklo Plus Membership</Text>
+              </View>
+              <Pressable
+                onPress={() => setShowKuikloPlusModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.plusModalDesc}>
+              Enjoy an elevated quick-commerce grocery experience with Kuiklo Plus benefits on every order:
+            </Text>
+
+            <View style={styles.plusPerkRow}>
+              <View style={styles.plusPerkIcon}>
+                <Check size={16} color={colors.success} strokeWidth={3} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.plusPerkTitle}>Unlimited Free Delivery</Text>
+                <Text style={styles.plusPerkSubtitle}>Zero delivery fee on all orders above ₹149</Text>
+              </View>
+            </View>
+
+            <View style={styles.plusPerkRow}>
+              <View style={styles.plusPerkIcon}>
+                <Check size={16} color={colors.success} strokeWidth={3} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.plusPerkTitle}>10–15 Min Priority Dispatch</Text>
+                <Text style={styles.plusPerkSubtitle}>Skip packaging queues for instant order packing</Text>
+              </View>
+            </View>
+
+            <View style={styles.plusPerkRow}>
+              <View style={styles.plusPerkIcon}>
+                <Check size={16} color={colors.success} strokeWidth={3} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.plusPerkTitle}>VIP 24/7 Dedicated Support</Text>
+                <Text style={styles.plusPerkSubtitle}>Direct access to our senior customer resolutions desk</Text>
+              </View>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.lg }
+              ]}
+              onPress={() => {
+                haptics.selection();
+                setShowKuikloPlusModal(false);
+              }}
+            >
+              <Text style={styles.primaryCtaText}>Got It</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 3: Help & Support --- */}
+      <Modal
+        visible={showHelpModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowHelpModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowHelpModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Help & Support</Text>
+              <Pressable
+                onPress={() => setShowHelpModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.helpIntroText}>
+              We are here to help you 24/7 with your grocery orders, deliveries, and payment inquiries.
+            </Text>
+
+            <Pressable
+              style={styles.supportActionRow}
+              onPress={handleOpenWhatsApp}
+            >
+              <View style={styles.supportActionIcon}>
+                <MessageSquare size={20} color={colors.success} strokeWidth={2.4} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.supportActionTitle}>Chat on WhatsApp</Text>
+                <Text style={styles.supportActionSubtitle}>Quick reply within 2 minutes</Text>
+              </View>
+              <ExternalLink size={16} color={colors.textSecondary} />
+            </Pressable>
+
+            <Pressable
+              style={styles.supportActionRow}
+              onPress={handleOpenEmail}
+            >
+              <View style={styles.supportActionIcon}>
+                <Mail size={20} color={colors.info} strokeWidth={2.4} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.supportActionTitle}>Email Support</Text>
+                <Text style={styles.supportActionSubtitle}>support@kuiklo.com</Text>
+              </View>
+              <ExternalLink size={16} color={colors.textSecondary} />
+            </Pressable>
+
+            <Pressable
+              style={styles.supportActionRow}
+              onPress={() => {
+                setShowHelpModal(false);
+                router.push('/(tabs)/orders');
+              }}
+            >
+              <View style={styles.supportActionIcon}>
+                <ShoppingBag size={20} color={colors.textPrimary} strokeWidth={2.4} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.supportActionTitle}>Order Issues & Returns</Text>
+                <Text style={styles.supportActionSubtitle}>Report missing or damaged items</Text>
+              </View>
+              <ChevronRight size={18} color={colors.textSecondary} />
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 4: About Kuiklo --- */}
+      <Modal
+        visible={showAboutModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowAboutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowAboutModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>About Kuiklo</Text>
+              <Pressable
+                onPress={() => setShowAboutModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <View style={styles.aboutBrandHeader}>
+              <Text style={styles.aboutBrandName}>Kuiklo Quick Commerce</Text>
+              <Text style={styles.aboutVersionBadge}>v{appVersion}</Text>
+            </View>
+            <Text style={styles.aboutDescription}>
+              Kuiklo is your neighborhood quick-commerce companion delivering farm-fresh produce, dairy, bakery, daily essentials, and household goods right to your doorstep in 10–15 minutes.
+            </Text>
+
+            <View style={styles.aboutLegalLinks}>
+              <Pressable
+                style={styles.aboutLinkItem}
+                onPress={() => {
+                  setShowAboutModal(false);
+                  router.push('/privacy');
+                }}
+              >
+                <ShieldCheck size={18} color={colors.black} style={{ marginRight: 10 }} />
+                <Text style={styles.aboutLinkText}>Privacy Policy</Text>
+                <ChevronRight size={16} color={colors.textSecondary} />
+              </Pressable>
+              <View style={styles.itemDivider} />
+              <Pressable
+                style={styles.aboutLinkItem}
+                onPress={() => {
+                  setShowAboutModal(false);
+                  router.push('/terms');
+                }}
+              >
+                <FileText size={18} color={colors.black} style={{ marginRight: 10 }} />
+                <Text style={styles.aboutLinkText}>Terms & Conditions</Text>
+                <ChevronRight size={16} color={colors.textSecondary} />
+              </Pressable>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.lg }
+              ]}
+              onPress={() => setShowAboutModal(false)}
+            >
+              <Text style={styles.primaryCtaText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 5: Payments Overview --- */}
+      <Modal
+        visible={showPaymentsModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowPaymentsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowPaymentsModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Payment Methods</Text>
+              <Pressable
+                onPress={() => setShowPaymentsModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.helpIntroText}>
+              Kuiklo supports all major secure payment gateways during checkout:
+            </Text>
+
+            <View style={styles.paymentMethodCard}>
+              <Text style={styles.paymentMethodTitle}>Instant UPI</Text>
+              <Text style={styles.paymentMethodDesc}>Google Pay, PhonePe, Paytm, CRED & Any UPI App</Text>
+            </View>
+
+            <View style={styles.paymentMethodCard}>
+              <Text style={styles.paymentMethodTitle}>Cards & Net Banking</Text>
+              <Text style={styles.paymentMethodDesc}>Visa, MasterCard, RuPay, Maestro & Net Banking</Text>
+            </View>
+
+            <View style={styles.paymentMethodCard}>
+              <Text style={styles.paymentMethodTitle}>Cash on Delivery (COD)</Text>
+              <Text style={styles.paymentMethodDesc}>Pay via Cash or UPI at your doorstep upon delivery</Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.md }
+              ]}
+              onPress={() => setShowPaymentsModal(false)}
+            >
+              <Text style={styles.primaryCtaText}>Close</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 6: Favorites / Saved Items --- */}
+      <Modal
+        visible={showFavoritesModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFavoritesModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowFavoritesModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Your Favorites</Text>
+              <Pressable
+                onPress={() => setShowFavoritesModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            <View style={styles.favoritesEmptyWrap}>
+              <Heart size={44} color={colors.primary} />
+              <Text style={styles.favoritesEmptyTitle}>Save items you love</Text>
+              <Text style={styles.favoritesEmptyDesc}>
+                Tap the heart icon on any grocery product to quickly order your kitchen staples anytime.
+              </Text>
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.lg }
+              ]}
+              onPress={() => {
+                setShowFavoritesModal(false);
+                router.push('/(tabs)');
+              }}
+            >
+              <Text style={styles.primaryCtaText}>Explore Store Catalog</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 7: Give Feedback --- */}
+      <Modal
+        visible={showFeedbackModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFeedbackModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowFeedbackModal(false)} />
+          <View style={styles.modalContentCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.modalTitle}>Give Feedback</Text>
+              <Pressable
+                onPress={() => setShowFeedbackModal(false)}
+                style={styles.modalCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+            </View>
+
+            {feedbackSent ? (
+              <View style={styles.feedbackSuccessWrap}>
+                <Check size={40} color={colors.success} />
+                <Text style={styles.feedbackSuccessTitle}>Thank you for your feedback!</Text>
+                <Text style={styles.feedbackSuccessDesc}>
+                  Your feedback helps us make Kuiklo deliveries faster and better every day.
+                </Text>
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryCtaBtn,
+                    { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.md }
+                  ]}
+                  onPress={() => {
+                    setShowFeedbackModal(false);
+                    setFeedbackSent(false);
+                    setFeedbackText('');
+                  }}
+                >
+                  <Text style={styles.primaryCtaText}>Done</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <>
+                <Text style={styles.helpIntroText}>How would you rate your Kuiklo experience?</Text>
+                <View style={styles.starRatingRow}>
+                  {[1, 2, 3, 4, 5].map((starVal) => (
+                    <Pressable
+                      key={starVal}
+                      onPress={() => {
+                        haptics.selection();
+                        setFeedbackRating(starVal);
+                      }}
+                      style={styles.starBtn}
+                    >
+                      <Star
+                        size={30}
+                        color="#F59E0B"
+                        fill={starVal <= feedbackRating ? '#F59E0B' : 'transparent'}
+                        strokeWidth={2}
+                      />
+                    </Pressable>
+                  ))}
+                </View>
+
+                <TextInput
+                  value={feedbackText}
+                  onChangeText={setFeedbackText}
+                  placeholder="Tell us what you loved or how we can improve..."
+                  placeholderTextColor={colors.textMuted}
+                  multiline={true}
+                  numberOfLines={4}
+                  style={styles.feedbackInput}
+                />
+
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.primaryCtaBtn,
+                    { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.md }
+                  ]}
+                  onPress={() => {
+                    haptics.notificationSuccess();
+                    setFeedbackSent(true);
+                  }}
+                >
+                  <Text style={styles.primaryCtaText}>Submit Feedback</Text>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 8: Logout Confirmation --- */}
+      <Modal
+        visible={showLogoutModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowLogoutModal(false)} />
+          <View style={styles.alertCard}>
+            <View style={styles.alertIconCircle}>
+              <LogOut size={26} color={colors.error} strokeWidth={2.4} />
+            </View>
+            <Text style={styles.alertTitle}>Sign Out</Text>
+            <Text style={styles.alertMessage}>
+              Are you sure you want to sign out of your Kuiklo account?
+            </Text>
+            <View style={styles.alertActionsRow}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.alertCancelBtn,
+                  { backgroundColor: pressed ? colors.softBackground : colors.white }
+                ]}
+                onPress={() => {
+                  haptics.selection();
+                  setShowLogoutModal(false);
+                }}
+              >
+                <Text style={styles.alertCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.alertConfirmBtn,
+                  { backgroundColor: pressed ? '#B91C1C' : colors.error }
+                ]}
+                onPress={handleConfirmLogout}
+              >
+                <Text style={styles.alertConfirmText}>Sign Out</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- MODAL 9: Delete Account Policy --- */}
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={styles.modalBackdrop} onPress={() => setShowDeleteModal(false)} />
+          <View style={styles.alertCard}>
+            <View style={[styles.alertIconCircle, { backgroundColor: '#FEE2E2' }]}>
+              <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
+            </View>
+            <Text style={styles.alertTitle}>Delete Account</Text>
+            <Text style={styles.alertMessage}>
+              In accordance with data privacy regulations, account deletion requests are processed manually to verify ongoing deliveries and pending refunds.
+            </Text>
+            <Text style={[styles.alertMessage, { marginTop: 4, fontFamily: typography.family.semibold }]}>
+              Please email support@kuiklo.com from your registered email with subject "Account Deletion Request".
+            </Text>
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryCtaBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary, marginTop: spacing.md, width: '100%' }
+              ]}
+              onPress={() => setShowDeleteModal(false)}
+            >
+              <Text style={styles.primaryCtaText}>Understood</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+function QuickActionButton({ icon, label, onPress }) {
+  return (
+    <View style={styles.quickActionItem}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.quickActionPressable,
+          pressed && { transform: [{ scale: 0.94 }] }
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+      >
+        <View style={styles.quickActionCircle}>
+          {icon}
+        </View>
+        <Text style={styles.quickActionLabel} numberOfLines={1}>
+          {label}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function MenuItemRow({ icon, title, subtitle, onPress }) {
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.menuItemRow,
+        { backgroundColor: pressed ? colors.softBackground : colors.white }
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+    >
+      <View style={styles.menuIconContainer}>
+        {icon}
+      </View>
+      <View style={styles.menuTextContainer}>
+        <Text style={styles.menuItemTitle}>{title}</Text>
+        {Boolean(subtitle) && (
+          <Text style={styles.menuItemSubtitle}>{subtitle}</Text>
         )}
       </View>
-
-      {/* Customer Stats */}
-      <View style={styles.statsCard}>
-        <View style={styles.statCol}>
-          <Text style={styles.statNumber}>{customer?.totalOrders || 0}</Text>
-          <Text style={styles.statLabel}>Orders</Text>
-        </View>
-        <View style={styles.statDivider} />
-        <View style={styles.statCol}>
-          <Text style={styles.statNumber}>₹{customer?.totalSpent || 0}</Text>
-          <Text style={styles.statLabel}>Total Spent</Text>
-        </View>
-      </View>
-
-      {/* Account Navigation Options */}
-      <View style={styles.menuSection}>
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => router.push('/addresses')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.menuIconContainer}>
-            <MapPin size={20} color={colors.primary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.menuTitle}>Saved Addresses</Text>
-            <Text style={styles.menuSubtitle}>Manage delivery addresses & defaults</Text>
-          </View>
-          <ChevronRight size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => router.push('/(tabs)/orders')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.menuIconContainer}>
-            <ShoppingBag size={20} color={colors.secondary} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.menuTitle}>My Orders</Text>
-            <Text style={styles.menuSubtitle}>Track orders and view invoices</Text>
-          </View>
-          <ChevronRight size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => router.push('/notifications')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.menuIconContainer}>
-            <Bell size={20} color={colors.accent} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.menuTitle}>Notifications</Text>
-            <Text style={styles.menuSubtitle}>Order updates and promotional offers</Text>
-          </View>
-          <ChevronRight size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => router.push('/(tabs)/orders')}
-          activeOpacity={0.7}
-        >
-          <View style={styles.menuIconContainer}>
-            <HelpCircle size={20} color={colors.info} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.menuTitle}>Help & Support</Text>
-            <Text style={styles.menuSubtitle}>Report damaged or missing items</Text>
-          </View>
-          <ChevronRight size={18} color={colors.textMuted} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Logout Action */}
-      <View style={styles.logoutSection}>
-        <TouchableOpacity 
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          activeOpacity={0.8}
-        >
-          <LogOut size={20} color={colors.error} style={{ marginRight: spacing.sm }} />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* App Version Info */}
-      <View style={styles.footer}>
-        <ShieldCheck size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
-        <Text style={styles.versionText}>Kuiklo Grocery App • v1.0.0 (Production Ready)</Text>
-      </View>
-    </ScrollView>
+      <ChevronRight size={18} color={colors.textSecondary} strokeWidth={2.2} />
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screenContainer: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
-  guestContainer: {
+  bannerHeaderWrap: {
+    backgroundColor: colors.primary,
+    height: 228,
+    position: 'relative',
+    overflow: 'hidden'
+  },
+  bannerBgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%'
+  },
+  bannerSafeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing['2xl']
+    paddingHorizontal: spacing.lg,
+    justifyContent: 'space-between',
+    paddingBottom: spacing.xl
   },
-  guestIconCircle: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
-    backgroundColor: colors.primarySubtle,
-    justifyContent: 'center',
+  headerTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: spacing.lg
+    paddingTop: spacing.xs
   },
-  guestTitle: {
-    fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+  settingsBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  customerInfoOverlay: {
+    maxWidth: '56%',
+    paddingBottom: spacing.xs
+  },
+  greetingText: {
+    fontSize: 16,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary,
+    marginBottom: 2
+  },
+  customerName: {
+    fontSize: 22,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    letterSpacing: -0.4,
+    marginBottom: 2
+  },
+  customerPhone: {
+    fontSize: 13,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary,
+    opacity: 0.9,
+    marginBottom: 8
+  },
+  verifiedPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: '#E5A900',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 5
+  },
+  verifiedCheckBadge: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.black,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  verifiedText: {
+    fontSize: 11,
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  bodyScrollView: {
+    flex: 1,
+    backgroundColor: colors.white,
+    marginTop: -20,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28
+  },
+  bodyScrollContent: {
+    paddingBottom: 40
+  },
+  whiteCardContainer: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingTop: spacing.lg
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md
+  },
+  quickActionItem: {
+    alignItems: 'center',
+    flex: 1
+  },
+  quickActionPressable: {
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  quickActionCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5,
+    borderColor: '#FFEAA7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  quickActionLabel: {
+    fontSize: 12,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary,
+    textAlign: 'center'
+  },
+  highlightCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5,
+    borderColor: '#FFE8A3',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.xs,
+    marginBottom: spacing.md
+  },
+  crownCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  highlightTextCol: {
+    flex: 1
+  },
+  highlightTitle: {
+    fontSize: 15,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  highlightSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  menuGroupCard: {
+    backgroundColor: colors.white,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden'
+  },
+  menuItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 13
+  },
+  menuIconContainer: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: colors.softBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  menuTextContainer: {
+    flex: 1
+  },
+  menuItemTitle: {
+    fontSize: 14,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
+  },
+  menuItemSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 1
+  },
+  itemDivider: {
+    height: 1,
+    backgroundColor: colors.borderSubtle,
+    marginLeft: 64
+  },
+  logoutPillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: '#FEE2E2',
+    marginHorizontal: spacing.xxl,
+    marginTop: spacing.sm,
     marginBottom: spacing.xs
   },
+  logoutPillText: {
+    fontSize: 15,
+    fontFamily: typography.family.bold,
+    color: colors.error
+  },
+  deleteAccountRow: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm
+  },
+  deleteAccountText: {
+    fontSize: 12,
+    fontFamily: typography.family.medium,
+    color: colors.textMuted,
+    textDecorationLine: 'underline'
+  },
+  footerBrandRow: {
+    alignItems: 'center',
+    marginTop: spacing.xs,
+    paddingBottom: spacing.sm
+  },
+  footerVersionText: {
+    fontSize: 11,
+    fontFamily: typography.family.regular,
+    color: colors.textMuted
+  },
+  primaryCtaBtn: {
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.xl
+  },
+  primaryCtaText: {
+    fontSize: 15,
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  guestSafeArea: {
+    flex: 1,
+    backgroundColor: colors.primary
+  },
+  guestScrollContent: {
+    flexGrow: 1,
+    backgroundColor: colors.white
+  },
+  guestHeaderIllustration: {
+    height: 240,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    overflow: 'hidden'
+  },
+  guestHeroImage: {
+    width: 180,
+    height: 180,
+    borderRadius: 30
+  },
+  guestCard: {
+    padding: spacing.xl,
+    alignItems: 'center'
+  },
+  guestGreeting: {
+    fontSize: 22,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginBottom: 8
+  },
   guestSubtitle: {
-    fontSize: typography.size.sm,
+    fontSize: 14,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: typography.lineHeight.md,
-    marginBottom: spacing['2xl'],
-    maxWidth: 300
+    lineHeight: 22,
+    marginBottom: spacing.xl
   },
-  header: {
-    backgroundColor: colors.surface,
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    justifyContent: 'flex-end'
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject
+  },
+  modalContentCard: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing['2xl'],
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    justifyContent: 'space-between',
+    marginBottom: spacing.md
   },
-  avatarCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+  modalTitle: {
+    fontSize: 18,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  modalCloseCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.softBackground,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  modalAlertError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.errorSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.error,
+    marginBottom: spacing.md
+  },
+  modalAlertErrorText: {
+    fontSize: 12,
+    fontFamily: typography.family.medium,
+    color: colors.error
+  },
+  modalAlertSuccess: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successSubtle,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: colors.success,
+    marginBottom: spacing.md
+  },
+  modalAlertSuccessText: {
+    fontSize: 12,
+    fontFamily: typography.family.medium,
+    color: colors.success
+  },
+  inputGroup: {
+    marginBottom: spacing.sm
+  },
+  inputLabel: {
+    fontSize: 12,
+    fontFamily: typography.family.semibold,
+    color: colors.textSecondary,
+    marginBottom: 6
+  },
+  inputBox: {
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12
+  },
+  inputBoxDisabled: {
+    backgroundColor: colors.softBackground
+  },
+  modalTextInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary
+  },
+  disabledInputText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: typography.family.medium,
+    color: colors.textSecondary
+  },
+  verifiedBadgeInline: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successSubtle,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 3
+  },
+  verifiedInlineText: {
+    fontSize: 10,
+    fontFamily: typography.family.bold,
+    color: colors.success
+  },
+  inputNote: {
+    fontSize: 11,
+    fontFamily: typography.family.regular,
+    color: colors.textMuted,
+    marginTop: 4
+  },
+  plusModalDesc: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.md
+  },
+  plusPerkRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: spacing.md
+  },
+  plusPerkIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: colors.successSubtle,
+    borderWidth: 1,
+    borderColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    marginTop: 2
+  },
+  plusPerkTitle: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  plusPerkSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 1
+  },
+  helpIntroText: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.md
+  },
+  supportActionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.white
+  },
+  supportActionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.softBackground,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12
+  },
+  supportActionTitle: {
+    fontSize: 14,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
+  },
+  supportActionSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 1
+  },
+  aboutBrandHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6
+  },
+  aboutBrandName: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  aboutVersionBadge: {
+    fontSize: 12,
+    fontFamily: typography.family.bold,
+    color: colors.black,
     backgroundColor: colors.primary,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10
+  },
+  aboutDescription: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: spacing.md
+  },
+  aboutLegalLinks: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    backgroundColor: colors.white
+  },
+  aboutLinkItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12
+  },
+  aboutLinkText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: typography.family.medium,
+    color: colors.textPrimary
+  },
+  paymentMethodCard: {
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.softBackground
+  },
+  paymentMethodTitle: {
+    fontSize: 13,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  paymentMethodDesc: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  favoritesEmptyWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl
+  },
+  favoritesEmptyTitle: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginTop: 10,
+    marginBottom: 4
+  },
+  favoritesEmptyDesc: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280
+  },
+  feedbackSuccessWrap: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl
+  },
+  feedbackSuccessTitle: {
+    fontSize: 16,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginTop: 10,
+    marginBottom: 4
+  },
+  feedbackSuccessDesc: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280
+  },
+  starRatingRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: spacing.md
+  },
+  starBtn: {
+    padding: 4
+  },
+  feedbackInput: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: 12,
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textPrimary,
+    backgroundColor: colors.softBackground,
+    textAlignVertical: 'top',
+    height: 90
+  },
+  alertCard: {
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    padding: spacing.xl,
+    marginHorizontal: spacing.xl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border
+  },
+  alertIconCircle: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FEE2E2',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md
   },
-  avatarText: {
-    fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.bold,
-    color: '#ffffff'
-  },
-  name: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+  alertTitle: {
+    fontSize: 18,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
-    marginBottom: 2
+    marginBottom: 6
   },
-  phone: {
-    fontSize: typography.size.sm,
-    color: colors.textSecondary
-  },
-  email: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-    marginTop: 2
-  },
-  statsCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.lg,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  statCol: {
-    flex: 1,
-    alignItems: 'center'
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: colors.border
-  },
-  statNumber: {
-    fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
-    color: colors.primary
-  },
-  statLabel: {
-    fontSize: typography.size.xs,
+  alertMessage: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
-    marginTop: 2
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: spacing.lg
   },
-  menuSection: {
-    backgroundColor: colors.surface,
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.lg,
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  menuItem: {
+  alertActionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle
+    gap: 12,
+    width: '100%'
   },
-  menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceSubtle,
+  alertCancelBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: spacing.md
+    backgroundColor: colors.white
   },
-  menuTitle: {
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+  alertCancelText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
-  menuSubtitle: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-    marginTop: 2
-  },
-  logoutSection: {
-    marginHorizontal: spacing.xl,
-    marginTop: spacing.lg
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  alertConfirmBtn: {
+    flex: 1,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: colors.error,
     justifyContent: 'center',
-    backgroundColor: colors.surface,
-    paddingVertical: spacing.md,
-    borderRadius: radius.xl,
+    alignItems: 'center'
+  },
+  alertConfirmText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.white
+  },
+  guestSafeArea: {
+    flex: 1,
+    backgroundColor: colors.white
+  },
+  guestScrollContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: 40
+  },
+  guestHeaderIllustration: {
+    width: '100%',
+    height: 190,
+    borderRadius: 20,
+    overflow: 'hidden',
+    backgroundColor: colors.primary,
+    marginBottom: spacing.lg
+  },
+  guestHeroImage: {
+    width: '100%',
+    height: '100%'
+  },
+  guestCard: {
+    backgroundColor: colors.softBackground,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.border,
+    padding: spacing.xl,
+    alignItems: 'center'
   },
-  logoutText: {
-    color: colors.error,
-    fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold
+  guestGreeting: {
+    fontSize: 20,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginBottom: 8
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing['2xl']
-  },
-  versionText: {
-    fontSize: typography.size.xs,
-    color: colors.textMuted
+  guestSubtitle: {
+    fontSize: 13,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: spacing.lg
   }
 });

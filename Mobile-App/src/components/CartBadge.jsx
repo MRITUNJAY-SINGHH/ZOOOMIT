@@ -5,7 +5,7 @@ import { colors, typography } from '../constants/theme';
 import { useCart } from '../context/CartContext';
 
 export const CartBadge = ({
-  color = colors.textSecondary,
+  color = colors.textPrimary,
   size = 24
 }) => {
   const { itemCount } = useCart();
@@ -42,11 +42,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
     borderWidth: 1.5,
-    borderColor: colors.surface
+    borderColor: colors.white
   },
   badgeText: {
-    color: '#fff',
+    color: colors.black,
     fontSize: typography.size.xs - 2,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold
   }
 });

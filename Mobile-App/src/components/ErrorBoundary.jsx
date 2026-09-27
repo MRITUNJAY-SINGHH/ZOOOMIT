@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing, radius, typography } from '../constants/theme';
 import { AlertCircle, RefreshCw } from 'lucide-react-native';
+import { AppButton } from './AppButton';
 
 export class ErrorBoundary extends Component {
   state = {
@@ -33,14 +34,12 @@ export class ErrorBoundary extends Component {
             <Text style={styles.message}>
               We encountered an unexpected issue. Please try refreshing or restarting the application.
             </Text>
-            <TouchableOpacity 
-              style={styles.button} 
+            <AppButton
+              title="Try Again"
               onPress={this.handleReset}
-              activeOpacity={0.8}
-            >
-              <RefreshCw size={18} color="#fff" style={{ marginRight: 8 }} />
-              <Text style={styles.buttonText}>Try Again</Text>
-            </TouchableOpacity>
+              variant="primary"
+              icon={<RefreshCw size={18} color={colors.black} />}
+            />
           </View>
         </View>
       );
@@ -53,15 +52,15 @@ export class ErrorBoundary extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl
   },
   card: {
-    backgroundColor: colors.surface,
-    padding: spacing['2xl'],
-    borderRadius: radius.xl,
+    backgroundColor: colors.white,
+    padding: spacing.xxl,
+    borderRadius: 16,
     alignItems: 'center',
     width: '100%',
     maxWidth: 400,
@@ -73,37 +72,25 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     backgroundColor: colors.errorSubtle,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.lg
   },
   title: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
     textAlign: 'center'
   },
   message: {
     fontSize: typography.size.md,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: typography.lineHeight.md,
     marginBottom: spacing.xl
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radius.lg,
-    width: '100%'
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.semibold
   }
 });

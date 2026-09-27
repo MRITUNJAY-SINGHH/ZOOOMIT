@@ -30,6 +30,143 @@ const generateOtp = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
+// In-memory OTP store for customer phone authentication
+// Maps normalized phone -> { otp: string, expiresAt: number, lastSentAt: number }
+const customerOtpCache = new Map();
+
+/**
+ * Send Customer OTP for mobile-first authentication
+ * POST /api/storefront/auth/send-otp
+ */
+export const sendCustomerOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: 'Mobile number is required' });
+    }
+
+    const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({ message: 'Please enter a valid 10-digit mobile number' });
+    }
+
+    const now = Date.now();
+    const existing = customerOtpCache.get(cleanPhone);
+
+    // Rate limiting: allow resend only after 15 seconds
+    if (existing && now - existing.lastSentAt < 15000) {
+      const waitSeconds = Math.ceil((15000 - (now - existing.lastSentAt)) / 1000);
+      return res.status(429).json({ 
+        message: `Please wait ${waitSeconds}s before requesting a new OTP` 
+      });
+    }
+
+    // Generate 6-digit OTP
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = now + 5 * 60 * 1000; // 5 minutes validity
+
+    customerOtpCache.set(cleanPhone, {
+      otp: generatedOtp,
+      expiresAt,
+      lastSentAt: now
+    });
+
+    console.log(`\n=========================================`);
+    console.log(`[AUTH] Customer OTP for +91 ${cleanPhone}: ${generatedOtp}`);
+    console.log(`=========================================\n`);
+
+    // In production, trigger real SMS service here (e.g. Fast2SMS / Twilio)
+    return res.status(200).json({
+      success: true,
+      message: 'OTP sent successfully',
+      resendAfter: 24,
+      // For development / testing convenience:
+      ...(process.env.NODE_ENV !== 'production' ? { devOtp: generatedOtp } : {})
+    });
+  } catch (error) {
+    console.error('Send OTP error:', error);
+    return res.status(500).json({ message: error.message || 'Failed to send OTP' });
+  }
+};
+
+/**
+ * Verify Customer OTP & Login or Auto-Register
+ * POST /api/storefront/auth/verify-otp
+ */
+export const verifyCustomerOtp = async (req, res) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return res.status(400).json({ message: 'Phone number and OTP are required' });
+    }
+
+    const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+    const enteredOtp = otp.toString().trim();
+
+    const cached = customerOtpCache.get(cleanPhone);
+    const now = Date.now();
+
+    // Verification check (Accept cached OTP, or '123456' for instant testing if in dev)
+    const isCachedValid = cached && cached.otp === enteredOtp && now <= cached.expiresAt;
+    const isDevBypass = process.env.NODE_ENV !== 'production' && enteredOtp === '123456';
+
+    if (!isCachedValid && !isDevBypass) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'The OTP you entered is incorrect or expired. Please try again.' 
+      });
+    }
+
+    // Clear used OTP
+    customerOtpCache.delete(cleanPhone);
+
+    // Find or Auto-Create Customer
+    let customer = await Customer.findOne({ phone: cleanPhone });
+
+    if (customer) {
+      if (customer.status === 'Blocked') {
+        return res.status(403).json({ message: 'Your account has been suspended. Please contact support.' });
+      }
+      // Upgrade walk-in or ensure app customer is active
+      if (customer.customerType !== 'APP' || customer.status !== 'Active') {
+        customer.customerType = 'APP';
+        customer.status = 'Active';
+        await customer.save();
+      }
+    } else {
+      // Auto-create new customer
+      customer = new Customer({
+        name: `Kuiklo User ${cleanPhone.slice(-4)}`,
+        phone: cleanPhone,
+        customerType: 'APP',
+        status: 'Active'
+      });
+      await customer.save();
+    }
+
+    const token = generateCustomerToken(customer._id);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Authentication successful',
+      token,
+      customer: {
+        id: customer._id,
+        name: customer.name,
+        phone: customer.phone,
+        email: customer.email,
+        customerType: customer.customerType,
+        addresses: customer.addresses || [],
+        totalOrders: customer.totalOrders || 0,
+        totalSpent: customer.totalSpent || 0
+      }
+    });
+  } catch (error) {
+    console.error('Verify OTP error:', error);
+    return res.status(500).json({ message: error.message || 'Failed to verify OTP' });
+  }
+};
+
 /* ==========================================================================
    1. AUTHENTICATION & PROFILE
    ========================================================================== */
@@ -527,10 +664,47 @@ export const getProducts = async (req, res) => {
     if (isFeatured === 'true') query.isFeatured = true;
 
     if (search) {
+      const trimmedSearch = search.trim().toLowerCase();
+      const HINDI_ENGLISH_SYNONYMS = {
+        rice: ['rice', 'chawal', 'chaawal', 'chaval', 'चावल', 'basmati'],
+        milk: ['milk', 'doodh', 'dudh', 'दूध', 'taaza', 'toned'],
+        potato: ['potato', 'potatoes', 'aloo', 'alu', 'आलू', 'batata'],
+        onion: ['onion', 'onions', 'pyaz', 'pyaaz', 'प्याज', 'kanda'],
+        tomato: ['tomato', 'tomatoes', 'tamatar', 'टमाटर', 'tamato', 'tomatto'],
+        curd: ['curd', 'dahi', 'दही', 'yogurt'],
+        water: ['water', 'paani', 'pani', 'पानी', 'bisleri'],
+        atta: ['atta', 'aata', 'flour', 'wheat', 'gehun', 'आटा'],
+        dal: ['dal', 'daal', 'lentils', 'pulses', 'arhar', 'toor', 'moong', 'urad', 'masoor', 'दाल'],
+        oil: ['oil', 'tel', 'mustard oil', 'sarson', 'refined', 'ghee', 'तेल'],
+        sugar: ['sugar', 'cheeni', 'chini', 'shakkar', 'चीनी'],
+        salt: ['salt', 'namak', 'tata salt', 'नमक'],
+        tea: ['tea', 'chai', 'chaay', 'चाय'],
+        butter: ['butter', 'makhan', 'makkhan', 'मक्खन'],
+        paneer: ['paneer', 'cottage cheese', 'पनीर'],
+        egg: ['egg', 'eggs', 'anda', 'ande', 'अंडा'],
+        banana: ['banana', 'bananas', 'kela', 'kele', 'केला'],
+        apple: ['apple', 'apples', 'seb', 'सेब'],
+        bread: ['bread', 'pav', 'double roti', 'ब्रेड'],
+        maggi: ['maggi', 'noodles', 'noodle', 'मैगी'],
+        soap: ['soap', 'sabun', 'साबुन'],
+        shampoo: ['shampoo', 'hair wash', 'शैम्पू']
+      };
+
+      const matchedTerms = new Set([trimmedSearch]);
+      for (const [key, synonyms] of Object.entries(HINDI_ENGLISH_SYNONYMS)) {
+        if (synonyms.some((s) => s.toLowerCase() === trimmedSearch || trimmedSearch.includes(s.toLowerCase()))) {
+          matchedTerms.add(key);
+          synonyms.forEach((s) => matchedTerms.add(s));
+        }
+      }
+
+      const escapedPatterns = Array.from(matchedTerms).map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const searchRegex = new RegExp(escapedPatterns.join('|'), 'i');
+
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { brand: { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { name: { $regex: searchRegex } },
+        { brand: { $regex: searchRegex } },
+        { tags: { $in: [searchRegex] } }
       ];
     }
 

@@ -16,9 +16,9 @@ import {
   HelpCircle,
   Package
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '../../../constants/theme';
-import { StorefrontAPI } from '../../../services/api';
-import { AppButton } from '../../../components/AppButton';
+import { colors, spacing, radius, typography } from '../../constants/theme';
+import { StorefrontAPI } from '../../services/api';
+import { AppButton } from '../../components/AppButton';
 
 const ISSUE_TYPES = [
   'Damaged Item',
@@ -32,7 +32,8 @@ const ISSUE_TYPES = [
 ];
 
 export default function IssueReportingScreen() {
-  const { id } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const id = params?.id || params?.orderId;
 
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [issueType, setIssueType] = useState(ISSUE_TYPES[0]);
@@ -53,7 +54,7 @@ export default function IssueReportingScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.black} />
       </View>
     );
   }
@@ -102,14 +103,14 @@ export default function IssueReportingScreen() {
 
           <View style={styles.ticketDetailsBox}>
             <Text style={styles.ticketDetailRow}>
-              <Text style={{ fontWeight: 'bold' }}>Status: </Text>{ticketResult.status}
+              <Text style={{ fontFamily: typography.family.bold }}>Status: </Text>{ticketResult.status}
             </Text>
             <Text style={styles.ticketDetailRow}>
-              <Text style={{ fontWeight: 'bold' }}>Issue: </Text>{ticketResult.issueType}
+              <Text style={{ fontFamily: typography.family.bold }}>Issue: </Text>{ticketResult.issueType}
             </Text>
             {ticketResult.refundAmount > 0 && (
               <Text style={styles.ticketDetailRow}>
-                <Text style={{ fontWeight: 'bold' }}>Eligible Refund: </Text>₹{ticketResult.refundAmount}
+                <Text style={{ fontFamily: typography.family.bold }}>Eligible Refund: </Text>₹{ticketResult.refundAmount}
               </Text>
             )}
           </View>
@@ -117,7 +118,7 @@ export default function IssueReportingScreen() {
           <AppButton
             title="Back to Order Details"
             onPress={() => router.back()}
-            style={{ width: '100%' }}
+            variant="primary"
           />
         </View>
       </View>
@@ -127,12 +128,11 @@ export default function IssueReportingScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: spacing.xl }}>
       <View style={styles.header}>
-        <HelpCircle size={28} color={colors.primary} style={{ marginBottom: spacing.xs }} />
+        <HelpCircle size={28} color={colors.black} style={{ marginBottom: spacing.xs }} />
         <Text style={styles.title}>Report Problem or Return</Text>
         <Text style={styles.subtitle}>Order #{order?.orderNumber}</Text>
       </View>
 
-      {/* Select Item */}
       <View style={styles.formCard}>
         <Text style={styles.sectionLabel}>Select the product with an issue:</Text>
         {order?.items?.map((item) => {
@@ -143,7 +143,7 @@ export default function IssueReportingScreen() {
               style={[styles.itemChoice, isSelected && styles.itemChoiceSelected]}
               onPress={() => setSelectedItemId(item._id)}
             >
-              <Package size={20} color={isSelected ? colors.primary : colors.textMuted} style={{ marginRight: spacing.sm }} />
+              <Package size={20} color={isSelected ? colors.black : colors.textMuted} style={{ marginRight: spacing.sm }} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.itemChoiceName, isSelected && styles.itemChoiceNameSelected]}>
                   {item.productName}
@@ -156,7 +156,6 @@ export default function IssueReportingScreen() {
           );
         })}
 
-        {/* Issue Type Dropdown / Radio */}
         <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>What went wrong?</Text>
         <View style={styles.typesGrid}>
           {ISSUE_TYPES.map((type) => (
@@ -172,7 +171,6 @@ export default function IssueReportingScreen() {
           ))}
         </View>
 
-        {/* Partial Quantity Return */}
         <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>
           Affected Quantity (Max {maxEligibleQty}):
         </Text>
@@ -182,9 +180,9 @@ export default function IssueReportingScreen() {
           onChangeText={setReturnQty}
           keyboardType="numeric"
           placeholder="e.g. 1"
+          placeholderTextColor={colors.textMuted}
         />
 
-        {/* Description */}
         <Text style={[styles.sectionLabel, { marginTop: spacing.lg }]}>Description:</Text>
         <TextInput
           style={styles.textArea}
@@ -199,7 +197,8 @@ export default function IssueReportingScreen() {
         <AppButton
           title="Submit Support Ticket"
           onPress={handleSubmit}
-          isLoading={isSubmitting}
+          loading={isSubmitting}
+          variant="primary"
           style={{ marginTop: spacing.xl }}
         />
       </View>
@@ -210,7 +209,7 @@ export default function IssueReportingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   centered: {
     justifyContent: 'center',
@@ -222,24 +221,25 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginTop: spacing.xs
   },
   subtitle: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   formCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     padding: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   sectionLabel: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     marginBottom: spacing.sm
   },
@@ -247,27 +247,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: colors.borderLight,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surfaceSubtle
+    backgroundColor: colors.softBackground
   },
   itemChoiceSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySubtle
+    borderColor: colors.primaryDark,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1
   },
   itemChoiceName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary
   },
   itemChoiceNameSelected: {
-    color: colors.primary,
-    fontWeight: typography.weight.bold
+    color: colors.textPrimary,
+    fontFamily: typography.family.bold
   },
   itemChoiceMeta: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     marginTop: 2
   },
@@ -277,62 +279,67 @@ const styles = StyleSheet.create({
     gap: spacing.xs + 2
   },
   typePill: {
-    paddingVertical: spacing.xs + 2,
+    paddingVertical: 6,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.full,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceSubtle
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white
   },
   typePillActive: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary
+    borderWidth: 0,
+    borderColor: 'transparent'
   },
   typePillText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary
   },
   typePillTextActive: {
-    color: '#fff',
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontFamily: typography.family.bold
   },
   qtyInput: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 14,
     padding: spacing.md,
-    fontSize: typography.size.md,
+    fontSize: 16,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary,
-    backgroundColor: colors.surfaceSubtle
+    backgroundColor: colors.white
   },
   textArea: {
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 14,
     padding: spacing.md,
-    fontSize: typography.size.sm,
+    fontSize: 15,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.white,
     minHeight: 100,
     textAlignVertical: 'top'
   },
   successCard: {
-    backgroundColor: colors.surface,
-    padding: spacing['2xl'],
-    borderRadius: radius.xl,
+    backgroundColor: colors.white,
+    padding: spacing.xxl,
+    borderRadius: 16,
     alignItems: 'center',
     width: '100%',
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   successTitle: {
     fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs
   },
   successDesc: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -340,13 +347,16 @@ const styles = StyleSheet.create({
   },
   ticketDetailsBox: {
     width: '100%',
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     padding: spacing.md,
-    borderRadius: radius.lg,
-    marginBottom: spacing.xl
+    borderRadius: 12,
+    marginBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight
   },
   ticketDetailRow: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary,
     marginBottom: 4
   }

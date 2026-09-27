@@ -9,7 +9,7 @@ export const layout = {
   },
   isSmallDevice: width < 375,
   isTablet: width >= 768,
-  maxWidth: 600, // For web and tablet max container width
+  maxWidth: 600,
   headerHeight: 56,
   bottomTabHeight: 64
 };

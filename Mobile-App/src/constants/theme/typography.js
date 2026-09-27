@@ -1,5 +1,4 @@
 export const typography = {
-  // Font Sizes
   size: {
     xs: 11,
     sm: 13,
@@ -10,8 +9,6 @@ export const typography = {
     '3xl': 30,
     '4xl': 36
   },
-
-  // Line Heights
   lineHeight: {
     xs: 14,
     sm: 18,
@@ -22,22 +19,23 @@ export const typography = {
     '3xl': 38,
     '4xl': 44
   },
-
-  // Font Weights
   weight: {
     regular: '400',
     medium: '500',
     semibold: '600',
     bold: '700',
-    heavy: '800'
+    extraBold: '800'
   },
-
-  // Font Families (Outfit Brand Typography)
   family: {
     regular: 'Outfit_400Regular',
     medium: 'Outfit_500Medium',
     semibold: 'Outfit_600SemiBold',
     bold: 'Outfit_700Bold',
-    display: 'Outfit_700Bold'
+    extraBold: 'Outfit_800ExtraBold',
+    display: 'Outfit_800ExtraBold',
+    largeHeading: 'Outfit_700Bold',
+    heading: 'Outfit_600SemiBold',
+    body: 'Outfit_400Regular',
+    button: 'Outfit_600SemiBold'
   }
 };

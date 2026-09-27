@@ -40,7 +40,12 @@ export const CartProvider = ({ children }) => {
         setCart(res.data.data);
       }
     } catch (e) {
-      console.warn('Failed to fetch cart:', e);
+      if (!e.response || e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.message?.includes('Network Error')) {
+        // Offline / dev mode fallback: keep current cart or default empty cart
+        setCart((prev) => (prev?.items?.length ? prev : { items: [], summary: emptySummary }));
+      } else {
+        console.warn('Failed to fetch cart:', e.message || e);
+      }
     } finally {
       setIsLoading(false);
     }

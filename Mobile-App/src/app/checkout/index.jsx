@@ -17,7 +17,7 @@ import {
   Clock, 
   Plus
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '../../constants/theme';
+import { colors, spacing, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -35,7 +35,6 @@ export default function CheckoutScreen() {
 
   const addresses = customer?.addresses || [];
 
-  // Select default address on mount
   useEffect(() => {
     if (addresses.length > 0) {
       const def = addresses.find((a) => a.isDefault) || addresses[0];
@@ -43,7 +42,6 @@ export default function CheckoutScreen() {
     }
   }, [customer]);
 
-  // Run serviceability check whenever address changes
   useEffect(() => {
     const checkArea = async () => {
       if (!selectedAddressId) return;
@@ -82,11 +80,9 @@ export default function CheckoutScreen() {
     setIsPlacingOrder(true);
     try {
       if (paymentMethod === 'Razorpay') {
-        // 1. Create Payment Intent on backend
         const intentRes = await StorefrontAPI.createPaymentIntent();
         const { orderId: rzpOrderId } = intentRes.data;
 
-        // In test/demo or native mode, complete checkout with verified intent
         const placeRes = await StorefrontAPI.placeOrder({
           addressId: selectedAddressId,
           paymentMethod: 'Razorpay',
@@ -100,7 +96,6 @@ export default function CheckoutScreen() {
 
         router.replace(`/orders/${placeRes.data.order.id}`);
       } else {
-        // Cash on Delivery
         const placeRes = await StorefrontAPI.placeOrder({
           addressId: selectedAddressId,
           paymentMethod: 'COD'
@@ -125,11 +120,10 @@ export default function CheckoutScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
-        {/* Delivery Address Card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <MapPin size={20} color={colors.primary} style={{ marginRight: spacing.sm }} />
+              <MapPin size={20} color={colors.black} style={{ marginRight: spacing.sm }} />
               <Text style={styles.cardTitle}>Delivery Address</Text>
             </View>
             <TouchableOpacity 
@@ -160,20 +154,19 @@ export default function CheckoutScreen() {
               style={styles.addAddressBox}
               onPress={() => router.push('/addresses')}
             >
-              <Plus size={20} color={colors.primary} style={{ marginRight: 6 }} />
+              <Plus size={20} color={colors.black} style={{ marginRight: 6 }} />
               <Text style={styles.addAddressText}>Add New Delivery Address</Text>
             </TouchableOpacity>
           )}
 
-          {/* Serviceability & Slot */}
           {serviceabilityLoading ? (
             <View style={styles.serviceBox}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={colors.black} />
               <Text style={styles.serviceText}>Verifying delivery serviceability...</Text>
             </View>
           ) : serviceability ? (
             <View style={styles.serviceBox}>
-              <Clock size={16} color={colors.primary} style={{ marginRight: spacing.sm }} />
+              <Clock size={16} color={colors.black} style={{ marginRight: spacing.sm }} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.serviceTitle}>⚡ Estimated Delivery: {serviceability.estimatedDelivery}</Text>
                 <Text style={styles.serviceMsg}>{serviceability.message}</Text>
@@ -182,11 +175,9 @@ export default function CheckoutScreen() {
           ) : null}
         </View>
 
-        {/* Payment Method Selector */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Payment Method</Text>
 
-          {/* Cash on Delivery */}
           <TouchableOpacity
             style={[styles.paymentOption, paymentMethod === 'COD' && styles.paymentOptionActive]}
             onPress={() => setPaymentMethod('COD')}
@@ -196,7 +187,7 @@ export default function CheckoutScreen() {
               <View style={[styles.radioCircle, paymentMethod === 'COD' && styles.radioCircleActive]}>
                 {paymentMethod === 'COD' && <View style={styles.radioInner} />}
               </View>
-              <Banknote size={22} color={colors.primary} style={{ marginHorizontal: spacing.md }} />
+              <Banknote size={22} color={colors.black} style={{ marginHorizontal: spacing.md }} />
               <View>
                 <Text style={styles.paymentName}>Cash on Delivery (COD)</Text>
                 <Text style={styles.paymentDesc}>Pay cash or UPI to delivery partner</Text>
@@ -204,7 +195,6 @@ export default function CheckoutScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Online Payment (Razorpay) */}
           <TouchableOpacity
             style={[styles.paymentOption, paymentMethod === 'Razorpay' && styles.paymentOptionActive]}
             onPress={() => setPaymentMethod('Razorpay')}
@@ -214,7 +204,7 @@ export default function CheckoutScreen() {
               <View style={[styles.radioCircle, paymentMethod === 'Razorpay' && styles.radioCircleActive]}>
                 {paymentMethod === 'Razorpay' && <View style={styles.radioInner} />}
               </View>
-              <CreditCard size={22} color={colors.secondary} style={{ marginHorizontal: spacing.md }} />
+              <CreditCard size={22} color={colors.textSecondary} style={{ marginHorizontal: spacing.md }} />
               <View>
                 <Text style={styles.paymentName}>Online Payment (Razorpay)</Text>
                 <Text style={styles.paymentDesc}>UPI, Credit/Debit Cards, NetBanking</Text>
@@ -223,7 +213,6 @@ export default function CheckoutScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Order Summary Snapshot */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Order Summary ({cart.items.length} items)</Text>
 
@@ -258,12 +247,11 @@ export default function CheckoutScreen() {
         </View>
 
         <View style={styles.guaranteeRow}>
-          <ShieldCheck size={18} color={colors.primary} style={{ marginRight: 6 }} />
+          <ShieldCheck size={18} color={colors.black} style={{ marginRight: 6 }} />
           <Text style={styles.guaranteeText}>100% Secure Checkout • Authoritative Backend Verification</Text>
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Place Order Action */}
       <View style={styles.bottomBar}>
         <View>
           <Text style={styles.bottomTotal}>₹{grandTotal.toFixed(2)}</Text>
@@ -273,7 +261,8 @@ export default function CheckoutScreen() {
         <AppButton
           title={paymentMethod === 'COD' ? 'Place Order' : 'Pay & Order'}
           onPress={handlePlaceOrder}
-          isLoading={isPlacingOrder}
+          loading={isPlacingOrder}
+          variant="primary"
           style={{ minWidth: 170 }}
         />
       </View>
@@ -284,13 +273,13 @@ export default function CheckoutScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginHorizontal: spacing.xl,
     marginTop: spacing.md,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     padding: spacing.lg,
     borderWidth: 1,
     borderColor: colors.border
@@ -303,102 +292,116 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   changeBtn: {
     paddingVertical: 2,
-    paddingHorizontal: spacing.xs
+    paddingHorizontal: spacing.sm
   },
   changeBtnText: {
-    color: colors.primary,
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold,
+    color: colors.primaryDark
   },
   addressBox: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     padding: spacing.md,
-    borderRadius: radius.lg
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border
   },
   addressLabelBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.primarySubtle,
+    backgroundColor: colors.primarySoft,
     paddingVertical: 2,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.xs,
-    marginBottom: spacing.xs
+    borderRadius: 6,
+    marginBottom: 6,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
   },
   addressLabelText: {
-    fontSize: 10,
-    fontWeight: typography.weight.bold,
-    color: colors.primary
+    fontSize: typography.size.xs - 1,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    textTransform: 'uppercase'
   },
   addressStreet: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary,
-    marginBottom: 2
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
   },
   addressLandmark: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
-    marginBottom: 2
+    marginTop: 2
   },
   addressCity: {
     fontSize: typography.size.xs,
-    color: colors.textMuted
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 2
   },
   addAddressBox: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.lg,
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: radius.lg,
+    padding: spacing.lg,
+    borderRadius: 12,
     borderWidth: 1,
     borderStyle: 'dashed',
-    borderColor: colors.primary
+    borderColor: colors.border,
+    backgroundColor: colors.softBackground
   },
   addAddressText: {
-    color: colors.primary,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
   },
   serviceBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primarySubtle,
     marginTop: spacing.md,
     padding: spacing.md,
-    borderRadius: radius.md
+    backgroundColor: colors.primarySoft,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
   },
   serviceText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginLeft: spacing.sm
   },
   serviceTitle: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.primaryDark
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
   },
   serviceMsg: {
-    fontSize: 11,
-    color: colors.textSecondary
+    fontSize: typography.size.xs - 1,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 2
   },
   paymentOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: spacing.md,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.lg,
-    marginTop: spacing.sm
+    marginTop: spacing.md,
+    backgroundColor: colors.white
   },
   paymentOptionActive: {
     borderColor: colors.primary,
-    backgroundColor: colors.primarySubtle
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5
   },
   paymentLeft: {
     flexDirection: 'row',
@@ -415,36 +418,39 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   radioCircleActive: {
-    borderColor: colors.primary
+    borderColor: colors.primaryDark
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.primary
+    backgroundColor: colors.black
   },
   paymentName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary
   },
   paymentDesc: {
     fontSize: typography.size.xs,
-    color: colors.textMuted
+    fontFamily: typography.family.regular,
+    color: colors.textMuted,
+    marginTop: 2
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xs + 2
+    marginBottom: spacing.sm
   },
   summaryLabel: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   summaryValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary
   },
   totalRow: {
@@ -455,13 +461,13 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   totalValue: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary
+    fontFamily: typography.family.extraBold,
+    color: colors.black
   },
   guaranteeRow: {
     flexDirection: 'row',
@@ -472,6 +478,7 @@ const styles = StyleSheet.create({
   },
   guaranteeText: {
     fontSize: 11,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   },
   bottomBar: {
@@ -479,7 +486,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: spacing.xl,
@@ -487,16 +494,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    ...shadows.lg
+    alignItems: 'center'
   },
   bottomTotal: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
+    fontFamily: typography.family.extraBold,
     color: colors.textPrimary
   },
   bottomMethod: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   }
 });

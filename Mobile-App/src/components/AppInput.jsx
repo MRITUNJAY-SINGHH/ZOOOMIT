@@ -6,7 +6,7 @@ import {
   StyleSheet, 
   TouchableOpacity 
 } from 'react-native';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, spacing, typography } from '../constants/theme';
 import { Eye, EyeOff, X } from 'lucide-react-native';
 
 export const AppInput = ({
@@ -14,6 +14,7 @@ export const AppInput = ({
   error,
   leftIcon,
   prefix,
+  isPhone = false,
   secureTextEntry,
   clearable = false,
   containerStyle,
@@ -37,17 +38,26 @@ export const AppInput = ({
           Boolean(error) && styles.errorBorder
         ]}
       >
-        {leftIcon && (
-          <View style={styles.leftIconContainer}>
-            {React.cloneElement(leftIcon, {
-              color: isFocused ? colors.primary : colors.textMuted
-            })}
+        {isPhone && (
+          <View style={styles.phonePrefixContainer}>
+            <Text style={styles.flagText}>🇮🇳</Text>
+            <Text style={styles.phonePrefixText}>+91</Text>
+            <View style={styles.divider} />
           </View>
         )}
 
-        {prefix && (
+        {!isPhone && prefix && (
           <View style={styles.prefixContainer}>
             <Text style={styles.prefixText}>{prefix}</Text>
+            <View style={styles.divider} />
+          </View>
+        )}
+
+        {leftIcon && !isPhone && (
+          <View style={styles.leftIconContainer}>
+            {React.cloneElement(leftIcon, {
+              color: isFocused ? colors.primaryDark : colors.textMuted
+            })}
           </View>
         )}
 
@@ -59,6 +69,7 @@ export const AppInput = ({
           onChangeText={onChangeText}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          selectionColor={colors.primaryDark}
           {...rest}
         />
 
@@ -69,7 +80,7 @@ export const AppInput = ({
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.clearCircle}>
-              <X size={12} color="#ffffff" />
+              <X size={12} color={colors.white} />
             </View>
           </TouchableOpacity>
         )}
@@ -82,9 +93,9 @@ export const AppInput = ({
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {isPasswordVisible ? (
-              <EyeOff size={20} color={isFocused ? colors.primary : colors.textMuted} />
+              <EyeOff size={20} color={isFocused ? colors.primaryDark : colors.textMuted} />
             ) : (
-              <Eye size={20} color={isFocused ? colors.primary : colors.textMuted} />
+              <Eye size={20} color={isFocused ? colors.primaryDark : colors.textMuted} />
             )}
           </TouchableOpacity>
         )}
@@ -101,54 +112,72 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.size.sm,
-    fontFamily: typography.family?.medium || undefined,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary,
-    marginBottom: spacing.xs + 2
+    marginBottom: 6
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceSubtle,
-    borderWidth: 1.5,
+    backgroundColor: colors.white,
+    borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    minHeight: 50
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 54
   },
   focused: {
-    borderColor: colors.primary,
-    backgroundColor: colors.surface
+    borderWidth: 1.5,
+    borderColor: colors.primary
   },
   errorBorder: {
+    borderWidth: 1.5,
     borderColor: colors.error
   },
   input: {
     flex: 1,
-    fontSize: typography.size.md,
-    fontFamily: typography.family?.regular || undefined,
+    fontSize: 16,
+    fontFamily: typography.family.regular,
     color: colors.textPrimary,
-    paddingVertical: spacing.sm + 4
+    paddingVertical: 0
   },
   leftIconContainer: {
-    marginRight: spacing.sm
+    marginRight: 10
+  },
+  phonePrefixContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10
+  },
+  flagText: {
+    fontSize: 16,
+    marginRight: 4
+  },
+  phonePrefixText: {
+    fontSize: 15,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary,
+    marginRight: 10
   },
   prefixContainer: {
-    backgroundColor: colors.borderSubtle,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 4,
-    borderRadius: radius.sm,
-    marginRight: spacing.sm
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10
   },
   prefixText: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family?.semibold || undefined,
-    fontWeight: typography.weight.semibold,
-    color: colors.textPrimary
+    fontSize: 15,
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary,
+    marginRight: 8
+  },
+  divider: {
+    width: 1,
+    height: 22,
+    backgroundColor: colors.border
   },
   actionIconContainer: {
-    padding: spacing.xs,
-    marginLeft: spacing.xs
+    padding: 4,
+    marginLeft: 6
   },
   clearCircle: {
     width: 18,
@@ -160,8 +189,9 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: typography.size.xs,
-    fontFamily: typography.family?.medium || undefined,
+    fontFamily: typography.family.medium,
     color: colors.error,
-    marginTop: spacing.xs
+    marginTop: 6,
+    marginLeft: 2
   }
 });

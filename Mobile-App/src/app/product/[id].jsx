@@ -7,7 +7,7 @@ import {
   TouchableOpacity, 
   ActivityIndicator 
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { 
@@ -17,7 +17,7 @@ import {
   Info,
   Plus
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '../../constants/theme';
+import { colors, spacing, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
 import { useCart } from '../../context/CartContext';
 import { QuantityStepper } from '../../components/QuantityStepper';
@@ -40,7 +40,7 @@ export default function ProductDetailsScreen() {
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.black} />
         <Text style={styles.loadingText}>Loading product details...</Text>
       </View>
     );
@@ -98,7 +98,6 @@ export default function ProductDetailsScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
-        {/* Product Image Section */}
         <View style={styles.imageContainer}>
           <Image
             source={{ uri: product.featuredImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800' }}
@@ -108,13 +107,12 @@ export default function ProductDetailsScreen() {
           />
           {hasDiscount && (
             <View style={styles.discountBadge}>
-              <Percent size={12} color="#fff" style={{ marginRight: 2 }} />
+              <Percent size={12} color={colors.black} style={{ marginRight: 2 }} />
               <Text style={styles.discountText}>{discountPercent}% OFF</Text>
             </View>
           )}
         </View>
 
-        {/* Product Details Header */}
         <View style={styles.detailsCard}>
           {Boolean(product.brand) && (
             <Text style={styles.brandText}>{product.brand}</Text>
@@ -122,7 +120,6 @@ export default function ProductDetailsScreen() {
           <Text style={styles.title}>{product.name}</Text>
           <Text style={styles.unitText}>{unit}</Text>
 
-          {/* Pricing Row */}
           <View style={styles.priceRow}>
             <Text style={styles.price}>₹{price}</Text>
             {hasDiscount && (
@@ -133,21 +130,18 @@ export default function ProductDetailsScreen() {
             </View>
           </View>
 
-          {/* Quantity Rules Highlight */}
           <View style={styles.rulesCard}>
-            <Info size={16} color={colors.secondary} style={{ marginRight: spacing.sm }} />
+            <Info size={16} color={colors.textSecondary} style={{ marginRight: spacing.sm }} />
             <Text style={styles.rulesText}>
               Min Order: {minQty} {unit} • Increments of {step} {unit} (Max {maxQty} {unit})
             </Text>
           </View>
         </View>
 
-        {/* Variants Selector if product has variants */}
         {product.variants && product.variants.length > 0 && (
           <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Select Pack / Size</Text>
             <View style={styles.variantsRow}>
-              {/* Default Base Variant */}
               <TouchableOpacity
                 style={[
                   styles.variantPill,
@@ -169,7 +163,6 @@ export default function ProductDetailsScreen() {
                 </Text>
               </TouchableOpacity>
 
-              {/* Other Variants */}
               {product.variants.map((v) => {
                 const isSelected = selectedVariantId === v._id;
                 return (
@@ -191,17 +184,16 @@ export default function ProductDetailsScreen() {
           </View>
         )}
 
-        {/* Superfast Delivery Promise */}
         <View style={styles.featureCard}>
           <View style={styles.featureRow}>
-            <Zap size={20} color={colors.primary} style={{ marginRight: spacing.md }} />
+            <Zap size={20} color={colors.black} style={{ marginRight: spacing.md }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.featureTitle}>Superfast 15-25 Mins Delivery</Text>
               <Text style={styles.featureSubtitle}>Packed fresh at our local micro-fulfillment center</Text>
             </View>
           </View>
           <View style={[styles.featureRow, { marginTop: spacing.md }]}>
-            <ShieldCheck size={20} color={colors.secondary} style={{ marginRight: spacing.md }} />
+            <ShieldCheck size={20} color={colors.textSecondary} style={{ marginRight: spacing.md }} />
             <View style={{ flex: 1 }}>
               <Text style={styles.featureTitle}>100% Quality Guarantee</Text>
               <Text style={styles.featureSubtitle}>Hassle-free returns or refunds if any item is damaged</Text>
@@ -209,7 +201,6 @@ export default function ProductDetailsScreen() {
           </View>
         </View>
 
-        {/* Description & Tax Details */}
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Product Details</Text>
           <Text style={styles.description}>
@@ -226,7 +217,6 @@ export default function ProductDetailsScreen() {
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Add to Cart Bar */}
       <View style={styles.bottomBar}>
         <View>
           <Text style={styles.bottomPrice}>₹{price}</Text>
@@ -248,9 +238,9 @@ export default function ProductDetailsScreen() {
           <TouchableOpacity
             style={styles.addButton}
             onPress={handleAdd}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Plus size={18} color="#fff" style={{ marginRight: 6 }} />
+            <Plus size={18} color={colors.black} style={{ marginRight: 6 }} />
             <Text style={styles.addButtonText}>Add to Cart</Text>
           </TouchableOpacity>
         )}
@@ -262,7 +252,7 @@ export default function ProductDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   centered: {
     justifyContent: 'center',
@@ -271,11 +261,12 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   imageContainer: {
     height: 260,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
@@ -295,36 +286,37 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     paddingVertical: 4,
     paddingHorizontal: spacing.md,
-    borderRadius: radius.sm
+    borderRadius: 8
   },
   discountText: {
-    color: '#fff',
+    color: colors.black,
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold
   },
   detailsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     padding: spacing.xl,
     borderBottomWidth: 1,
     borderBottomColor: colors.border
   },
   brandText: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
-    color: colors.primary,
+    fontFamily: typography.family.bold,
+    color: colors.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4
   },
   title: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     lineHeight: 28,
     marginBottom: spacing.xs
   },
   unitText: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     marginBottom: spacing.md
   },
@@ -336,41 +328,45 @@ const styles = StyleSheet.create({
   },
   price: {
     fontSize: typography.size['2xl'],
-    fontWeight: typography.weight.heavy,
+    fontFamily: typography.family.extraBold,
     color: colors.textPrimary
   },
   mrp: {
     fontSize: typography.size.md,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     textDecorationLine: 'line-through'
   },
   inclusiveBadge: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     paddingVertical: 2,
     paddingHorizontal: spacing.sm,
-    borderRadius: radius.xs,
-    marginLeft: spacing.xs
+    borderRadius: 6,
+    marginLeft: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.border
   },
   inclusiveText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   rulesCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.secondarySubtle,
+    backgroundColor: colors.softBackground,
     padding: spacing.md,
-    borderRadius: radius.md,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border
   },
   rulesText: {
     fontSize: typography.size.xs,
-    color: colors.secondary,
-    fontWeight: typography.weight.medium
+    fontFamily: typography.family.medium,
+    color: colors.textSecondary
   },
   sectionCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginTop: spacing.md,
     padding: spacing.xl,
     borderBottomWidth: 1,
@@ -378,7 +374,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.md
   },
@@ -390,34 +386,37 @@ const styles = StyleSheet.create({
   variantPill: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    borderRadius: radius.lg,
-    borderWidth: 1.5,
+    borderRadius: 14,
+    borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surfaceSubtle
+    backgroundColor: colors.white
   },
   variantPillActive: {
     borderColor: colors.primary,
-    backgroundColor: colors.primarySubtle
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1.5
   },
   variantPillName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary
   },
   variantPillNameActive: {
-    color: colors.primary,
-    fontWeight: typography.weight.bold
+    color: colors.textPrimary,
+    fontFamily: typography.family.bold
   },
   variantPillPrice: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2
   },
   variantPillPriceActive: {
-    color: colors.primary
+    color: colors.black,
+    fontFamily: typography.family.bold
   },
   featureCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginTop: spacing.md,
     padding: spacing.xl,
     borderBottomWidth: 1,
@@ -429,33 +428,38 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     marginBottom: 2
   },
   featureSubtitle: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   description: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     lineHeight: 22
   },
   taxDetailsBox: {
     marginTop: spacing.lg,
     padding: spacing.md,
-    backgroundColor: colors.surfaceSubtle,
-    borderRadius: radius.md
+    backgroundColor: colors.softBackground,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border
   },
   taxTitle: {
     fontSize: typography.size.xs,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.xs
   },
   taxLine: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     lineHeight: 18
   },
@@ -464,7 +468,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: spacing.xl,
@@ -472,31 +476,31 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    ...shadows.lg
+    alignItems: 'center'
   },
   bottomPrice: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
+    fontFamily: typography.family.extraBold,
     color: colors.textPrimary
   },
   bottomUnit: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing['2xl'],
-    borderRadius: radius.lg,
+    height: 52,
+    paddingHorizontal: spacing.xxl,
+    borderRadius: 16,
     minWidth: 160,
     justifyContent: 'center'
   },
   addButtonText: {
-    color: '#fff',
-    fontSize: typography.size.md,
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontSize: 16,
+    fontFamily: typography.family.bold
   }
 });

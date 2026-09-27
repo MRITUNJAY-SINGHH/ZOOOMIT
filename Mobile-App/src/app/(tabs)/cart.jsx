@@ -21,7 +21,7 @@ import {
   ArrowRight, 
   ShoppingBag 
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '../../constants/theme';
+import { colors, spacing, typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { QuantityStepper } from '../../components/QuantityStepper';
@@ -29,7 +29,7 @@ import { AppButton } from '../../components/AppButton';
 import { EmptyState } from '../../components/EmptyState';
 
 export default function CartScreen() {
-  const { token, customer } = useAuth();
+  const { token } = useAuth();
   const { 
     cart, 
     isLoading, 
@@ -48,7 +48,7 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<ShoppingBag size={48} color={colors.primary} />}
+          icon={<ShoppingBag size={48} color={colors.black} />}
           title="Sign In to view your cart"
           description="Your cart is synced with your Kuiklo account across devices."
           actionTitle="Sign In"
@@ -61,7 +61,7 @@ export default function CartScreen() {
   if (isLoading && cart.items.length === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={colors.black} />
         <Text style={styles.loadingText}>Syncing your cart...</Text>
       </View>
     );
@@ -71,7 +71,7 @@ export default function CartScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<ShoppingBag size={48} color={colors.primary} />}
+          icon={<ShoppingBag size={48} color={colors.black} />}
           title="Your Cart is Empty"
           description="Looks like you haven't added anything to your cart yet. Explore our fresh groceries and daily essentials!"
           actionTitle="Shop Groceries"
@@ -115,7 +115,6 @@ export default function CartScreen() {
   return (
     <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
-        {/* Header with clear action */}
         <View style={styles.headerRow}>
           <Text style={styles.headerTitle}>Shopping Cart ({cart.items.length})</Text>
           <TouchableOpacity onPress={handleClearCart} style={styles.clearBtn}>
@@ -124,7 +123,6 @@ export default function CartScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Stale Data / Quantity Warnings if any */}
         {Boolean(cart.warnings && cart.warnings.length > 0) && (
           <View style={styles.warningBox}>
             <AlertCircle size={18} color={colors.warning} style={{ marginRight: spacing.sm, marginTop: 2 }} />
@@ -136,21 +134,19 @@ export default function CartScreen() {
           </View>
         )}
 
-        {/* Free Delivery Bar */}
         <View style={styles.deliveryBanner}>
-          <Zap size={18} color={colors.primary} style={{ marginRight: spacing.sm }} />
+          <Zap size={18} color={colors.black} style={{ marginRight: spacing.sm }} />
           {awayFromFree === 0 ? (
             <Text style={styles.deliveryBannerText}>
-              🎉 You unlocked <Text style={{ fontWeight: 'bold' }}>FREE Delivery!</Text>
+              🎉 You unlocked <Text style={{ fontFamily: typography.family.bold }}>FREE Delivery!</Text>
             </Text>
           ) : (
             <Text style={styles.deliveryBannerText}>
-              Add <Text style={{ fontWeight: 'bold' }}>₹{awayFromFree.toFixed(0)}</Text> more to get FREE Delivery!
+              Add <Text style={{ fontFamily: typography.family.bold }}>₹{awayFromFree.toFixed(0)}</Text> more to get FREE Delivery!
             </Text>
           )}
         </View>
 
-        {/* Cart Items List */}
         <View style={styles.itemsCard}>
           {cart.items.map((item) => (
             <View key={item._id} style={styles.itemRow}>
@@ -188,7 +184,6 @@ export default function CartScreen() {
           ))}
         </View>
 
-        {/* Coupon Section */}
         <View style={styles.couponCard}>
           {cart.appliedCoupon ? (
             <View style={styles.appliedCouponRow}>
@@ -224,7 +219,7 @@ export default function CartScreen() {
                   style={[styles.applyBtn, !couponCode.trim() && { opacity: 0.5 }]}
                 >
                   {couponLoading ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
+                    <ActivityIndicator size="small" color={colors.black} />
                   ) : (
                     <Text style={styles.applyBtnText}>APPLY</Text>
                   )}
@@ -237,7 +232,6 @@ export default function CartScreen() {
           )}
         </View>
 
-        {/* Bill Summary */}
         <View style={styles.billCard}>
           <Text style={styles.billTitle}>Bill Details</Text>
 
@@ -273,14 +267,12 @@ export default function CartScreen() {
           </View>
         </View>
 
-        {/* Safe Cancellation Policy */}
         <View style={styles.policyRow}>
           <ShieldCheck size={16} color={colors.textMuted} style={{ marginRight: 6 }} />
           <Text style={styles.policyText}>Safe packing • Contactless delivery available</Text>
         </View>
       </ScrollView>
 
-      {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
         <View>
           <Text style={styles.bottomBarPrice}>₹{grandTotal.toFixed(2)}</Text>
@@ -292,7 +284,8 @@ export default function CartScreen() {
         <AppButton
           title="Proceed to Checkout"
           onPress={handleProceedToCheckout}
-          icon={<ArrowRight size={18} color="#fff" />}
+          variant="primary"
+          icon={<ArrowRight size={18} color={colors.black} />}
           style={{ minWidth: 190 }}
         />
       </View>
@@ -303,7 +296,7 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   centered: {
     justifyContent: 'center',
@@ -312,6 +305,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: spacing.md,
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   headerRow: {
@@ -324,7 +318,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   clearBtn: {
@@ -333,9 +327,9 @@ const styles = StyleSheet.create({
   },
   clearText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: colors.error,
-    marginLeft: 4,
-    fontWeight: typography.weight.medium
+    marginLeft: 4
   },
   warningBox: {
     flexDirection: 'row',
@@ -345,30 +339,34 @@ const styles = StyleSheet.create({
     marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
     padding: spacing.md,
-    borderRadius: radius.md
+    borderRadius: 14
   },
   warningText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.warning,
     lineHeight: 16
   },
   deliveryBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primarySubtle,
+    backgroundColor: colors.primarySoft,
     marginHorizontal: spacing.xl,
     padding: spacing.md,
-    borderRadius: radius.lg,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.primaryLight,
     marginBottom: spacing.md
   },
   deliveryBannerText: {
     fontSize: typography.size.sm,
-    color: colors.primaryDark
+    fontFamily: typography.family.regular,
+    color: colors.textPrimary
   },
   itemsCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginHorizontal: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     marginBottom: spacing.md,
@@ -385,8 +383,8 @@ const styles = StyleSheet.create({
   itemImage: {
     width: 60,
     height: 60,
-    borderRadius: radius.md,
-    backgroundColor: colors.surfaceSubtle
+    borderRadius: 10,
+    backgroundColor: colors.softBackground
   },
   itemInfo: {
     flex: 1,
@@ -394,18 +392,19 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary,
     marginBottom: 2
   },
   itemUnit: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     marginBottom: 4
   },
   itemPrice: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   itemActions: {
@@ -413,14 +412,14 @@ const styles = StyleSheet.create({
   },
   itemTotal: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginTop: spacing.xs
   },
   couponCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginHorizontal: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
@@ -433,17 +432,19 @@ const styles = StyleSheet.create({
   couponInput: {
     flex: 1,
     fontSize: typography.size.sm,
-    color: colors.textPrimary,
-    fontWeight: typography.weight.semibold
+    fontFamily: typography.family.semibold,
+    color: colors.textPrimary
   },
   applyBtn: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2
+    paddingVertical: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 10
   },
   applyBtnText: {
-    color: colors.primary,
+    color: colors.black,
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold
   },
   appliedCouponRow: {
     flexDirection: 'row',
@@ -452,28 +453,29 @@ const styles = StyleSheet.create({
   },
   appliedCouponCode: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   appliedCouponSaving: {
     fontSize: typography.size.xs,
-    color: colors.success,
-    fontWeight: typography.weight.medium
+    fontFamily: typography.family.medium,
+    color: colors.success
   },
   removeCouponText: {
     fontSize: typography.size.xs,
-    color: colors.error,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold,
+    color: colors.error
   },
   couponMessageText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     color: colors.error,
     marginTop: spacing.xs
   },
   billCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginHorizontal: spacing.xl,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
@@ -481,7 +483,7 @@ const styles = StyleSheet.create({
   },
   billTitle: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginBottom: spacing.md
   },
@@ -493,15 +495,17 @@ const styles = StyleSheet.create({
   },
   billLabel: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   billValue: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.semibold,
+    fontFamily: typography.family.semibold,
     color: colors.textPrimary
   },
   billSubValue: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   },
   grandTotalRow: {
@@ -512,13 +516,13 @@ const styles = StyleSheet.create({
   },
   grandTotalLabel: {
     fontSize: typography.size.md,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   grandTotalValue: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
-    color: colors.primary
+    fontFamily: typography.family.bold,
+    color: colors.black
   },
   policyRow: {
     flexDirection: 'row',
@@ -529,6 +533,7 @@ const styles = StyleSheet.create({
   },
   policyText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   },
   bottomBar: {
@@ -536,7 +541,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
     paddingHorizontal: spacing.xl,
@@ -544,16 +549,16 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    ...shadows.lg
+    alignItems: 'center'
   },
   bottomBarPrice: {
     fontSize: typography.size.xl,
-    fontWeight: typography.weight.heavy,
+    fontFamily: typography.family.extraBold,
     color: colors.textPrimary
   },
   bottomBarSavings: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   }
 });

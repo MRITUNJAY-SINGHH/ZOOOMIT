@@ -54,7 +54,7 @@ export default function NotificationsScreen() {
     return (
       <View style={styles.container}>
         <EmptyState
-          icon={<Bell size={48} color={colors.primary} />}
+          icon={<Bell size={48} color={colors.black} />}
           title="Sign In to view notifications"
           description="Get live updates on your deliveries, refunds, and special discounts."
           actionTitle="Sign In"
@@ -71,21 +71,19 @@ export default function NotificationsScreen() {
     if (!notif.isRead) {
       markReadMutation.mutate(notif._id);
     }
-    // Deep Link handling
     if (notif.order) {
       router.push(`/orders/${notif.order}`);
     }
   };
 
   const getIcon = (type) => {
-    if (type?.includes('Order')) return <Package size={20} color={colors.primary} />;
+    if (type?.includes('Order')) return <Package size={20} color={colors.black} />;
     if (type?.includes('Refund') || type?.includes('Support')) return <AlertCircle size={20} color={colors.secondary} />;
-    return <Sparkles size={20} color={colors.accent} />;
+    return <Sparkles size={20} color={colors.black} />;
   };
 
   return (
     <View style={styles.container}>
-      {/* Header bar */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Notifications ({unreadCount} unread)</Text>
         {unreadCount > 0 && (
@@ -94,7 +92,7 @@ export default function NotificationsScreen() {
             onPress={() => markAllReadMutation.mutate()}
             disabled={markAllReadMutation.isPending}
           >
-            <CheckCheck size={16} color={colors.primary} style={{ marginRight: 4 }} />
+            <CheckCheck size={16} color={colors.black} style={{ marginRight: 4 }} />
             <Text style={styles.markAllText}>Mark all read</Text>
           </TouchableOpacity>
         )}
@@ -102,7 +100,7 @@ export default function NotificationsScreen() {
 
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={colors.black} />
         </View>
       ) : notifications.length > 0 ? (
         <FlatList
@@ -143,7 +141,7 @@ export default function NotificationsScreen() {
         />
       ) : (
         <EmptyState
-          icon={<Bell size={48} color={colors.primary} />}
+          icon={<Bell size={48} color={colors.black} />}
           title="No Notifications Yet"
           description="You're all caught up! Order updates and promotions will appear here."
         />
@@ -155,7 +153,7 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   centered: {
     justifyContent: 'center',
@@ -167,13 +165,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
     borderBottomColor: colors.border
   },
   headerTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   markAllBtn: {
@@ -182,27 +180,27 @@ const styles = StyleSheet.create({
   },
   markAllText: {
     fontSize: typography.size.xs,
-    color: colors.primary,
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontFamily: typography.family.bold
   },
   itemCard: {
     flexDirection: 'row',
     padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: colors.border,
     marginBottom: spacing.sm
   },
   unreadItemCard: {
-    backgroundColor: colors.primarySubtle,
+    backgroundColor: colors.primarySoft,
     borderColor: colors.primaryLight
   },
   iconCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.md
@@ -218,27 +216,29 @@ const styles = StyleSheet.create({
   },
   itemTitle: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textPrimary
   },
   unreadTitle: {
-    fontWeight: typography.weight.bold,
-    color: colors.primaryDark
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
   },
   unreadDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary
+    backgroundColor: colors.primaryDark
   },
   itemMessage: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary,
     lineHeight: 18,
     marginBottom: 4
   },
   itemTime: {
     fontSize: 10,
+    fontFamily: typography.family.regular,
     color: colors.textMuted
   }
 });

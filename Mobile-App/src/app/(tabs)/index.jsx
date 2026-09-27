@@ -19,7 +19,7 @@ import {
   Search as SearchIcon, 
   Sparkles 
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography, shadows } from '../../constants/theme';
+import { colors, spacing, radius, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { ProductCard } from '../../components/ProductCard';
@@ -33,7 +33,6 @@ export default function HomeScreen() {
   const { customer } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // 1. Fetch Banners
   const { 
     data: bannersData, 
     isLoading: bannersLoading, 
@@ -46,7 +45,6 @@ export default function HomeScreen() {
     }
   });
 
-  // 2. Fetch Categories
   const { 
     data: categoriesData, 
     isLoading: categoriesLoading, 
@@ -59,7 +57,6 @@ export default function HomeScreen() {
     }
   });
 
-  // 3. Fetch Featured / Deals Products
   const { 
     data: productsData, 
     isLoading: productsLoading, 
@@ -77,7 +74,6 @@ export default function HomeScreen() {
     }
   });
 
-  // 4. Fetch Unread Notifications
   const { data: notifsData } = useQuery({
     queryKey: ['notifications-badge'],
     queryFn: async () => {
@@ -105,7 +101,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.locationContainer}
@@ -113,7 +108,7 @@ export default function HomeScreen() {
           activeOpacity={0.7}
         >
           <View style={styles.locationIconCircle}>
-            <MapPin size={16} color={colors.primary} />
+            <MapPin size={16} color={colors.black} />
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -126,7 +121,6 @@ export default function HomeScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Notifications Bell */}
         <TouchableOpacity 
           style={styles.bellButton}
           onPress={() => router.push('/notifications')}
@@ -143,7 +137,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Main Scrollable Content */}
       <ScrollView
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -151,7 +144,6 @@ export default function HomeScreen() {
         }
         contentContainerStyle={{ paddingBottom: spacing['4xl'] }}
       >
-        {/* Search Bar CTA */}
         <TouchableOpacity 
           style={styles.searchBar}
           onPress={() => router.push('/(tabs)/search')}
@@ -161,10 +153,9 @@ export default function HomeScreen() {
           <Text style={styles.searchPlaceholder}>Search for "milk", "atta", "chips", "sugar"...</Text>
         </TouchableOpacity>
 
-        {/* Dynamic Promotional Banners */}
         {bannersLoading ? (
           <View style={{ paddingHorizontal: spacing.xl, marginBottom: spacing.lg }}>
-            <SkeletonBox height={140} borderRadius={radius.xl} />
+            <SkeletonBox height={140} borderRadius={16} />
           </View>
         ) : bannersData && bannersData.length > 0 ? (
           <FlatList
@@ -199,7 +190,6 @@ export default function HomeScreen() {
           />
         ) : null}
 
-        {/* Categories Scroller */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Shop by Category</Text>
         </View>
@@ -252,7 +242,6 @@ export default function HomeScreen() {
           </ScrollView>
         ) : null}
 
-        {/* Featured Products / Deals Grid */}
         <View style={[styles.sectionHeader, { marginTop: spacing.xl }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Sparkles size={18} color={colors.accent} style={{ marginRight: 6 }} />
@@ -285,7 +274,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={{ padding: spacing.xl, alignItems: 'center' }}>
-            <Text style={{ color: colors.textMuted }}>No products available in this category</Text>
+            <Text style={{ color: colors.textMuted, fontFamily: typography.family.regular }}>No products available in this category</Text>
           </View>
         )}
       </ScrollView>
@@ -296,7 +285,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background
+    backgroundColor: colors.white
   },
   header: {
     flexDirection: 'row',
@@ -305,7 +294,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
-    backgroundColor: colors.surface
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border
   },
   locationContainer: {
     flexDirection: 'row',
@@ -317,26 +308,29 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primarySubtle,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: spacing.sm
   },
   deliveryTime: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.heavy,
+    fontFamily: typography.family.extraBold,
     color: colors.textPrimary,
     letterSpacing: 0.5
   },
   addressText: {
     fontSize: typography.size.xs,
+    fontFamily: typography.family.regular,
     color: colors.textSecondary
   },
   bellButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
+    borderWidth: 1,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative'
@@ -354,59 +348,61 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3
   },
   bellBadgeText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 9,
-    fontWeight: typography.weight.bold
+    fontFamily: typography.family.bold
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.white,
     marginHorizontal: spacing.xl,
     marginTop: spacing.md,
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md - 2,
-    borderRadius: radius.lg,
+    height: 52,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.border,
-    ...shadows.sm
+    borderColor: colors.border
   },
   searchPlaceholder: {
     fontSize: typography.size.sm,
+    fontFamily: typography.family.regular,
     color: colors.textMuted,
     flex: 1
   },
   bannerCard: {
     width: BANNER_WIDTH,
     height: 140,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     overflow: 'hidden',
-    ...shadows.md
+    borderWidth: 1,
+    borderColor: colors.border
   },
   bannerTextContainer: {
     flex: 1,
     paddingRight: spacing.sm
   },
   bannerTitle: {
-    color: '#ffffff',
+    color: colors.black,
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     marginBottom: 4
   },
   bannerSubtitle: {
-    color: 'rgba(255, 255, 255, 0.9)',
+    color: colors.textPrimary,
     fontSize: typography.size.xs,
+    fontFamily: typography.family.medium,
     lineHeight: 16
   },
   bannerImage: {
     width: 100,
     height: 100,
-    borderRadius: radius.md
+    borderRadius: 12
   },
   sectionHeader: {
     paddingHorizontal: spacing.xl,
@@ -415,14 +411,14 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.size.lg,
-    fontWeight: typography.weight.bold,
+    fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   categoryPill: {
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.full,
+    backgroundColor: colors.white,
+    borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border
   },
@@ -432,12 +428,12 @@ const styles = StyleSheet.create({
   },
   categoryPillText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.medium,
+    fontFamily: typography.family.medium,
     color: colors.textSecondary
   },
   categoryPillTextActive: {
-    color: '#ffffff',
-    fontWeight: typography.weight.bold
+    color: colors.black,
+    fontFamily: typography.family.bold
   },
   grid: {
     flexDirection: 'row',

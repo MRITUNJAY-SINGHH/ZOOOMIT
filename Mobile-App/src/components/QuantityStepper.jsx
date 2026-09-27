@@ -27,7 +27,7 @@ export const QuantityStepper = ({
         {isMin ? (
           <Trash2 size={compact ? 13 : 16} color={colors.textSecondary} />
         ) : (
-          <Minus size={compact ? 13 : 16} color={colors.primary} />
+          <Minus size={compact ? 13 : 16} color={colors.black} />
         )}
       </TouchableOpacity>
 
@@ -46,7 +46,7 @@ export const QuantityStepper = ({
         style={[styles.button, styles.incrementBtn, isMax && styles.disabledBtn]}
         activeOpacity={0.7}
       >
-        <Plus size={compact ? 13 : 16} color={isMax ? colors.textMuted : colors.primary} />
+        <Plus size={compact ? 13 : 16} color={isMax ? colors.textMuted : colors.black} />
       </TouchableOpacity>
     </View>
   );
@@ -56,17 +56,15 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primarySubtle,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.primaryLight,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
     overflow: 'hidden'
   },
   compactContainer: {
     paddingHorizontal: 2
   },
   button: {
-    paddingVertical: spacing.xs,
+    paddingVertical: 6,
     paddingHorizontal: spacing.sm,
     justifyContent: 'center',
     alignItems: 'center'
@@ -85,19 +83,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xs,
-    minWidth: 28
+    minWidth: 26
   },
   quantityText: {
     fontSize: typography.size.sm,
-    fontWeight: typography.weight.bold,
-    color: colors.primary
+    fontFamily: typography.family.bold,
+    color: colors.black
   },
   compactQuantityText: {
     fontSize: typography.size.xs + 1
   },
   unitText: {
     fontSize: typography.size.xs - 2,
-    color: colors.textSecondary,
+    fontFamily: typography.family.regular,
+    color: colors.black,
     marginLeft: 2
   }
 });

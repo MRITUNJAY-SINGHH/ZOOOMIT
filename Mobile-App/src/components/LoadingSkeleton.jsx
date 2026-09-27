@@ -36,12 +36,12 @@ export const ProductCardSkeleton = () => {
 
 const styles = StyleSheet.create({
   box: {
-    backgroundColor: colors.surfaceSubtle,
+    backgroundColor: colors.softBackground,
     overflow: 'hidden'
   },
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.lg,
+    backgroundColor: colors.white,
+    borderRadius: 16,
     padding: spacing.sm,
     borderWidth: 1,
     borderColor: colors.border,

@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+  sendCustomerOtp,
+  verifyCustomerOtp,
   registerCustomer,
   loginCustomer,
   forgotPassword,
@@ -44,6 +46,8 @@ import { protectCustomer } from '../middleware/storefrontAuthMiddleware.js';
 const router = express.Router();
 
 /* --- Auth & Profile --- */
+router.post('/auth/send-otp', sendCustomerOtp);
+router.post('/auth/verify-otp', verifyCustomerOtp);
 router.post('/auth/register', registerCustomer);
 router.post('/auth/login', loginCustomer);
 router.post('/auth/forgot-password', forgotPassword);

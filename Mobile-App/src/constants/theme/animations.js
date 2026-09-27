@@ -1,5 +1,4 @@
 export const animations = {
-  // Spring configurations
   spring: {
     bouncy: {
       damping: 12,
@@ -17,15 +16,13 @@ export const animations = {
       mass: 0.6
     }
   },
-  // Durations
   timing: {
     fast: 150,
     normal: 250,
     slow: 400
   },
-  // Scale micro-interactions
   scale: {
-    pressed: 0.96,
-    activeBadge: 1.2
+    pressed: 0.98,
+    activeBadge: 1.1
   }
 };

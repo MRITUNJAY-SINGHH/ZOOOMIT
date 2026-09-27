@@ -7,24 +7,24 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../context/AuthContext';
 import { CartProvider } from '../context/CartContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { colors } from '../constants/theme';
+import { colors, typography } from '../constants/theme';
 
 import { 
   useFonts,
   Outfit_400Regular,
   Outfit_500Medium,
   Outfit_600SemiBold,
-  Outfit_700Bold
+  Outfit_700Bold,
+  Outfit_800ExtraBold
 } from '@expo-google-fonts/outfit';
 
-// Keep native splash screen visible while loading resources
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 1000 * 60 * 2, // 2 minutes
+      staleTime: 1000 * 60 * 2,
       refetchOnWindowFocus: false
     }
   }
@@ -35,14 +35,15 @@ export default function RootLayout() {
     Outfit_400Regular,
     Outfit_500Medium,
     Outfit_600SemiBold,
-    Outfit_700Bold
+    Outfit_700Bold,
+    Outfit_800ExtraBold
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    if (fontError) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontsLoaded, fontError]);
+  }, [fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -71,6 +72,7 @@ export default function RootLayout() {
                     headerShown: true, 
                     title: 'Product Details',
                     headerTintColor: colors.textPrimary,
+                    headerTitleStyle: { fontFamily: typography.family.bold },
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.surface }
                   }} 
@@ -81,29 +83,29 @@ export default function RootLayout() {
                     headerShown: true, 
                     title: 'Checkout',
                     headerTintColor: colors.textPrimary,
+                    headerTitleStyle: { fontFamily: typography.family.bold },
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.surface }
                   }} 
                 />
                 <Stack.Screen 
                   name="orders/[id]" 
+                  options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
+                  name="orders/issue" 
                   options={{ 
                     headerShown: true, 
-                    title: 'Track Order',
+                    title: 'Report Problem / Return',
                     headerTintColor: colors.textPrimary,
+                    headerTitleStyle: { fontFamily: typography.family.bold },
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.surface }
                   }} 
                 />
                 <Stack.Screen 
-                  name="orders/[id]/issue" 
-                  options={{ 
-                    headerShown: true, 
-                    title: 'Report Problem / Return',
-                    headerTintColor: colors.textPrimary,
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: colors.surface }
-                  }} 
+                  name="orders/support" 
+                  options={{ headerShown: false }} 
                 />
                 <Stack.Screen 
                   name="notifications" 
@@ -111,6 +113,7 @@ export default function RootLayout() {
                     headerShown: true, 
                     title: 'Notifications',
                     headerTintColor: colors.textPrimary,
+                    headerTitleStyle: { fontFamily: typography.family.bold },
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.surface }
                   }} 
@@ -121,6 +124,7 @@ export default function RootLayout() {
                     headerShown: true, 
                     title: 'My Addresses',
                     headerTintColor: colors.textPrimary,
+                    headerTitleStyle: { fontFamily: typography.family.bold },
                     headerShadowVisible: false,
                     headerStyle: { backgroundColor: colors.surface }
                   }} 
