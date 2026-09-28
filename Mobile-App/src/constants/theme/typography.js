@@ -20,22 +20,44 @@ export const typography = {
     '4xl': 44
   },
   weight: {
+    light: '300',
     regular: '400',
     medium: '500',
-    semibold: '600',
     bold: '700',
-    extraBold: '800'
+    heavy: '800'
   },
   family: {
-    regular: 'Outfit_400Regular',
-    medium: 'Outfit_500Medium',
-    semibold: 'Outfit_600SemiBold',
-    bold: 'Outfit_700Bold',
-    extraBold: 'Outfit_800ExtraBold',
-    display: 'Outfit_800ExtraBold',
-    largeHeading: 'Outfit_700Bold',
-    heading: 'Outfit_600SemiBold',
-    body: 'Outfit_400Regular',
-    button: 'Outfit_600SemiBold'
+    light: 'GilroyLight',
+    regular: 'GilroyRegular',
+    medium: 'GilroyMedium',
+    semibold: 'GilroyBold',
+    bold: 'GilroyBold',
+    heavy: 'GilroyHeavy',
+    extraBold: 'GilroyHeavy',
+    display: 'GilroyHeavy',
+    largeHeading: 'GilroyBold',
+    heading: 'GilroyBold',
+    body: 'GilroyRegular',
+    button: 'GilroyBold',
+
+    // Direct font family access
+    GilroyLight: 'GilroyLight',
+    GilroyRegular: 'GilroyRegular',
+    GilroyMedium: 'GilroyMedium',
+    GilroyBold: 'GilroyBold',
+    GilroyHeavy: 'GilroyHeavy'
+  },
+  fonts: {
+    light: 'GilroyLight',
+    regular: 'GilroyRegular',
+    medium: 'GilroyMedium',
+    bold: 'GilroyBold',
+    heavy: 'GilroyHeavy',
+    GilroyLight: 'GilroyLight',
+    GilroyRegular: 'GilroyRegular',
+    GilroyMedium: 'GilroyMedium',
+    GilroyBold: 'GilroyBold',
+    GilroyHeavy: 'GilroyHeavy'
   }
 };
+

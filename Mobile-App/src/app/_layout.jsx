@@ -5,18 +5,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../context/AuthContext';
+import { WishlistProvider } from '../context/WishlistContext';
 import { CartProvider } from '../context/CartContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { colors, typography } from '../constants/theme';
 
-import { 
-  useFonts,
-  Outfit_400Regular,
-  Outfit_500Medium,
-  Outfit_600SemiBold,
-  Outfit_700Bold,
-  Outfit_800ExtraBold
-} from '@expo-google-fonts/outfit';
+import { useFonts } from 'expo-font';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -32,18 +26,23 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Outfit_400Regular,
-    Outfit_500Medium,
-    Outfit_600SemiBold,
-    Outfit_700Bold,
-    Outfit_800ExtraBold
+    GilroyLight: require('../../assets/fonts/Gilroy-Light.ttf'),
+    GilroyRegular: require('../../assets/fonts/Gilroy-Regular.ttf'),
+    GilroyMedium: require('../../assets/fonts/Gilroy-Medium.ttf'),
+    GilroyBold: require('../../assets/fonts/Gilroy-Bold.ttf'),
+    GilroyHeavy: require('../../assets/fonts/Gilroy-Heavy.ttf'),
+    'Gilroy-Light': require('../../assets/fonts/Gilroy-Light.ttf'),
+    'Gilroy-Regular': require('../../assets/fonts/Gilroy-Regular.ttf'),
+    'Gilroy-Medium': require('../../assets/fonts/Gilroy-Medium.ttf'),
+    'Gilroy-Bold': require('../../assets/fonts/Gilroy-Bold.ttf'),
+    'Gilroy-Heavy': require('../../assets/fonts/Gilroy-Heavy.ttf')
   });
 
   useEffect(() => {
-    if (fontError) {
+    if (fontsLoaded || fontError) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontError]);
+  }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
     return null;
@@ -54,29 +53,27 @@ export default function RootLayout() {
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <CartProvider>
-              <StatusBar style="dark" />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: colors.background },
-                  animation: 'slide_from_right'
-                }}
-              >
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen 
-                  name="product/[id]" 
-                  options={{ 
-                    headerShown: true, 
-                    title: 'Product Details',
-                    headerTintColor: colors.textPrimary,
-                    headerTitleStyle: { fontFamily: typography.family.bold },
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: colors.surface }
-                  }} 
-                />
+            <WishlistProvider>
+              <CartProvider>
+                <StatusBar style="dark" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: colors.background },
+                    animation: 'slide_from_right'
+                  }}
+                >
+                  <Stack.Screen name="index" options={{ headerShown: false }} />
+                  <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                  <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                  <Stack.Screen 
+                    name="product/[id]" 
+                    options={{ headerShown: false }} 
+                  />
+                  <Stack.Screen 
+                    name="category/[id]" 
+                    options={{ headerShown: false }} 
+                  />
                 <Stack.Screen 
                   name="checkout/index" 
                   options={{ 
@@ -130,7 +127,8 @@ export default function RootLayout() {
                   }} 
                 />
               </Stack>
-            </CartProvider>
+              </CartProvider>
+            </WishlistProvider>
           </AuthProvider>
         </QueryClientProvider>
       </ErrorBoundary>

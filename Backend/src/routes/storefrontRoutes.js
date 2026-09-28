@@ -17,6 +17,8 @@ import {
   getCategories,
   getProducts,
   getProductDetails,
+  getWishlist,
+  toggleWishlist,
   getCart,
   addToCart,
   updateCartItem,
@@ -67,6 +69,10 @@ router.get('/banners', getBanners);
 router.get('/categories', getCategories);
 router.get('/products', getProducts);
 router.get('/products/:idOrSlug', getProductDetails);
+
+/* --- Customer Wishlist / Saved Items --- */
+router.get('/wishlist', protectCustomer, getWishlist);
+router.post('/wishlist/:productId/toggle', protectCustomer, toggleWishlist);
 
 /* --- Persistent Cart CRUD --- */
 router.get('/cart', protectCustomer, getCart);

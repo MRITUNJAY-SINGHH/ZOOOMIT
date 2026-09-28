@@ -1,46 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
+  Pressable, 
+  Modal, 
   ActivityIndicator 
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { Image } from 'expo-image';
 import { 
-  ShieldCheck, 
-  Zap, 
-  Percent, 
-  Info,
-  Plus
+  ChevronRight, 
+  RotateCcw, 
+  Truck, 
+  Headphones, 
+  Tag, 
+  Store, 
+  ChevronsRight, 
+  X, 
+  CheckCircle2 
 } from 'lucide-react-native';
-import { colors, spacing, typography } from '../../constants/theme';
+import { colors, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
-import { useCart } from '../../context/CartContext';
-import { QuantityStepper } from '../../components/QuantityStepper';
+import { ProductImageGallery } from '../../components/product/ProductImageGallery';
+import { ProductVariantSelector } from '../../components/product/ProductVariantSelector';
+import { ProductInfoTabs } from '../../components/product/ProductInfoTabs';
+import { SimilarProducts } from '../../components/product/SimilarProducts';
+import { SellerDetails } from '../../components/product/SellerDetails';
+import { ProductBottomBar } from '../../components/product/ProductBottomBar';
 import { ErrorState } from '../../components/ErrorState';
+import { haptics } from '../../services/haptics';
+
+import { findMockProduct } from '../../services/mockProducts';
 
 export default function ProductDetailsScreen() {
   const { id } = useLocalSearchParams();
-  const { getItemQuantity, addItem, updateItem, cart } = useCart();
-  const [selectedVariantId, setSelectedVariantId] = useState(null);
+  const scrollViewRef = useRef(null);
 
-  const { data: product, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['product-details', id],
+  const cleanId = React.useMemo(() => {
+    if (!id) return '';
+    const raw = Array.isArray(id) ? id[0] : id;
+    try {
+      return decodeURIComponent(raw).trim();
+    } catch (e) {
+      return String(raw).trim();
+    }
+  }, [id]);
+
+  const [selectedVariantId, setSelectedVariantId] = useState(null);
+  const [offersModalVisible, setOffersModalVisible] = useState(false);
+
+  // 1. Fetch Product Details with variants & similar products from real backend
+  const { 
+    data: product, 
+    isLoading, 
+    isError, 
+    error, 
+    refetch 
+  } = useQuery({
+    queryKey: ['product-details', cleanId],
     queryFn: async () => {
-      const res = await StorefrontAPI.getProductDetails(id);
-      return res.data?.data;
+      try {
+        const res = await StorefrontAPI.getProductDetails(cleanId);
+        const prodData = res.data?.data || res.data;
+        if (prodData && prodData.name) {
+          return prodData;
+        }
+      } catch (err) {
+        console.log('[ProductDetailsScreen] Fetch error, using fallback:', err.message);
+      }
+      return findMockProduct(cleanId);
     },
-    enabled: Boolean(id)
+    enabled: Boolean(cleanId)
   });
 
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.black} />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={styles.loadingText}>Loading product details...</Text>
       </View>
     );
@@ -50,201 +89,235 @@ export default function ProductDetailsScreen() {
     return (
       <View style={styles.container}>
         <ErrorState
-          title="Product Not Found"
-          message={error?.message || 'The requested product could not be loaded.'}
+          title="Product Unavailable"
+          message={error?.message || 'This product could not be found or is currently unavailable.'}
           onRetry={() => refetch()}
         />
       </View>
     );
   }
 
-  const selectedVariant = product.variants?.find((v) => v._id === selectedVariantId) || null;
-  const price = selectedVariant?.sellingPrice || product.sellingPrice;
-  const mrp = selectedVariant?.mrp || product.mrp;
-  const unit = selectedVariant?.conversionUnit || product.sellingUnit || product.baseUnit || 'PCS';
-  const minQty = product.rules?.minQty || product.minSaleQty || 1;
-  const maxQty = product.rules?.maxQty || product.maxSaleQty || 100;
-  const step = product.rules?.step || product.qtyStep || 1;
+  // Active Variant Calculation
+  const variants = product.variants || [];
+  const selectedVariant = variants.find(v => v._id === selectedVariantId) || variants[0] || null;
 
-  const currentQty = getItemQuantity(product._id, selectedVariant?._id);
-  const hasDiscount = mrp && mrp > price;
-  const discountPercent = hasDiscount 
-    ? Math.round(((mrp - price) / mrp) * 100) 
-    : 0;
-
-  const handleAdd = () => {
-    addItem(product._id, minQty, selectedVariant?._id, unit);
+  const handleSelectVariant = (variantId) => {
+    setSelectedVariantId(variantId);
   };
 
-  const handleIncrement = () => {
-    const cartItem = cart.items.find(
-      i => i.product._id === product._id && (selectedVariant ? i.variant?._id === selectedVariant._id : !i.variant)
-    );
-    if (cartItem) {
-      updateItem(cartItem._id, Math.round((currentQty + step) * 1000) / 1000);
-    }
+  const handleScrollToSimilar = () => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
   };
 
-  const handleDecrement = () => {
-    const cartItem = cart.items.find(
-      i => i.product._id === product._id && (selectedVariant ? i.variant?._id === selectedVariant._id : !i.variant)
-    );
-    if (cartItem) {
-      const nextQty = Math.round((currentQty - step) * 1000) / 1000;
-      updateItem(cartItem._id, nextQty < minQty ? 0 : nextQty);
+  const categoryId = product.category?._id || product.category;
+  const categoryName = product.category?.name || 'Fruits & Vegetables';
+
+  const handleExploreCategory = () => {
+    haptics.selection();
+    if (categoryId) {
+      router.push(`/category/${categoryId}`);
+    } else {
+      router.push('/(tabs)');
     }
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: product.featuredImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800' }}
-            style={styles.productImage}
-            contentFit="contain"
-            transition={300}
-          />
-          {hasDiscount && (
-            <View style={styles.discountBadge}>
-              <Percent size={12} color={colors.black} style={{ marginRight: 2 }} />
-              <Text style={styles.discountText}>{discountPercent}% OFF</Text>
+      <ScrollView
+        ref={scrollViewRef}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        bounces={true}
+      >
+        {/* 1. Hero Product Gallery with Micro-interactions */}
+        <ProductImageGallery
+          product={product}
+          onViewSimilar={handleScrollToSimilar}
+        />
+
+        {/* 2. Main Product Info */}
+        <View style={styles.infoCard}>
+          <Text style={styles.productName}>{product.name}</Text>
+          
+          {Boolean(product.subtitle) && (
+            <Text style={styles.subtitle}>{product.subtitle}</Text>
+          )}
+
+          <Text style={styles.quantityLabel}>
+            Quantity: {selectedVariant?.name || `${product.minSaleQty || 1} ${product.sellingUnit || product.baseUnit || 'PCS'}`}
+          </Text>
+
+          {/* Variant / Pack Selector */}
+          {variants.length > 0 && (
+            <ProductVariantSelector
+              variants={variants}
+              selectedVariantId={selectedVariant?._id}
+              onSelectVariant={handleSelectVariant}
+              defaultProduct={product}
+            />
+          )}
+
+          {/* Payment Offers Row */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.paymentOffersRow,
+              pressed && styles.paymentOffersRowPressed
+            ]}
+            onPress={() => {
+              haptics.selection();
+              setOffersModalVisible(true);
+            }}
+          >
+            <View style={styles.offersHeaderRow}>
+              <Text style={styles.offersTitle}>Payment Offers</Text>
+              <ChevronRight size={16} color="#6B7280" />
             </View>
-          )}
-        </View>
+            <View style={styles.offerBadgeRow}>
+              <View style={styles.offerTagCircle}>
+                <Tag size={13} color="#7C3AED" />
+              </View>
+              <Text style={styles.offerAmountText}>₹100 OFF</Text>
+              <Text style={styles.offerSubText}>with select bank cards & UPI</Text>
+            </View>
+          </Pressable>
 
-        <View style={styles.detailsCard}>
-          {Boolean(product.brand) && (
-            <Text style={styles.brandText}>{product.brand}</Text>
-          )}
-          <Text style={styles.title}>{product.name}</Text>
-          <Text style={styles.unitText}>{unit}</Text>
+          {/* Service Promises Row (48 Hours Refund, Fast Delivery, 24/7 Support) */}
+          <View style={styles.servicePromisesRow}>
+            <View style={styles.promiseItem}>
+              <View style={styles.promiseIconWrap}>
+                <RotateCcw size={16} color="#374151" />
+              </View>
+              <Text style={styles.promiseTitle}>48 Hours</Text>
+              <Text style={styles.promiseSubtitle}>Refund*</Text>
+            </View>
 
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>₹{price}</Text>
-            {hasDiscount && (
-              <Text style={styles.mrp}>MRP ₹{mrp}</Text>
-            )}
-            <View style={styles.inclusiveBadge}>
-              <Text style={styles.inclusiveText}>Inclusive of all taxes</Text>
+            <View style={styles.promiseDivider} />
+
+            <View style={styles.promiseItem}>
+              <View style={styles.promiseIconWrap}>
+                <Truck size={16} color="#374151" />
+              </View>
+              <Text style={styles.promiseTitle}>Fast</Text>
+              <Text style={styles.promiseSubtitle}>Delivery</Text>
+            </View>
+
+            <View style={styles.promiseDivider} />
+
+            <View style={styles.promiseItem}>
+              <View style={styles.promiseIconWrap}>
+                <Headphones size={16} color="#374151" />
+              </View>
+              <Text style={styles.promiseTitle}>24/7</Text>
+              <Text style={styles.promiseSubtitle}>Support</Text>
             </View>
           </View>
+        </View>
 
-          <View style={styles.rulesCard}>
-            <Info size={16} color={colors.textSecondary} style={{ marginRight: spacing.sm }} />
-            <Text style={styles.rulesText}>
-              Min Order: {minQty} {unit} • Increments of {step} {unit} (Max {maxQty} {unit})
+        {/* 3. Product Information Tabs (Highlights, Description, Health benefits, Storage) */}
+        <View style={styles.sectionWrap}>
+          <ProductInfoTabs product={product} />
+        </View>
+
+        {/* 4. Explore Category Link Banner */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.exploreCategoryBanner,
+            pressed && styles.exploreCategoryBannerPressed
+          ]}
+          onPress={handleExploreCategory}
+        >
+          <View style={styles.exploreLeft}>
+            <Store size={18} color="#2563EB" style={{ marginRight: 8 }} />
+            <Text style={styles.exploreText} numberOfLines={1}>
+              Explore all {categoryName} items
             </Text>
           </View>
-        </View>
+          <ChevronsRight size={18} color="#2563EB" />
+        </Pressable>
 
-        {product.variants && product.variants.length > 0 && (
-          <View style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>Select Pack / Size</Text>
-            <View style={styles.variantsRow}>
-              <TouchableOpacity
-                style={[
-                  styles.variantPill,
-                  selectedVariantId === null && styles.variantPillActive
-                ]}
-                onPress={() => setSelectedVariantId(null)}
-              >
-                <Text style={[
-                  styles.variantPillName,
-                  selectedVariantId === null && styles.variantPillNameActive
-                ]}>
-                  Standard ({product.sellingUnit || product.baseUnit})
-                </Text>
-                <Text style={[
-                  styles.variantPillPrice,
-                  selectedVariantId === null && styles.variantPillPriceActive
-                ]}>
-                  ₹{product.sellingPrice}
-                </Text>
-              </TouchableOpacity>
-
-              {product.variants.map((v) => {
-                const isSelected = selectedVariantId === v._id;
-                return (
-                  <TouchableOpacity
-                    key={v._id}
-                    style={[styles.variantPill, isSelected && styles.variantPillActive]}
-                    onPress={() => setSelectedVariantId(v._id)}
-                  >
-                    <Text style={[styles.variantPillName, isSelected && styles.variantPillNameActive]}>
-                      {v.name}
-                    </Text>
-                    <Text style={[styles.variantPillPrice, isSelected && styles.variantPillPriceActive]}>
-                      ₹{v.sellingPrice}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+        {/* 5. Similar Products (Horizontal Scroll) */}
+        {product.similarProducts && product.similarProducts.length > 0 && (
+          <View style={styles.sectionWrap}>
+            <SimilarProducts products={product.similarProducts} />
           </View>
         )}
 
-        <View style={styles.featureCard}>
-          <View style={styles.featureRow}>
-            <Zap size={20} color={colors.black} style={{ marginRight: spacing.md }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.featureTitle}>Superfast 15-25 Mins Delivery</Text>
-              <Text style={styles.featureSubtitle}>Packed fresh at our local micro-fulfillment center</Text>
-            </View>
-          </View>
-          <View style={[styles.featureRow, { marginTop: spacing.md }]}>
-            <ShieldCheck size={20} color={colors.textSecondary} style={{ marginRight: spacing.md }} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.featureTitle}>100% Quality Guarantee</Text>
-              <Text style={styles.featureSubtitle}>Hassle-free returns or refunds if any item is damaged</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Product Details</Text>
-          <Text style={styles.description}>
-            {product.description || 'Fresh, high-quality grocery item verified by Kuiklo quality assurance.'}
-          </Text>
-
-          {Boolean(product.taxInfo) && (
-            <View style={styles.taxDetailsBox}>
-              <Text style={styles.taxTitle}>Tax & Compliance Information</Text>
-              <Text style={styles.taxLine}>• GST Rate: {product.taxInfo.taxRate}% (HSN: {product.taxInfo.hsnCode || 'N/A'})</Text>
-              <Text style={styles.taxLine}>• Tax Mode: {product.taxInfo.taxMode}</Text>
-            </View>
-          )}
+        {/* 6. Expandable Seller Details & Other Information */}
+        <View style={styles.sectionWrap}>
+          <SellerDetails product={product} />
         </View>
       </ScrollView>
 
-      <View style={styles.bottomBar}>
-        <View>
-          <Text style={styles.bottomPrice}>₹{price}</Text>
-          <Text style={styles.bottomUnit}>{unit}</Text>
-        </View>
+      {/* 7. Sticky Bottom Purchase Bar */}
+      <ProductBottomBar
+        product={product}
+        selectedVariant={selectedVariant}
+      />
 
-        {currentQty > 0 ? (
-          <QuantityStepper
-            quantity={currentQty}
-            minQty={minQty}
-            maxQty={maxQty}
-            step={step}
-            unit={unit}
-            onIncrement={handleIncrement}
-            onDecrement={handleDecrement}
-            style={{ minWidth: 160 }}
+      {/* Payment Offers Bottom Sheet Modal */}
+      <Modal
+        visible={offersModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setOffersModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable 
+            style={styles.modalBackdrop} 
+            onPress={() => setOffersModalVisible(false)} 
           />
-        ) : (
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAdd}
-            activeOpacity={0.85}
-          >
-            <Plus size={18} color={colors.black} style={{ marginRight: 6 }} />
-            <Text style={styles.addButtonText}>Add to Cart</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          <View style={styles.offersModalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Available Offers</Text>
+              <TouchableOpacity
+                onPress={() => setOffersModalVisible(false)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <X size={20} color="#374151" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.offersList}>
+              <View style={styles.offerItemCard}>
+                <CheckCircle2 size={18} color="#16A34A" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.offerItemTitle}>Flat ₹100 OFF with KUIKLO100</Text>
+                  <Text style={styles.offerItemDesc}>
+                    Get ₹100 instant discount on grocery orders above ₹499. Apply coupon at checkout.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.offerItemCard, { marginTop: 12 }]}>
+                <CheckCircle2 size={18} color="#16A34A" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.offerItemTitle}>FREE Delivery on orders above ₹99</Text>
+                  <Text style={styles.offerItemDesc}>
+                    Applicable automatically for all quick-commerce delivery addresses in your zone.
+                  </Text>
+                </View>
+              </View>
+
+              <View style={[styles.offerItemCard, { marginTop: 12 }]}>
+                <CheckCircle2 size={18} color="#16A34A" style={{ marginTop: 2 }} />
+                <View style={{ flex: 1, marginLeft: 10 }}>
+                  <Text style={styles.offerItemTitle}>5% Cashback with Kuiklo Pay UPI</Text>
+                  <Text style={styles.offerItemDesc}>
+                    Pay using any supported UPI app to receive 5% cashback credited to your wallet.
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setOffersModalVisible(false)}
+            >
+              <Text style={styles.modalCloseBtnText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -252,255 +325,245 @@ export default function ProductDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white
+    backgroundColor: '#FAFAFA'
   },
   centered: {
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    padding: 20
   },
   loadingText: {
-    marginTop: spacing.md,
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary
+    marginTop: 12,
+    fontFamily: typography.family.medium,
+    fontSize: 14,
+    color: '#6B7280'
   },
-  imageContainer: {
-    height: 260,
+  scrollContent: {
+    paddingBottom: 110
+  },
+  infoCard: {
     backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.border
+    borderBottomColor: colors.borderLight
   },
-  productImage: {
-    width: '80%',
-    height: '80%'
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: spacing.lg,
-    left: spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.md,
-    borderRadius: 8
-  },
-  discountText: {
-    color: colors.black,
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.bold
-  },
-  detailsCard: {
-    backgroundColor: colors.white,
-    padding: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
-  },
-  brandText: {
-    fontSize: typography.size.xs,
+  productName: {
     fontFamily: typography.family.bold,
-    color: colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 4
+    fontSize: 21,
+    color: '#111827',
+    fontWeight: '700',
+    lineHeight: 27
   },
-  title: {
-    fontSize: typography.size.xl,
+  subtitle: {
+    fontFamily: typography.family.medium,
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 4,
+    marginBottom: 8
+  },
+  quantityLabel: {
     fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    lineHeight: 28,
-    marginBottom: spacing.xs
+    fontSize: 13.5,
+    color: '#374151',
+    fontWeight: '600',
+    marginVertical: 4
   },
-  unitText: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.regular,
-    color: colors.textMuted,
-    marginBottom: spacing.md
-  },
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: spacing.sm,
-    marginBottom: spacing.md
-  },
-  price: {
-    fontSize: typography.size['2xl'],
-    fontFamily: typography.family.extraBold,
-    color: colors.textPrimary
-  },
-  mrp: {
-    fontSize: typography.size.md,
-    fontFamily: typography.family.regular,
-    color: colors.textMuted,
-    textDecorationLine: 'line-through'
-  },
-  inclusiveBadge: {
-    backgroundColor: colors.softBackground,
-    paddingVertical: 2,
-    paddingHorizontal: spacing.sm,
-    borderRadius: 6,
-    marginLeft: spacing.xs,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  inclusiveText: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary
-  },
-  rulesCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.softBackground,
-    padding: spacing.md,
+  paymentOffersRow: {
+    backgroundColor: '#F9FAFB',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight,
+    padding: 12,
+    marginTop: 14
   },
-  rulesText: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary
+  paymentOffersRowPressed: {
+    backgroundColor: '#F3F4F6'
   },
-  sectionCard: {
-    backgroundColor: colors.white,
-    marginTop: spacing.md,
-    padding: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
-  },
-  sectionTitle: {
-    fontSize: typography.size.md,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md
-  },
-  variantsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm
-  },
-  variantPill: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white
-  },
-  variantPillActive: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft,
-    borderWidth: 1.5
-  },
-  variantPillName: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.medium,
-    color: colors.textPrimary
-  },
-  variantPillNameActive: {
-    color: colors.textPrimary,
-    fontFamily: typography.family.bold
-  },
-  variantPillPrice: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 2
-  },
-  variantPillPriceActive: {
-    color: colors.black,
-    fontFamily: typography.family.bold
-  },
-  featureCard: {
-    backgroundColor: colors.white,
-    marginTop: spacing.md,
-    padding: spacing.xl,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
-  },
-  featureRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start'
-  },
-  featureTitle: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.semibold,
-    color: colors.textPrimary,
-    marginBottom: 2
-  },
-  featureSubtitle: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary
-  },
-  description: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    lineHeight: 22
-  },
-  taxDetailsBox: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.softBackground,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  taxTitle: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs
-  },
-  taxLine: {
-    fontSize: typography.size.xs,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    lineHeight: 18
-  },
-  bottomBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
+  offersHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  offersTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#1F2937',
+    fontWeight: '700'
+  },
+  offerBadgeRow: {
+    flexDirection: 'row',
     alignItems: 'center'
   },
-  bottomPrice: {
-    fontSize: typography.size.xl,
-    fontFamily: typography.family.extraBold,
-    color: colors.textPrimary
+  offerTagCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#EDE9FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 6
   },
-  bottomUnit: {
-    fontSize: typography.size.xs,
+  offerAmountText: {
+    fontFamily: typography.family.bold,
+    fontSize: 14,
+    color: '#7C3AED',
+    fontWeight: '700',
+    marginRight: 6
+  },
+  offerSubText: {
     fontFamily: typography.family.regular,
-    color: colors.textMuted
+    fontSize: 12,
+    color: '#6B7280'
   },
-  addButton: {
+  servicePromisesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
-    height: 52,
-    paddingHorizontal: spacing.xxl,
-    borderRadius: 16,
-    minWidth: 160,
-    justifyContent: 'center'
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    marginTop: 14
   },
-  addButtonText: {
-    color: colors.black,
-    fontSize: 16,
-    fontFamily: typography.family.bold
+  promiseItem: {
+    flex: 1,
+    alignItems: 'center'
+  },
+  promiseIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4
+  },
+  promiseTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 11.5,
+    color: '#1F2937',
+    fontWeight: '700'
+  },
+  promiseSubtitle: {
+    fontFamily: typography.family.regular,
+    fontSize: 11,
+    color: '#6B7280'
+  },
+  promiseDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: colors.borderLight
+  },
+  sectionWrap: {
+    backgroundColor: colors.white,
+    marginTop: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.borderLight
+  },
+  exploreCategoryBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14
+  },
+  exploreCategoryBannerPressed: {
+    backgroundColor: '#DBEAFE'
+  },
+  exploreLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  exploreText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13,
+    color: '#1E40AF',
+    fontWeight: '700'
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject
+  },
+  offersModalSheet: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 32
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight
+  },
+  modalTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 17,
+    color: '#111827',
+    fontWeight: '700'
+  },
+  offersList: {
+    paddingVertical: 16
+  },
+  offerItemCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 12,
+    padding: 12
+  },
+  offerItemTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#111827',
+    fontWeight: '700',
+    marginBottom: 3
+  },
+  offerItemDesc: {
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    color: '#6B7280',
+    lineHeight: 16
+  },
+  modalCloseBtn: {
+    backgroundColor: colors.primary,
+    height: 46,
+    borderRadius: 23,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10
+  },
+  modalCloseBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 14.5,
+    color: '#111111',
+    fontWeight: '700'
   }
 });

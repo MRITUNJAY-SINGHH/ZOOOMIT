@@ -174,7 +174,8 @@ const styles = StyleSheet.create({
     left: 52
   },
   leafEmoji: {
-    fontSize: 22
+    fontSize: 22,
+    fontFamily: typography.family.regular
   },
   textWrapper: {
     marginTop: spacing.xs

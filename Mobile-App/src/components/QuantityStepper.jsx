@@ -91,7 +91,8 @@ const styles = StyleSheet.create({
     color: colors.black
   },
   compactQuantityText: {
-    fontSize: typography.size.xs + 1
+    fontSize: typography.size.xs + 1,
+    fontFamily: typography.family.bold
   },
   unitText: {
     fontSize: typography.size.xs - 2,

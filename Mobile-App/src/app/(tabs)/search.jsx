@@ -548,7 +548,7 @@ export default function SearchScreen() {
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitleBold}>Popular Categories</Text>
               <Pressable
-                onPress={() => router.push('/(tabs)')}
+                onPress={() => router.push('/category/vegetables')}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
               >
                 <Text style={styles.viewAllText}>View All &gt;</Text>
@@ -560,7 +560,13 @@ export default function SearchScreen() {
                 <ScalePressable
                   key={cat.id}
                   style={[styles.categoryCard, { backgroundColor: cat.bgColor }]}
-                  onPress={() => handleSelectQuery(cat.query)}
+                  onPress={() => {
+                    if (cat.id === 'fruits_veg') {
+                      router.push('/category/vegetables');
+                    } else {
+                      handleSelectQuery(cat.query);
+                    }
+                  }}
                 >
                   <View style={styles.categoryImgWrap}>
                     <Image source={cat.image} style={styles.categoryCardImg} resizeMode="contain" />
@@ -1095,7 +1101,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border
   },
   scopeTabText: {
-    fontSize: 13
+    fontSize: 13,
+    fontFamily: typography.family.medium
   },
   scopeTextActive: {
     fontFamily: typography.family.bold,
@@ -1412,7 +1419,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border
   },
   filterModalPillText: {
-    fontSize: 13
+    fontSize: 13,
+    fontFamily: typography.family.medium
   },
   filterModalTextActive: {
     fontFamily: typography.family.bold,

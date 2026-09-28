@@ -59,7 +59,22 @@ const productSchema = new mongoose.Schema({
   isFeatured: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
   needsReview: { type: Boolean, default: false }, // Tag for migrated items requiring admin review
-  sortOrder: { type: Number, default: 0 }
+  sortOrder: { type: Number, default: 0 },
+
+  // Quick-Commerce Details & Metadata
+  subtitle: { type: String }, // e.g. "Zero Sprouting, Zero Smut"
+  isVeg: { type: Boolean, default: true },
+  deliveryTime: { type: String, default: '17 MINS' },
+  highlights: [{ key: String, value: String }], // e.g. [{ key: "Pack Size", value: "1 kg" }]
+  healthBenefits: { type: String },
+  storageInfo: { type: String },
+  sellerDetails: {
+    name: { type: String, default: 'PJIT TECHNOLOGIES PVT LTD' },
+    fssaiNumber: { type: String, default: '12725052000372' },
+    address: { type: String }
+  },
+  countryOfOrigin: { type: String, default: 'India' },
+  ean: { type: String }
 }, { timestamps: true });
 
 productSchema.index({ baseSku: 1 });

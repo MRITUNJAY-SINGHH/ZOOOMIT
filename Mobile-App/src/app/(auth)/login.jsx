@@ -730,6 +730,7 @@ const styles = StyleSheet.create({
   },
   flagEmoji: {
     fontSize: 18,
+    fontFamily: typography.family.regular,
     marginRight: 4
   },
   countryCode: {

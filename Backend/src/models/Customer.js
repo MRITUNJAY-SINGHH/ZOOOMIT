@@ -32,7 +32,10 @@ const customerSchema = new mongoose.Schema({
   
   // Cached fields managed by OrderService
   totalOrders: { type: Number, default: 0 },
-  totalSpent: { type: Number, default: 0 }
+  totalSpent: { type: Number, default: 0 },
+
+  // Customer Wishlist / Saved Items
+  wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Product' }]
 }, { timestamps: true });
 
 // Hash password before saving if modified

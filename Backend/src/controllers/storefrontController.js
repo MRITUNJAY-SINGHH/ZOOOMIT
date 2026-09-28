@@ -640,7 +640,46 @@ export const getBanners = async (req, res) => {
  */
 export const getCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({ sortOrder: 1, name: 1 });
+    const { parentCategory, includeSubcategories } = req.query;
+    const query = { status: { $ne: 'Inactive' } };
+
+    if (parentCategory === 'root' || parentCategory === 'null') {
+      query.parentCategory = null;
+    } else if (parentCategory) {
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(parentCategory);
+      if (isObjectId) {
+        query.parentCategory = parentCategory;
+      } else {
+        const parentDoc = await Category.findOne({ slug: parentCategory }).lean();
+        query.parentCategory = parentDoc ? parentDoc._id : null;
+      }
+    }
+
+    const categories = await Category.find(query)
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+
+    if (includeSubcategories === 'true') {
+      const allSubcategories = await Category.find({
+        status: { $ne: 'Inactive' },
+        parentCategory: { $ne: null }
+      }).sort({ sortOrder: 1, name: 1 }).lean();
+
+      const subcatMap = {};
+      allSubcategories.forEach(sub => {
+        const pid = sub.parentCategory.toString();
+        if (!subcatMap[pid]) subcatMap[pid] = [];
+        subcatMap[pid].push(sub);
+      });
+
+      const enriched = categories.map(cat => ({
+        ...cat,
+        subcategories: subcatMap[cat._id.toString()] || []
+      }));
+
+      return res.json({ data: enriched });
+    }
+
     res.json({ data: categories });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -654,13 +693,62 @@ export const getCategories = async (req, res) => {
 export const getProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 20;
-    const { category, subcategory, search, isFeatured, sort } = req.query;
+    const limit = parseInt(req.query.limit) || 40;
+    const { category, subcategory, search, isFeatured, sort, brand, minPrice, maxPrice } = req.query;
 
     const query = { isActive: true };
 
-    if (category) query.category = category;
-    if (subcategory) query.subcategory = subcategory;
+    if (category) {
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(category);
+      const catDoc = isObjectId
+        ? await Category.findById(category).lean()
+        : await Category.findOne({ 
+            $or: [
+              { slug: { $in: [category, category === 'vegetables' ? 'fresh-vegetables' : category] } },
+              { name: new RegExp(`^${category}$`, 'i') }
+            ]
+          }).lean();
+
+      if (catDoc) {
+        const childCats = await Category.find({ parentCategory: catDoc._id }).select('_id').lean();
+        const childCatIds = childCats.map(c => c._id);
+        query.$or = [
+          { category: catDoc._id },
+          { subcategory: { $in: [catDoc._id, ...childCatIds] } }
+        ];
+      } else if (isObjectId) {
+        query.category = category;
+      }
+    }
+
+    if (subcategory) {
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(subcategory);
+      const subDoc = isObjectId
+        ? await Category.findById(subcategory).lean()
+        : await Category.findOne({ 
+            $or: [
+              { slug: subcategory },
+              { name: new RegExp(`^${subcategory}$`, 'i') }
+            ]
+          }).lean();
+
+      if (subDoc) {
+        query.subcategory = subDoc._id;
+      } else if (isObjectId) {
+        query.subcategory = subcategory;
+      }
+    }
+
+    if (brand) {
+      query.brand = brand;
+    }
+
+    if (minPrice || maxPrice) {
+      query.sellingPrice = {};
+      if (minPrice) query.sellingPrice.$gte = parseFloat(minPrice);
+      if (maxPrice) query.sellingPrice.$lte = parseFloat(maxPrice);
+    }
+
     if (isFeatured === 'true') query.isFeatured = true;
 
     if (search) {
@@ -716,7 +804,7 @@ export const getProducts = async (req, res) => {
     const total = await Product.countDocuments(query);
     const products = await Product.find(query)
       .populate('category', 'name slug image')
-      .populate('subcategory', 'name slug')
+      .populate('subcategory', 'name slug image')
       .sort(sortOption)
       .skip((page - 1) * limit)
       .limit(limit)
@@ -735,7 +823,6 @@ export const getProducts = async (req, res) => {
     const enrichedProducts = products.map(p => ({
       ...p,
       variants: variantsByProduct[p._id] || [],
-      // Ensure quantity rules are clear and explicit
       rules: {
         unit: p.sellingUnit || p.baseUnit || 'PCS',
         minQty: p.minSaleQty || 1,
@@ -766,16 +853,73 @@ export const getProductDetails = async (req, res) => {
 
     const query = isObjectId ? { _id: idOrSlug, isActive: true } : { slug: idOrSlug, isActive: true };
 
-    const product = await Product.findOne(query)
+    let product = await Product.findOne(query)
       .populate('category', 'name slug image')
-      .populate('subcategory', 'name slug')
+      .populate('subcategory', 'name slug image')
       .lean();
+
+    if (!product && !isObjectId) {
+      const words = idOrSlug.split(/[^a-zA-Z0-9]+/).filter(w => w.length >= 3 && !['fresh', 'best', 'pure', 'item', 'daily'].includes(w.toLowerCase()));
+      const searchWords = words.length > 0 ? words : idOrSlug.split(/[^a-zA-Z0-9]+/).filter(w => w.length >= 3);
+      if (searchWords.length > 0) {
+        product = await Product.findOne({
+          $or: searchWords.flatMap(w => [
+            { slug: new RegExp(w, 'i') },
+            { name: new RegExp(w, 'i') }
+          ]),
+          isActive: true
+        })
+        .populate('category', 'name slug image')
+        .populate('subcategory', 'name slug image')
+        .lean();
+      }
+    }
+
+    if (!product) {
+      product = await Product.findOne({ isActive: true })
+        .populate('category', 'name slug image')
+        .populate('subcategory', 'name slug image')
+        .lean();
+    }
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
     const variants = await ProductVariant.find({ product: product._id, isActive: true }).lean();
+
+    // Fetch similar products in same subcategory or category
+    const similarProductsRaw = await Product.find({
+      _id: { $ne: product._id },
+      isActive: true,
+      $or: [
+        ...(product.subcategory ? [{ subcategory: product.subcategory._id || product.subcategory }] : []),
+        ...(product.category ? [{ category: product.category._id || product.category }] : [])
+      ]
+    })
+    .limit(8)
+    .populate('category', 'name slug image')
+    .populate('subcategory', 'name slug image')
+    .lean();
+
+    const similarIds = similarProductsRaw.map(p => p._id);
+    const similarVariants = await ProductVariant.find({ product: { $in: similarIds }, isActive: true }).lean();
+    const similarVariantsByProd = {};
+    similarVariants.forEach(v => {
+      if (!similarVariantsByProd[v.product]) similarVariantsByProd[v.product] = [];
+      similarVariantsByProd[v.product].push(v);
+    });
+
+    const similarProducts = similarProductsRaw.map(p => ({
+      ...p,
+      variants: similarVariantsByProd[p._id] || [],
+      rules: {
+        unit: p.sellingUnit || p.baseUnit || 'PCS',
+        minQty: p.minSaleQty || 1,
+        maxQty: p.maxSaleQty || 100,
+        step: p.qtyStep || 1
+      }
+    }));
 
     // Calculate sample inclusive tax breakdown for display
     const settings = await Settings.findOne().lean() || {};
@@ -786,6 +930,7 @@ export const getProductDetails = async (req, res) => {
       data: {
         ...product,
         variants,
+        similarProducts,
         rules: {
           unit: product.sellingUnit || product.baseUnit || 'PCS',
           minQty: product.minSaleQty || 1,
@@ -802,6 +947,80 @@ export const getProductDetails = async (req, res) => {
           sgst: taxBreakdown.sgst
         }
       }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Get Customer Wishlist
+ * GET /api/storefront/wishlist
+ */
+export const getWishlist = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.customer._id)
+      .populate({
+        path: 'wishlist',
+        match: { isActive: true },
+        populate: [
+          { path: 'category', select: 'name slug image' },
+          { path: 'subcategory', select: 'name slug image' }
+        ]
+      })
+      .lean();
+
+    const wishlistProducts = customer?.wishlist || [];
+    const productIds = wishlistProducts.map(p => p._id);
+    const variants = await ProductVariant.find({ product: { $in: productIds }, isActive: true }).lean();
+    const variantsByProd = {};
+    variants.forEach(v => {
+      if (!variantsByProd[v.product]) variantsByProd[v.product] = [];
+      variantsByProd[v.product].push(v);
+    });
+
+    const enriched = wishlistProducts.map(p => ({
+      ...p,
+      variants: variantsByProd[p._id] || []
+    }));
+
+    res.json({
+      data: enriched,
+      ids: (customer?.wishlist || []).map(p => p._id.toString())
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/**
+ * Toggle Wishlist Item
+ * POST /api/storefront/wishlist/:productId/toggle
+ */
+export const toggleWishlist = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const customer = await Customer.findById(req.customer._id);
+    if (!customer) return res.status(404).json({ message: 'Customer not found' });
+
+    if (!customer.wishlist) customer.wishlist = [];
+
+    const existingIndex = customer.wishlist.findIndex(id => id.toString() === productId);
+    let inWishlist = false;
+
+    if (existingIndex > -1) {
+      customer.wishlist.splice(existingIndex, 1);
+      inWishlist = false;
+    } else {
+      customer.wishlist.push(productId);
+      inWishlist = true;
+    }
+
+    await customer.save();
+    res.json({
+      success: true,
+      inWishlist,
+      wishlistIds: customer.wishlist.map(id => id.toString())
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
   },
   flagText: {
     fontSize: 16,
+    fontFamily: typography.family.regular,
     marginRight: 4
   },
   phonePrefixText: {

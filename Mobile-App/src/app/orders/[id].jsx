@@ -1535,9 +1535,20 @@ const styles = StyleSheet.create({
   refundInfoDesc: {
     fontSize: 11,
     fontFamily: typography.family.regular,
-    color: '#B45309',
-    marginTop: 2,
     lineHeight: 16
+  },
+  cancelCustomInput: {
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: typography.family.regular,
+    color: colors.textPrimary,
+    backgroundColor: '#F9FAFB',
+    marginTop: 8,
+    marginBottom: 4
   },
   cancelModalActions: {
     flexDirection: 'row',

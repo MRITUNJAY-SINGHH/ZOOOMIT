@@ -1948,7 +1948,6 @@ const styles = StyleSheet.create({
   inScreenModalOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 9999,
-    elevation: 9999,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.lg

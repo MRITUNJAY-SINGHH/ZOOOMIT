@@ -629,7 +629,8 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight
   },
   filterTabText: {
-    fontSize: 13
+    fontSize: 13,
+    fontFamily: typography.family.medium
   },
   filterTabTextActive: {
     fontFamily: typography.family.bold,

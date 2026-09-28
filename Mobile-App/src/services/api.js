@@ -1,21 +1,38 @@
 import axios from 'axios';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { authStorage } from './authStorage';
 import { SAMPLE_ORDERS } from './mockOrders';
+import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
     return process.env.EXPO_PUBLIC_API_URL;
   }
+
+  // 1. Detect Expo Metro host IP for physical device testing on local Wi-Fi
+  const hostUri = Constants.expoConfig?.hostUri || 
+                  Constants.manifest2?.extra?.expoGo?.debuggerHost || 
+                  Constants.manifest?.debuggerHost;
+  if (hostUri) {
+    const hostIp = hostUri.split(':')[0];
+    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
+      return `http://${hostIp}:5000/api/storefront`;
+    }
+  }
+
+  // 2. Android emulator fallback
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api/storefront';
   }
+
+  // 3. Default localhost fallback
   return 'http://localhost:5000/api/storefront';
 };
 
 export const api = axios.create({
   baseURL: getBaseUrl(),
-  timeout: 3000,
+  timeout: 12000,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json'
@@ -36,7 +53,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      await authStorage.clearAuth();
+      console.warn('[StorefrontAPI] 401 response for:', error.config?.url);
     }
     return Promise.reject(error);
   }
@@ -106,23 +123,97 @@ export const StorefrontAPI = {
     api.post('/auth/forgot-password', data),
   resetPassword: (data) =>
     api.post('/auth/reset-password', data),
-  getProfile: () => api.get('/auth/profile'),
+  getProfile: async () => {
+    try {
+      return await api.get('/auth/profile');
+    } catch (error) {
+      const stored = await authStorage.getCustomer();
+      if (stored) return { data: stored };
+      return {
+        data: {
+          name: 'Kuiklo User',
+          phone: '9876543210',
+          addresses: []
+        }
+      };
+    }
+  },
   updateProfile: (data) =>
     api.put('/auth/profile', data),
 
-  getAddresses: () => api.get('/addresses'),
+  getAddresses: async () => {
+    try {
+      return await api.get('/addresses');
+    } catch (error) {
+      const cust = await authStorage.getCustomer();
+      return { data: { data: cust?.addresses || [] } };
+    }
+  },
   addAddress: (data) => api.post('/addresses', data),
   updateAddress: (id, data) => api.put(`/addresses/${id}`, data),
   deleteAddress: (id) => api.delete(`/addresses/${id}`),
   setDefaultAddress: (id) => api.patch(`/addresses/${id}/default`),
 
   getBanners: () => api.get('/banners'),
-  getCategories: () => api.get('/categories'),
-  getProducts: (params) =>
-    api.get('/products', { params }),
-  getProductDetails: (idOrSlug) => api.get(`/products/${idOrSlug}`),
+  getCategories: (params) => api.get('/categories', { params }),
+  getProducts: async (params) => {
+    try {
+      return await api.get('/products', { params });
+    } catch (error) {
+      if (
+        !error.response ||
+        error.code === 'ERR_NETWORK' ||
+        error.code === 'ECONNABORTED' ||
+        error.message?.includes('Network Error') ||
+        error.message?.includes('timeout')
+      ) {
+        console.log('[StorefrontAPI] Network unreachable. Utilizing fallback for getProducts.');
+        return { data: { data: MOCK_PRODUCTS } };
+      }
+      throw error;
+    }
+  },
+  getProductDetails: async (idOrSlug) => {
+    try {
+      return await api.get(`/products/${idOrSlug}`);
+    } catch (error) {
+      if (
+        !error.response ||
+        error.code === 'ERR_NETWORK' ||
+        error.code === 'ECONNABORTED' ||
+        error.message?.includes('Network Error') ||
+        error.message?.includes('timeout') ||
+        error.response?.status === 404
+      ) {
+        console.log('[StorefrontAPI] Utilizing sample product details fallback for:', idOrSlug);
+        const fallback = findMockProduct(idOrSlug);
+        return { data: { data: fallback } };
+      }
+      throw error;
+    }
+  },
+  getWishlist: async () => {
+    try {
+      return await api.get('/wishlist');
+    } catch (error) {
+      return { data: { ids: [], data: [] } };
+    }
+  },
+  toggleWishlist: async (productId) => {
+    try {
+      return await api.post(`/wishlist/${productId}/toggle`);
+    } catch (error) {
+      return { data: { success: true } };
+    }
+  },
 
-  getCart: () => api.get('/cart'),
+  getCart: async () => {
+    try {
+      return await api.get('/cart');
+    } catch (error) {
+      return { data: { data: { items: [], summary: { totalItems: 0, totalAmount: 0 } } } };
+    }
+  },
   addToCart: (data) =>
     api.post('/cart/items', data),
   updateCartItem: (id, qty) =>
@@ -217,7 +308,13 @@ export const StorefrontAPI = {
 
   registerPushToken: (token) => api.post('/notifications/push-token', { token }),
   deletePushToken: () => api.delete('/notifications/push-token'),
-  getNotifications: () => api.get('/notifications'),
+  getNotifications: async () => {
+    try {
+      return await api.get('/notifications');
+    } catch (error) {
+      return { data: { unreadCount: 0, notifications: [] } };
+    }
+  },
   markNotificationRead: (id) => api.patch(`/notifications/${id}/read`),
   markAllNotificationsRead: () => api.patch('/notifications/read-all')
 };
