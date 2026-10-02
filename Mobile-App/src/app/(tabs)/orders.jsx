@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,10 @@ import {
   ActivityIndicator,
   Image,
   TextInput,
-  Modal
+  Modal,
+  Animated,
+  ScrollView,
+  Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -31,18 +34,25 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { EmptyState } from '../../components/EmptyState';
 import { haptics } from '../../services/haptics';
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const FILTER_TABS = ['All', 'Delivered', 'Processing', 'Cancelled'];
 
 export default function OrdersScreen() {
   const { token } = useAuth();
   const { refreshCart } = useCart();
+  const { onScrollHandler } = useTabBarVisibility();
 
   const [activeFilter, setActiveFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchInput, setShowSearchInput] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [reorderingId, setReorderingId] = useState(null);
   const [reorderSuccessModal, setReorderSuccessModal] = useState(false);
+
+  const searchAnim = useRef(new Animated.Value(0)).current;
+  const searchInputRef = useRef(null);
 
   const { data: fetchedOrders, isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['customer-orders', token],
@@ -86,6 +96,31 @@ export default function OrdersScreen() {
     });
   }, [orders, activeFilter, searchQuery]);
 
+  const openSearch = () => {
+    haptics.selection();
+    setIsSearchOpen(true);
+    Animated.spring(searchAnim, {
+      toValue: 1,
+      friction: 8,
+      tension: 65,
+      useNativeDriver: false
+    }).start(() => {
+      searchInputRef.current?.focus();
+    });
+  };
+
+  const closeSearch = () => {
+    haptics.selection();
+    setSearchQuery('');
+    Animated.timing(searchAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: false
+    }).start(() => {
+      setIsSearchOpen(false);
+    });
+  };
+
   const handleReorder = async (orderId) => {
     haptics.impactLight();
     setReorderingId(orderId);
@@ -112,12 +147,14 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>
-      {/* Header */}
       <View style={styles.headerBar}>
         <Pressable
           style={styles.backButton}
           onPress={() => {
-            if (router.canGoBack()) {
+            haptics.selection();
+            if (isSearchOpen) {
+              closeSearch();
+            } else if (router.canGoBack()) {
               router.back();
             } else {
               router.replace('/(tabs)');
@@ -126,50 +163,66 @@ export default function OrdersScreen() {
           accessibilityRole="button"
           accessibilityLabel="Back"
         >
-          <ArrowLeft size={22} color={colors.textPrimary} strokeWidth={2.4} />
+          <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
         </Pressable>
 
-        <View style={styles.headerTitleCol}>
-          <Text style={styles.headerTitle}>My Orders</Text>
-          <Text style={styles.headerSubtitle}>
-            Track, reorder and manage your orders
-          </Text>
-        </View>
+        {!isSearchOpen ? (
+          <>
+            <View style={styles.headerTitleCol}>
+              <Text style={styles.headerTitle}>My Orders</Text>
+            </View>
 
-        <Pressable
-          style={styles.searchIconButton}
-          onPress={() => {
-            haptics.selection();
-            setShowSearchInput((prev) => !prev);
-          }}
-          accessibilityRole="button"
-          accessibilityLabel="Search orders"
-        >
-          <Search size={20} color={colors.textPrimary} strokeWidth={2.2} />
-        </Pressable>
+            <Pressable
+              style={styles.searchIconButton}
+              onPress={openSearch}
+              accessibilityRole="button"
+              accessibilityLabel="Search orders"
+            >
+              <Search size={18} color={colors.textPrimary} strokeWidth={2.2} />
+            </Pressable>
+          </>
+        ) : (
+          <Animated.View
+            style={[
+              styles.animatedSearchWrap,
+              {
+                opacity: searchAnim,
+                transform: [
+                  {
+                    translateX: searchAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0]
+                    })
+                  }
+                ]
+              }
+            ]}
+          >
+            <View style={styles.searchInputCapsule}>
+              <Search size={16} color="#64748B" style={{ marginRight: 8 }} />
+              <TextInput
+                ref={searchInputRef}
+                style={styles.searchInput}
+                placeholder="Search by Order # or item name..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                returnKeyType="search"
+              />
+              {Boolean(searchQuery) && (
+                <Pressable onPress={() => setSearchQuery('')} style={styles.clearSearchBtn} hitSlop={8}>
+                  <X size={14} color="#64748B" />
+                </Pressable>
+              )}
+            </View>
+
+            <Pressable onPress={closeSearch} style={styles.cancelSearchBtn} hitSlop={8}>
+              <Text style={styles.cancelSearchText}>Cancel</Text>
+            </Pressable>
+          </Animated.View>
+        )}
       </View>
 
-      {/* Expandable Search Input */}
-      {showSearchInput && (
-        <View style={styles.searchBarWrap}>
-          <Search size={16} color={colors.textSecondary} style={{ marginRight: 8 }} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by Order # or item name..."
-            placeholderTextColor={colors.textMuted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            autoFocus={true}
-          />
-          {Boolean(searchQuery) && (
-            <Pressable onPress={() => setSearchQuery('')} style={styles.clearSearchBtn}>
-              <X size={14} color={colors.textSecondary} />
-            </Pressable>
-          )}
-        </View>
-      )}
-
-      {/* Guest Notice Banner */}
       {!token && (
         <View style={styles.guestBanner}>
           <View style={styles.guestBannerTextCol}>
@@ -189,45 +242,51 @@ export default function OrdersScreen() {
         </View>
       )}
 
-      {/* Filter Tabs */}
-      <View style={styles.tabsRow}>
-        {FILTER_TABS.map((tab) => {
-          const isSelected = activeFilter === tab;
-          return (
-            <Pressable
-              key={tab}
-              style={[
-                styles.filterTabPill,
-                isSelected ? styles.filterTabPillActive : styles.filterTabPillInactive
-              ]}
-              onPress={() => {
-                haptics.selection();
-                setActiveFilter(tab);
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={`${tab} orders`}
-            >
-              <Text style={[
-                styles.filterTabText,
-                isSelected ? styles.filterTabTextActive : styles.filterTabTextInactive
-              ]}>
-                {tab}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.tabsContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsScrollContent}
+        >
+          {FILTER_TABS.map((tab) => {
+            const isSelected = activeFilter === tab;
+            return (
+              <Pressable
+                key={tab}
+                style={[
+                  styles.filterTabPill,
+                  isSelected ? styles.filterTabPillActive : styles.filterTabPillInactive
+                ]}
+                onPress={() => {
+                  haptics.selection();
+                  setActiveFilter(tab);
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={`${tab} orders`}
+              >
+                <Text style={[
+                  styles.filterTabText,
+                  isSelected ? styles.filterTabTextActive : styles.filterTabTextInactive
+                ]}>
+                  {tab}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Content */}
       {isLoading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.black} />
+          <ActivityIndicator size="large" color={colors.primary} />
           <Text style={styles.loadingText}>Loading your orders...</Text>
         </View>
       ) : filteredOrders.length > 0 ? (
         <FlatList
           data={filteredOrders}
           keyExtractor={(item) => item._id}
+          onScroll={onScrollHandler}
+          scrollEventThrottle={16}
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
@@ -261,7 +320,6 @@ export default function OrdersScreen() {
         </View>
       )}
 
-      {/* Reorder Confirmation Modal */}
       <Modal
         visible={reorderSuccessModal}
         transparent={true}
@@ -349,7 +407,6 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
 
   return (
     <View style={styles.cardContainer}>
-      {/* Top Details Row */}
       <Pressable
         style={styles.cardTopRow}
         onPress={openOrderDetails}
@@ -365,8 +422,8 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
         </View>
 
         <View style={styles.cardInfoCol}>
-          <Text style={styles.cardOrderNumber}>Order #{order.orderNumber}</Text>
-          <Text style={styles.cardOrderDate}>{formatDate(order.createdAt)}</Text>
+          <Text style={styles.cardOrderNumber} numberOfLines={1}>Order #{order.orderNumber}</Text>
+          <Text style={styles.cardOrderDate} numberOfLines={1}>{formatDate(order.createdAt)}</Text>
           <Text style={styles.cardOrderAmount}>₹{order.amount?.toFixed(2)}</Text>
         </View>
 
@@ -375,7 +432,6 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
         </View>
       </Pressable>
 
-      {/* Horizontal Progress Timeline */}
       <Pressable style={styles.timelineRow} onPress={openOrderDetails}>
         <TimelineStep
           label="Confirmed"
@@ -412,11 +468,9 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
           time={t4}
           state={isCancelled ? 'cancelled' : (isDelivered ? 'done' : 'upcoming')}
           themeColor={themeColor}
-          isLast={true}
         />
       </Pressable>
 
-      {/* Action Buttons */}
       <View style={styles.cardActionsRow}>
         {isDelivered && (
           <>
@@ -429,7 +483,7 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
               disabled={isReordering}
             >
               {isReordering ? (
-                <ActivityIndicator size="small" color={colors.black} />
+                <ActivityIndicator size="small" color={colors.textPrimary} />
               ) : (
                 <Text style={styles.secondaryActionText}>Reorder</Text>
               )}
@@ -451,22 +505,22 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
           <>
             <Pressable
               style={({ pressed }) => [
-                styles.primaryActionBtn,
-                { backgroundColor: pressed ? colors.primaryDark : colors.primary }
-              ]}
-              onPress={openOrderDetails}
-            >
-              <Text style={styles.primaryActionText}>Track Order</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
                 styles.secondaryActionBtn,
                 { backgroundColor: pressed ? colors.softBackground : colors.white }
               ]}
               onPress={openOrderDetails}
             >
-              <Text style={styles.secondaryActionText}>View Details</Text>
+              <Text style={styles.secondaryActionText}>Track Order</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.primaryActionBtn,
+                { backgroundColor: pressed ? colors.primaryDark : colors.primary }
+              ]}
+              onPress={openOrderDetails}
+            >
+              <Text style={styles.primaryActionText}>View Details</Text>
             </Pressable>
           </>
         )}
@@ -474,13 +528,13 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
         {isCancelled && (
           <Pressable
             style={({ pressed }) => [
-              styles.secondaryActionBtn,
+              styles.primaryActionBtn,
               styles.fullWidthBtn,
-              { backgroundColor: pressed ? colors.softBackground : colors.white }
+              { backgroundColor: pressed ? colors.primaryDark : colors.primary }
             ]}
             onPress={openOrderDetails}
           >
-            <Text style={styles.secondaryActionText}>View Details</Text>
+            <Text style={styles.primaryActionText}>View Details</Text>
           </Pressable>
         )}
       </View>
@@ -488,7 +542,7 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
   );
 }
 
-function TimelineStep({ label, time, state, themeColor, isLast }) {
+function TimelineStep({ label, time, state, themeColor }) {
   let circleBg = '#F3F4F6';
   let circleBorder = '#E5E7EB';
   let iconComponent = <Check size={10} color="#9CA3AF" strokeWidth={2.5} />;
@@ -525,7 +579,7 @@ function TimelineStep({ label, time, state, themeColor, isLast }) {
       <Text style={[styles.stepLabelText, state === 'done' && styles.stepLabelActive]} numberOfLines={1}>
         {label}
       </Text>
-      <Text style={styles.stepTimeText}>{time}</Text>
+      <Text style={styles.stepTimeText} numberOfLines={1}>{time}</Text>
     </View>
   );
 }
@@ -548,71 +602,127 @@ const styles = StyleSheet.create({
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
-    backgroundColor: colors.white
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight
   },
   backButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
+    backgroundColor: colors.softBackground,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginRight: 12
   },
   headerTitleCol: {
     flex: 1,
-    marginLeft: 6
+    justifyContent: 'center'
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: typography.family.bold,
     color: colors.textPrimary,
+    fontWeight: '800',
     letterSpacing: -0.3
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 1
   },
   searchIconButton: {
     width: 38,
     height: 38,
     borderRadius: 19,
+    backgroundColor: colors.softBackground,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center'
   },
-  searchBarWrap: {
+  animatedSearchWrap: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.softBackground,
+    gap: 8
+  },
+  searchInputCapsule: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: '#E2E8F0',
     paddingHorizontal: 12,
-    height: 42,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.xs
+    height: 40
   },
   searchInput: {
     flex: 1,
     fontSize: 13,
     fontFamily: typography.family.medium,
-    color: colors.textPrimary
+    color: '#0F172A',
+    paddingVertical: 0
   },
   clearSearchBtn: {
     padding: 4
   },
-  tabsRow: {
+  cancelSearchBtn: {
+    paddingHorizontal: 6,
+    paddingVertical: 6
+  },
+  cancelSearchText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0284C7'
+  },
+  guestBanner: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs,
+    alignItems: 'center',
+    backgroundColor: colors.softBackground,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+    paddingHorizontal: 14,
+    paddingVertical: spacing.sm
+  },
+  guestBannerTextCol: {
+    flex: 1,
+    marginRight: 12
+  },
+  guestBannerTitle: {
+    fontSize: 13,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary
+  },
+  guestBannerSubtitle: {
+    fontSize: 11,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  guestBannerBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8
+  },
+  guestBannerBtnText: {
+    fontSize: 12,
+    fontFamily: typography.family.bold,
+    color: '#FFFFFF'
+  },
+  tabsContainer: {
+    backgroundColor: colors.white,
+    paddingVertical: 6
+  },
+  tabsScrollContent: {
+    paddingHorizontal: 14,
     gap: 8
   },
   filterTabPill: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 7,
     borderRadius: 20,
     borderWidth: 1,
     justifyContent: 'center',
@@ -629,21 +739,21 @@ const styles = StyleSheet.create({
     borderColor: colors.borderLight
   },
   filterTabText: {
-    fontSize: 13,
+    fontSize: 12.5,
     fontFamily: typography.family.medium
   },
   filterTabTextActive: {
     fontFamily: typography.family.bold,
-    color: colors.black
+    color: '#FFFFFF'
   },
   filterTabTextInactive: {
     fontFamily: typography.family.medium,
     color: colors.textSecondary
   },
   listContent: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 14,
     paddingTop: spacing.xs,
-    paddingBottom: 40
+    paddingBottom: 110
   },
   cardContainer: {
     backgroundColor: colors.white,
@@ -658,46 +768,47 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   thumbWrap: {
-    width: 52,
-    height: 52,
+    width: 50,
+    height: 50,
     borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: colors.borderLight,
-    marginRight: 12
+    marginRight: 10
   },
   basketThumbnail: {
     width: '100%',
     height: '100%'
   },
   cardInfoCol: {
-    flex: 1
+    flex: 1,
+    marginRight: 8
   },
   cardOrderNumber: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
   cardOrderDate: {
-    fontSize: 12,
+    fontSize: 11.5,
     fontFamily: typography.family.regular,
     color: colors.textSecondary,
     marginTop: 2
   },
   cardOrderAmount: {
-    fontSize: 15,
+    fontSize: 14.5,
     fontFamily: typography.family.bold,
     color: colors.textPrimary,
     marginTop: 2
   },
   statusBadgePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4.5,
-    borderRadius: 12,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
+    borderRadius: 10,
     alignSelf: 'flex-start'
   },
   statusBadgeLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontFamily: typography.family.bold
   },
   badgeDelivered: {
@@ -722,73 +833,76 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    marginTop: 4,
+    paddingVertical: 12,
+    marginTop: 6,
     borderTopWidth: 1,
     borderTopColor: colors.borderSubtle
   },
   stepItemCol: {
+    flex: 1,
     alignItems: 'center',
-    width: 64
+    paddingHorizontal: 2
   },
   stepCircle: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 17,
+    height: 17,
+    borderRadius: 8.5,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4
   },
   activeDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: colors.black
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: '#FFFFFF'
   },
   stepLabelText: {
-    fontSize: 10,
+    fontSize: 9.5,
     fontFamily: typography.family.medium,
     color: colors.textMuted,
-    textAlign: 'center'
+    textAlign: 'center',
+    width: '100%'
   },
   stepLabelActive: {
     color: colors.textPrimary,
     fontFamily: typography.family.semibold
   },
   stepTimeText: {
-    fontSize: 9,
+    fontSize: 8.5,
     fontFamily: typography.family.regular,
     color: colors.textMuted,
-    marginTop: 1
+    marginTop: 1,
+    textAlign: 'center'
   },
   timelineLineBar: {
-    flex: 1,
+    flex: 0.8,
     height: 2,
-    marginBottom: 20
+    marginBottom: 18
   },
   cardActionsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
     marginTop: 4
   },
   primaryActionBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 14,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center'
   },
   primaryActionText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontFamily: typography.family.bold,
-    color: colors.black
+    color: '#FFFFFF'
   },
   secondaryActionBtn: {
     flex: 1,
-    height: 44,
-    borderRadius: 14,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -796,7 +910,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   secondaryActionText: {
-    fontSize: 14,
+    fontSize: 13.5,
     fontFamily: typography.family.bold,
     color: colors.textPrimary
   },
@@ -849,18 +963,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 24,
     padding: spacing.xl,
-    alignItems: 'center',
     width: '100%',
-    borderWidth: 1,
-    borderColor: colors.borderLight
+    maxWidth: 340,
+    alignItems: 'center'
   },
   reorderSuccessBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#DCFCE7',
-    borderWidth: 1.5,
-    borderColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: spacing.md
@@ -869,84 +980,42 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: typography.family.bold,
     color: colors.textPrimary,
-    marginBottom: 6
+    marginBottom: spacing.xs
   },
   reorderModalDesc: {
     fontSize: 13,
     fontFamily: typography.family.regular,
     color: colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
     marginBottom: spacing.lg
   },
   reorderModalActions: {
     width: '100%',
-    gap: 10
+    gap: spacing.sm
   },
   reorderPrimaryBtn: {
-    height: 48,
-    borderRadius: 14,
+    height: 46,
     backgroundColor: colors.primary,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center'
   },
   reorderPrimaryText: {
     fontSize: 15,
     fontFamily: typography.family.bold,
-    color: colors.black
+    color: '#FFFFFF'
   },
   reorderSecondaryBtn: {
-    height: 48,
+    height: 46,
+    backgroundColor: colors.softBackground,
     borderRadius: 14,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
     justifyContent: 'center',
     alignItems: 'center'
   },
   reorderSecondaryText: {
-    fontSize: 14,
-    fontFamily: typography.family.semibold,
-    color: colors.textPrimary
-  },
-  guestBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    borderRadius: 14,
-    marginHorizontal: spacing.lg,
-    marginTop: spacing.xs,
-    marginBottom: spacing.xs,
-    paddingHorizontal: 14,
-    paddingVertical: 10
-  },
-  guestBannerTextCol: {
-    flex: 1,
-    paddingRight: 10
-  },
-  guestBannerTitle: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: '#92400E'
-  },
-  guestBannerSubtitle: {
-    fontSize: 11,
-    fontFamily: typography.family.regular,
-    color: '#B45309',
-    marginTop: 2
-  },
-  guestBannerBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 12
-  },
-  guestBannerBtnText: {
-    fontSize: 12,
-    fontFamily: typography.family.bold,
-    color: colors.black
+    fontSize: 15,
+    fontFamily: typography.family.medium,
+    color: colors.textSecondary
   }
 });

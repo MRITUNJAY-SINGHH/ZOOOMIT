@@ -116,6 +116,10 @@ export default function RootLayout() {
                   }} 
                 />
                 <Stack.Screen 
+                  name="wishlist" 
+                  options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
                   name="addresses" 
                   options={{ 
                     headerShown: true, 

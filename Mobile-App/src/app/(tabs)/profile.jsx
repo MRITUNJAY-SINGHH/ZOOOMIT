@@ -311,10 +311,9 @@ export default function ProfileScreen() {
           (showLogoutModal || showDeleteModal) && styles.pageContentBlurred
         ]}
       >
-        {/* Top Yellow Underlay for seamless pull-down overscroll */}
+        
         <View style={styles.topYellowUnderlay} />
 
-      {/* Sticky Compact Header (appears when collapsed) */}
       <Animated.View
         style={[
           styles.compactHeaderBar,
@@ -358,7 +357,6 @@ export default function ProfileScreen() {
         </Pressable>
       </Animated.View>
 
-      {/* Parallax Collapsing Yellow Banner Header */}
       <Animated.View
         style={[
           styles.bannerHeaderWrap,
@@ -379,7 +377,7 @@ export default function ProfileScreen() {
             { paddingTop: insets.top + 8, paddingBottom: HEADER_OVERLAP + 12 }
           ]}
         >
-          {/* Top Bar with Settings */}
+          
           <Animated.View style={[styles.headerTopBar, settingsBtnAnimatedStyle]}>
             <View style={{ flex: 1 }} />
             <Pressable
@@ -395,7 +393,6 @@ export default function ProfileScreen() {
             </Pressable>
           </Animated.View>
 
-          {/* Large User Identity */}
           <Animated.View style={[styles.customerInfoOverlay, identityAnimatedStyle]}>
             <Text style={styles.greetingText}>Hello,</Text>
             <Text style={styles.customerName} numberOfLines={1}>
@@ -414,7 +411,6 @@ export default function ProfileScreen() {
         </View>
       </Animated.View>
 
-      {/* Main Content Body with Smooth Curved Layer Transition */}
       <Animated.ScrollView
         style={styles.bodyScrollView}
         contentContainerStyle={[
@@ -426,7 +422,7 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.whiteCardContainer}>
-          {/* Quick Actions Row: My Orders, Addresses, Favorites, Payments */}
+          
           <View style={styles.quickActionsGrid}>
             <QuickActionButton
               icon={<ShoppingBag size={22} color={colors.black} strokeWidth={2.2} />}
@@ -446,10 +442,10 @@ export default function ProfileScreen() {
             />
             <QuickActionButton
               icon={<Heart size={22} color={colors.black} strokeWidth={2.2} />}
-              label="Favorites"
+              label="Wishlist"
               onPress={() => {
                 haptics.selection();
-                setShowFavoritesModal(true);
+                router.push('/wishlist');
               }}
             />
             <QuickActionButton
@@ -462,7 +458,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* Kuiklo Plus Highlight Card */}
           <Pressable
             style={({ pressed }) => [
               styles.highlightCard,
@@ -487,7 +482,6 @@ export default function ProfileScreen() {
             <ChevronRight size={18} color={colors.textSecondary} strokeWidth={2.2} />
           </Pressable>
 
-          {/* Section 1: Main Account Actions */}
           <View style={styles.menuGroupCard}>
             <MenuItemRow
               icon={<User size={20} color={colors.black} strokeWidth={2.2} />}
@@ -527,7 +521,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* Section 2: Feedback & Ratings */}
           <View style={styles.menuGroupCard}>
             <MenuItemRow
               icon={<MessageSquare size={20} color={colors.black} strokeWidth={2.2} />}
@@ -560,7 +553,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* Log Out Button */}
           <Pressable
             style={({ pressed }) => [
               styles.logoutPillButton,
@@ -577,7 +569,6 @@ export default function ProfileScreen() {
             <Text style={styles.logoutPillText}>Log Out</Text>
           </Pressable>
 
-          {/* Discrete Account Deletion Notice */}
           <Pressable
             style={styles.deleteAccountRow}
             onPress={() => {
@@ -590,7 +581,6 @@ export default function ProfileScreen() {
             <Text style={styles.deleteAccountText}>Delete Account</Text>
           </Pressable>
 
-          {/* App Version Footer */}
           <View style={styles.footerBrandRow}>
             <Text style={styles.footerVersionText}>
               Kuiklo Grocery • Version {appVersion}
@@ -600,14 +590,19 @@ export default function ProfileScreen() {
       </Animated.ScrollView>
       </BlurTargetView>
 
-      {/* --- MODAL 1: Edit Profile (Personal Information) --- */}
       <Modal
         visible={showEditProfileModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowEditProfileModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowEditProfileModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -696,14 +691,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 2: Kuiklo Plus Benefits --- */}
       <Modal
         visible={showKuikloPlusModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowKuikloPlusModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowKuikloPlusModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -769,14 +769,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 3: Help & Support --- */}
       <Modal
         visible={showHelpModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowHelpModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowHelpModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -841,14 +846,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 4: About Kuiklo --- */}
       <Modal
         visible={showAboutModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowAboutModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowAboutModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -908,14 +918,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 5: Payments Overview --- */}
       <Modal
         visible={showPaymentsModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowPaymentsModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowPaymentsModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -960,14 +975,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 6: Favorites / Saved Items --- */}
       <Modal
         visible={showFavoritesModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowFavoritesModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowFavoritesModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -1004,14 +1024,19 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- MODAL 7: Give Feedback --- */}
       <Modal
         visible={showFeedbackModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
+        statusBarTranslucent={true}
         onRequestClose={() => setShowFeedbackModal(false)}
       >
         <View style={styles.modalOverlay}>
+          <BlurView
+            intensity={Platform.OS === 'ios' ? 70 : 50}
+            tint="dark"
+            style={StyleSheet.absoluteFillObject}
+          />
           <Pressable style={styles.modalBackdrop} onPress={() => setShowFeedbackModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
@@ -1096,21 +1121,24 @@ export default function ProfileScreen() {
         </View>
       </Modal>
 
-      {/* --- IN-SCREEN MODAL 8: Logout Confirmation --- */}
-      {showLogoutModal && (
-        <View style={styles.inScreenModalOverlay}>
+      <Modal
+        visible={showLogoutModal}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => setShowLogoutModal(false)}
+      >
+        <View style={styles.centeredDeleteOverlay}>
           <BlurView
             intensity={Platform.OS === 'ios' ? 70 : 50}
             tint="dark"
             style={StyleSheet.absoluteFillObject}
-            blurMethod="dimezisBlurView"
-            blurTarget={pageContentRef}
           />
           <Pressable
             style={styles.modalBackdropBlurOverlay}
             onPress={() => setShowLogoutModal(false)}
           />
-          <View style={styles.logoutCard}>
+          <View style={styles.centeredDeleteCard}>
             <View style={styles.alertIconCircle}>
               <LogOut size={26} color={colors.error} strokeWidth={2.4} />
             </View>
@@ -1143,23 +1171,26 @@ export default function ProfileScreen() {
             </View>
           </View>
         </View>
-      )}
+      </Modal>
 
-      {/* --- IN-SCREEN MODAL 9: Delete Account Policy --- */}
-      {showDeleteModal && (
-        <View style={styles.inScreenModalOverlay}>
+      <Modal
+        visible={showDeleteModal}
+        transparent={true}
+        animationType="fade"
+        statusBarTranslucent={true}
+        onRequestClose={() => setShowDeleteModal(false)}
+      >
+        <View style={styles.centeredDeleteOverlay}>
           <BlurView
             intensity={Platform.OS === 'ios' ? 70 : 50}
             tint="dark"
             style={StyleSheet.absoluteFillObject}
-            blurMethod="dimezisBlurView"
-            blurTarget={pageContentRef}
           />
           <Pressable
             style={styles.modalBackdropBlurOverlay}
             onPress={() => setShowDeleteModal(false)}
           />
-          <View style={styles.logoutCard}>
+          <View style={styles.centeredDeleteCard}>
             <View style={[styles.alertIconCircle, { backgroundColor: '#FEE2E2' }]}>
               <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
             </View>
@@ -1181,7 +1212,7 @@ export default function ProfileScreen() {
             </Pressable>
           </View>
         </View>
-      )}
+      </Modal>
     </View>
   );
 }
@@ -1609,20 +1640,24 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
-    justifyContent: 'flex-end'
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.xl
   },
   modalBackdrop: {
     ...StyleSheet.absoluteFillObject
   },
   modalContentCard: {
+    width: '100%',
+    maxWidth: 340,
     backgroundColor: colors.white,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderRadius: 24,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.lg,
-    paddingBottom: Platform.OS === 'ios' ? 40 : spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.border
+    borderColor: colors.borderLight
   },
   modalHeaderRow: {
     flexDirection: 'row',
@@ -1944,6 +1979,24 @@ const styles = StyleSheet.create({
         opacity: 0.8
       }
     })
+  },
+  centeredDeleteOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+  },
+  centeredDeleteCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.xl,
+    borderWidth: 1,
+    borderColor: colors.borderLight
   },
   inScreenModalOverlay: {
     ...StyleSheet.absoluteFillObject,

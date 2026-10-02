@@ -1,104 +1,250 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
+  TouchableOpacity,
   Pressable,
   ScrollView,
-  Image,
   Dimensions,
-  ActivityIndicator,
-  Modal
+  Modal,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import {
+  ChevronLeft,
   Search,
   X,
-  ArrowLeft,
+  Clock,
+  ChevronRight,
   SlidersHorizontal,
+  ChevronDown,
   ArrowUpDown,
-  TrendingUp,
+  Heart,
   Plus,
   Minus,
   Check,
-  ChevronRight,
-  Clock
+  Star,
+  ShoppingBag
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '../../constants/theme';
+import { typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
 import { searchService } from '../../services/searchService';
 import { useCart } from '../../context/CartContext';
+import { useWishlist } from '../../context/WishlistContext';
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import { haptics } from '../../services/haptics';
+import { MOCK_PRODUCTS } from '../../services/mockProducts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const POPULAR_CATEGORY_CARDS = [
+const FONTS = {
+  heavy: typography?.family?.heavy || 'Gilroy-Heavy',
+  bold: typography?.family?.bold || 'Gilroy-Bold',
+  medium: typography?.family?.medium || 'Gilroy-Medium',
+  regular: typography?.family?.regular || 'Gilroy-Regular'
+};
+
+const DEFAULT_RECENT_SEARCHES = ['Milk', 'Eggs', 'Bread', 'Chocolates', 'Detergent', 'Apples'];
+
+const POPULAR_CATEGORIES = [
   {
-    id: 'fruits_veg',
-    name: 'Fruits & Vegetables',
-    query: 'Fruits & Vegetables',
-    image: require('../../../assets/images/categories/fruits_veggies.jpg'),
-    bgColor: '#FFFBF0'
+    id: 'milk_dairy',
+    name: 'Milk & Dairy',
+    query: 'Milk',
+    image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400'
   },
   {
-    id: 'dairy_milk',
-    name: 'Dairy & Milk',
-    query: 'Dairy & Milk',
-    image: require('../../../assets/images/categories/dairy_milk.jpg'),
-    bgColor: '#F0F9FF'
+    id: 'fruits',
+    name: 'Fruits',
+    query: 'Fruits',
+    image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400'
   },
   {
-    id: 'snacks_bev',
-    name: 'Snacks & Beverages',
-    query: 'Snacks & Beverages',
-    image: require('../../../assets/images/categories/snacks_beverages.jpg'),
-    bgColor: '#FFF7ED'
+    id: 'vegetables',
+    name: 'Vegetables',
+    query: 'Vegetables',
+    image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400'
+  },
+  {
+    id: 'chocolates',
+    name: 'Chocolates',
+    query: 'Chocolates',
+    image: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=400'
+  },
+  {
+    id: 'biscuits',
+    name: 'Biscuits',
+    query: 'Biscuits',
+    image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=400'
+  },
+  {
+    id: 'chips_snacks',
+    name: 'Chips & Snacks',
+    query: 'Chips',
+    image: 'https://images.unsplash.com/photo-1566478989037-eec170784d0b?w=400'
+  },
+  {
+    id: 'cold_drinks',
+    name: 'Cold Drinks',
+    query: 'Cold Drinks',
+    image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=400'
+  },
+  {
+    id: 'ice_creams',
+    name: 'Ice Creams',
+    query: 'Ice Cream',
+    image: 'https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=400'
   },
   {
     id: 'atta_rice_dal',
     name: 'Atta, Rice & Dal',
-    query: 'Atta, Rice & Dal',
-    image: require('../../../assets/images/categories/atta_rice_dal.jpg'),
-    bgColor: '#FAF5EF'
-  },
-  {
-    id: 'masala_spices',
-    name: 'Masala & Spices',
-    query: 'Masala & Spices',
-    image: require('../../../assets/images/categories/masala_spices.jpg'),
-    bgColor: '#FEF2F2'
-  },
-  {
-    id: 'personal_care',
-    name: 'Personal Care',
-    query: 'Personal Care',
-    image: require('../../../assets/images/categories/personal_care.jpg'),
-    bgColor: '#F0FDF4'
+    query: 'Atta',
+    image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400'
   }
 ];
 
-const TRENDING_SEARCH_PILLS = [
-  'Milk',
-  'Banana',
-  'Tomato',
-  'Eggs',
-  'Potato',
-  'Onion',
-  'Maggi',
-  'Biscuits'
+const EXTENDED_CATALOG = [
+  {
+    _id: 'choc_1',
+    name: 'Cadbury Dairy Milk Chocolate Bar',
+    brand: 'Cadbury',
+    unit: '60 g',
+    sellingPrice: 45,
+    mrp: 50,
+    rating: 4.6,
+    reviewsCount: '12k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=350',
+    stock: 50,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_2',
+    name: 'Ferrero Rocher Chocolate Box',
+    brand: 'Ferrero Rocher',
+    unit: '200 g',
+    sellingPrice: 599,
+    mrp: 649,
+    rating: 4.7,
+    reviewsCount: '8k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=350',
+    stock: 25,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_3',
+    name: 'KitKat Chocolate Wafer',
+    brand: 'Nestle',
+    unit: '50 g',
+    sellingPrice: 35,
+    mrp: 40,
+    rating: 4.5,
+    reviewsCount: '10k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1575330901080-f05f01815732?w=350',
+    stock: 80,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_4',
+    name: 'Cadbury 5 Star Chocolate Bar',
+    brand: 'Cadbury',
+    unit: '45 g',
+    sellingPrice: 30,
+    mrp: 35,
+    rating: 4.4,
+    reviewsCount: '6k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=350',
+    stock: 65,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_5',
+    name: 'Amul Dark Chocolate 55%',
+    brand: 'Amul',
+    unit: '150 g',
+    sellingPrice: 110,
+    mrp: 125,
+    rating: 4.6,
+    reviewsCount: '4k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=350',
+    stock: 30,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_6',
+    name: "Hershey's Kisses Milk Chocolate",
+    brand: "Hershey's",
+    unit: '100 g',
+    sellingPrice: 140,
+    mrp: 160,
+    rating: 4.7,
+    reviewsCount: '5k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=350',
+    stock: 40,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_7',
+    name: 'Lindt Excellence 70% Dark Chocolate',
+    brand: 'Lindt',
+    unit: '100 g',
+    sellingPrice: 320,
+    mrp: 350,
+    rating: 4.8,
+    reviewsCount: '3k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=350',
+    stock: 15,
+    category: { name: 'Chocolates' }
+  },
+  {
+    _id: 'choc_8',
+    name: 'Snickers Peanut Chocolate Bar',
+    brand: 'Mars',
+    unit: '50 g',
+    sellingPrice: 48,
+    mrp: 55,
+    rating: 4.5,
+    reviewsCount: '9k',
+    deliveryTime: '17 MINS',
+    featuredImage: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=350',
+    stock: 55,
+    category: { name: 'Chocolates' }
+  }
 ];
 
-const POPULAR_SEARCH_FALLBACKS = [
-  'Milk',
-  'Rice',
-  'Atta',
-  'Oil',
-  'Biscuits',
-  'Vegetables'
+const SEARCH_TABS = ['All', 'Products', 'Categories', 'Brands'];
+
+const PRICE_FILTER_OPTIONS = [
+  'Under ₹50',
+  '₹50 - ₹100',
+  '₹100 - ₹200',
+  '₹200 - ₹500',
+  'Above ₹500'
 ];
+
+const BRAND_FILTER_OPTIONS = [
+  'Cadbury',
+  'Nestle',
+  'Ferrero Rocher',
+  'Mars',
+  "Hershey's",
+  'Lindt',
+  'Amul',
+  'Others'
+];
+
+const RATING_FILTER_OPTIONS = ['4★ & above', '3★ & above', '2★ & above'];
 
 const SORT_OPTIONS = [
   { id: 'default', label: 'Relevance' },
@@ -107,692 +253,866 @@ const SORT_OPTIONS = [
   { id: 'price_desc', label: 'Price: High to Low' }
 ];
 
-function ScalePressable({ children, onPress, style, disabled, ...props }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        style,
-        !disabled && pressed && { transform: [{ scale: 0.96 }] }
-      ]}
-      {...props}
-    >
-      {children}
-    </Pressable>
-  );
-}
-
 export default function SearchScreen() {
+  const { onScrollHandler } = useTabBarVisibility();
   const { cart, addItem, updateItem, getItemQuantity } = useCart();
+  const { isSaved, toggleSave } = useWishlist();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
+  const [activeQuery, setActiveQuery] = useState('');
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [activeTab, setActiveTab] = useState('All');
-  const [sortBy, setSortBy] = useState('default');
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [recentSearches, setRecentSearches] = useState([]);
-  const [suggestions, setSuggestions] = useState([]);
+
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [sortModalVisible, setSortModalVisible] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+
+  const [selectedPriceRange, setSelectedPriceRange] = useState(null);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedRating, setSelectedRating] = useState(null);
+  const [inStockOnly, setInStockOnly] = useState(true);
 
   const inputRef = useRef(null);
 
   useEffect(() => {
-    searchService.getRecentSearches().then(setRecentSearches);
+    let isMounted = true;
+    searchService.getRecentSearches().then((saved) => {
+      if (isMounted) {
+        if (Array.isArray(saved) && saved.length > 0) {
+          setRecentSearches(saved);
+        } else {
+          setRecentSearches(DEFAULT_RECENT_SEARCHES);
+        }
+      }
+    }).catch(() => {
+      if (isMounted) setRecentSearches(DEFAULT_RECENT_SEARCHES);
+    });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  useEffect(() => {
-    const trimmed = searchQuery.trim();
-    if (trimmed.length >= 2) {
-      setSuggestions(searchService.getSuggestions(trimmed));
-    } else {
-      setSuggestions([]);
-    }
-
-    const timer = setTimeout(() => {
-      setDebouncedQuery(trimmed);
-      if (trimmed) {
-        searchService.addRecentSearch(trimmed).then(setRecentSearches);
+  const { data: apiProducts = [] } = useQuery({
+    queryKey: ['storefront-products-search'],
+    queryFn: async () => {
+      try {
+        const res = await StorefrontAPI.getProducts({ limit: 50 });
+        return res.data?.data || [];
+      } catch {
+        return [];
       }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  const { data: searchData, isLoading: isSearchLoading } = useQuery({
-    queryKey: ['smart-search', debouncedQuery, sortBy, selectedCategoryFilter],
-    queryFn: () =>
-      searchService.executeSmartSearch({
-        query: debouncedQuery,
-        sort: sortBy,
-        category: selectedCategoryFilter
-      }),
-    enabled: Boolean(debouncedQuery)
-  });
-
-  const { data: landingProducts = [] } = useQuery({
-    queryKey: ['landing-featured-products'],
-    queryFn: async () => {
-      const res = await StorefrontAPI.getProducts({ limit: 8, isFeatured: true });
-      return res.data?.data || [];
-    },
-    enabled: !debouncedQuery
-  });
-
-  const { data: allCategories = [] } = useQuery({
-    queryKey: ['all-categories-filter'],
-    queryFn: async () => {
-      const res = await StorefrontAPI.getCategories();
-      return res.data?.data || [];
     }
   });
 
-  const handleClear = () => {
+  const combinedCatalog = useMemo(() => {
+    const map = new Map();
+    EXTENDED_CATALOG.forEach((p) => map.set(p._id, p));
+    MOCK_PRODUCTS.forEach((p) => {
+      if (!map.has(p._id)) {
+        map.set(p._id, {
+          ...p,
+          rating: p.rating || 4.5,
+          reviewsCount: '8k',
+          deliveryTime: p.deliveryTime || '17 MINS'
+        });
+      }
+    });
+    apiProducts.forEach((p) => {
+      if (!map.has(p._id)) {
+        map.set(p._id, {
+          ...p,
+          rating: p.rating || 4.5,
+          reviewsCount: '5k',
+          deliveryTime: p.deliveryTime || '17 MINS'
+        });
+      }
+    });
+    return Array.from(map.values());
+  }, [apiProducts]);
+
+  const suggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+
+    const baseList = [
+      q.charAt(0).toUpperCase() + q.slice(1),
+      `${q.charAt(0).toUpperCase() + q.slice(1)} box`,
+      `${q.charAt(0).toUpperCase() + q.slice(1)} gift pack`,
+      `Cadbury ${q}`,
+      'Dairy milk',
+      `${q.charAt(0).toUpperCase() + q.slice(1)} biscuits`,
+      `Dark ${q}`,
+      `${q.charAt(0).toUpperCase() + q.slice(1)} ice cream`,
+      'Ferrero rocher'
+    ];
+
+    const catalogMatches = combinedCatalog
+      .filter((p) => (p.name || '').toLowerCase().includes(q))
+      .map((p) => p.name);
+
+    const merged = Array.from(new Set([...baseList, ...catalogMatches])).slice(0, 9);
+    return merged;
+  }, [searchQuery, combinedCatalog]);
+
+  const searchResults = useMemo(() => {
+    const q = (activeQuery || searchQuery).trim().toLowerCase();
+    if (!q) return [];
+
+    let list = combinedCatalog.filter((item) => {
+      const nameMatch = (item.name || '').toLowerCase().includes(q);
+      const catMatch = (item.category?.name || '').toLowerCase().includes(q);
+      const brandMatch = (item.brand || '').toLowerCase().includes(q);
+      return nameMatch || catMatch || brandMatch;
+    });
+
+    if (activeTab === 'Products') {
+      list = list.filter((item) => !item.isCategoryItem);
+    } else if (activeTab === 'Categories') {
+      list = list.filter((item) => item.category?.name);
+    } else if (activeTab === 'Brands') {
+      list = list.filter((item) => item.brand);
+    }
+
+    if (inStockOnly) {
+      list = list.filter((item) => (item.stock || 1) > 0);
+    }
+
+    if (selectedPriceRange) {
+      list = list.filter((item) => {
+        const p = item.sellingPrice || item.price || 0;
+        if (selectedPriceRange === 'Under ₹50') return p < 50;
+        if (selectedPriceRange === '₹50 - ₹100') return p >= 50 && p <= 100;
+        if (selectedPriceRange === '₹100 - ₹200') return p >= 100 && p <= 200;
+        if (selectedPriceRange === '₹200 - ₹500') return p >= 200 && p <= 500;
+        if (selectedPriceRange === 'Above ₹500') return p > 500;
+        return true;
+      });
+    }
+
+    if (selectedBrand) {
+      if (selectedBrand === 'Others') {
+        const standard = ['Cadbury', 'Nestle', 'Ferrero Rocher', 'Mars', "Hershey's", 'Lindt', 'Amul'];
+        list = list.filter((item) => !standard.includes(item.brand));
+      } else {
+        list = list.filter((item) => item.brand === selectedBrand);
+      }
+    }
+
+    if (selectedRating) {
+      const minRating = parseFloat(selectedRating);
+      if (!isNaN(minRating)) {
+        list = list.filter((item) => (item.rating || 0) >= minRating);
+      }
+    }
+
+    if (sortBy === 'price_asc') {
+      list.sort((a, b) => (a.sellingPrice || a.price || 0) - (b.sellingPrice || b.price || 0));
+    } else if (sortBy === 'price_desc') {
+      list.sort((a, b) => (b.sellingPrice || b.price || 0) - (a.sellingPrice || a.price || 0));
+    } else if (sortBy === 'popular') {
+      list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
+
+    return list;
+  }, [activeQuery, searchQuery, combinedCatalog, activeTab, inStockOnly, selectedPriceRange, selectedBrand, selectedRating, sortBy]);
+
+  const addSearchToRecent = (term) => {
+    if (!term || !term.trim()) return;
+    const clean = term.trim();
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((t) => t.toLowerCase() !== clean.toLowerCase());
+      const updated = [clean, ...filtered].slice(0, 10);
+      searchService.addRecentSearch(clean).catch(() => {});
+      return updated;
+    });
+  };
+
+  const handleSelectSuggestion = (term) => {
+    const q = term.trim();
+    if (q) {
+      haptics.selection();
+      setSearchQuery(q);
+      setActiveQuery(q);
+      setIsInputFocused(false);
+      inputRef.current?.blur();
+      addSearchToRecent(q);
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    const q = searchQuery.trim();
+    if (q) {
+      haptics.selection();
+      setActiveQuery(q);
+      setIsInputFocused(false);
+      inputRef.current?.blur();
+      addSearchToRecent(q);
+    }
+  };
+
+  const handleClearRecent = () => {
+    haptics.selection();
+    setRecentSearches([]);
+    searchService.clearRecentSearches().catch(() => {});
+  };
+
+  const handleClearQuery = () => {
     haptics.selection();
     setSearchQuery('');
-    setDebouncedQuery('');
-    setSuggestions([]);
+    setActiveQuery('');
     inputRef.current?.focus();
   };
 
-  const handleSelectQuery = (term) => {
-    haptics.impactLight();
-    setSearchQuery(term);
-    setDebouncedQuery(term);
-    setSuggestions([]);
-    inputRef.current?.blur();
+  const handleBackPress = () => {
+    haptics.selection();
+    if (activeQuery || searchQuery || isInputFocused) {
+      setSearchQuery('');
+      setActiveQuery('');
+      setIsInputFocused(false);
+      inputRef.current?.blur();
+    } else if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)');
+    }
   };
 
   const handleAddToCart = (product) => {
     haptics.impactLight();
     const minQty = product.minSaleQty || 1;
-    const unit = product.sellingUnit || product.baseUnit || 'PCS';
+    const unit = product.unit || product.sellingUnit || '1 pack';
     addItem(product._id, minQty, undefined, unit);
   };
 
-  const handleIncrement = (product) => {
+  const handleQtyChange = (product, newQty) => {
     haptics.selection();
     const cartItem = cart?.items?.find((i) => i.product?._id === product._id && !i.variant);
     if (cartItem) {
-      const step = product.qtyStep || 1;
-      updateItem(cartItem._id, Math.round((cartItem.qty + step) * 1000) / 1000);
+      updateItem(cartItem._id, newQty);
+    } else if (newQty > 0) {
+      handleAddToCart(product);
     }
   };
 
-  const handleDecrement = (product) => {
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (selectedPriceRange) count++;
+    if (selectedBrand) count++;
+    if (selectedRating) count++;
+    if (inStockOnly) count++;
+    return count;
+  }, [selectedPriceRange, selectedBrand, selectedRating, inStockOnly]);
+
+  const handleClearFilters = () => {
     haptics.selection();
-    const cartItem = cart?.items?.find((i) => i.product?._id === product._id && !i.variant);
-    if (cartItem) {
-      const step = product.qtyStep || 1;
-      const minQty = product.minSaleQty || 1;
-      const nextQty = Math.round((cartItem.qty - step) * 1000) / 1000;
-      updateItem(cartItem._id, nextQty < minQty ? 0 : nextQty);
-    }
+    setSelectedPriceRange(null);
+    setSelectedBrand(null);
+    setSelectedRating(null);
+    setInStockOnly(false);
   };
 
-  const isSearching = Boolean(debouncedQuery);
-  const products = searchData?.products || [];
-  const topResult = searchData?.topResult || null;
-  const matchingCategories = searchData?.categories || [];
-  const counts = searchData?.counts || { all: 0, products: 0, categories: 0 };
-  const didYouMean = searchData?.didYouMean || null;
+  const isResultsView = Boolean(activeQuery && !isInputFocused);
+  const isTypingView = Boolean(searchQuery.trim().length > 0 && isInputFocused);
 
   return (
-    <SafeAreaView style={styles.screenContainer} edges={['top']}>
-      {/* Top Header / Search Bar */}
-      <View style={styles.topHeaderArea}>
-        {isSearching ? (
-          <View style={styles.resultsHeaderRow}>
-            <Pressable
-              onPress={() => {
-                haptics.selection();
-                setSearchQuery('');
-                setDebouncedQuery('');
-              }}
-              style={styles.backBtn}
-              accessibilityRole="button"
-              accessibilityLabel="Back to search landing"
-            >
-              <ArrowLeft size={22} color={colors.textPrimary} strokeWidth={2.4} />
-            </Pressable>
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <View style={styles.headerBar}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBackPress}
+          hitSlop={8}
+          activeOpacity={0.7}
+        >
+          <ChevronLeft size={24} color="#0F172A" strokeWidth={2.4} />
+        </TouchableOpacity>
 
-            <View style={[styles.searchInputWrapper, isFocused && styles.searchInputFocused]}>
-              <Search size={18} color={colors.textMuted} strokeWidth={2.4} style={{ marginRight: 8 }} />
-              <TextInput
-                ref={inputRef}
-                style={styles.textInputStyle}
-                placeholder="Search products, brands or categories"
-                placeholderTextColor={colors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                returnKeyType="search"
-                autoCorrect={false}
-              />
-              {Boolean(searchQuery) && (
-                <Pressable onPress={handleClear} style={styles.clearIconBtn}>
-                  <X size={14} color={colors.textSecondary} strokeWidth={2.6} />
-                </Pressable>
-              )}
-            </View>
-          </View>
-        ) : (
-          <View style={styles.landingHeaderWrap}>
-            <Text style={styles.landingTitle}>Search</Text>
-            <Text style={styles.landingSubtitle}>Find your favorite products</Text>
+        <View style={styles.searchBarWrapper}>
+          <Search size={18} color="#64748B" style={{ marginRight: 8 }} />
+          <TextInput
+            ref={inputRef}
+            style={styles.searchInput}
+            placeholder="Search for 'Milk'"
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={(text) => {
+              setSearchQuery(text);
+              if (!isInputFocused) setIsInputFocused(true);
+            }}
+            onFocus={() => setIsInputFocused(true)}
+            onSubmitEditing={handleSearchSubmit}
+            returnKeyType="search"
+            autoCorrect={false}
+          />
 
-            <View style={[styles.searchInputWrapper, isFocused && styles.searchInputFocused, { marginTop: spacing.md }]}>
-              <Search size={19} color={colors.textMuted} strokeWidth={2.4} style={{ marginRight: 10 }} />
-              <TextInput
-                ref={inputRef}
-                style={styles.textInputStyle}
-                placeholder="Search for products, brands or categories"
-                placeholderTextColor={colors.textMuted}
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                returnKeyType="search"
-                autoCorrect={false}
-              />
-              {Boolean(searchQuery) && (
-                <Pressable onPress={handleClear} style={styles.clearIconBtn}>
-                  <X size={14} color={colors.textSecondary} strokeWidth={2.6} />
-                </Pressable>
-              )}
-            </View>
-          </View>
-        )}
+          {Boolean(searchQuery) && (
+            <TouchableOpacity onPress={handleClearQuery} hitSlop={6} style={styles.clearIconBtn}>
+              <View style={styles.clearIconCircle}>
+                <X size={12} color="#FFFFFF" strokeWidth={2.5} />
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
 
-        {/* Live Search Suggestions Dropdown */}
-        {Boolean(suggestions.length > 0 && isFocused) && (
-          <View style={styles.suggestionsContainer}>
-            {suggestions.map((sug, idx) => (
-              <Pressable
-                key={idx}
-                style={styles.suggestionRow}
-                onPress={() => handleSelectQuery(sug.split(' (')[0])}
-              >
-                <Search size={14} color={colors.textMuted} style={{ marginRight: 10 }} />
-                <Text style={styles.suggestionText}>{sug}</Text>
-                <ChevronRight size={14} color={colors.textMuted} />
-              </Pressable>
-            ))}
-          </View>
-        )}
       </View>
 
-      {/* Main Content Area */}
-      {isSearching ? (
-        <View style={styles.resultsMainContainer}>
-          {/* Results Scope Tabs: All (count), Products (count), Categories (count) */}
+      {isTypingView ? (
+        <ScrollView
+          style={styles.contentFlex}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {suggestions.map((item, idx) => (
+            <TouchableOpacity
+              key={idx.toString()}
+              style={styles.suggestionRow}
+              onPress={() => handleSelectSuggestion(item)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.suggestionLeft}>
+                <Search size={16} color="#64748B" style={{ marginRight: 12 }} />
+                <Text style={styles.suggestionText}>{item}</Text>
+              </View>
+              <ChevronRight size={16} color="#94A3B8" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : isResultsView ? (
+        <View style={styles.contentFlex}>
           <View style={styles.tabsRow}>
-            <ScalePressable
-              onPress={() => {
-                haptics.selection();
-                setActiveTab('All');
-              }}
-              style={[styles.scopeTabPill, activeTab === 'All' ? styles.scopeTabActive : styles.scopeTabInactive]}
-            >
-              <Text style={[styles.scopeTabText, activeTab === 'All' ? styles.scopeTextActive : styles.scopeTextInactive]}>
-                All ({counts.all})
-              </Text>
-            </ScalePressable>
+            {SEARCH_TABS.map((tab) => {
+              const isSelected = activeTab === tab;
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tabItem, isSelected && styles.tabItemActive]}
+                  onPress={() => {
+                    haptics.selection();
+                    setActiveTab(tab);
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.tabItemText, isSelected && styles.tabItemTextActive]}>
+                    {tab}
+                  </Text>
+                  {isSelected && <View style={styles.tabIndicator} />}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-            <ScalePressable
-              onPress={() => {
-                haptics.selection();
-                setActiveTab('Products');
-              }}
-              style={[styles.scopeTabPill, activeTab === 'Products' ? styles.scopeTabActive : styles.scopeTabInactive]}
+          <View style={styles.filterChipsBar}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterChipsScroll}
             >
-              <Text style={[styles.scopeTabText, activeTab === 'Products' ? styles.scopeTextActive : styles.scopeTextInactive]}>
-                Products ({counts.products})
-              </Text>
-            </ScalePressable>
+              <TouchableOpacity
+                style={[
+                  styles.filterActionButton,
+                  activeFiltersCount > 0 && styles.filterActionButtonActive
+                ]}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <SlidersHorizontal
+                  size={14}
+                  color={activeFiltersCount > 0 ? '#2563EB' : '#0F172A'}
+                  style={{ marginRight: 6 }}
+                />
+                <Text
+                  style={[
+                    styles.filterActionButtonText,
+                    activeFiltersCount > 0 && styles.filterActionButtonTextActive
+                  ]}
+                >
+                  Filters
+                </Text>
+              </TouchableOpacity>
 
-            <ScalePressable
+              <TouchableOpacity
+                style={[styles.filterChip, Boolean(selectedPriceRange) && styles.filterChipActive]}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    Boolean(selectedPriceRange) && styles.filterChipTextActive
+                  ]}
+                >
+                  {selectedPriceRange || 'Price'}
+                </Text>
+                <ChevronDown
+                  size={14}
+                  color={selectedPriceRange ? '#2563EB' : '#64748B'}
+                  style={{ marginLeft: 4 }}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterChip, Boolean(selectedBrand) && styles.filterChipActive]}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    Boolean(selectedBrand) && styles.filterChipTextActive
+                  ]}
+                >
+                  {selectedBrand || 'Brand'}
+                </Text>
+                <ChevronDown
+                  size={14}
+                  color={selectedBrand ? '#2563EB' : '#64748B'}
+                  style={{ marginLeft: 4 }}
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.filterChip}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.filterChipText}>FSSAI</Text>
+                <ChevronDown size={14} color="#64748B" style={{ marginLeft: 4 }} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.filterChip, Boolean(selectedRating) && styles.filterChipActive]}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(true);
+                }}
+                activeOpacity={0.8}
+              >
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    Boolean(selectedRating) && styles.filterChipTextActive
+                  ]}
+                >
+                  {selectedRating || 'Rating'}
+                </Text>
+                <ChevronDown
+                  size={14}
+                  color={selectedRating ? '#2563EB' : '#64748B'}
+                  style={{ marginLeft: 4 }}
+                />
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          <View style={styles.resultsInfoRow}>
+            <View>
+              <Text style={styles.resultsTitleText}>
+                Showing results for "{activeQuery}"
+              </Text>
+              <Text style={styles.resultsCountText}>
+                {searchResults.length} products
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.sortButton}
               onPress={() => {
                 haptics.selection();
-                setActiveTab('Categories');
+                setSortModalVisible(true);
               }}
-              style={[styles.scopeTabPill, activeTab === 'Categories' ? styles.scopeTabActive : styles.scopeTabInactive]}
+              activeOpacity={0.8}
             >
-              <Text style={[styles.scopeTabText, activeTab === 'Categories' ? styles.scopeTextActive : styles.scopeTextInactive]}>
-                Categories ({counts.categories})
-              </Text>
-            </ScalePressable>
+              <ArrowUpDown size={14} color="#0F172A" style={{ marginRight: 5 }} />
+              <Text style={styles.sortButtonText}>Sort</Text>
+            </TouchableOpacity>
           </View>
 
           <ScrollView
+            style={styles.contentFlex}
+            contentContainerStyle={styles.gridContentContainer}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.resultsScrollContent}
-            keyboardShouldPersistTaps="handled"
           >
-            {isSearchLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color={colors.black} />
-                <Text style={styles.loadingLabel}>Searching fresh products...</Text>
+            {searchResults.length === 0 ? (
+              <View style={styles.emptyStateWrap}>
+                <ShoppingBag size={48} color="#94A3B8" style={{ marginBottom: 12 }} />
+                <Text style={styles.emptyTitle}>No matching products</Text>
+                <Text style={styles.emptyDesc}>
+                  We couldn't find any products matching "{activeQuery}". Try adjusting your filters or search keywords.
+                </Text>
+                <TouchableOpacity
+                  style={styles.emptyResetBtn}
+                  onPress={handleClearFilters}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.emptyResetBtnText}>Reset Filters</Text>
+                </TouchableOpacity>
               </View>
-            ) : products.length > 0 || matchingCategories.length > 0 ? (
-              <>
-                {/* Top Result Card */}
-                {Boolean(topResult && (activeTab === 'All' || activeTab === 'Products')) && (
-                  <View style={styles.sectionWrap}>
-                    <Text style={styles.sectionHeading}>Top Result</Text>
-                    <View style={styles.topResultCard}>
-                      <View style={styles.topResultImgWrap}>
+            ) : (
+              <View style={styles.productsGrid}>
+                {searchResults.map((product) => {
+                  const isWish = isSaved(product._id);
+                  const price = product.sellingPrice || product.price || 45;
+                  const mrp = product.mrp || Math.round(price * 1.15);
+                  const discountPct = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
+                  const cartQty = getItemQuantity(product._id);
+
+                  return (
+                    <View key={product._id} style={styles.productGridCard}>
+                      <TouchableOpacity
+                        style={styles.wishlistIconBtn}
+                        onPress={() => {
+                          haptics.selection();
+                          toggleSave(product);
+                        }}
+                        hitSlop={6}
+                        activeOpacity={0.7}
+                      >
+                        <Heart
+                          size={16}
+                          color={isWish ? '#EF4444' : '#64748B'}
+                          fill={isWish ? '#EF4444' : 'transparent'}
+                          strokeWidth={2}
+                        />
+                      </TouchableOpacity>
+
+                      <View style={styles.productImgContainer}>
                         <Image
-                          source={{
-                            uri: topResult.featuredImage || 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400'
-                          }}
-                          style={styles.topResultImg}
-                          resizeMode="cover"
+                          source={{ uri: product.featuredImage }}
+                          style={styles.productImg}
+                          contentFit="contain"
+                          transition={200}
                         />
                       </View>
 
-                      <View style={styles.topResultInfoCol}>
-                        <Text style={styles.topResultName} numberOfLines={1}>{topResult.name}</Text>
-                        <Text style={styles.topResultUnit}>
-                          {topResult.sellingUnit || topResult.baseUnit || '1 unit'}
+                      <Text style={styles.productCardTitle} numberOfLines={2}>
+                        {product.name}
+                      </Text>
+
+                      <Text style={styles.productCardUnit}>
+                        {product.unit || '1 pack'}
+                      </Text>
+
+                      <View style={styles.ratingBadgeRow}>
+                        <Star size={11} color="#16A34A" fill="#16A34A" style={{ marginRight: 3 }} />
+                        <Text style={styles.ratingBadgeText}>
+                          {product.rating || '4.6'}
                         </Text>
-                        <Text style={styles.topResultPrice}>₹{topResult.sellingPrice?.toFixed(2)}</Text>
+                        <Text style={styles.ratingCountText}>
+                          ({product.reviewsCount || '10k'})
+                        </Text>
+                        <Text style={styles.ratingDivider}>|</Text>
+                        <Clock size={10} color="#64748B" style={{ marginRight: 3 }} />
+                        <Text style={styles.deliveryBadgeText}>
+                          {product.deliveryTime || '17 MINS'}
+                        </Text>
                       </View>
 
-                      <ProductActionButton
-                        product={topResult}
-                        quantity={getItemQuantity(topResult._id)}
-                        onAdd={() => handleAddToCart(topResult)}
-                        onIncrement={() => handleIncrement(topResult)}
-                        onDecrement={() => handleDecrement(topResult)}
-                      />
-                    </View>
-                  </View>
-                )}
-
-                {/* Categories Matching Tab or Section */}
-                {Boolean(matchingCategories.length > 0 && (activeTab === 'All' || activeTab === 'Categories')) && (
-                  <View style={styles.sectionWrap}>
-                    <Text style={styles.sectionHeading}>Categories</Text>
-                    <View style={styles.categoriesGridRow}>
-                      {matchingCategories.map((cat) => (
-                        <ScalePressable
-                          key={cat._id}
-                          style={styles.matchingCatCard}
-                          onPress={() => {
-                            haptics.selection();
-                            setSelectedCategoryFilter(cat._id);
-                          }}
-                        >
-                          <Text style={styles.matchingCatName}>{cat.name}</Text>
-                          <ChevronRight size={16} color={colors.textSecondary} />
-                        </ScalePressable>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {/* Products List Section */}
-                {(activeTab === 'All' || activeTab === 'Products') && (
-                  <View style={styles.sectionWrap}>
-                    <View style={styles.productsHeaderRow}>
-                      <Text style={styles.sectionHeading}>Products</Text>
-                      <View style={styles.filterActionsRow}>
-                        <ScalePressable
-                          onPress={() => setShowFilterModal(true)}
-                          style={styles.filterSortBtn}
-                        >
-                          <ArrowUpDown size={14} color={colors.textPrimary} strokeWidth={2.2} style={{ marginRight: 4 }} />
-                          <Text style={styles.filterSortBtnText}>Sort</Text>
-                        </ScalePressable>
-
-                        <ScalePressable
-                          onPress={() => setShowFilterModal(true)}
-                          style={[styles.filterSortBtn, Boolean(selectedCategoryFilter) && styles.filterSortBtnActive]}
-                        >
-                          <SlidersHorizontal size={14} color={colors.textPrimary} strokeWidth={2.2} style={{ marginRight: 4 }} />
-                          <Text style={styles.filterSortBtnText}>
-                            {selectedCategoryFilter ? 'Filtered' : 'Filter'}
-                          </Text>
-                        </ScalePressable>
-                      </View>
-                    </View>
-
-                    <View style={styles.productsListWrap}>
-                      {products.map((item) => (
-                        <View key={item._id} style={styles.productListItemRow}>
-                          <Pressable
-                            style={styles.productRowTouchable}
-                            onPress={() => router.push(`/product/${item._id}`)}
-                          >
-                            <View style={styles.productRowImgWrap}>
-                              <Image
-                                source={{
-                                  uri: item.featuredImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'
-                                }}
-                                style={styles.productRowImg}
-                                resizeMode="cover"
-                              />
-                            </View>
-
-                            <View style={styles.productRowDetailsCol}>
-                              <Text style={styles.productRowName} numberOfLines={1}>{item.name}</Text>
-                              <Text style={styles.productRowUnit}>
-                                {item.sellingUnit || item.baseUnit || '1 unit'}
-                              </Text>
-                              <Text style={styles.productRowPrice}>₹{item.sellingPrice?.toFixed(2)}</Text>
-                            </View>
-                          </Pressable>
-
-                          <ProductActionButton
-                            product={item}
-                            quantity={getItemQuantity(item._id)}
-                            onAdd={() => handleAddToCart(item)}
-                            onIncrement={() => handleIncrement(item)}
-                            onDecrement={() => handleDecrement(item)}
-                          />
+                      <View style={styles.productCardBottomRow}>
+                        <View style={styles.priceCol}>
+                          <View style={styles.priceRow}>
+                            <Text style={styles.sellingPriceText}>₹{price}</Text>
+                            {mrp > price && (
+                              <Text style={styles.mrpText}>₹{mrp}</Text>
+                            )}
+                          </View>
+                          {discountPct > 0 && (
+                            <Text style={styles.discountPctText}>{discountPct}% OFF</Text>
+                          )}
                         </View>
-                      ))}
+
+                        {cartQty > 0 ? (
+                          <View style={styles.cardStepper}>
+                            <TouchableOpacity
+                              style={styles.cardStepperBtn}
+                              onPress={() => handleQtyChange(product, cartQty - 1)}
+                              hitSlop={4}
+                            >
+                              <Minus size={12} color="#2563EB" strokeWidth={2.8} />
+                            </TouchableOpacity>
+                            <Text style={styles.cardStepperQty}>{cartQty}</Text>
+                            <TouchableOpacity
+                              style={styles.cardStepperBtn}
+                              onPress={() => handleQtyChange(product, cartQty + 1)}
+                              hitSlop={4}
+                            >
+                              <Plus size={12} color="#2563EB" strokeWidth={2.8} />
+                            </TouchableOpacity>
+                          </View>
+                        ) : (
+                          <TouchableOpacity
+                            style={styles.cardAddButton}
+                            onPress={() => handleAddToCart(product)}
+                            hitSlop={4}
+                            activeOpacity={0.8}
+                          >
+                            <Plus size={18} color="#2563EB" strokeWidth={2.6} />
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                )}
-              </>
-            ) : (
-              <View style={styles.emptyStateWrap}>
-                <Text style={styles.emptyTitle}>No products found</Text>
-                <Text style={styles.emptyDesc}>
-                  We couldn't find any results for "{debouncedQuery}".
-                </Text>
-
-                {Boolean(didYouMean) && (
-                  <View style={styles.didYouMeanBox}>
-                    <Text style={styles.didYouMeanLabel}>Did you mean:</Text>
-                    <ScalePressable
-                      style={styles.didYouMeanBtn}
-                      onPress={() => handleSelectQuery(didYouMean)}
-                    >
-                      <Text style={styles.didYouMeanText}>{didYouMean}</Text>
-                    </ScalePressable>
-                  </View>
-                )}
-
-                <View style={styles.emptyPopularBlock}>
-                  <Text style={styles.emptyPopularTitle}>Try Searching For</Text>
-                  <View style={styles.pillsWrap}>
-                    {POPULAR_SEARCH_FALLBACKS.map((term, idx) => (
-                      <ScalePressable
-                        key={idx}
-                        style={styles.trendingPill}
-                        onPress={() => handleSelectQuery(term)}
-                      >
-                        <Text style={styles.trendingPillText}>{term}</Text>
-                      </ScalePressable>
-                    ))}
-                  </View>
-                </View>
+                  );
+                })}
               </View>
             )}
           </ScrollView>
         </View>
       ) : (
-        /* Search Landing View */
         <ScrollView
-          showsVerticalScrollIndicator={false}
+          style={styles.contentFlex}
           contentContainerStyle={styles.landingScrollContent}
-          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Popular Categories Grid (2 rows x 3 columns) */}
-          <View style={styles.landingSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitleBold}>Popular Categories</Text>
-              <Pressable
-                onPress={() => router.push('/category/vegetables')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.viewAllText}>View All &gt;</Text>
-              </Pressable>
-            </View>
+          {recentSearches.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeaderRow}>
+                <Text style={styles.sectionTitle}>Recent Searches</Text>
+                <TouchableOpacity onPress={handleClearRecent} hitSlop={6}>
+                  <Text style={styles.sectionActionLink}>Clear All</Text>
+                </TouchableOpacity>
+              </View>
 
-            <View style={styles.categoryCardsGrid}>
-              {POPULAR_CATEGORY_CARDS.map((cat) => (
-                <ScalePressable
-                  key={cat.id}
-                  style={[styles.categoryCard, { backgroundColor: cat.bgColor }]}
-                  onPress={() => {
-                    if (cat.id === 'fruits_veg') {
-                      router.push('/category/vegetables');
-                    } else {
-                      handleSelectQuery(cat.query);
-                    }
-                  }}
-                >
-                  <View style={styles.categoryImgWrap}>
-                    <Image source={cat.image} style={styles.categoryCardImg} resizeMode="contain" />
-                  </View>
-                  <Text style={styles.categoryCardLabel} numberOfLines={2}>
-                    {cat.name}
-                  </Text>
-                </ScalePressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Trending Searches */}
-          <View style={styles.landingSection}>
-            <View style={styles.sectionHeaderRow}>
-              <View style={styles.rowAlign}>
-                <TrendingUp size={16} color="#D97706" strokeWidth={2.4} style={{ marginRight: 6 }} />
-                <Text style={styles.sectionTitleBold}>Trending Searches</Text>
+              <View style={styles.recentTagsWrap}>
+                {recentSearches.map((term, idx) => (
+                  <TouchableOpacity
+                    key={idx.toString()}
+                    style={styles.recentPill}
+                    onPress={() => handleSelectSuggestion(term)}
+                    activeOpacity={0.7}
+                  >
+                    <Clock size={13} color="#64748B" style={{ marginRight: 6 }} />
+                    <Text style={styles.recentPillText}>{term}</Text>
+                    {idx === 0 && (
+                      <ChevronRight size={13} color="#94A3B8" style={{ marginLeft: 4 }} />
+                    )}
+                  </TouchableOpacity>
+                ))}
               </View>
             </View>
+          )}
 
-            <View style={styles.pillsWrap}>
-              {TRENDING_SEARCH_PILLS.map((pill, idx) => (
-                <ScalePressable
-                  key={idx}
-                  style={styles.trendingPill}
-                  onPress={() => handleSelectQuery(pill)}
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Popular Right Now</Text>
+              <TouchableOpacity
+                onPress={() => handleSelectSuggestion('Chocolates')}
+                hitSlop={6}
+              >
+                <Text style={styles.sectionActionLink}>See All</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.popularGrid}>
+              {POPULAR_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={styles.popularCategoryCard}
+                  onPress={() => handleSelectSuggestion(cat.name)}
+                  activeOpacity={0.8}
                 >
-                  <Text style={styles.trendingPillText}>{pill}</Text>
-                </ScalePressable>
+                  <View style={styles.popularImgWrap}>
+                    <Image
+                      source={{ uri: cat.image }}
+                      style={styles.popularImg}
+                      contentFit="cover"
+                      transition={200}
+                    />
+                  </View>
+                  <Text style={styles.popularLabel} numberOfLines={2}>
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
-          </View>
-
-          {/* Recently Viewed / Recommended Carousel */}
-          <View style={styles.landingSection}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitleBold}>Recently Viewed</Text>
-              <Pressable
-                onPress={() => router.push('/(tabs)')}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Text style={styles.viewAllText}>View All &gt;</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.recentViewedScroll}
-            >
-              {landingProducts.slice(0, 6).map((item) => {
-                const qty = getItemQuantity(item._id);
-                return (
-                  <View key={item._id} style={styles.recentViewedCard}>
-                    <Pressable
-                      onPress={() => router.push(`/product/${item._id}`)}
-                      style={{ alignItems: 'center' }}
-                    >
-                      <View style={styles.recentViewedImgWrap}>
-                        <Image
-                          source={{
-                            uri: item.featuredImage || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'
-                          }}
-                          style={styles.recentViewedImg}
-                          resizeMode="cover"
-                        />
-                      </View>
-                      <Text style={styles.recentViewedTitle} numberOfLines={1}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.recentViewedUnit}>
-                        {item.sellingUnit || item.baseUnit || '1 unit'}
-                      </Text>
-                    </Pressable>
-
-                    <View style={styles.recentViewedBottomRow}>
-                      <Text style={styles.recentViewedPrice}>
-                        ₹{item.sellingPrice?.toFixed(2)}
-                      </Text>
-
-                      {qty > 0 ? (
-                        <View style={styles.miniStepperWrap}>
-                          <Pressable
-                            onPress={() => handleDecrement(item)}
-                            style={styles.miniStepBtn}
-                          >
-                            <Minus size={11} color={colors.black} strokeWidth={2.8} />
-                          </Pressable>
-                          <Text style={styles.miniStepQty}>{qty}</Text>
-                          <Pressable
-                            onPress={() => handleIncrement(item)}
-                            style={styles.miniStepBtn}
-                          >
-                            <Plus size={11} color={colors.black} strokeWidth={2.8} />
-                          </Pressable>
-                        </View>
-                      ) : (
-                        <ScalePressable
-                          style={styles.circlePlusBtn}
-                          onPress={() => handleAddToCart(item)}
-                        >
-                          <Plus size={14} color={colors.black} strokeWidth={3} />
-                        </ScalePressable>
-                      )}
-                    </View>
-                  </View>
-                );
-              })}
-            </ScrollView>
           </View>
         </ScrollView>
       )}
 
-      {/* Sort & Filter Modal */}
       <Modal
-        visible={showFilterModal}
+        visible={filterModalVisible}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowFilterModal(false)}
+        onRequestClose={() => setFilterModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <Pressable style={styles.modalBackdrop} onPress={() => setShowFilterModal(false)} />
-          <View style={styles.modalCard}>
+        <View style={styles.modalBackdrop}>
+          <Pressable style={styles.backdropDismiss} onPress={() => setFilterModalVisible(false)} />
+          <View style={styles.filterModalCard}>
+            <View style={styles.modalDragHandle} />
+
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Sort & Filter</Text>
-              <Pressable onPress={() => setShowFilterModal(false)} style={styles.modalCloseBtn}>
-                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
-              </Pressable>
+              <Text style={styles.modalTitle}>Filters</Text>
+              <TouchableOpacity onPress={handleClearFilters} hitSlop={6}>
+                <Text style={styles.modalClearLink}>Clear All</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Sort Options */}
-            <Text style={styles.filterSectionTitle}>Sort By</Text>
-            <View style={styles.filterPillsWrap}>
-              {SORT_OPTIONS.map((item) => (
-                <Pressable
-                  key={item.id}
-                  style={[
-                    styles.filterModalPill,
-                    sortBy === item.id ? styles.filterModalPillActive : styles.filterModalPillInactive
-                  ]}
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollBody}>
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterGroupTitle}>Price Range</Text>
+                <View style={styles.pillGroupWrap}>
+                  {PRICE_FILTER_OPTIONS.map((range) => {
+                    const isSelected = selectedPriceRange === range;
+                    return (
+                      <TouchableOpacity
+                        key={range}
+                        style={[styles.filterPill, isSelected && styles.filterPillSelected]}
+                        onPress={() => {
+                          haptics.selection();
+                          setSelectedPriceRange(isSelected ? null : range);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.filterPillText,
+                            isSelected && styles.filterPillTextSelected
+                          ]}
+                        >
+                          {range}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.filterGroup}>
+                <View style={styles.filterGroupHeaderRow}>
+                  <Text style={styles.filterGroupTitle}>Brands</Text>
+                  <TouchableOpacity hitSlop={6}>
+                    <Text style={styles.filterGroupActionLink}>View All</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.pillGroupWrap}>
+                  {BRAND_FILTER_OPTIONS.map((brand) => {
+                    const isSelected = selectedBrand === brand;
+                    return (
+                      <TouchableOpacity
+                        key={brand}
+                        style={[styles.filterPill, isSelected && styles.filterPillSelected]}
+                        onPress={() => {
+                          haptics.selection();
+                          setSelectedBrand(isSelected ? null : brand);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.filterPillText,
+                            isSelected && styles.filterPillTextSelected
+                          ]}
+                        >
+                          {brand}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterGroupTitle}>Ratings</Text>
+                <View style={styles.pillGroupWrap}>
+                  {RATING_FILTER_OPTIONS.map((rating) => {
+                    const isSelected = selectedRating === rating;
+                    return (
+                      <TouchableOpacity
+                        key={rating}
+                        style={[styles.filterPill, isSelected && styles.filterPillSelected]}
+                        onPress={() => {
+                          haptics.selection();
+                          setSelectedRating(isSelected ? null : rating);
+                        }}
+                      >
+                        <Text
+                          style={[
+                            styles.filterPillText,
+                            isSelected && styles.filterPillTextSelected
+                          ]}
+                        >
+                          {rating}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              <View style={styles.filterGroup}>
+                <Text style={styles.filterGroupTitle}>Availability</Text>
+                <View style={styles.switchRow}>
+                  <Text style={styles.switchLabel}>In Stock Only</Text>
+                  <Switch
+                    value={inStockOnly}
+                    onValueChange={(val) => {
+                      haptics.selection();
+                      setInStockOnly(val);
+                    }}
+                    trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                    thumbColor="#FFFFFF"
+                  />
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalBottomBar}>
+              <TouchableOpacity
+                style={styles.applyFilterBtn}
+                onPress={() => {
+                  haptics.selection();
+                  setFilterModalVisible(false);
+                }}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.applyFilterBtnText}>
+                  Apply Filters ({searchResults.length || 24})
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={sortModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setSortModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <Pressable style={styles.backdropDismiss} onPress={() => setSortModalVisible(false)} />
+          <View style={styles.sortModalCard}>
+            <View style={styles.modalDragHandle} />
+            <Text style={styles.sortModalTitle}>Sort Products</Text>
+            {SORT_OPTIONS.map((opt) => {
+              const isSelected = sortBy === opt.id;
+              return (
+                <TouchableOpacity
+                  key={opt.id}
+                  style={styles.sortOptionRow}
                   onPress={() => {
                     haptics.selection();
-                    setSortBy(item.id);
+                    setSortBy(opt.id);
+                    setSortModalVisible(false);
                   }}
+                  activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.filterModalPillText,
-                    sortBy === item.id ? styles.filterModalTextActive : styles.filterModalTextInactive
-                  ]}>
-                    {item.label}
+                  <Text style={[styles.sortOptionText, isSelected && styles.sortOptionTextSelected]}>
+                    {opt.label}
                   </Text>
-                </Pressable>
-              ))}
-            </View>
-
-            {/* Category Filter */}
-            {allCategories.length > 0 && (
-              <>
-                <Text style={[styles.filterSectionTitle, { marginTop: spacing.md }]}>Category</Text>
-                <View style={styles.filterPillsWrap}>
-                  <Pressable
-                    style={[
-                      styles.filterModalPill,
-                      !selectedCategoryFilter ? styles.filterModalPillActive : styles.filterModalPillInactive
-                    ]}
-                    onPress={() => {
-                      haptics.selection();
-                      setSelectedCategoryFilter(null);
-                    }}
-                  >
-                    <Text style={[
-                      styles.filterModalPillText,
-                      !selectedCategoryFilter ? styles.filterModalTextActive : styles.filterModalTextInactive
-                    ]}>
-                      All Categories
-                    </Text>
-                  </Pressable>
-
-                  {allCategories.slice(0, 8).map((cat) => (
-                    <Pressable
-                      key={cat._id}
-                      style={[
-                        styles.filterModalPill,
-                        selectedCategoryFilter === cat._id ? styles.filterModalPillActive : styles.filterModalPillInactive
-                      ]}
-                      onPress={() => {
-                        haptics.selection();
-                        setSelectedCategoryFilter(cat._id);
-                      }}
-                    >
-                      <Text style={[
-                        styles.filterModalPillText,
-                        selectedCategoryFilter === cat._id ? styles.filterModalTextActive : styles.filterModalTextInactive
-                      ]}>
-                        {cat.name}
-                      </Text>
-                    </Pressable>
-                  ))}
-                </View>
-              </>
-            )}
-
-            {/* Modal Actions */}
-            <View style={styles.modalActionButtonsRow}>
-              <Pressable
-                style={styles.resetModalBtn}
-                onPress={() => {
-                  haptics.selection();
-                  setSortBy('default');
-                  setSelectedCategoryFilter(null);
-                }}
-              >
-                <Text style={styles.resetModalBtnText}>Reset</Text>
-              </Pressable>
-
-              <Pressable
-                style={styles.applyModalBtn}
-                onPress={() => {
-                  haptics.selection();
-                  setShowFilterModal(false);
-                }}
-              >
-                <Text style={styles.applyModalBtnText}>Apply</Text>
-              </Pressable>
-            </View>
+                  {isSelected && <Check size={18} color="#2563EB" strokeWidth={2.8} />}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       </Modal>
@@ -800,667 +1120,620 @@ export default function SearchScreen() {
   );
 }
 
-function ProductActionButton({ product, quantity, onAdd, onIncrement, onDecrement }) {
-  if (quantity > 0) {
-    return (
-      <View style={styles.stepperContainer}>
-        <Pressable onPress={onDecrement} style={styles.stepperBtn}>
-          <Minus size={13} color={colors.black} strokeWidth={2.8} />
-        </Pressable>
-        <Text style={styles.stepperQtyText}>{quantity}</Text>
-        <Pressable onPress={onIncrement} style={styles.stepperBtn}>
-          <Plus size={13} color={colors.black} strokeWidth={2.8} />
-        </Pressable>
-      </View>
-    );
-  }
-
-  return (
-    <ScalePressable style={styles.addBtn} onPress={onAdd}>
-      <Text style={styles.addBtnText}>Add</Text>
-    </ScalePressable>
-  );
-}
-
 const styles = StyleSheet.create({
-  screenContainer: {
+  safeContainer: {
     flex: 1,
-    backgroundColor: colors.white
+    backgroundColor: '#FFFFFF'
   },
-  topHeaderArea: {
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xs,
-    paddingBottom: spacing.sm,
+  contentFlex: {
+    flex: 1
+  },
+  headerBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle
+    borderBottomColor: '#F1F5F9'
   },
-  landingHeaderWrap: {
-    paddingVertical: spacing.xs
-  },
-  landingTitle: {
-    fontSize: 26,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    letterSpacing: -0.5
-  },
-  landingSubtitle: {
-    fontSize: 13,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 2
-  },
-  resultsHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
-  },
-  backBtn: {
-    width: 36,
+  backButton: {
+    width: 28,
     height: 36,
-    borderRadius: 18,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center'
+    marginRight: 6
   },
-  searchInputWrapper: {
+  searchBarWrapper: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 16,
-    height: 48,
-    paddingHorizontal: 14
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    height: 42
   },
-  searchInputFocused: {
-    borderColor: colors.primaryDark
-  },
-  textInputStyle: {
+  searchInput: {
     flex: 1,
     fontSize: 14,
-    fontFamily: typography.family.medium,
-    color: colors.textPrimary,
+    fontFamily: FONTS.medium,
+    color: '#0F172A',
     paddingVertical: 0
   },
   clearIconBtn: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.softBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 6
+    padding: 2
   },
-  suggestionsContainer: {
-    position: 'absolute',
-    top: 70,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.white,
-    borderRadius: 16,
+  clearIconCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  landingScrollContent: {
+    paddingBottom: 40
+  },
+  sectionContainer: {
+    paddingTop: 18,
+    paddingHorizontal: 16
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12
+  },
+  sectionTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A'
+  },
+  sectionActionLink: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: '#2563EB'
+  },
+  recentTagsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  recentPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: colors.border,
-    zIndex: 99,
-    paddingVertical: 4
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 14,
+    paddingVertical: 8
+  },
+  recentPillText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12.5,
+    color: '#334155'
+  },
+  popularGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10
+  },
+  popularCategoryCard: {
+    width: (SCREEN_WIDTH - 52) / 3,
+    alignItems: 'center',
+    marginBottom: 14
+  },
+  popularImgWrap: {
+    width: (SCREEN_WIDTH - 52) / 3,
+    height: (SCREEN_WIDTH - 52) / 3,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginBottom: 8
+  },
+  popularImg: {
+    width: '100%',
+    height: '100%'
+  },
+  popularLabel: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A',
+    textAlign: 'center',
+    lineHeight: 15
   },
   suggestionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle
+    borderBottomColor: '#F8FAFC'
+  },
+  suggestionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center'
   },
   suggestionText: {
-    flex: 1,
+    fontFamily: FONTS.medium,
     fontSize: 14,
-    fontFamily: typography.family.medium,
-    color: colors.textPrimary
-  },
-  landingScrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: 50
-  },
-  landingSection: {
-    marginBottom: spacing.xl
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm + 2
-  },
-  rowAlign: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  sectionTitleBold: {
-    fontSize: 16,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    letterSpacing: -0.2
-  },
-  viewAllText: {
-    fontSize: 12,
-    fontFamily: typography.family.semibold,
-    color: colors.textSecondary
-  },
-  categoryCardsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 10
-  },
-  categoryCard: {
-    width: (SCREEN_WIDTH - spacing.lg * 2 - 20) / 3,
-    height: 106,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 8,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  categoryImgWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginBottom: 6
-  },
-  categoryCardImg: {
-    width: '100%',
-    height: '100%'
-  },
-  categoryCardLabel: {
-    fontSize: 11,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    lineHeight: 14
-  },
-  pillsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8
-  },
-  trendingPill: {
-    paddingVertical: 7,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: colors.softBackground,
-    borderWidth: 1,
-    borderColor: colors.border
-  },
-  trendingPillText: {
-    fontSize: 13,
-    fontFamily: typography.family.medium,
-    color: colors.textPrimary
-  },
-  recentViewedScroll: {
-    gap: 12,
-    paddingVertical: 2
-  },
-  recentViewedCard: {
-    width: 124,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 18,
-    padding: 10
-  },
-  recentViewedImgWrap: {
-    width: 90,
-    height: 75,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.softBackground,
-    marginBottom: 6
-  },
-  recentViewedImg: {
-    width: '100%',
-    height: '100%'
-  },
-  recentViewedTitle: {
-    fontSize: 12,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    textAlign: 'center',
-    width: '100%'
-  },
-  recentViewedUnit: {
-    fontSize: 11,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 1
-  },
-  recentViewedBottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8
-  },
-  recentViewedPrice: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
-  },
-  circlePlusBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  miniStepperWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingHorizontal: 4,
-    height: 26
-  },
-  miniStepBtn: {
-    padding: 2
-  },
-  miniStepQty: {
-    fontSize: 11,
-    fontFamily: typography.family.bold,
-    color: colors.black,
-    marginHorizontal: 4
-  },
-  resultsMainContainer: {
-    flex: 1
+    color: '#1E293B'
   },
   tabsRow: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.xs + 2,
-    gap: 8,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle
+    borderBottomColor: '#F1F5F9'
   },
-  scopeTabPill: {
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  scopeTabActive: {
-    backgroundColor: colors.primary,
-    borderWidth: 0,
-    borderColor: 'transparent'
-  },
-  scopeTabInactive: {
-    backgroundColor: colors.white,
-    borderColor: colors.border
-  },
-  scopeTabText: {
-    fontSize: 13,
-    fontFamily: typography.family.medium
-  },
-  scopeTextActive: {
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  scopeTextInactive: {
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary
-  },
-  resultsScrollContent: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: 50
-  },
-  sectionWrap: {
-    marginBottom: spacing.lg
-  },
-  sectionHeading: {
-    fontSize: 16,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs
-  },
-  topResultCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF9E8',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#FFE8A3',
-    padding: 12
-  },
-  topResultImgWrap: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.white,
-    marginRight: 12
-  },
-  topResultImg: {
-    width: '100%',
-    height: '100%'
-  },
-  topResultInfoCol: {
-    flex: 1
-  },
-  topResultName: {
-    fontSize: 15,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
-  },
-  topResultUnit: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 2
-  },
-  topResultPrice: {
-    fontSize: 15,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginTop: 3
-  },
-  productsHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs
-  },
-  filterActionsRow: {
-    flexDirection: 'row',
-    gap: 8
-  },
-  filterSortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.white
-  },
-  filterSortBtnActive: {
-    backgroundColor: colors.primarySoft,
-    borderColor: colors.primaryDark
-  },
-  filterSortBtnText: {
-    fontSize: 12,
-    fontFamily: typography.family.medium,
-    color: colors.textPrimary
-  },
-  productsListWrap: {
-    gap: 8
-  },
-  productListItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: 12
-  },
-  productRowTouchable: {
+  tabItem: {
     flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    paddingVertical: 12,
+    position: 'relative'
   },
-  productRowImgWrap: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: colors.softBackground,
-    marginRight: 12
+  tabItemActive: {},
+  tabItemText: {
+    fontFamily: FONTS.medium,
+    fontSize: 13.5,
+    color: '#64748B'
   },
-  productRowImg: {
-    width: '100%',
-    height: '100%'
+  tabItemTextActive: {
+    fontFamily: FONTS.bold,
+    fontWeight: '800',
+    color: '#2563EB'
   },
-  productRowDetailsCol: {
-    flex: 1
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    width: 32,
+    height: 2.5,
+    backgroundColor: '#2563EB',
+    borderRadius: 2
   },
-  productRowName: {
-    fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
+  filterChipsBar: {
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9'
   },
-  productRowUnit: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 2
+  filterChipsScroll: {
+    paddingHorizontal: 16,
+    gap: 8
   },
-  productRowPrice: {
-    fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginTop: 3
-  },
-  addBtn: {
-    width: 68,
-    height: 36,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  addBtnText: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  stepperContainer: {
+  filterActionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    height: 36,
-    paddingHorizontal: 6
+    backgroundColor: '#F8FAFC',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 6
   },
-  stepperBtn: {
-    padding: 6
+  filterActionButtonActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB'
   },
-  stepperQtyText: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.black,
-    minWidth: 18,
-    textAlign: 'center'
+  filterActionButtonText: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A'
   },
-  matchingCatCard: {
+  filterActionButtonTextActive: {
+    color: '#2563EB'
+  },
+  filterChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 6
+  },
+  filterChipActive: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB'
+  },
+  filterChipText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12,
+    color: '#475569'
+  },
+  filterChipTextActive: {
+    fontFamily: FONTS.bold,
+    color: '#2563EB',
+    fontWeight: '700'
+  },
+  resultsInfoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.softBackground,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF'
+  },
+  resultsTitleText: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A'
+  },
+  resultsCountText: {
+    fontFamily: FONTS.regular,
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 2
+  },
+  sortButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.border,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 10,
+    paddingVertical: 6
+  },
+  sortButtonText: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0F172A'
+  },
+  gridContentContainer: {
+    paddingHorizontal: 14,
+    paddingBottom: 80
+  },
+  productsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12
+  },
+  productGridCard: {
+    width: (SCREEN_WIDTH - 40) / 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    position: 'relative'
+  },
+  wishlistIconBtn: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  productImgContainer: {
+    width: '100%',
+    height: 105,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
     marginBottom: 8
   },
-  matchingCatName: {
-    fontSize: 14,
-    fontFamily: typography.family.semibold,
-    color: colors.textPrimary
+  productImg: {
+    width: '90%',
+    height: '90%'
   },
-  categoriesGridRow: {
-    gap: 8
+  productCardTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 16,
+    minHeight: 32,
+    marginBottom: 2
   },
-  loadingContainer: {
-    paddingVertical: 60,
-    alignItems: 'center'
+  productCardUnit: {
+    fontFamily: FONTS.regular,
+    fontSize: 11,
+    color: '#64748B',
+    marginBottom: 6
   },
-  loadingLabel: {
-    marginTop: 12,
-    fontSize: 13,
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary
-  },
-  emptyStateWrap: {
-    paddingVertical: 40,
-    alignItems: 'center'
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: 4
-  },
-  emptyDesc: {
-    fontSize: 13,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 16
-  },
-  didYouMeanBox: {
+  ratingBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primarySoft,
-    borderWidth: 1,
-    borderColor: '#FFE8A3',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 20
+    backgroundColor: '#F8FAFC',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    alignSelf: 'flex-start',
+    marginBottom: 8
   },
-  didYouMeanLabel: {
-    fontSize: 13,
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary,
-    marginRight: 6
+  ratingBadgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#16A34A'
   },
-  didYouMeanBtn: {
-    backgroundColor: colors.primary,
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4
+  ratingCountText: {
+    fontFamily: FONTS.regular,
+    fontSize: 10,
+    color: '#64748B',
+    marginLeft: 2
   },
-  didYouMeanText: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.black
+  ratingDivider: {
+    color: '#CBD5E1',
+    marginHorizontal: 4,
+    fontSize: 10
   },
-  emptyPopularBlock: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 10
+  deliveryBadgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#64748B'
   },
-  emptyPopularTitle: {
+  productCardBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginTop: 'auto'
+  },
+  priceCol: {},
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4
+  },
+  sellingPriceText: {
+    fontFamily: FONTS.heavy,
     fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: 10
+    fontWeight: '800',
+    color: '#0F172A'
   },
-  modalOverlay: {
+  mrpText: {
+    fontFamily: FONTS.regular,
+    fontSize: 11,
+    color: '#94A3B8',
+    textDecorationLine: 'line-through'
+  },
+  discountPctText: {
+    fontFamily: FONTS.bold,
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#16A34A',
+    marginTop: 1
+  },
+  cardAddButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#2563EB',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  cardStepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#2563EB',
+    paddingHorizontal: 4,
+    paddingVertical: 2
+  },
+  cardStepperBtn: {
+    padding: 3
+  },
+  cardStepperQty: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#2563EB',
+    minWidth: 16,
+    textAlign: 'center'
+  },
+  emptyStateWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 24
+  },
+  emptyTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6
+  },
+  emptyDesc: {
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 16
+  },
+  emptyResetBtn: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 16,
+    paddingVertical: 8
+  },
+  emptyResetBtnText: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: '#2563EB'
+  },
+  modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'flex-end'
   },
-  modalBackdrop: {
-    ...StyleSheet.absoluteFillObject
+  backdropDismiss: {
+    flex: 1
   },
-  modalCard: {
-    backgroundColor: colors.white,
+  filterModalCard: {
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    padding: spacing.xl,
-    borderWidth: 1,
-    borderColor: colors.border
+    paddingTop: 12,
+    maxHeight: '85%'
+  },
+  modalDragHandle: {
+    width: 38,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: 12
   },
   modalHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9'
   },
   modalTitle: {
+    fontFamily: FONTS.bold,
     fontSize: 18,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
+    fontWeight: '800',
+    color: '#0F172A'
   },
-  modalCloseBtn: {
-    padding: 4
+  modalClearLink: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: '#2563EB'
   },
-  filterSectionTitle: {
-    fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: 8
+  modalScrollBody: {
+    paddingHorizontal: 20,
+    paddingVertical: 14
   },
-  filterPillsWrap: {
+  filterGroup: {
+    marginBottom: 20
+  },
+  filterGroupHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
+  filterGroupTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 10
+  },
+  filterGroupActionLink: {
+    fontFamily: FONTS.bold,
+    fontSize: 12,
+    color: '#2563EB'
+  },
+  pillGroupWrap: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8
   },
-  filterModalPill: {
-    paddingVertical: 7,
+  filterPill: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     paddingHorizontal: 14,
-    borderRadius: 16,
-    borderWidth: 1
+    paddingVertical: 8
   },
-  filterModalPillActive: {
-    backgroundColor: colors.primary,
-    borderWidth: 0,
-    borderColor: 'transparent'
+  filterPillSelected: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#2563EB'
   },
-  filterModalPillInactive: {
-    backgroundColor: colors.white,
-    borderColor: colors.border
+  filterPillText: {
+    fontFamily: FONTS.medium,
+    fontSize: 12.5,
+    color: '#334155'
   },
-  filterModalPillText: {
-    fontSize: 13,
-    fontFamily: typography.family.medium
+  filterPillTextSelected: {
+    fontFamily: FONTS.bold,
+    color: '#2563EB',
+    fontWeight: '700'
   },
-  filterModalTextActive: {
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  filterModalTextInactive: {
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary
-  },
-  modalActionButtonsRow: {
+  switchRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: spacing.xl
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 4
   },
-  resetModalBtn: {
-    flex: 1,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  resetModalBtnText: {
+  switchLabel: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
+    color: '#1E293B'
   },
-  applyModalBtn: {
-    flex: 1,
-    height: 46,
+  modalBottomBar: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9'
+  },
+  applyFilterBtn: {
+    backgroundColor: '#2563EB',
     borderRadius: 14,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center'
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  applyModalBtnText: {
+  applyFilterBtnText: {
+    fontFamily: FONTS.bold,
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF'
+  },
+  sortModalCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20
+  },
+  sortModalTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 14
+  },
+  sortOptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC'
+  },
+  sortOptionText: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.black
+    color: '#334155'
+  },
+  sortOptionTextSelected: {
+    fontFamily: FONTS.bold,
+    color: '#2563EB',
+    fontWeight: '800'
   }
 });
