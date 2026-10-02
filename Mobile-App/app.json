@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Zooom",
-    "slug": "Zooom",
+    "slug": "jooom",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -42,6 +42,7 @@
       "eas": {
         "projectId": "36cbb05f-df92-440d-97bf-416c5c7ec30f"
       }
-    }
+    },
+    "owner": "aeterns-team"
   }
 }
