@@ -140,7 +140,7 @@ export default function MobileLoginScreen() {
     transform: [{ scale: verifyBtnScale.value }]
   }));
 
-  // Submit phone -> Open Half Screen Verify instantly
+  // Send the code, then continue to the dedicated verification screen.
   const handleContinue = async () => {
     if (!isComplete) {
       triggerShake();
@@ -157,15 +157,10 @@ export default function MobileLoginScreen() {
 
     try {
       const res = await StorefrontAPI.sendOtp(phone);
-      setDevOtp(res?.devOtp || '');
-      setResendFeedback(res?.devOtp ? `Testing OTP: ${res.devOtp}` : '');
-      setOtp('');
-      setVerifyError('');
-      setResendCount(24);
-      setShowVerifyModal(true);
-      setTimeout(() => {
-        otpInputRef.current?.focus();
-      }, 350);
+      router.push({
+        pathname: '/(auth)/otp',
+        params: { phone, devOtp: res?.devOtp || '' }
+      });
     } catch (err) {
       haptics.notificationError();
       const message = err.response?.data?.message || 'Failed to send verification code. Please try again.';

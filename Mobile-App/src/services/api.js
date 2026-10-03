@@ -7,13 +7,13 @@ import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL;
+    return process.env.EXPO_PUBLIC_API_URL.trim();
   }
 
   // 1. Detect Expo Metro host IP for physical device testing on local Wi-Fi
-  const hostUri = Constants.expoConfig?.hostUri || 
-                  Constants.manifest2?.extra?.expoGo?.debuggerHost || 
-                  Constants.manifest?.debuggerHost;
+  const hostUri = Constants.expoConfig?.hostUri ||
+    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
+    Constants.manifest?.debuggerHost;
   if (hostUri) {
     const hostIp = hostUri.split(':')[0];
     if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
@@ -66,8 +66,9 @@ export const StorefrontAPI = {
       return res.data;
     } catch (error) {
       if (
-        !error.response || 
-        error.code === 'ERR_NETWORK' || 
+        !error.response ||
+        error.response?.status >= 500 ||
+        error.code === 'ERR_NETWORK' ||
         error.code === 'ECONNABORTED' ||
         error.message?.includes('Network Error') ||
         error.message?.includes('timeout')
@@ -90,8 +91,9 @@ export const StorefrontAPI = {
       return res.data;
     } catch (error) {
       if (
-        !error.response || 
-        error.code === 'ERR_NETWORK' || 
+        !error.response ||
+        error.response?.status >= 500 ||
+        error.code === 'ERR_NETWORK' ||
         error.code === 'ECONNABORTED' ||
         error.message?.includes('Network Error') ||
         error.message?.includes('timeout')
