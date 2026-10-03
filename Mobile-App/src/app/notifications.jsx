@@ -7,6 +7,7 @@ import {
   TouchableOpacity, 
   ActivityIndicator 
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
@@ -20,6 +21,7 @@ import { colors, spacing, radius, typography } from '../constants/theme';
 import { StorefrontAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { EmptyState } from '../components/EmptyState';
+import { PageHeader } from '../components/PageHeader';
 
 export default function NotificationsScreen() {
   const { token } = useAuth();
@@ -52,15 +54,18 @@ export default function NotificationsScreen() {
 
   if (!token) {
     return (
-      <View style={styles.container}>
-        <EmptyState
-          icon={<Bell size={48} color={colors.black} />}
-          title="Sign In to view notifications"
-          description="Get live updates on your deliveries, refunds, and special discounts."
-          actionTitle="Sign In"
-          onAction={() => router.push('/(auth)/login')}
-        />
-      </View>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+        <PageHeader title="Notifications" />
+        <View style={styles.container}>
+          <EmptyState
+            icon={<Bell size={48} color={colors.black} />}
+            title="Sign In to view notifications"
+            description="Get live updates on your deliveries, refunds, and special discounts."
+            actionTitle="Sign In"
+            onAction={() => router.push('/(auth)/login')}
+          />
+        </View>
+      </SafeAreaView>
     );
   }
 
@@ -83,100 +88,101 @@ export default function NotificationsScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Notifications ({unreadCount} unread)</Text>
-        {unreadCount > 0 && (
-          <TouchableOpacity 
-            style={styles.markAllBtn}
-            onPress={() => markAllReadMutation.mutate()}
-            disabled={markAllReadMutation.isPending}
-          >
-            <CheckCheck size={16} color={colors.black} style={{ marginRight: 4 }} />
-            <Text style={styles.markAllText}>Mark all read</Text>
-          </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+      <PageHeader
+        title="Notifications"
+        right={
+          unreadCount > 0 ? (
+            <TouchableOpacity 
+              style={styles.markAllBtn}
+              onPress={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending}
+            >
+              <CheckCheck size={16} color={colors.black} style={{ marginRight: 4 }} />
+              <Text style={styles.markAllText}>Read all</Text>
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
+
+      <View style={styles.container}>
+        {isLoading ? (
+          <View style={styles.centered}>
+            <ActivityIndicator size="large" color={colors.black} />
+          </View>
+        ) : notifications.length > 0 ? (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item._id}
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            contentContainerStyle={{ padding: spacing.xl }}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.itemCard, !item.isRead && styles.unreadItemCard]}
+                onPress={() => handleNotificationPress(item)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.iconCircle}>
+                  {getIcon(item.type)}
+                </View>
+
+                <View style={styles.content}>
+                  <View style={styles.titleRow}>
+                    <Text style={[styles.itemTitle, !item.isRead && styles.unreadTitle]}>
+                      {item.title || item.type}
+                    </Text>
+                    {!item.isRead && <View style={styles.unreadDot} />}
+                  </View>
+                  <Text style={styles.itemMessage}>{item.message}</Text>
+                  <Text style={styles.itemTime}>
+                    {new Date(item.createdAt).toLocaleDateString('en-IN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      day: 'numeric',
+                      month: 'short'
+                    })}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        ) : (
+          <EmptyState
+            icon={<Bell size={48} color={colors.black} />}
+            title="No Notifications Yet"
+            description="You're all caught up! Order updates and promotions will appear here."
+          />
         )}
       </View>
-
-      {isLoading ? (
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.black} />
-        </View>
-      ) : notifications.length > 0 ? (
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item._id}
-          refreshing={isRefetching}
-          onRefresh={refetch}
-          contentContainerStyle={{ padding: spacing.xl }}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[styles.itemCard, !item.isRead && styles.unreadItemCard]}
-              onPress={() => handleNotificationPress(item)}
-              activeOpacity={0.8}
-            >
-              <View style={styles.iconCircle}>
-                {getIcon(item.type)}
-              </View>
-
-              <View style={styles.content}>
-                <View style={styles.titleRow}>
-                  <Text style={[styles.itemTitle, !item.isRead && styles.unreadTitle]}>
-                    {item.title || item.type}
-                  </Text>
-                  {!item.isRead && <View style={styles.unreadDot} />}
-                </View>
-                <Text style={styles.itemMessage}>{item.message}</Text>
-                <Text style={styles.itemTime}>
-                  {new Date(item.createdAt).toLocaleDateString('en-IN', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    day: 'numeric',
-                    month: 'short'
-                  })}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-      ) : (
-        <EmptyState
-          icon={<Bell size={48} color={colors.black} />}
-          title="No Notifications Yet"
-          description="You're all caught up! Order updates and promotions will appear here."
-        />
-      )}
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background
+  },
   container: {
     flex: 1,
-    backgroundColor: colors.white
+    backgroundColor: colors.softBackground
   },
   centered: {
     justifyContent: 'center',
-    alignItems: 'center'
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border
-  },
-  headerTitle: {
-    fontSize: typography.size.sm,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
+    flex: 1
   },
   markAllBtn: {
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: colors.primarySoft,
+    borderWidth: 1,
+    borderColor: colors.primaryLight
   },
   markAllText: {
     fontSize: typography.size.xs,

@@ -222,7 +222,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.screenRoot}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
 
       <Animated.View
         style={[
@@ -251,14 +251,14 @@ export default function HomeScreen() {
           >
             <Navigation
               size={18}
-              color="#FFFFFF"
-              fill="#FFFFFF"
+              color={colors.primaryDark}
+              fill={colors.primaryDark}
               style={styles.addressArrowIcon}
             />
             <View style={styles.addressTextCol}>
               <View style={styles.addressTitleRow}>
-                <Text style={styles.addressTitleText}>J P Nagar Metro Station</Text>
-                <ChevronDown size={16} color="#FFFFFF" strokeWidth={2.5} style={{ marginLeft: 3 }} />
+                <Text style={styles.addressTitleText}>Delivering to J P Nagar</Text>
+                <ChevronDown size={16} color={colors.textPrimary} strokeWidth={2.5} style={{ marginLeft: 3 }} />
               </View>
               <Text style={styles.addressSubtitleText} numberOfLines={1}>
                 {addressLabel}
@@ -274,7 +274,7 @@ export default function HomeScreen() {
             }}
             activeOpacity={0.8}
           >
-            <User size={18} color="#FFFFFF" strokeWidth={2.2} />
+            <User size={18} color={colors.textPrimary} strokeWidth={2.2} />
           </TouchableOpacity>
         </Animated.View>
 
@@ -287,10 +287,13 @@ export default function HomeScreen() {
             }}
             activeOpacity={0.9}
           >
+            <Search size={18} color={colors.textSecondary} style={{ marginRight: 8 }} />
             <Text style={styles.searchPlaceholderText} numberOfLines={1}>
               {SEARCH_PROMPTS[searchIndex]}
             </Text>
-            <Search size={19} color="#64748B" />
+            <View style={styles.searchShortcut}>
+              <Text style={styles.searchShortcutText}>⌘ K</Text>
+            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -322,14 +325,14 @@ export default function HomeScreen() {
         ]}
       >
         <LinearGradient
-          colors={['#06112C', '#0A1C4A', '#122E76', '#091538']}
+          colors={[colors.primary, '#FFD95A', '#FFF0B0']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.heroBannerContainer}
         >
           <Image
             source={require('../../../assets/images/festive_banner_bg.jpg')}
-            style={[StyleSheet.absoluteFillObject, { opacity: 0.85 }]}
+            style={[StyleSheet.absoluteFillObject, { opacity: 0.12 }]}
             contentFit="cover"
           />
 
@@ -344,11 +347,14 @@ export default function HomeScreen() {
 
             <View style={styles.bannerCenterContent}>
               <View style={styles.bannerTagRow}>
-                <Text style={styles.bannerTagText}>Foodie Weekend</Text>
-                <Text style={styles.bannerTagIcon}>🏷️</Text>
+                <View style={styles.heroEyebrow}>
+                  <Zap size={13} color={colors.primaryDark} fill={colors.primaryDark} />
+                  <Text style={styles.bannerTagText}>FASTEST DELIVERY</Text>
+                </View>
               </View>
 
-              <Text style={styles.bannerOfferHeading}>Flat ₹150 OFF on delights!</Text>
+              <Text style={styles.bannerHeadline}>Fresh groceries at your doorstep</Text>
+              <Text style={styles.bannerOfferHeading}>Flat ₹150 OFF on your first order</Text>
 
               <TouchableOpacity
                 style={styles.bannerOrderNowBtn}
@@ -358,7 +364,7 @@ export default function HomeScreen() {
                 }}
                 activeOpacity={0.85}
               >
-                <Text style={styles.bannerOrderNowText}>ORDER NOW</Text>
+                <Text style={styles.bannerOrderNowText}>SHOP NOW</Text>
               </TouchableOpacity>
             </View>
 
@@ -372,10 +378,28 @@ export default function HomeScreen() {
           </View>
         </LinearGradient>
 
+        <View style={styles.promiseStrip}>
+          <View style={styles.promiseItem}>
+            <View style={styles.promiseIcon}><Clock size={15} color={colors.primaryDark} /></View>
+            <View>
+              <Text style={styles.promiseTitle}>10 min delivery</Text>
+              <Text style={styles.promiseCaption}>At your doorstep</Text>
+            </View>
+          </View>
+          <View style={styles.promiseDivider} />
+          <View style={styles.promiseItem}>
+            <View style={styles.promiseIcon}><Sparkles size={15} color={colors.primaryDark} /></View>
+            <View>
+              <Text style={styles.promiseTitle}>Fresh & sorted</Text>
+              <Text style={styles.promiseCaption}>Quality you can trust</Text>
+            </View>
+          </View>
+        </View>
+
         <View style={styles.sectionHeaderRow}>
           <View>
-            <Text style={styles.sectionHeading}>Shop by Category</Text>
-            <Text style={styles.sectionSubHeading}>Handpicked fresh groceries in 10 mins</Text>
+            <Text style={styles.sectionHeading}>What are you looking for?</Text>
+            <Text style={styles.sectionSubHeading}>Everyday essentials, delivered fast</Text>
           </View>
           <TouchableOpacity
             onPress={() => handleCategoryPress('vegetables')}
@@ -509,7 +533,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   screenRoot: {
     flex: 1,
-    backgroundColor: '#F8FAFC'
+    backgroundColor: colors.softBackground
   },
   stickyHeaderWrapper: {
     position: 'absolute',
@@ -517,7 +541,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 900,
-    backgroundColor: '#070F26',
+    backgroundColor: colors.primary,
     paddingHorizontal: 12,
     paddingBottom: 8
   },
@@ -547,22 +571,22 @@ const styles = StyleSheet.create({
   addressTitleText: {
     fontFamily: typography.family.bold,
     fontSize: 15.5,
-    color: '#FFFFFF',
+    color: colors.textPrimary,
     fontWeight: '800'
   },
   addressSubtitleText: {
     fontFamily: typography.family.medium,
     fontSize: 11.5,
-    color: '#94A3B8',
+    color: '#6B5B20',
     fontWeight: '500'
   },
   profileBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.72)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
+    borderColor: 'rgba(17, 24, 39, 0.08)',
     alignItems: 'center',
     justifyContent: 'center'
   },
@@ -574,40 +598,55 @@ const styles = StyleSheet.create({
   searchBarMain: {
     flex: 1,
     height: 46,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14
+    paddingHorizontal: 13,
+    borderWidth: 1,
+    borderColor: 'rgba(17, 24, 39, 0.08)'
   },
   searchPlaceholderText: {
     flex: 1,
     fontFamily: typography.family.medium,
     fontSize: 13.5,
-    color: '#64748B',
+    color: colors.textSecondary,
     fontWeight: '500',
     marginRight: 8
+  },
+  searchShortcut: {
+    paddingHorizontal: 7,
+    paddingVertical: 4,
+    borderRadius: 7,
+    backgroundColor: colors.softBackground
+  },
+  searchShortcutText: {
+    fontFamily: typography.family.bold,
+    fontSize: 10,
+    color: colors.textMuted
   },
   wishlistBookmarkBtn: {
     width: 46,
     height: 46,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.88)',
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(17, 24, 39, 0.08)'
   },
   scrollBody: {
-    backgroundColor: '#F8FAFC'
+    backgroundColor: colors.softBackground
   },
   heroBannerContainer: {
     marginHorizontal: 12,
-    marginTop: 10,
-    marginBottom: 18,
-    height: 165,
-    borderRadius: 22,
-    backgroundColor: '#0A1C4A',
+    marginTop: 12,
+    marginBottom: 14,
+    height: 174,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     overflow: 'hidden',
     position: 'relative',
     justifyContent: 'center'
@@ -626,8 +665,8 @@ const styles = StyleSheet.create({
     borderRadius: 46,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    backgroundColor: '#0F172A'
+    borderColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: colors.primarySoft
   },
   dishRightWrap: {
     width: 92,
@@ -635,8 +674,8 @@ const styles = StyleSheet.create({
     borderRadius: 46,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.25)',
-    backgroundColor: '#0F172A'
+    borderColor: 'rgba(255, 255, 255, 0.75)',
+    backgroundColor: colors.primarySoft
   },
   dishImg: {
     width: '100%',
@@ -655,10 +694,19 @@ const styles = StyleSheet.create({
   },
   bannerTagText: {
     fontFamily: typography.family.bold,
-    fontSize: 15.5,
-    color: '#FFFFFF',
+    fontSize: 11,
+    color: colors.primaryDark,
     fontWeight: '800',
-    letterSpacing: 0.3
+    letterSpacing: 0.8
+  },
+  heroEyebrow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(255, 255, 255, 0.58)',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 12
   },
   bannerTagIcon: {
     fontSize: 13,
@@ -666,14 +714,24 @@ const styles = StyleSheet.create({
   },
   bannerOfferHeading: {
     fontFamily: typography.family.medium,
-    fontSize: 12,
-    color: '#E0F2FE',
+    fontSize: 11,
+    color: '#6B5B20',
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 10
+    marginBottom: 8,
+    maxWidth: 150
+  },
+  bannerHeadline: {
+    fontFamily: typography.family.bold,
+    fontSize: 18,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    lineHeight: 21,
+    marginBottom: 4,
+    maxWidth: 165
   },
   bannerOrderNowBtn: {
-    backgroundColor: '#FACC15',
+    backgroundColor: colors.textPrimary,
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderRadius: 18
@@ -681,7 +739,7 @@ const styles = StyleSheet.create({
   bannerOrderNowText: {
     fontFamily: typography.family.bold,
     fontSize: 11.5,
-    color: '#0F172A',
+    color: colors.white,
     fontWeight: '900',
     letterSpacing: 0.5
   },
@@ -692,22 +750,66 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 12
   },
+  promiseStrip: {
+    marginHorizontal: 12,
+    marginBottom: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  promiseItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  promiseIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.primarySoft,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  promiseTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: colors.textPrimary
+  },
+  promiseCaption: {
+    fontFamily: typography.family.regular,
+    fontSize: 10,
+    color: colors.textSecondary,
+    marginTop: 2
+  },
+  promiseDivider: {
+    width: 1,
+    height: 30,
+    backgroundColor: colors.border,
+    marginHorizontal: 10
+  },
   sectionHeading: {
     fontFamily: typography.family.bold,
     fontSize: 17,
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '800'
   },
   sectionSubHeading: {
     fontFamily: typography.family.regular,
     fontSize: 12,
-    color: '#64748B',
+    color: colors.textSecondary,
     marginTop: 2
   },
   seeAllText: {
     fontFamily: typography.family.bold,
     fontSize: 12.5,
-    color: '#0066FF',
+    color: colors.primaryDark,
     fontWeight: '700'
   },
   categoriesGrid4Col: {
@@ -739,7 +841,7 @@ const styles = StyleSheet.create({
   grid4ColName: {
     fontFamily: typography.family.medium,
     fontSize: 11,
-    color: '#1E293B',
+    color: colors.textPrimary,
     textAlign: 'center',
     lineHeight: 14,
     fontWeight: '600'
@@ -759,7 +861,7 @@ const styles = StyleSheet.create({
   shelfHeading: {
     fontFamily: typography.family.bold,
     fontSize: 17,
-    color: '#0F172A',
+    color: colors.textPrimary,
     fontWeight: '800',
     marginRight: 8
   },
@@ -774,7 +876,7 @@ const styles = StyleSheet.create({
   lightningPillText: {
     fontFamily: typography.family.bold,
     fontSize: 10.5,
-    color: '#C2410C',
+    color: colors.primaryDark,
     fontWeight: '700'
   },
   shelfSubHeading: {

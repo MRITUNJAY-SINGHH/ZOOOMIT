@@ -218,7 +218,7 @@ export default function ProfileScreen() {
     setEditError('');
     setEditSuccess(false);
     haptics.selection();
-    setShowEditProfileModal(true);
+    router.push('/personal-information');
   };
 
   const handleSaveProfile = async () => {
@@ -487,7 +487,10 @@ export default function ProfileScreen() {
               icon={<User size={20} color={colors.black} strokeWidth={2.2} />}
               title="Personal Information"
               subtitle="View and update your details"
-              onPress={handleOpenEditProfile}
+              onPress={() => {
+                haptics.selection();
+                router.push('/personal-information');
+              }}
             />
             <View style={styles.itemDivider} />
             <MenuItemRow
@@ -506,7 +509,7 @@ export default function ProfileScreen() {
               subtitle="Get support, FAQs and contact us"
               onPress={() => {
                 haptics.selection();
-                setShowHelpModal(true);
+                router.push('/help-support');
               }}
             />
             <View style={styles.itemDivider} />
@@ -516,7 +519,7 @@ export default function ProfileScreen() {
               subtitle="App version, policies and more"
               onPress={() => {
                 haptics.selection();
-                setShowAboutModal(true);
+                router.push('/about-kuiklo');
               }}
             />
           </View>
@@ -1139,8 +1142,17 @@ export default function ProfileScreen() {
             onPress={() => setShowLogoutModal(false)}
           />
           <View style={styles.centeredDeleteCard}>
-            <View style={styles.alertIconCircle}>
-              <LogOut size={26} color={colors.error} strokeWidth={2.4} />
+            <View style={styles.alertHeaderRow}>
+              <View style={styles.alertHeaderSpacer} />
+              <View style={styles.alertIconCircle}>
+                <LogOut size={26} color={colors.error} strokeWidth={2.4} />
+              </View>
+              <Pressable
+                onPress={() => setShowLogoutModal(false)}
+                style={styles.alertCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
             </View>
             <Text style={styles.alertTitle}>Sign Out</Text>
             <Text style={styles.alertMessage}>
@@ -1191,14 +1203,23 @@ export default function ProfileScreen() {
             onPress={() => setShowDeleteModal(false)}
           />
           <View style={styles.centeredDeleteCard}>
-            <View style={[styles.alertIconCircle, { backgroundColor: '#FEE2E2' }]}>
-              <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
+            <View style={styles.alertHeaderRow}>
+              <View style={styles.alertHeaderSpacer} />
+              <View style={[styles.alertIconCircle, { backgroundColor: '#FEE2E2' }]}>
+                <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
+              </View>
+              <Pressable
+                onPress={() => setShowDeleteModal(false)}
+                style={styles.alertCloseCircle}
+              >
+                <X size={18} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
             </View>
             <Text style={styles.alertTitle}>Delete Account</Text>
             <Text style={styles.alertMessage}>
               In accordance with data privacy regulations, account deletion requests are processed manually to verify ongoing deliveries and pending refunds.
             </Text>
-            <Text style={[styles.alertMessage, { marginTop: 4, fontFamily: typography.family.semibold }]}>
+            <Text style={[styles.alertMessage, { marginTop: 4, fontFamily: typography.family.semibold }]}> 
               Please email support@kuiklo.com from your registered email with subject "Account Deletion Request".
             </Text>
             <Pressable
@@ -1985,7 +2006,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)'
+    backgroundColor: 'rgba(17, 24, 39, 0.32)'
   },
   centeredDeleteCard: {
     width: '100%',
@@ -1993,10 +2014,32 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 24,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
+    paddingTop: spacing.md,
     paddingBottom: spacing.xl,
     borderWidth: 1,
-    borderColor: colors.borderLight
+    borderColor: colors.borderLight,
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    elevation: 0
+  },
+  alertHeaderRow: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm
+  },
+  alertHeaderSpacer: {
+    width: 32,
+    height: 32
+  },
+  alertCloseCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.softBackground,
+    justifyContent: 'center',
+    alignItems: 'center'
   },
   inScreenModalOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -2046,7 +2089,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: typography.family.bold,
     color: colors.textPrimary,
-    marginBottom: 6
+    marginBottom: 6,
+    textAlign: 'center'
   },
   alertMessage: {
     fontSize: 13,
