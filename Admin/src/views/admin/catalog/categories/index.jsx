@@ -21,6 +21,10 @@ export default function Categories() {
   
   const [activeTab, setActiveTab] = useState('categories');
   const [modalType, setModalType] = useState('category'); // 'category' or 'subcategory'
+  
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
+  const [deletingBulk, setDeletingBulk] = useState(false);
 
   const [formData, setFormData] = useState({ 
     _id: null, 
@@ -131,6 +135,21 @@ export default function Categories() {
     catch (err) { toast.error('Failed to delete'); }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      setDeletingBulk(true);
+      await Promise.all(selectedIds.map(id => api.delete(`/categories/${id}`)));
+      toast.success(`${selectedIds.length} items deleted successfully`);
+      setSelectedIds([]);
+      setShowBulkDeleteModal(false);
+      fetchCategories();
+    } catch (err) {
+      toast.error('Failed to delete some items');
+    } finally {
+      setDeletingBulk(false);
+    }
+  };
+
   // Group into Hierarchy
   const rootCategories = categories.filter(c => !c.parentCategory);
   const subCategories = categories.filter(c => c.parentCategory);
@@ -150,6 +169,18 @@ export default function Categories() {
   const totalPages = Math.ceil(filteredData.length / pageSize);
   const currentData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(currentData.map(c => c._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
   return (
     <div>
       <PageHeader 
@@ -162,11 +193,17 @@ export default function Categories() {
           <div className="d-flex justify-content-between mb-3 align-items-center flex-wrap gap-2">
             <InputGroup size="sm" style={{ maxWidth: '280px' }}>
               <InputGroup.Text className="bg-transparent text-muted"><Icon icon="lucide:search" width={14} /></InputGroup.Text>
-              <Form.Control placeholder={`Search ${activeTab}...`} value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
+              <Form.Control placeholder={`Search ${activeTab}...`} value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); setSelectedIds([]); }} />
             </InputGroup>
             <div className="d-flex gap-2 align-items-center">
               <span className="text-muted small">{sourceData.length} total {activeTab}</span>
               <Button variant="outline-secondary" size="sm" onClick={fetchCategories}><Icon icon="lucide:refresh-cw" width={14} /></Button>
+              {selectedIds.length > 0 && (
+                <Button variant="danger" size="sm" onClick={() => setShowBulkDeleteModal(true)} disabled={deletingBulk}>
+                  <Icon icon="lucide:trash-2" width={14} className="me-1" />
+                  Delete Selected ({selectedIds.length})
+                </Button>
+              )}
               {activeTab === 'categories' ? (
                 <Button variant="primary" size="sm" onClick={() => handleOpenModal(null, '', 'category')}><Icon icon="lucide:plus" width={14} className="me-1" />Add Category</Button>
               ) : (
@@ -175,7 +212,7 @@ export default function Categories() {
             </div>
           </div>
           
-          <Tabs activeKey={activeTab} onSelect={(k) => { setActiveTab(k); setCurrentPage(1); setSearch(''); }} className="mb-3">
+          <Tabs activeKey={activeTab} onSelect={(k) => { setActiveTab(k); setCurrentPage(1); setSearch(''); setSelectedIds([]); }} className="mb-3">
             <Tab eventKey="categories" title="Categories" />
             <Tab eventKey="subcategories" title="Subcategories" />
           </Tabs>
@@ -187,6 +224,13 @@ export default function Categories() {
               <Table responsive hover className="align-middle mb-0">
                 <thead className="bg-light">
                   <tr>
+                    <th style={{ width: 40 }}>
+                      <Form.Check 
+                        type="checkbox"
+                        checked={currentData.length > 0 && selectedIds.length === currentData.length}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
                     <th style={{ width: 60 }}>Image</th>
                     <th>Name</th>
                     {activeTab === 'subcategories' && <th>Parent Category</th>}
@@ -198,6 +242,13 @@ export default function Categories() {
                 <tbody>
                   {currentData.map(c => (
                     <tr key={c._id}>
+                      <td>
+                        <Form.Check 
+                          type="checkbox"
+                          checked={selectedIds.includes(c._id)}
+                          onChange={() => handleSelectOne(c._id)}
+                        />
+                      </td>
                       <td>
                         {c.image ? (
                           <img src={c.image} alt={c.name} width="36" height="36" className="rounded" style={{ objectFit: 'cover' }} />
@@ -229,13 +280,13 @@ export default function Categories() {
                 <div className="d-flex justify-content-between align-items-center pt-3 border-top">
                   <span className="text-muted small">Page {currentPage} of {totalPages}</span>
                   <Pagination size="sm" className="mb-0">
-                    <Pagination.Prev disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} />
+                    <Pagination.Prev disabled={currentPage === 1} onClick={() => { setCurrentPage(p => p - 1); setSelectedIds([]); }} />
                     {Array.from({ length: totalPages }, (_, i) => (
-                      <Pagination.Item key={i + 1} active={i + 1 === currentPage} onClick={() => setCurrentPage(i + 1)}>
+                      <Pagination.Item key={i + 1} active={i + 1 === currentPage} onClick={() => { setCurrentPage(i + 1); setSelectedIds([]); }}>
                         {i + 1}
                       </Pagination.Item>
                     ))}
-                    <Pagination.Next disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} />
+                    <Pagination.Next disabled={currentPage === totalPages} onClick={() => { setCurrentPage(p => p + 1); setSelectedIds([]); }} />
                   </Pagination>
                 </div>
               )}
@@ -337,6 +388,13 @@ export default function Categories() {
         itemName={deleteTarget?.name} 
         onCancel={() => setDeleteTarget(null)} 
         onConfirm={handleDelete} 
+      />
+
+      <DeleteModal 
+        show={showBulkDeleteModal} 
+        itemName={`${selectedIds.length} selected items`} 
+        onCancel={() => setShowBulkDeleteModal(false)} 
+        onConfirm={handleBulkDelete} 
       />
     </div>
   );
