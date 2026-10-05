@@ -63,7 +63,7 @@ const categoryText = (p) => `${p.category?.name || (typeof p.category === 'strin
 const TabItem = ({ name, icon: Icon, active, onPress }) => {
   const v = useRef(new Animated.Value(active ? 1 : 0)).current;
   useEffect(() => { Animated.timing(v, { toValue: active ? 1 : 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [active, v]);
-  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, -3] });
+  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, 0] });
   const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const color = v.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,0.72)', 'rgba(255,255,255,1)'] });
   return <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }} style={styles.tabPress}>
@@ -76,22 +76,29 @@ const TabItem = ({ name, icon: Icon, active, onPress }) => {
 const SEARCH_WORDS = ['Apple', 'Atta', 'Sugar', 'Milk', 'Paneer', 'Eggs'];
 const WORD_H = 18;
 const RotatingSearch = ({ words }) => {
-  const list = words.length ? words : SEARCH_WORDS;
-  const [i, setI] = useState(0);
-  const p = useRef(new Animated.Value(0)).current;
+  const seen = new Set();
+  const uniq = (words.length ? words : SEARCH_WORDS).filter(w => { const k = String(w).trim().toLowerCase(); if (!k || seen.has(k)) return false; seen.add(k); return true; });
+  const list = uniq.length >= 2 ? uniq : SEARCH_WORDS;
+  const [step, setStep] = useState(0);
+  const t = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     const timer = setTimeout(() => {
-      Animated.timing(p, { toValue: 1, duration: 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start(({ finished }) => { if (finished) { setI(x => x + 1); p.setValue(0); } });
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, [i, p]);
-  const cur = list[i % list.length];
-  const next = list[(i + 1) % list.length];
+      Animated.timing(t, { toValue: step + 1, duration: 420, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start(({ finished }) => { if (finished) setStep(step + 1); });
+    }, 1800);
+    return () => { clearTimeout(timer); };
+  }, [step, t]);
+  // Two slots, even and odd word numbers. t only ever counts up, so a slot is re-pointed at a new word
+  // while it is invisible and nothing is reset mid-frame (this removed the repeat/flash).
+  const slotWord = (parity) => { const n = step % 2 === parity ? step : step + 1; return n; };
+  const renderSlot = (n) => <Animated.Text key={n % 2} numberOfLines={1} style={[styles.placeholder, styles.rotWord, {
+    opacity: t.interpolate({ inputRange: [n - 1, n, n + 1], outputRange: [0, 1, 0], extrapolate: 'clamp' }),
+    transform: [{ translateY: t.interpolate({ inputRange: [n - 1, n, n + 1], outputRange: [WORD_H, 0, -WORD_H], extrapolate: 'clamp' }) }]
+  }]}>{list[n % list.length] + "'"}</Animated.Text>;
   return <View style={styles.rotRow}>
     <Text style={styles.placeholder}>{"Search for '"}</Text>
     <View style={styles.rotWindow}>
-      <Animated.Text numberOfLines={1} style={[styles.placeholder, styles.rotWord, { opacity: p.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }), transform: [{ translateY: p.interpolate({ inputRange: [0, 1], outputRange: [0, -WORD_H] }) }] }]}>{cur + "'"}</Animated.Text>
-      <Animated.Text numberOfLines={1} style={[styles.placeholder, styles.rotWord, { opacity: p, transform: [{ translateY: p.interpolate({ inputRange: [0, 1], outputRange: [WORD_H, 0] }) }] }]}>{next + "'"}</Animated.Text>
+      {renderSlot(slotWord(0))}
+      {renderSlot(slotWord(1))}
     </View>
   </View>;
 };
@@ -123,7 +130,7 @@ export default function HomeScreen() {
   const theme = THEMES[THEME_INDEX(tab)];
   const themeBg = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeColors });
   const tabW = tabsWidth / TABS.length;
-  const HUMP_W = Math.max(tabW - 10, 48);
+  const HUMP_W = Math.min(Math.max(tabW - 8, 44), 54);
   const humpLeft = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => i * tabW + (tabW - HUMP_W) / 2) });
   const lineLeftW = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => i * tabW + (tabW - HUMP_W) / 2 + 16 + 1) });
   const lineRightW = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => Math.max(tabsWidth + 32 - (i * tabW + (tabW - HUMP_W) / 2 + 16 + HUMP_W - 1), 0)) });
@@ -189,12 +196,12 @@ export default function HomeScreen() {
           </View>
           {tabsWidth > 0 && <>
             <Animated.View pointerEvents="none" style={[styles.lineSeg, { left: -16, width: lineLeftW }]}>
-              <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.9)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.lineFade} />
+              <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.lineFade} />
               <View style={[styles.lineSolid, { left: 56 }]} />
             </Animated.View>
             <Animated.View pointerEvents="none" style={[styles.lineSeg, { right: -16, width: lineRightW }]}>
               <View style={[styles.lineSolid, { right: 56 }]} />
-              <LinearGradient colors={['rgba(255,255,255,0.9)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.lineFade, { right: 0 }]} />
+              <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.lineFade, { right: 0 }]} />
             </Animated.View>
             <Animated.View pointerEvents="none" style={[styles.hump, { left: humpLeft, width: HUMP_W }]} />
           </>}
@@ -257,7 +264,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16, overflow: 'hidden' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
-  tabs: { flexDirection: 'row', paddingTop: 16 }, tabsWrap: { position: 'relative' }, lineSeg: { position: 'absolute', bottom: 0, height: 2, overflow: 'hidden' }, lineFade: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 56 }, lineSolid: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.9)' }, hump: { position: 'absolute', bottom: 0, height: 60, borderWidth: 2, borderBottomWidth: 0, borderColor: 'rgba(255,255,255,0.9)', borderTopLeftRadius: 20, borderTopRightRadius: 20 }, rotRow: { flexDirection: 'row', alignItems: 'center', flex: 1 }, rotWindow: { height: 18, flex: 1, overflow: 'hidden' }, rotWord: { position: 'absolute', left: 0, right: 0, top: 0, lineHeight: 18 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 2 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
+  tabs: { flexDirection: 'row', paddingTop: 16 }, tabsWrap: { position: 'relative' }, lineSeg: { position: 'absolute', top: 48, height: 1, overflow: 'hidden' }, lineFade: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 56 }, lineSolid: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.5)' }, hump: { position: 'absolute', top: 14, height: 35, borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(255,255,255,0.5)', borderTopLeftRadius: 18, borderTopRightRadius: 18 }, rotRow: { flexDirection: 'row', alignItems: 'center', flex: 1 }, rotWindow: { height: 18, flex: 1, overflow: 'hidden' }, rotWord: { position: 'absolute', left: 0, right: 0, top: 0, lineHeight: 18 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 9, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 2 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
   body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', overflow: 'hidden', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
   featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 18, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '92%', height: '92%' }, categoryArt: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, categoryName: { fontSize: 12, lineHeight: 16, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
