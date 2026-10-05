@@ -21,9 +21,9 @@ const TABS = [
   { name: 'More', icon: Package, match: '' }
 ];
 const GROUPS = [
-  { name: 'Fresh\nfruits', match: 'fruit', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400' },
+  { name: 'Fresh\nfruits', match: 'fruit|apple|banana|mango|orange|grape', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400' },
   { name: 'Fresh\nvegetables', match: 'vegetable', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400' },
-  { name: 'Milk &\ndairy', match: 'milk|dairy', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400' }
+  { name: 'Milk &\ndairy', match: 'milk|curd|paneer|butter|cheese', image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400' }
 ];
 const listFrom = (res) => {
   const data = res.data?.data ?? res.data;
@@ -80,8 +80,8 @@ export default function HomeScreen() {
           </View>
           <View style={styles.featuredRow}>
             {GROUPS.map(g => {
-              const items = products.filter(p => new RegExp(g.match, 'i').test(categoryText(p)));
-              const prices = items.map(p => p.variants?.[0]?.sellingPrice ?? p.sellingPrice).filter(p => Number.isFinite(Number(p)) && Number(p) >= 0).map(Number);
+              const items = products.filter(p => new RegExp(g.match, 'i').test(p.name || ''));
+              const prices = items.flatMap(p => p.variants?.length ? p.variants.map(v => v.sellingPrice ?? p.sellingPrice) : [p.sellingPrice]).filter(p => Number.isFinite(Number(p)) && Number(p) >= 0).map(Number);
               return <Pressable key={g.name} style={[styles.featuredTile, group === g.match && styles.selectedTile]} onPress={() => { setGroup(g.match); setTab('Fresh'); }} accessibilityRole="button" accessibilityLabel={g.name.replace('\n', ' ')}>
                 <Text style={styles.featuredName}>{g.name}</Text><Image source={{ uri: g.image }} style={styles.featuredImage} contentFit="cover" />
                 <Text style={styles.priceRibbon} numberOfLines={1}>{prices.length ? `STARTS AT ₹${Math.min(...prices)}` : 'EXPLORE'}</Text>
