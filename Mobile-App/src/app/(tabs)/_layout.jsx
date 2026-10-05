@@ -14,7 +14,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Home,
-  Search,
+  LayoutGrid,
   ShoppingCart,
   ClipboardList,
   User,
@@ -119,9 +119,9 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
             strokeWidth={isFocused ? 2.4 : 1.9}
           />
         );
-      case 'search':
+      case 'category':
         return (
-          <Search
+          <LayoutGrid
             size={iconSize}
             color={iconColor}
             strokeWidth={isFocused ? 2.5 : 1.9}
@@ -321,9 +321,9 @@ export default function TabLayout() {
           }}
         />
         <Tabs.Screen
-          name="search"
+          name="category"
           options={{
-            title: 'Search'
+            title: 'Category'
           }}
         />
         <Tabs.Screen
