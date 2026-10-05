@@ -11,14 +11,12 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Search, ShoppingBag, ChevronRight } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
-import { StorefrontAPI } from '../../services/api';
+import { StorefrontAPI, api } from '../../services/api';
 import { CategorySidebar } from '../../components/category/CategorySidebar';
 import { CategoryFilterBar } from '../../components/category/CategoryFilterBar';
 import { CategoryProductGrid } from '../../components/category/CategoryProductGrid';
 import { useCart } from '../../context/CartContext';
 import { haptics } from '../../services/haptics';
-import { MOCK_PRODUCTS } from '../../services/mockProducts';
-import { QuickProductSheet } from '../../components/product/QuickProductSheet';
 
 export default function CategoryDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -30,8 +28,6 @@ export default function CategoryDetailsScreen() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [selectedType, setSelectedType] = useState('ALL');
-  const [selectedProductForSheet, setSelectedProductForSheet] = useState(null);
-  const [quickSheetVisible, setQuickSheetVisible] = useState(false);
 
   // 1. Fetch Categories with subcategories
   const { data: categoriesData, isLoading: isCategoriesLoading } = useQuery({
@@ -114,29 +110,14 @@ export default function CategoryDetailsScreen() {
   } = useQuery({
     queryKey: ['category-products', activeCategory?._id, effectiveSubcategoryId, activeSort],
     queryFn: async () => {
-      try {
-        const params = {
-          limit: 50
-        };
-        if (activeCategory?._id) {
-          params.category = activeCategory._id;
-        }
-        if (effectiveSubcategoryId) {
-          params.subcategory = effectiveSubcategoryId;
-        }
-        if (activeSort === 'price_asc') params.sort = 'price_asc';
-        if (activeSort === 'price_desc') params.sort = 'price_desc';
-        if (activeSort === 'discount_desc') params.sort = 'discount_desc';
-
-        const res = await StorefrontAPI.getProducts(params);
-        const list = res.data?.data || res.data;
-        if (Array.isArray(list) && list.length > 0) {
-          return list;
-        }
-      } catch (err) {
-        console.log('[CategoryDetailsScreen] Products fetch error, using fallback:', err.message);
-      }
-      return MOCK_PRODUCTS;
+      const params = { limit: 50 };
+      if (activeCategory?._id) params.category = activeCategory._id;
+      if (effectiveSubcategoryId) params.subcategory = effectiveSubcategoryId;
+      if (['price_asc', 'price_desc', 'discount_desc'].includes(activeSort)) params.sort = activeSort;
+      const res = await api.get('/products', { params });
+      const list = res.data?.data ?? res.data;
+      if (!Array.isArray(list)) throw new Error('Invalid store catalog');
+      return list;
     },
     enabled: true
   });
@@ -267,8 +248,7 @@ export default function CategoryDetailsScreen() {
             isRefreshing={isRefetching}
             onRefresh={refetch}
             onProductPress={(prod) => {
-              setSelectedProductForSheet(prod);
-              setQuickSheetVisible(true);
+              router.push(`/product/${prod._id}`);
             }}
             onRetry={handleResetFilters}
           />
@@ -290,7 +270,7 @@ export default function CategoryDetailsScreen() {
           >
             <View style={styles.cartBarLeft}>
               <View style={styles.cartIconCircle}>
-                <ShoppingBag size={18} color="#111111" />
+                <ShoppingBag size={18} color="#FFFFFF" />
               </View>
               <View>
                 <Text style={styles.cartBarCountText}>
@@ -302,22 +282,14 @@ export default function CategoryDetailsScreen() {
 
             <View style={styles.cartBarRight}>
               <Text style={styles.cartBarActionText}>View Cart</Text>
-              <ChevronRight size={18} color="#111111" />
+              <ChevronRight size={18} color="#FFFFFF" />
             </View>
           </Pressable>
         </View>
       )}
 
       {/* 5. Quick Product Bottom Sheet (Screenshot 2) */}
-      <QuickProductSheet
-        visible={quickSheetVisible}
-        product={selectedProductForSheet}
-        onClose={() => setQuickSheetVisible(false)}
-        onOpenFullDetails={(prod) => {
-          setQuickSheetVisible(false);
-          router.push(`/product/${prod._id}`);
-        }}
-      />
+
     </SafeAreaView>
   );
 }
@@ -395,7 +367,7 @@ const styles = StyleSheet.create({
     borderTopColor: colors.borderLight
   },
   cartBar: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#1769FF',
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
