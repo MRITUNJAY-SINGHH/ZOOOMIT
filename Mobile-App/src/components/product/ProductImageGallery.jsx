@@ -41,7 +41,7 @@ export const ProductImageGallery = ({
     haptics.selection();
     try {
       await Share.share({
-        message: `Check out ${product?.name} on Kuiklo! Fresh essentials delivered in 17 mins.`,
+        message: `Check out ${product?.name} on Zooom.`,
         title: product?.name
       });
     } catch (e) {
@@ -120,12 +120,12 @@ export const ProductImageGallery = ({
       {/* Bottom Overlay Elements on Hero */}
       <View style={styles.bottomHeroOverlay}>
         {/* Delivery ETA Badge */}
-        <View style={styles.deliveryBadge}>
+        {Boolean(product?.deliveryTime) && <View style={styles.deliveryBadge}>
           <Zap size={13} color="#D97706" fill="#D97706" />
           <Text style={styles.deliveryBadgeText}>
-            {product?.deliveryTime || '17 MINS'}
+            {product.deliveryTime}
           </Text>
-        </View>
+        </View>}
 
         {/* Pagination Dots */}
         {images.length > 1 && (
