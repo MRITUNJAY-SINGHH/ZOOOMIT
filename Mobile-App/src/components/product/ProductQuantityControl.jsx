@@ -97,7 +97,7 @@ export const ProductQuantityControl = ({
             accessibilityRole="button"
             accessibilityLabel="Decrease quantity"
           >
-            <Minus size={compact ? 13 : 16} color={colors.textPrimary} strokeWidth={2.6} />
+            <Minus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />
           </Pressable>
 
           <Text style={[styles.qtyText, compact && styles.qtyTextCompact]}>
@@ -114,7 +114,7 @@ export const ProductQuantityControl = ({
             accessibilityRole="button"
             accessibilityLabel="Increase quantity"
           >
-            <Plus size={compact ? 13 : 16} color={colors.textPrimary} strokeWidth={2.6} />
+            <Plus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />
           </Pressable>
         </View>
       </Animated.View>
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   addBtn: {
     height: 38,
     paddingHorizontal: 22,
-    backgroundColor: colors.primary,
+    backgroundColor: '#1769FF',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   addBtnText: {
     fontSize: 14,
     fontFamily: typography.family.bold,
-    color: colors.black,
+    color: '#FFFFFF',
     letterSpacing: 0.4
   },
   addBtnTextCompact: {
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.primary,
+    backgroundColor: '#1769FF',
     borderRadius: 12,
     height: 38,
     paddingHorizontal: 4,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   qtyText: {
     fontSize: 14,
     fontFamily: typography.family.bold,
-    color: colors.black,
+    color: '#FFFFFF',
     minWidth: 20,
     textAlign: 'center'
   },
