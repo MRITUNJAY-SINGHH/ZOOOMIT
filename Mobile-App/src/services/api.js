@@ -163,13 +163,13 @@ export const StorefrontAPI = {
     try {
       return await api.get('/products', { params });
     } catch (error) {
-      if (
+      if (process.env.EXPO_PUBLIC_USE_MOCK_DATA === 'true' && (
         !error.response ||
         error.code === 'ERR_NETWORK' ||
         error.code === 'ECONNABORTED' ||
         error.message?.includes('Network Error') ||
         error.message?.includes('timeout')
-      ) {
+      )) {
         console.log('[StorefrontAPI] Network unreachable. Utilizing fallback for getProducts.');
         return { data: { data: MOCK_PRODUCTS } };
       }
@@ -180,14 +180,14 @@ export const StorefrontAPI = {
     try {
       return await api.get(`/products/${idOrSlug}`);
     } catch (error) {
-      if (
+      if (process.env.EXPO_PUBLIC_USE_MOCK_DATA === 'true' && (
         !error.response ||
         error.code === 'ERR_NETWORK' ||
         error.code === 'ECONNABORTED' ||
         error.message?.includes('Network Error') ||
         error.message?.includes('timeout') ||
         error.response?.status === 404
-      ) {
+      )) {
         console.log('[StorefrontAPI] Utilizing sample product details fallback for:', idOrSlug);
         const fallback = findMockProduct(idOrSlug);
         return { data: { data: fallback } };
