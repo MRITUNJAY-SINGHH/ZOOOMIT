@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, ChevronDown, ChevronRight, ChevronUp, User } from 'lucide-react-native';
+import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, Leaf, Cherry, Grape, Citrus, Banana, Carrot, Wine, ChefHat, Heart, Star, Sprout, PartyPopper, ChevronDown, ChevronRight, ChevronUp, User } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +20,32 @@ const TABS = [
   { name: 'Gifts', icon: Gift, match: 'gift' },
   { name: 'More', icon: Package, match: '' }
 ];
+
+// One place to change the look of each tab. Order must match TABS.
+// bg = header + hero colour, accent = hero headline colour, deco = vector icons (x/y in %, size, rotation) faded in behind the header and hero.
+const THEMES = [
+  { name: 'All', bg: '#437D29', accent: '#FFA7CC', title: 'Fresh picks', sub: 'EVERY DAY', caption: 'Fruits, vegetables & more', hero: Leaf,
+    deco: [[Leaf, 6, 10, 30, -20], [Apple, 82, 8, 26, 15], [Sprout, 48, 55, 28, 0], [Leaf, 90, 62, 34, 30], [Citrus, 22, 70, 26, 10]] },
+  { name: 'Winter', bg: '#2F6FA8', accent: '#CFF3FF', title: 'Winter', sub: 'ESSENTIALS', caption: 'Stay warm, stay stocked', hero: Snowflake,
+    deco: [[Snowflake, 6, 8, 30, 0], [Snowflake, 84, 6, 22, 20], [Snowflake, 40, 60, 34, 10], [Snowflake, 92, 58, 26, -15], [Snowflake, 20, 72, 20, 30], [Snowflake, 62, 12, 18, 0]] },
+  { name: 'Fresh', bg: '#2E7D32', accent: '#FFE27A', title: 'Lowest prices', sub: 'EVERYDAY', caption: 'Fresh fruits & vegetables', hero: Apple,
+    deco: [[Cherry, 5, 10, 30, -15], [Banana, 80, 6, 30, 20], [Grape, 44, 62, 30, 0], [Carrot, 92, 60, 30, 25], [Citrus, 20, 72, 26, 10], [Apple, 62, 10, 22, -10]] },
+  { name: 'Gourmet', bg: '#5B2A86', accent: '#FFD27A', title: 'Gourmet', sub: 'FINDS', caption: 'Treat yourself today', hero: ChefHat,
+    deco: [[Sparkles, 6, 10, 28, 0], [Wine, 84, 8, 28, 15], [ChefHat, 42, 62, 30, -10], [Star, 92, 60, 22, 0], [Sparkles, 20, 72, 22, 15]] },
+  { name: 'Gifts', bg: '#C2185B', accent: '#FFE0EC', title: 'Gifts', sub: 'THEY\'LL LOVE', caption: 'Pick something special', hero: Gift,
+    deco: [[Heart, 6, 10, 28, -15], [Gift, 84, 8, 28, 15], [PartyPopper, 44, 62, 30, 0], [Heart, 92, 60, 24, 20], [Star, 20, 72, 20, 0]] },
+  { name: 'More', bg: '#46505E', accent: '#D8E1EC', title: 'Discover', sub: 'MORE', caption: 'Everything else you need', hero: Package,
+    deco: [[Package, 6, 10, 28, -10], [ShoppingBasket, 84, 8, 28, 10], [Sparkles, 44, 62, 26, 0], [Package, 92, 60, 24, 15]] }
+];
+const THEME_INDEX = (name) => Math.max(0, TABS.findIndex(t => t.name === name));
+const themeColors = THEMES.map(t => t.bg);
+const themeRange = THEMES.map((_, i) => i);
+const fade = (anim, i) => anim.interpolate({ inputRange: [i - 1, i, i + 1], outputRange: [0, 1, 0], extrapolate: 'clamp' });
+const ThemeDeco = ({ anim }) => <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+  {THEMES.map((t, i) => <Animated.View key={t.name} pointerEvents="none" style={[StyleSheet.absoluteFill, { opacity: fade(anim, i) }]}>
+    {t.deco.map(([Icon, x, y, size, rot], k) => <View key={k} style={{ position: 'absolute', left: `${x}%`, top: `${y}%`, transform: [{ rotate: `${rot}deg` }], opacity: 0.2 }}><Icon size={size} color="#fff" strokeWidth={1.6} /></View>)}
+  </Animated.View>)}
+</View>;
 const GROUPS = [
   { name: 'Fresh\nfruits', match: 'fruit|apple|banana|mango|orange|grape', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400' },
   { name: 'Fresh\nvegetables', match: 'vegetable', image: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=400' },
@@ -35,16 +61,14 @@ const categoryText = (p) => `${p.category?.name || (typeof p.category === 'strin
 
 const TabItem = ({ name, icon: Icon, active, onPress }) => {
   const v = useRef(new Animated.Value(active ? 1 : 0)).current;
-  useEffect(() => { Animated.timing(v, { toValue: active ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [active, v]);
-  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
-  const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
-  const bg = v.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.22)'] });
-  const bar = v.interpolate({ inputRange: [0, 1], outputRange: [0, 26] });
+  useEffect(() => { Animated.timing(v, { toValue: active ? 1 : 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [active, v]);
+  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, -3] });
+  const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
+  const color = v.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,0.72)', 'rgba(255,255,255,1)'] });
   return <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }} style={styles.tabPress}>
-    <Animated.View style={[styles.tab, { backgroundColor: bg, transform: [{ translateY: lift }, { scale }] }]}>
+    <Animated.View style={[styles.tab, { transform: [{ translateY: lift }, { scale }] }]}>
       <Icon size={22} color="#fff" strokeWidth={active ? 2.1 : 1.6} />
-      <Text style={[styles.tabText, active && styles.tabTextActive]}>{name}</Text>
-      <Animated.View style={[styles.tabBar, { width: bar, opacity: v }]} />
+      <Animated.Text style={[styles.tabText, active && styles.tabTextActive, { color }]}>{name}</Animated.Text>
     </Animated.View>
   </Pressable>;
 };
@@ -70,6 +94,14 @@ export default function HomeScreen() {
   const downFrom = useRef(0);
   const [activeParent, setActiveParent] = useState(null);
   const [tab, setTab] = useState('All');
+  const themeAnim = useRef(new Animated.Value(0)).current;
+  const [tabsWidth, setTabsWidth] = useState(0);
+  useEffect(() => { Animated.timing(themeAnim, { toValue: THEME_INDEX(tab), duration: 450, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start(); }, [tab, themeAnim]);
+  const theme = THEMES[THEME_INDEX(tab)];
+  const themeBg = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeColors });
+  const tabW = tabsWidth / TABS.length;
+  const CUP_W = 56;
+  const cupLeft = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => i * tabW + (tabW - CUP_W) / 2) });
   const [group, setGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const productsQuery = useQuery({ queryKey: ['instamart-home-products'], queryFn: async () => listFrom(await api.get('/products', { params: { limit: 60 } })) });
@@ -107,7 +139,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)} style={[styles.header, { paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
+      <Animated.View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)} style={[styles.header, { backgroundColor: themeBg, paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
+        <ThemeDeco anim={themeAnim} />
         <View style={styles.addressRow}>
         <Pressable style={styles.address} onPress={() => router.push('/addresses')} accessibilityRole="button">
           <Text style={styles.addressText} numberOfLines={1}>{addressLabel}</Text><ChevronDown size={14} color="#fff" />
@@ -122,15 +155,20 @@ export default function HomeScreen() {
           </Pressable>
           <Pressable style={styles.bookmark} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Bookmark size={22} color="#fff" /></Pressable>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+        <View onLayout={e => setTabsWidth(e.nativeEvent.layout.width)} style={styles.tabs}>
           {TABS.map(t => <TabItem key={t.name} name={t.name} icon={t.icon} active={t.name === tab} onPress={() => { setTab(t.name); setGroup(null); }} />)}
-        </ScrollView>
-      </View>
+        </View>
+        <View style={styles.tabLineWrap}>
+          <View style={styles.tabLine} />
+          {tabsWidth > 0 && <Animated.View style={[styles.tabCup, { left: cupLeft, width: CUP_W, backgroundColor: themeBg }]} />}
+        </View>
+      </Animated.View>
       <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
-        <View style={styles.greenPanel}>
+        <Animated.View style={[styles.greenPanel, { backgroundColor: themeBg }]}>
+          <ThemeDeco anim={themeAnim} />
           <View style={styles.hero}>
-            <View style={styles.heroCopy}><Text style={styles.heroPink}>Fresh picks</Text><Text style={styles.heroWhite}>EVERY DAY</Text><Text style={styles.heroCaption}>Fruits, vegetables & more</Text></View>
-            <Image source={{ uri: GROUPS[0].image }} style={styles.heroImage} contentFit="cover" />
+            <View style={styles.heroCopy}><Text style={[styles.heroPink, { color: theme.accent }]}>{theme.title}</Text><Text style={styles.heroWhite}>{theme.sub}</Text><Text style={styles.heroCaption}>{theme.caption}</Text></View>
+            {tab === 'All' || tab === 'Fresh' ? <Image source={{ uri: GROUPS[0].image }} style={styles.heroImage} contentFit="cover" /> : <View style={styles.heroBadge}><theme.hero size={44} color="#fff" strokeWidth={1.5} /></View>}
           </View>
           <View style={styles.featuredRow}>
             {GROUPS.map(g => {
@@ -142,7 +180,7 @@ export default function HomeScreen() {
               </Pressable>;
             })}
           </View>
-        </View>
+        </Animated.View>
         {categoriesQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
         {categoriesQuery.isError && <View style={styles.state}><Text style={styles.stateText}>Couldn't load categories.</Text><Pressable onPress={() => categoriesQuery.refetch()}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
         {parents.length > 0 && <>
@@ -179,11 +217,11 @@ const styles = StyleSheet.create({
   parentSlider: { paddingHorizontal: 16, paddingVertical: 22, gap: 12 }, parentTile: { width: 76, gap: 8, alignItems: 'center' }, parentArt: { width: 68, height: 68, borderRadius: 16, borderWidth: 2, borderColor: 'transparent' }, parentArtActive: { borderColor: '#1769FF', transform: [{ translateY: -3 }] }, parentLabelActive: { color: '#1769FF' },
   fullSeeAll: { marginHorizontal: 16, marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center' }, fullSeeAllText: { color: '#0066CC', fontSize: 16, fontFamily: typography.family.bold },
   backTopWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 20 }, backTop: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#1C1F26', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 28, elevation: 5, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, backTopText: { color: '#fff', fontSize: 14, fontFamily: typography.family.medium },
-  root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16 },
+  root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16, overflow: 'hidden' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
-  tabs: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 16, paddingBottom: 0 }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 6 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
-  body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
-  featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: '#193F17', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
+  tabs: { flexDirection: 'row', paddingTop: 16 }, tabLineWrap: { height: 16, marginHorizontal: -16 }, tabLine: { position: 'absolute', top: 2, left: 0, right: 0, height: 2, backgroundColor: 'rgba(255,255,255,0.28)' }, tabCup: { position: 'absolute', top: 0, height: 15, marginLeft: 16, borderWidth: 2.5, borderTopWidth: 0, borderColor: '#fff', borderBottomLeftRadius: 16, borderBottomRightRadius: 16 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 2 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
+  body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', overflow: 'hidden', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
+  featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 18, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '92%', height: '92%' }, categoryArt: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, categoryName: { fontSize: 12, lineHeight: 16, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
 });
