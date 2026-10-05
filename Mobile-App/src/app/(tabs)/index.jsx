@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, ChevronDown, ChevronRight } from 'lucide-react-native';
+import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -48,19 +48,45 @@ const TabItem = ({ name, icon: Icon, active, onPress }) => {
     </Animated.View>
   </Pressable>;
 };
+const idOf = (item) => typeof item === 'string' ? item : item?._id || item?.id;
+const CategoryArt = ({ category, products }) => {
+  const [failed, setFailed] = useState(false);
+  const ownProduct = products.find(p => idOf(p.category) === idOf(category) || idOf(p.subcategory) === idOf(category));
+  const uri = failed ? ownProduct?.featuredImage : category.image || category.featuredImage || ownProduct?.featuredImage;
+  const [fallbackFailed, setFallbackFailed] = useState(false);
+  return <View style={styles.categoryArt}>{uri && !fallbackFailed ? <Image source={{ uri }} style={styles.categoryImage} contentFit="contain" onError={() => failed ? setFallbackFailed(true) : setFailed(true)} /> : <ShoppingBasket size={30} color="#2376B5" />}</View>;
+};
 const TOP_INSET_FALLBACK = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { customer } = useAuth();
   const { onScrollHandler } = useTabBarVisibility();
+  const scrollRef = useRef(null);
+  const sectionOffsets = useRef({});
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [activeParent, setActiveParent] = useState(null);
   const [tab, setTab] = useState('All');
   const [group, setGroup] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const productsQuery = useQuery({ queryKey: ['instamart-home-products'], queryFn: async () => listFrom(await api.get('/products', { params: { limit: 60 } })) });
-  const categoriesQuery = useQuery({ queryKey: ['instamart-home-categories'], queryFn: async () => listFrom(await api.get('/categories')) });
+  const categoriesQuery = useQuery({ queryKey: ['instamart-home-categories'], queryFn: async () => listFrom(await api.get('/categories', { params: { includeSubcategories: 'true' } })) });
   const products = productsQuery.data || [];
   const categories = categoriesQuery.data || [];
+  const parents = categories.filter(c => !idOf(c.parentCategory));
+  const childrenOf = (parent) => {
+    const list = [...(parent.subcategories || []), ...categories.filter(c => idOf(c.parentCategory) === idOf(parent))];
+    return list.filter((c, i) => list.findIndex(x => idOf(x) === idOf(c)) === i);
+  };
+  const handleScroll = (event) => {
+    onScrollHandler(event);
+    setShowBackToTop(event.nativeEvent.contentOffset.y > 320);
+  };
+  const jumpToParent = (parent) => {
+    setActiveParent(idOf(parent));
+    const y = sectionOffsets.current[idOf(parent)];
+    if (typeof y === 'number') scrollRef.current?.scrollTo({ y: Math.max(y - 12, 0), animated: true });
+  };
   const address = customer?.addresses?.find(a => a.isDefault) || customer?.addresses?.[0];
   const addressLabel = address ? [address.street, address.city].filter(Boolean).join(', ') : 'Select delivery address';
   const match = group || TABS.find(t => t.name === tab)?.match;
@@ -87,7 +113,7 @@ export default function HomeScreen() {
           {TABS.map(t => <TabItem key={t.name} name={t.name} icon={t.icon} active={t.name === tab} onPress={() => { setTab(t.name); setGroup(null); }} />)}
         </ScrollView>
       </View>
-      <ScrollView onScroll={onScrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
+      <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
         <View style={styles.greenPanel}>
           <View style={styles.hero}>
             <View style={styles.heroCopy}><Text style={styles.heroPink}>Fresh picks</Text><Text style={styles.heroWhite}>EVERY DAY</Text><Text style={styles.heroCaption}>Fruits, vegetables & more</Text></View>
@@ -104,26 +130,47 @@ export default function HomeScreen() {
             })}
           </View>
         </View>
+        {categoriesQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
+        {categoriesQuery.isError && <View style={styles.state}><Text style={styles.stateText}>Couldn't load categories.</Text><Pressable onPress={() => categoriesQuery.refetch()}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
+        {parents.length > 0 && <>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.parentSlider}>
+            {parents.map(parent => <Pressable key={idOf(parent)} onPress={() => jumpToParent(parent)} style={styles.parentTile} accessibilityRole="button" accessibilityLabel={`Browse ${parent.name}`} accessibilityState={{ selected: activeParent === idOf(parent) }}>
+              <View style={[styles.parentArt, activeParent === idOf(parent) && styles.parentArtActive]}><CategoryArt category={parent} products={products} /></View>
+              <Text style={[styles.categoryName, activeParent === idOf(parent) && styles.parentLabelActive]} numberOfLines={2}>{parent.name}</Text>
+            </Pressable>)}
+          </ScrollView>
+          {parents.map(parent => {
+            const children = childrenOf(parent);
+            const tiles = children.length ? children : [parent];
+            return <View key={idOf(parent)} onLayout={e => { sectionOffsets.current[idOf(parent)] = e.nativeEvent.layout.y; }}>
+              <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{parent.name}</Text></View>
+              <View style={styles.categoryGrid}>{tiles.map(c => <Pressable key={idOf(c)} style={styles.category} onPress={() => openCategory(c)} accessibilityRole="button" accessibilityLabel={`Shop ${c.name}`}>
+                <CategoryArt category={c} products={products} /><Text style={styles.categoryName} numberOfLines={3}>{c.name}</Text>
+              </Pressable>)}</View>
+            </View>;
+          })}
+        </>}
         <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{group ? 'Fresh picks for you' : tab === 'All' ? 'Top deals on bestsellers' : `${tab} picks`}</Text><Pressable onPress={() => router.push('/(tabs)/search')} style={styles.seeAll}><Text style={styles.seeAllText}>See All</Text><ChevronRight size={14} color="#1769FF" /></Pressable></View>
         {productsQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
         {productsQuery.isError && <View style={styles.state}><Text style={styles.stateTitle}>Couldn't load your store</Text><Text style={styles.stateText}>Check your connection and try again.</Text><Pressable onPress={onRefresh}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
         {!productsQuery.isLoading && !productsQuery.isError && !visibleProducts.length && <View style={styles.state}><Text style={styles.stateText}>No products in this collection yet.</Text><Pressable onPress={() => { setTab('All'); setGroup(null); }}><Text style={styles.seeAllText}>Browse all products</Text></Pressable></View>}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(0, 12).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView>
-        {categories.length > 0 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Shop by category</Text></View><View style={styles.categoryGrid}>{categories.map(c => <Pressable key={c._id || c.id} style={styles.category} onPress={() => openCategory(c)}>
-          {c.image || c.featuredImage ? <Image source={{ uri: c.image || c.featuredImage }} style={styles.categoryImage} contentFit="contain" /> : <ShoppingBasket size={30} color="#467B29" />}
-          <Text style={styles.categoryName} numberOfLines={2}>{c.name}</Text>
-        </Pressable>)}</View></>}
+        {visibleProducts.length > 0 && <Pressable style={styles.fullSeeAll} onPress={() => router.push('/(tabs)/search')} accessibilityRole="button"><Text style={styles.fullSeeAllText}>See All »</Text></Pressable>}
         {visibleProducts.length > 12 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>More everyday essentials</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(12, 24).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView></>}
       </ScrollView>
+      {showBackToTop && <View pointerEvents="box-none" style={[styles.backTopWrap, { bottom: Math.max(insets.bottom, 12) + 138 }]}><Pressable style={styles.backTop} onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} accessibilityRole="button" accessibilityLabel="Back to top"><ChevronUp size={20} color="#fff" /><Text style={styles.backTopText}>Back to top</Text></Pressable></View>}
     </View>
   );
 }
 const styles = StyleSheet.create({
+  parentSlider: { paddingHorizontal: 16, paddingVertical: 22, gap: 12 }, parentTile: { width: 76, gap: 8, alignItems: 'center' }, parentArt: { width: 68, height: 68, borderRadius: 16, borderWidth: 2, borderColor: 'transparent' }, parentArtActive: { borderColor: '#1769FF', transform: [{ translateY: -3 }] }, parentLabelActive: { color: '#1769FF' },
+  fullSeeAll: { marginHorizontal: 16, marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center' }, fullSeeAllText: { color: '#0066CC', fontSize: 16, fontFamily: typography.family.bold },
+  backTopWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 20 }, backTop: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#1C1F26', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 28, elevation: 5, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, backTopText: { color: '#fff', fontSize: 14, fontFamily: typography.family.medium },
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16 },
   address: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 12, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
   tabs: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 16, paddingBottom: 0 }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 6 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
-  body: { paddingBottom: 125 }, greenPanel: { backgroundColor: '#437D29', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
+  body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
   featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: '#193F17', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
-  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 15, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '100%', height: 70, borderRadius: 12, backgroundColor: '#F2F7EE' }, categoryName: { fontSize: 11, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 18, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '92%', height: '92%' }, categoryArt: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, categoryName: { fontSize: 12, lineHeight: 16, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
 });
