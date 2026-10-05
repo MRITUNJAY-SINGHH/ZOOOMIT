@@ -31,7 +31,7 @@ import {
   Clock
 } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
-import { StorefrontAPI } from '../../services/api';
+import { StorefrontAPI, MOCKS_ENABLED } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { haptics } from '../../services/haptics';
@@ -42,63 +42,15 @@ import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const INSTAMART_CATEGORIES = [
-  {
-    id: 'vegetables',
-    name: 'Vegetables & Fruits',
-    image: 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=300',
-    bgColor: '#EBF9F1',
-    borderColor: '#D1FAE5'
-  },
-  {
-    id: 'dairy',
-    name: 'Dairy, Bread & Eggs',
-    image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=300',
-    bgColor: '#EFF6FF',
-    borderColor: '#DBEAFE'
-  },
-  {
-    id: 'groceries',
-    name: 'Atta, Rice & Dal',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300',
-    bgColor: '#FFFBEB',
-    borderColor: '#FEF3C7'
-  },
-  {
-    id: 'snacks',
-    name: 'Snacks & Munchies',
-    image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300',
-    bgColor: '#FFF7ED',
-    borderColor: '#FFEDD5'
-  },
-  {
-    id: 'drinks',
-    name: 'Cold Drinks & Juices',
-    image: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?w=300',
-    bgColor: '#FEF2F2',
-    borderColor: '#FEE2E2'
-  },
-  {
-    id: 'instant',
-    name: 'Instant & Frozen',
-    image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300',
-    bgColor: '#FAF5FF',
-    borderColor: '#F3E8FF'
-  },
-  {
-    id: 'household',
-    name: 'Cleaning & Household',
-    image: 'https://images.unsplash.com/photo-1585842378054-ee2e52f94ba2?w=300',
-    bgColor: '#F0FDFA',
-    borderColor: '#CCFBF1'
-  },
-  {
-    id: 'beauty',
-    name: 'Personal & Baby Care',
-    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=300',
-    bgColor: '#FDF2F8',
-    borderColor: '#FCE7F3'
-  }
+const TILE_PALETTE = [
+  { bgColor: '#EBF9F1', borderColor: '#D1FAE5' },
+  { bgColor: '#EFF6FF', borderColor: '#DBEAFE' },
+  { bgColor: '#FFFBEB', borderColor: '#FEF3C7' },
+  { bgColor: '#FFF7ED', borderColor: '#FFEDD5' },
+  { bgColor: '#FEF2F2', borderColor: '#FEE2E2' },
+  { bgColor: '#FAF5FF', borderColor: '#F3E8FF' },
+  { bgColor: '#F0FDFA', borderColor: '#CCFBF1' },
+  { bgColor: '#FDF2F8', borderColor: '#FCE7F3' }
 ];
 
 const SEARCH_PROMPTS = [
@@ -130,53 +82,85 @@ export default function HomeScreen() {
     return () => clearInterval(timer);
   }, []);
 
-  const { data: categoriesData, refetch: refetchCategories } = useQuery({
+  // Queries do not swallow errors: failures show a retry card instead of silent sample data.
+  const {
+    data: categoriesData,
+    refetch: refetchCategories
+  } = useQuery({
     queryKey: ['home-categories'],
     queryFn: async () => {
-      try {
-        const res = await StorefrontAPI.getCategories();
-        return res.data?.data || [];
-      } catch (e) {
-        return [];
-      }
+      const res = await StorefrontAPI.getCategories();
+      return res.data?.data || [];
     }
   });
 
-  const { data: backendProducts, refetch: refetchProducts } = useQuery({
+  const { data: bannersData, refetch: refetchBanners } = useQuery({
+    queryKey: ['home-banners'],
+    queryFn: async () => {
+      const res = await StorefrontAPI.getBanners();
+      return res.data?.data || [];
+    }
+  });
+
+  const {
+    data: backendProducts,
+    isLoading: productsLoading,
+    isError: productsError,
+    refetch: refetchProducts
+  } = useQuery({
     queryKey: ['home-products'],
     queryFn: async () => {
-      try {
-        const res = await StorefrontAPI.getProducts({ limit: 40 });
-        const list = res.data?.data || res.data;
-        return Array.isArray(list) && list.length > 0 ? list : null;
-      } catch (e) {
-        return null;
-      }
+      const res = await StorefrontAPI.getProducts({ limit: 60 });
+      const list = res.data?.data || res.data;
+      return Array.isArray(list) ? list : [];
     }
   });
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     haptics.selection();
-    await Promise.all([refetchCategories(), refetchProducts()]);
+    await Promise.all([refetchCategories(), refetchProducts(), refetchBanners()]);
     setRefreshing(false);
-  }, [refetchCategories, refetchProducts]);
+  }, [refetchCategories, refetchProducts, refetchBanners]);
 
+  // Dev-only sample data, and only when EXPO_PUBLIC_USE_MOCKS=true.
   const activeProducts = useMemo(() => {
-    return backendProducts || MOCK_PRODUCTS;
+    if (backendProducts && backendProducts.length > 0) return backendProducts;
+    return MOCKS_ENABLED ? MOCK_PRODUCTS : [];
   }, [backendProducts]);
 
+  // Top-level categories only (sub-categories have a parentCategory).
+  const rootCategories = useMemo(() => {
+    const list = (categoriesData || []).filter((c) => !c.parentCategory && c.status !== 'Inactive');
+    return list.map((c, i) => ({
+      id: c.slug || c._id,
+      name: (c.name || '').trim(),
+      image: c.image,
+      ...TILE_PALETTE[i % TILE_PALETTE.length]
+    }));
+  }, [categoriesData]);
+
   const lightningDealsShelf = useMemo(() => {
-    return activeProducts.slice(0, 8);
+    const featured = activeProducts.filter((p) => p.isFeatured);
+    const rest = activeProducts.filter((p) => !p.isFeatured);
+    return [...featured, ...rest].slice(0, 10);
   }, [activeProducts]);
 
-  const dairyEssentialsShelf = useMemo(() => {
-    return activeProducts.filter((p) => p.category === 'dairy' || p.category === 'groceries').slice(0, 8);
-  }, [activeProducts]);
+  // One shelf per category that actually has products (max 4), matched by slug.
+  const categoryShelves = useMemo(() => {
+    const bySlug = {};
+    activeProducts.forEach((p) => {
+      const slug = p.category?.slug;
+      if (!slug) return;
+      (bySlug[slug] = bySlug[slug] || []).push(p);
+    });
+    return rootCategories
+      .filter((c) => (bySlug[c.id] || []).length >= 2)
+      .slice(0, 4)
+      .map((c) => ({ ...c, items: bySlug[c.id].slice(0, 10) }));
+  }, [activeProducts, rootCategories]);
 
-  const snackMunchiesShelf = useMemo(() => {
-    return activeProducts.filter((p) => p.category === 'snacks' || p.category === 'drinks').slice(0, 8);
-  }, [activeProducts]);
+  const heroBanner = bannersData && bannersData.length > 0 ? bannersData[0] : null;
 
   const handleProductPress = (product) => {
     haptics.selection();
@@ -186,10 +170,7 @@ export default function HomeScreen() {
 
   const handleCategoryPress = (categoryId) => {
     haptics.selection();
-    router.push({
-      pathname: '/(tabs)/search',
-      params: { category: categoryId }
-    });
+    router.push(`/category/${categoryId}`);
   };
 
   const addressLabel = useMemo(() => {
@@ -197,7 +178,13 @@ export default function HomeScreen() {
       const def = customer.addresses.find((a) => a.isDefault) || customer.addresses[0];
       return `${def.street || ''}, ${def.city || ''}`.trim() || 'Select delivery address';
     }
-    return 'Jaya Prakash Nagar, Kanakapura Main Rd...';
+    return 'Select delivery address';
+  }, [customer]);
+
+  const addressTitle = useMemo(() => {
+    const def = customer?.addresses?.find((a) => a.isDefault) || customer?.addresses?.[0];
+    const label = def?.label || def?.type;
+    return label ? `Delivering to ${label}` : 'Delivering to';
   }, [customer]);
 
   const topInset = Math.max(insets.top, 12);
@@ -257,7 +244,7 @@ export default function HomeScreen() {
             />
             <View style={styles.addressTextCol}>
               <View style={styles.addressTitleRow}>
-                <Text style={styles.addressTitleText}>Delivering to J P Nagar</Text>
+                <Text style={styles.addressTitleText}>{addressTitle}</Text>
                 <ChevronDown size={16} color={colors.textPrimary} strokeWidth={2.5} style={{ marginLeft: 3 }} />
               </View>
               <Text style={styles.addressSubtitleText} numberOfLines={1}>
@@ -291,9 +278,6 @@ export default function HomeScreen() {
             <Text style={styles.searchPlaceholderText} numberOfLines={1}>
               {SEARCH_PROMPTS[searchIndex]}
             </Text>
-            <View style={styles.searchShortcut}>
-              <Text style={styles.searchShortcutText}>⌘ K</Text>
-            </View>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -353,14 +337,19 @@ export default function HomeScreen() {
                 </View>
               </View>
 
-              <Text style={styles.bannerHeadline}>Fresh groceries at your doorstep</Text>
-              <Text style={styles.bannerOfferHeading}>Flat ₹150 OFF on your first order</Text>
+              <Text style={styles.bannerHeadline} numberOfLines={2}>{heroBanner?.title || 'Fresh groceries at your doorstep'}</Text>
+              <Text style={styles.bannerOfferHeading} numberOfLines={2}>{heroBanner?.subtitle || 'Flat ₹150 OFF on your first order'}</Text>
 
               <TouchableOpacity
                 style={styles.bannerOrderNowBtn}
                 onPress={() => {
                   haptics.medium();
-                  handleCategoryPress('snacks');
+                  const target =
+                    heroBanner?.linkType === 'CATEGORY' && heroBanner?.linkId
+                      ? heroBanner.linkId
+                      : rootCategories[0]?.id;
+                  if (target) handleCategoryPress(target);
+                  else router.push('/(tabs)/search');
                 }}
                 activeOpacity={0.85}
               >
@@ -402,7 +391,7 @@ export default function HomeScreen() {
             <Text style={styles.sectionSubHeading}>Everyday essentials, delivered fast</Text>
           </View>
           <TouchableOpacity
-            onPress={() => handleCategoryPress('vegetables')}
+            onPress={() => rootCategories[0] && handleCategoryPress(rootCategories[0].id)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text style={styles.seeAllText}>See All &gt;</Text>
@@ -410,7 +399,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.categoriesGrid4Col}>
-          {INSTAMART_CATEGORIES.map((cat) => (
+          {rootCategories.map((cat) => (
             <TouchableOpacity
               key={cat.id}
               onPress={() => handleCategoryPress(cat.id)}
@@ -424,7 +413,7 @@ export default function HomeScreen() {
                 ]}
               >
                 <Image
-                  source={{ uri: cat.image }}
+                  source={cat.image ? { uri: cat.image } : undefined}
                   style={styles.grid4ColImg}
                   contentFit="contain"
                   transition={150}
@@ -448,7 +437,7 @@ export default function HomeScreen() {
             </View>
             <Text style={styles.shelfSubHeading}>Lowest prices guaranteed today</Text>
           </View>
-          <TouchableOpacity onPress={() => handleCategoryPress('vegetables')} hitSlop={8}>
+          <TouchableOpacity onPress={() => rootCategories[0] && handleCategoryPress(rootCategories[0].id)} hitSlop={8}>
             <Text style={styles.seeAllText}>See All &gt;</Text>
           </TouchableOpacity>
         </View>
@@ -468,55 +457,49 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        <View style={styles.shelfHeaderRow}>
-          <View>
-            <Text style={styles.shelfHeading}>Dairy, Bread & Eggs</Text>
-            <Text style={styles.shelfSubHeading}>Farm-fresh milk, butter & morning staples</Text>
+        {categoryShelves.map((shelf) => (
+          <View key={shelf.id}>
+            <View style={styles.shelfHeaderRow}>
+              <View>
+                <Text style={styles.shelfHeading}>{shelf.name}</Text>
+              </View>
+              <TouchableOpacity onPress={() => handleCategoryPress(shelf.id)} hitSlop={8}>
+                <Text style={styles.seeAllText}>See All &gt;</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.shelfScrollContent}
+            >
+              {shelf.items.map((item) => (
+                <ProductCard
+                  key={item._id}
+                  product={item}
+                  compact={true}
+                  onPress={handleProductPress}
+                />
+              ))}
+            </ScrollView>
           </View>
-          <TouchableOpacity onPress={() => handleCategoryPress('dairy')} hitSlop={8}>
-            <Text style={styles.seeAllText}>See All &gt;</Text>
-          </TouchableOpacity>
-        </View>
+        ))}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.shelfScrollContent}
-        >
-          {dairyEssentialsShelf.map((item) => (
-            <ProductCard
-              key={item._id}
-              product={item}
-              compact={true}
-              onPress={handleProductPress}
-            />
-          ))}
-        </ScrollView>
-
-        <View style={styles.shelfHeaderRow}>
-          <View>
-            <Text style={styles.shelfHeading}>Snacks & Drinks</Text>
-            <Text style={styles.shelfSubHeading}>Cravings satisfied in 10 minutes</Text>
+        {productsError && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>Can't reach the store right now</Text>
+            <Text style={styles.errorBody}>Check your connection or the API URL, then try again.</Text>
+            <TouchableOpacity style={styles.errorRetryBtn} onPress={onRefresh} activeOpacity={0.85}>
+              <Text style={styles.errorRetryText}>Retry</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => handleCategoryPress('snacks')} hitSlop={8}>
-            <Text style={styles.seeAllText}>See All &gt;</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.shelfScrollContent}
-        >
-          {snackMunchiesShelf.map((item) => (
-            <ProductCard
-              key={item._id}
-              product={item}
-              compact={true}
-              onPress={handleProductPress}
-            />
-          ))}
-        </ScrollView>
+        {!productsLoading && !productsError && activeProducts.length === 0 && (
+          <View style={styles.errorCard}>
+            <Text style={styles.errorTitle}>No products yet</Text>
+            <Text style={styles.errorBody}>The store returned no products.</Text>
+          </View>
+        )}
       </ScrollView>
 
       {selectedProduct && (
@@ -531,6 +514,24 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  errorCard: {
+    margin: 16,
+    padding: 16,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+    alignItems: 'center'
+  },
+  errorTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 4 },
+  errorBody: { fontSize: 13, color: '#667085', textAlign: 'center', marginBottom: 12 },
+  errorRetryBtn: {
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFC928'
+  },
+  errorRetryText: { fontSize: 14, fontWeight: '700', color: '#111827' },
   screenRoot: {
     flex: 1,
     backgroundColor: colors.softBackground
