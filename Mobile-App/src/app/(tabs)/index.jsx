@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator, Animated, Easing, Platform, StatusBar as RNStatusBar } from 'react-native';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,6 +33,23 @@ const listFrom = (res) => {
 };
 const categoryText = (p) => `${p.category?.name || (typeof p.category === 'string' ? p.category : '')} ${p.name || ''}`;
 
+const TabItem = ({ name, icon: Icon, active, onPress }) => {
+  const v = useRef(new Animated.Value(active ? 1 : 0)).current;
+  useEffect(() => { Animated.timing(v, { toValue: active ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [active, v]);
+  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
+  const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.1] });
+  const bg = v.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,0)', 'rgba(255,255,255,0.22)'] });
+  const bar = v.interpolate({ inputRange: [0, 1], outputRange: [0, 26] });
+  return <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }} style={styles.tabPress}>
+    <Animated.View style={[styles.tab, { backgroundColor: bg, transform: [{ translateY: lift }, { scale }] }]}>
+      <Icon size={22} color="#fff" strokeWidth={active ? 2.1 : 1.6} />
+      <Text style={[styles.tabText, active && styles.tabTextActive]}>{name}</Text>
+      <Animated.View style={[styles.tabBar, { width: bar, opacity: v }]} />
+    </Animated.View>
+  </Pressable>;
+};
+const TOP_INSET_FALLBACK = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44;
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { customer } = useAuth();
@@ -56,7 +73,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 10) }]}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
         <Pressable style={styles.address} onPress={() => router.push('/addresses')} accessibilityRole="button">
           <Text style={styles.addressText} numberOfLines={1}>{addressLabel}</Text><ChevronDown size={14} color="#fff" />
         </Pressable>
@@ -67,9 +84,7 @@ export default function HomeScreen() {
           <Pressable style={styles.bookmark} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Bookmark size={22} color="#fff" /></Pressable>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-          {TABS.map(({ name, icon: Icon }) => <Pressable key={name} style={[styles.tab, name === tab && styles.activeTab]} onPress={() => { setTab(name); setGroup(null); }} accessibilityRole="tab" accessibilityState={{ selected: name === tab }}>
-            <Icon size={21} color="#fff" strokeWidth={1.6} /><Text style={styles.tabText}>{name}</Text>
-          </Pressable>)}
+          {TABS.map(t => <TabItem key={t.name} name={t.name} icon={t.icon} active={t.name === tab} onPress={() => { setTab(t.name); setGroup(null); }} />)}
         </ScrollView>
       </View>
       <ScrollView onScroll={onScrollHandler} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
@@ -105,9 +120,9 @@ export default function HomeScreen() {
 }
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16 },
-  address: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 10 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
+  address: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 12, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
-  tabs: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 12 }, tab: { minWidth: 49, alignItems: 'center', gap: 5, paddingHorizontal: 5, paddingBottom: 11, borderBottomWidth: 2, borderBottomColor: 'transparent' }, activeTab: { borderBottomColor: '#fff', backgroundColor: '#ffffff12', borderTopLeftRadius: 12, borderTopRightRadius: 12 }, tabText: { fontSize: 10, color: '#fff', fontFamily: typography.family.medium },
+  tabs: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 16, paddingBottom: 0 }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 6 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
   body: { paddingBottom: 125 }, greenPanel: { backgroundColor: '#437D29', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
   featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: '#193F17', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 15, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '100%', height: 70, borderRadius: 12, backgroundColor: '#F2F7EE' }, categoryName: { fontSize: 11, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
