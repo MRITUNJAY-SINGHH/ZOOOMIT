@@ -32,13 +32,13 @@ import {
   ShoppingBag
 } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
-import { StorefrontAPI } from '../../services/api';
+import { api } from '../../services/api';
+import { ProductCard } from '../../components/product/ProductCard';
 import { searchService } from '../../services/searchService';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import { haptics } from '../../services/haptics';
-import { MOCK_PRODUCTS } from '../../services/mockProducts';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -108,120 +108,6 @@ const POPULAR_CATEGORIES = [
   }
 ];
 
-const EXTENDED_CATALOG = [
-  {
-    _id: 'choc_1',
-    name: 'Cadbury Dairy Milk Chocolate Bar',
-    brand: 'Cadbury',
-    unit: '60 g',
-    sellingPrice: 45,
-    mrp: 50,
-    rating: 4.6,
-    reviewsCount: '12k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=350',
-    stock: 50,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_2',
-    name: 'Ferrero Rocher Chocolate Box',
-    brand: 'Ferrero Rocher',
-    unit: '200 g',
-    sellingPrice: 599,
-    mrp: 649,
-    rating: 4.7,
-    reviewsCount: '8k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1582293041079-7814c2f12063?w=350',
-    stock: 25,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_3',
-    name: 'KitKat Chocolate Wafer',
-    brand: 'Nestle',
-    unit: '50 g',
-    sellingPrice: 35,
-    mrp: 40,
-    rating: 4.5,
-    reviewsCount: '10k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1575330901080-f05f01815732?w=350',
-    stock: 80,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_4',
-    name: 'Cadbury 5 Star Chocolate Bar',
-    brand: 'Cadbury',
-    unit: '45 g',
-    sellingPrice: 30,
-    mrp: 35,
-    rating: 4.4,
-    reviewsCount: '6k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=350',
-    stock: 65,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_5',
-    name: 'Amul Dark Chocolate 55%',
-    brand: 'Amul',
-    unit: '150 g',
-    sellingPrice: 110,
-    mrp: 125,
-    rating: 4.6,
-    reviewsCount: '4k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=350',
-    stock: 30,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_6',
-    name: "Hershey's Kisses Milk Chocolate",
-    brand: "Hershey's",
-    unit: '100 g',
-    sellingPrice: 140,
-    mrp: 160,
-    rating: 4.7,
-    reviewsCount: '5k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=350',
-    stock: 40,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_7',
-    name: 'Lindt Excellence 70% Dark Chocolate',
-    brand: 'Lindt',
-    unit: '100 g',
-    sellingPrice: 320,
-    mrp: 350,
-    rating: 4.8,
-    reviewsCount: '3k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1549007994-cb92caebd54b?w=350',
-    stock: 15,
-    category: { name: 'Chocolates' }
-  },
-  {
-    _id: 'choc_8',
-    name: 'Snickers Peanut Chocolate Bar',
-    brand: 'Mars',
-    unit: '50 g',
-    sellingPrice: 48,
-    mrp: 55,
-    rating: 4.5,
-    reviewsCount: '9k',
-    deliveryTime: '17 MINS',
-    featuredImage: 'https://images.unsplash.com/photo-1511381939415-e44015466834?w=350',
-    stock: 55,
-    category: { name: 'Chocolates' }
-  }
-];
 
 const SEARCH_TABS = ['All', 'Products', 'Categories', 'Brands'];
 
@@ -293,43 +179,16 @@ export default function SearchScreen() {
     };
   }, []);
 
-  const { data: apiProducts = [] } = useQuery({
+  const { data: apiProducts = [], isLoading: catalogLoading, isError: catalogError, refetch: reloadCatalog } = useQuery({
     queryKey: ['storefront-products-search'],
     queryFn: async () => {
-      try {
-        const res = await StorefrontAPI.getProducts({ limit: 50 });
-        return res.data?.data || [];
-      } catch {
-        return [];
-      }
+      const res = await api.get('/products', { params: { limit: 100 } });
+      const data = res.data?.data ?? res.data;
+      if (!Array.isArray(data)) throw new Error('Invalid store catalog');
+      return data;
     }
   });
-
-  const combinedCatalog = useMemo(() => {
-    const map = new Map();
-    EXTENDED_CATALOG.forEach((p) => map.set(p._id, p));
-    MOCK_PRODUCTS.forEach((p) => {
-      if (!map.has(p._id)) {
-        map.set(p._id, {
-          ...p,
-          rating: p.rating || 4.5,
-          reviewsCount: '8k',
-          deliveryTime: p.deliveryTime || '17 MINS'
-        });
-      }
-    });
-    apiProducts.forEach((p) => {
-      if (!map.has(p._id)) {
-        map.set(p._id, {
-          ...p,
-          rating: p.rating || 4.5,
-          reviewsCount: '5k',
-          deliveryTime: p.deliveryTime || '17 MINS'
-        });
-      }
-    });
-    return Array.from(map.values());
-  }, [apiProducts]);
+  const combinedCatalog = apiProducts;
 
   const suggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -375,7 +234,7 @@ export default function SearchScreen() {
     }
 
     if (inStockOnly) {
-      list = list.filter((item) => (item.stock || 1) > 0);
+      list = list.filter((item) => (!item.isTrackInventory || Number(item.stock ?? 0) > 0));
     }
 
     if (selectedPriceRange) {
@@ -745,7 +604,7 @@ export default function SearchScreen() {
             showsVerticalScrollIndicator={false}
           >
             {searchResults.length === 0 ? (
-              <View style={styles.emptyStateWrap}>
+              <View style={styles.emptyStateWrap}>{catalogLoading ? <Text>Loading products...</Text> : catalogError ? <TouchableOpacity onPress={() => reloadCatalog()}><Text>Could not load the store. Tap to retry.</Text></TouchableOpacity> : null}
                 <ShoppingBag size={48} color="#94A3B8" style={{ marginBottom: 12 }} />
                 <Text style={styles.emptyTitle}>No matching products</Text>
                 <Text style={styles.emptyDesc}>
@@ -761,109 +620,7 @@ export default function SearchScreen() {
               </View>
             ) : (
               <View style={styles.productsGrid}>
-                {searchResults.map((product) => {
-                  const isWish = isSaved(product._id);
-                  const price = product.sellingPrice || product.price || 45;
-                  const mrp = product.mrp || Math.round(price * 1.15);
-                  const discountPct = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
-                  const cartQty = getItemQuantity(product._id);
-
-                  return (
-                    <View key={product._id} style={styles.productGridCard}>
-                      <TouchableOpacity
-                        style={styles.wishlistIconBtn}
-                        onPress={() => {
-                          haptics.selection();
-                          toggleSave(product);
-                        }}
-                        hitSlop={6}
-                        activeOpacity={0.7}
-                      >
-                        <Heart
-                          size={16}
-                          color={isWish ? '#EF4444' : '#64748B'}
-                          fill={isWish ? '#EF4444' : 'transparent'}
-                          strokeWidth={2}
-                        />
-                      </TouchableOpacity>
-
-                      <View style={styles.productImgContainer}>
-                        <Image
-                          source={{ uri: product.featuredImage }}
-                          style={styles.productImg}
-                          contentFit="contain"
-                          transition={200}
-                        />
-                      </View>
-
-                      <Text style={styles.productCardTitle} numberOfLines={2}>
-                        {product.name}
-                      </Text>
-
-                      <Text style={styles.productCardUnit}>
-                        {product.unit || '1 pack'}
-                      </Text>
-
-                      <View style={styles.ratingBadgeRow}>
-                        <Star size={11} color="#16A34A" fill="#16A34A" style={{ marginRight: 3 }} />
-                        <Text style={styles.ratingBadgeText}>
-                          {product.rating || '4.6'}
-                        </Text>
-                        <Text style={styles.ratingCountText}>
-                          ({product.reviewsCount || '10k'})
-                        </Text>
-                        <Text style={styles.ratingDivider}>|</Text>
-                        <Clock size={10} color="#64748B" style={{ marginRight: 3 }} />
-                        <Text style={styles.deliveryBadgeText}>
-                          {product.deliveryTime || '17 MINS'}
-                        </Text>
-                      </View>
-
-                      <View style={styles.productCardBottomRow}>
-                        <View style={styles.priceCol}>
-                          <View style={styles.priceRow}>
-                            <Text style={styles.sellingPriceText}>₹{price}</Text>
-                            {mrp > price && (
-                              <Text style={styles.mrpText}>₹{mrp}</Text>
-                            )}
-                          </View>
-                          {discountPct > 0 && (
-                            <Text style={styles.discountPctText}>{discountPct}% OFF</Text>
-                          )}
-                        </View>
-
-                        {cartQty > 0 ? (
-                          <View style={styles.cardStepper}>
-                            <TouchableOpacity
-                              style={styles.cardStepperBtn}
-                              onPress={() => handleQtyChange(product, cartQty - 1)}
-                              hitSlop={4}
-                            >
-                              <Minus size={12} color="#2563EB" strokeWidth={2.8} />
-                            </TouchableOpacity>
-                            <Text style={styles.cardStepperQty}>{cartQty}</Text>
-                            <TouchableOpacity
-                              style={styles.cardStepperBtn}
-                              onPress={() => handleQtyChange(product, cartQty + 1)}
-                              hitSlop={4}
-                            >
-                              <Plus size={12} color="#2563EB" strokeWidth={2.8} />
-                            </TouchableOpacity>
-                          </View>
-                        ) : (
-                          <TouchableOpacity
-                            style={styles.cardAddButton}
-                            onPress={() => handleAddToCart(product)}
-                            hitSlop={4}
-                            activeOpacity={0.8}
-                          >
-                            <Plus size={18} color="#2563EB" strokeWidth={2.6} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  );
-                })}
+                {searchResults.map(product => <View key={product._id} style={{ width: '48%' }}><ProductCard product={product} /></View>)}
               </View>
             )}
           </ScrollView>
