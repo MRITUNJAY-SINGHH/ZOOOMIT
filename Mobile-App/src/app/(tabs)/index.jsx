@@ -80,9 +80,9 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const tabOutline = (width, height, cell, content) => {
   const center = cell.x + cell.width / 2;
   const base = height - 0.5;
-  const roof = Math.min(cell.y + content.y + 2, base - 12);
+  const roof = Math.min(cell.y + content.y + 27, base - 12);
   const halfFoot = Math.max(1, cell.width / 2 - 1);
-  const halfRoof = Math.max(1, Math.min(content.width / 2 + 6, halfFoot - 9));
+  const halfRoof = Math.max(1, Math.min(content.width / 2 + 3, halfFoot - 9));
   const left = center - halfFoot, right = center + halfFoot;
   const topLeft = center - halfRoof, topRight = center + halfRoof;
   const rise = base - roof;
