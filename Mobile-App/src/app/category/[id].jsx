@@ -49,7 +49,14 @@ export default function CategoryDetailsScreen() {
            (id === 'vegetables' && c.slug === 'fresh-vegetables') ||
            (c.name && id && c.name.toLowerCase() === id.toString().toLowerCase())
     );
-    if (directMatch) return directMatch;
+    if (directMatch) {
+      const parentId = typeof directMatch.parentCategory === 'string' ? directMatch.parentCategory : directMatch.parentCategory?._id;
+      if (parentId) {
+        const parent = categoriesData.find(c => c._id === parentId);
+        if (parent) return parent;
+      }
+      return directMatch;
+    }
 
     // Check if id matches a subcategory
     for (const parent of categoriesData) {
