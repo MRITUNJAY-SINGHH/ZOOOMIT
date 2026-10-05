@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Plus, Minus, Star, Package } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
 export const ProductCard = ({ product, onPress, compact = false }) => {
+  const { width } = useWindowDimensions();
   const { getItemQuantity, addItem, updateItem, cart, isUpdating } = useCart();
   const { token } = useAuth();
   const [variantIndex, setVariantIndex] = useState(0);
@@ -24,6 +25,12 @@ export const ProductCard = ({ product, onPress, compact = false }) => {
   const max = product.maxSaleQty || 100;
   const outOfStock = product.isTrackInventory && Number(product.stock || 0) <= 0;
   const discount = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0;
+  const rating = Number(product.rating ?? product.ratingsAverage);
+  const eta = product.deliveryEtaMinutes;
+  const attributes = (variant?.attributes || []).filter(a => a.key !== 'Pack' && typeof a.value === 'string');
+  const badge = product.tags?.includes('popular') ? 'POPULAR' : product.isFeatured ? 'FEATURED' : null;
+  const perUnitPrice = variant?.unitPrice ?? product.unitPrice;
+  const perUnitLabel = variant?.unitPriceLabel ?? product.unitPriceLabel;
   const image = product.featuredImage || product.galleryImages?.[0];
   const open = () => onPress ? onPress(product) : router.push(`/product/${product._id}`);
   const change = async (direction, e) => {
@@ -38,29 +45,33 @@ export const ProductCard = ({ product, onPress, compact = false }) => {
       else if (direction > 0) await addItem(product._id, min, variantId, unit);
     } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); }
   };
-  return <Pressable style={[styles.card, compact && styles.compact]} onPress={open} accessibilityRole="button" accessibilityLabel={`View ${product.name}`}>
+  return <Pressable style={[styles.card, compact && [styles.compact, { width: Math.max(96, Math.min(160, (width - 56) / 3)) }]]} onPress={open} accessibilityRole="button" accessibilityLabel={`View ${product.name}`}>
     <View style={styles.imageBox}>
       {image ? <Image source={{ uri: image }} style={styles.image} contentFit="contain" /> : <Package size={40} color="#9BA69B" />}
+      {badge && <Text style={styles.badge}>{badge}</Text>}
       <View style={styles.action}>
         {outOfStock ? <Text style={styles.soldOut}>Sold out</Text> : qty > 0 ? <View style={styles.stepper}>
-          <Pressable disabled={isUpdating} onPress={e => change(-1, e)} style={styles.step} accessibilityLabel="Decrease quantity"><Minus size={15} color="#1769FF" /></Pressable>
-          <Text style={styles.qty}>{qty}</Text><Pressable disabled={isUpdating || qty >= max} onPress={e => change(1, e)} style={styles.step} accessibilityLabel="Increase quantity"><Plus size={15} color="#1769FF" /></Pressable>
+          <Pressable disabled={isUpdating} onPress={e => change(-1, e)} style={styles.step} accessibilityLabel="Decrease quantity"><Minus size={15} color="#fff" /></Pressable>
+          <Text style={styles.qty}>{qty}</Text><Pressable disabled={isUpdating || qty >= max} onPress={e => change(1, e)} style={styles.step} accessibilityLabel="Increase quantity"><Plus size={15} color="#fff" /></Pressable>
         </View> : <Pressable disabled={isUpdating} style={styles.plus} onPress={e => change(1, e)} accessibilityLabel={`Add ${product.name} to cart`}><Plus size={23} color="#1769FF" strokeWidth={2} /></Pressable>}
       </View>
     </View>
     {variants.length > 1 ? <View style={styles.variants}>{variants.slice(0, 3).map((v, i) => <Pressable key={v._id || i} onPress={e => { e.stopPropagation(); setVariantIndex(i); }} style={[styles.variant, i === variantIndex && styles.selectedVariant]}><Text style={[styles.variantText, i === variantIndex && styles.variantTextOn]} numberOfLines={1}>{v.name}</Text></Pressable>)}</View> : <View style={styles.unitRow}><Text style={styles.unit} numberOfLines={1}>{variant?.name || `${min} ${unit}`}</Text></View>}
-    <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
-    {Boolean(product.rating || product.ratingsAverage) && <View style={styles.rating}><Star size={9} color="#218755" fill="#218755" /><Text style={styles.ratingText}>{product.rating || product.ratingsAverage}</Text>{Boolean(product.ratingCount || product.reviewsCount) && <Text style={styles.ratingCount}>({product.ratingCount || product.reviewsCount})</Text>}</View>}
-    {discount > 0 && <Text style={styles.discount}>{discount}% OFF</Text>}
     <View style={styles.prices}><Text style={styles.price}>₹{price}</Text>{mrp > price && <Text style={styles.mrp}>₹{mrp}</Text>}</View>
+    {Number.isFinite(Number(perUnitPrice)) && perUnitLabel && <Text style={styles.perUnit}>₹{perUnitPrice}/{perUnitLabel}</Text>}
+    {discount > 0 && <Text style={styles.discount}>{discount}% OFF</Text>}
+    <Text style={styles.name} numberOfLines={3}>{product.name}</Text>
+    {(rating > 0 || Number(eta) > 0) && <View style={styles.rating}>{rating > 0 && <><Star size={11} color="#0A946F" fill="#0A946F" /><Text style={styles.ratingText}>{rating}</Text>{Boolean(product.ratingCount || product.reviewsCount) && <Text style={styles.ratingCount}>{product.ratingCount || product.reviewsCount}</Text>}</>}{Number(eta) > 0 && <Text style={styles.ratingCount}>{eta} MINS</Text>}</View>}
+    {attributes.length > 0 && <View style={styles.attributes}>{attributes.slice(0, 2).map(a => <Text key={a.key} style={styles.attribute} numberOfLines={1}>{a.value}</Text>)}</View>}
   </Pressable>;
 };
 const styles = StyleSheet.create({
+  badge: { position: 'absolute', top: 0, left: 0, backgroundColor: '#0C689C', color: '#fff', fontSize: 9, fontWeight: '700', paddingHorizontal: 5, paddingVertical: 3, borderTopLeftRadius: 10, borderBottomRightRadius: 7 }, perUnit: { color: '#7A7D82', fontSize: 11, marginTop: 3 }, attributes: { gap: 4, marginTop: 5 }, attribute: { fontSize: 10, color: '#3C4653', backgroundColor: '#F1F3F6', paddingHorizontal: 5, paddingVertical: 3, borderRadius: 4, alignSelf: 'flex-start' },
   card: { flex: 1, backgroundColor: '#fff', padding: 0, marginBottom: 14, minWidth: 0 }, compact: { flex: undefined, width: 128, marginRight: 12, marginBottom: 0 },
   imageBox: { width: '100%', aspectRatio: 1, borderRadius: 12, borderWidth: 1, borderColor: '#ECEEF1', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginBottom: 7, overflow: 'visible' }, image: { width: '84%', height: '84%' },
-  action: { position: 'absolute', right: 5, top: 5 }, plus: { width: 32, height: 32, borderRadius: 8, borderWidth: 1, borderColor: '#C9D6F5', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#1769FF', shadowOpacity: 0.12, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
+  action: { position: 'absolute', right: -1, bottom: -1 }, plus: { width: 36, height: 36, borderRadius: 8, borderWidth: 1, borderColor: '#C9D6F5', backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 2, shadowColor: '#1769FF', shadowOpacity: 0.12, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
   stepper: { flexDirection: 'row', alignItems: 'center', height: 32, borderRadius: 8, backgroundColor: '#1769FF' }, step: { width: 26, height: 32, alignItems: 'center', justifyContent: 'center' }, qty: { color: '#fff', fontSize: 12, fontWeight: '700', minWidth: 16, textAlign: 'center' }, soldOut: { fontSize: 10, color: '#7C807B', padding: 5, backgroundColor: '#fff', borderRadius: 6 },
-  unitRow: { flexDirection: 'row', marginBottom: 4 }, unit: { color: '#6B7280', fontSize: 11, fontFamily: typography.family.medium }, variants: { flexDirection: 'row', gap: 4, marginBottom: 5, flexWrap: 'wrap' }, variant: { borderWidth: 1, borderColor: '#E3E7EC', borderRadius: 6, paddingVertical: 3, paddingHorizontal: 6, maxWidth: '100%', backgroundColor: '#fff' }, selectedVariant: { borderColor: '#1769FF', backgroundColor: '#EEF5FF' }, variantText: { fontSize: 10, color: '#4B5563' }, variantTextOn: { color: '#1769FF', fontWeight: '700' },
-  name: { minHeight: 32, lineHeight: 16, fontSize: 12, color: '#1F2937', fontFamily: typography.family.medium }, rating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }, ratingText: { fontSize: 10, color: '#218755', fontWeight: '700' }, ratingCount: { fontSize: 10, color: '#9CA3AF' },
-  discount: { fontSize: 11, color: '#1769FF', marginTop: 5, fontFamily: typography.family.bold }, prices: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }, price: { fontSize: 14, fontFamily: typography.family.bold, color: '#111827' }, mrp: { fontSize: 11, color: '#9CA3AF', textDecorationLine: 'line-through' }
+  unitRow: { flexDirection: 'row', marginBottom: 4 }, unit: { color: '#0066CC', borderWidth: 1, borderColor: '#E3E7EC', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 2, fontSize: 11, fontFamily: typography.family.medium }, variants: { flexDirection: 'row', gap: 4, marginBottom: 5, flexWrap: 'wrap' }, variant: { borderWidth: 1, borderColor: '#E3E7EC', borderRadius: 6, paddingVertical: 3, paddingHorizontal: 6, maxWidth: '100%', backgroundColor: '#fff' }, selectedVariant: { borderColor: '#1769FF', backgroundColor: '#EEF5FF' }, variantText: { fontSize: 10, color: '#4B5563' }, variantTextOn: { color: '#1769FF', fontWeight: '700' },
+  name: { minHeight: 48, lineHeight: 17, fontSize: 13, color: '#1F2937', fontFamily: typography.family.medium }, rating: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 3 }, ratingText: { fontSize: 10, color: '#218755', fontWeight: '700' }, ratingCount: { fontSize: 10, color: '#9CA3AF' },
+  discount: { fontSize: 11, color: '#0A946F', marginTop: 3, fontFamily: typography.family.bold }, prices: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }, price: { fontSize: 14, fontFamily: typography.family.bold, color: '#111827' }, mrp: { fontSize: 11, color: '#9CA3AF', textDecorationLine: 'line-through' }
 });
