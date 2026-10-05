@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
-import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, ChevronDown, ChevronRight, ChevronUp } from 'lucide-react-native';
+import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, ChevronDown, ChevronRight, ChevronUp, User } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -65,6 +65,9 @@ export default function HomeScreen() {
   const scrollRef = useRef(null);
   const sectionOffsets = useRef({});
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const lastY = useRef(0);
+  const downFrom = useRef(0);
   const [activeParent, setActiveParent] = useState(null);
   const [tab, setTab] = useState('All');
   const [group, setGroup] = useState(null);
@@ -80,7 +83,11 @@ export default function HomeScreen() {
   };
   const handleScroll = (event) => {
     onScrollHandler(event);
-    setShowBackToTop(event.nativeEvent.contentOffset.y > 320);
+    const y = Math.max(event.nativeEvent.contentOffset.y, 0);
+    const dy = y - lastY.current;
+    lastY.current = y;
+    if (y < 320) { setShowBackToTop(false); downFrom.current = y; return; }
+    if (dy > 4) { setShowBackToTop(false); } else if (dy < -8) { setShowBackToTop(true); }
   };
   const jumpToParent = (parent) => {
     setActiveParent(idOf(parent));
@@ -88,6 +95,7 @@ export default function HomeScreen() {
     if (typeof y === 'number') scrollRef.current?.scrollTo({ y: Math.max(y - 12, 0), animated: true });
   };
   const address = customer?.addresses?.find(a => a.isDefault) || customer?.addresses?.[0];
+  const initial = (customer?.name || customer?.firstName || customer?.fullName || '').trim().charAt(0).toUpperCase();
   const addressLabel = address ? [address.street, address.city].filter(Boolean).join(', ') : 'Select delivery address';
   const match = group || TABS.find(t => t.name === tab)?.match;
   const visibleProducts = match ? products.filter(p => new RegExp(match, 'i').test(categoryText(p))) : products;
@@ -99,10 +107,15 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
+      <View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)} style={[styles.header, { paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
+        <View style={styles.addressRow}>
         <Pressable style={styles.address} onPress={() => router.push('/addresses')} accessibilityRole="button">
           <Text style={styles.addressText} numberOfLines={1}>{addressLabel}</Text><ChevronDown size={14} color="#fff" />
         </Pressable>
+        <Pressable style={styles.avatar} onPress={() => router.push('/(tabs)/profile')} accessibilityRole="button" accessibilityLabel="Open profile">
+          {initial ? <Text style={styles.avatarText}>{initial}</Text> : <User size={18} color="#fff" />}
+        </Pressable>
+        </View>
         <View style={styles.searchRow}>
           <Pressable style={styles.search} onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Search products" accessibilityRole="button">
             <Text style={styles.placeholder}>Search for 'Apples'</Text><Search size={19} color="#637164" />
@@ -158,7 +171,7 @@ export default function HomeScreen() {
         {visibleProducts.length > 0 && <Pressable style={styles.fullSeeAll} onPress={() => router.push('/(tabs)/search')} accessibilityRole="button"><Text style={styles.fullSeeAllText}>See All »</Text></Pressable>}
         {visibleProducts.length > 12 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>More everyday essentials</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(12, 24).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView></>}
       </ScrollView>
-      {showBackToTop && <View pointerEvents="box-none" style={[styles.backTopWrap, { bottom: Math.max(insets.bottom, 12) + 138 }]}><Pressable style={styles.backTop} onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} accessibilityRole="button" accessibilityLabel="Back to top"><ChevronUp size={20} color="#fff" /><Text style={styles.backTopText}>Back to top</Text></Pressable></View>}
+      {showBackToTop && <View pointerEvents="box-none" style={[styles.backTopWrap, { top: headerHeight + 10 }]}><Pressable style={styles.backTop} onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} accessibilityRole="button" accessibilityLabel="Back to top"><ChevronUp size={20} color="#fff" /><Text style={styles.backTopText}>Back to top</Text></Pressable></View>}
     </View>
   );
 }
@@ -167,7 +180,7 @@ const styles = StyleSheet.create({
   fullSeeAll: { marginHorizontal: 16, marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center' }, fullSeeAllText: { color: '#0066CC', fontSize: 16, fontFamily: typography.family.bold },
   backTopWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 20 }, backTop: { flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: '#1C1F26', paddingHorizontal: 16, paddingVertical: 12, borderRadius: 28, elevation: 5, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, backTopText: { color: '#fff', fontSize: 14, fontFamily: typography.family.medium },
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16 },
-  address: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 12, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
   tabs: { flexGrow: 1, justifyContent: 'space-between', paddingTop: 16, paddingBottom: 0 }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 5, paddingHorizontal: 7, paddingTop: 7, paddingBottom: 8, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 6 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
   body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
