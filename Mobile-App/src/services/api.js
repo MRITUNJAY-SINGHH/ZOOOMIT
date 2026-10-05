@@ -7,7 +7,8 @@ import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.trim();
+    const configured = process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+    return configured.endsWith('/api/storefront') ? configured : `${configured}/api/storefront`;
   }
 
   // 1. Detect Expo Metro host IP for physical device testing on local Wi-Fi
