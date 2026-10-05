@@ -116,8 +116,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white
   },
   variantCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primarySoft
+    borderColor: '#1769FF',
+    backgroundColor: '#EEF5FF'
   },
   variantName: {
     fontSize: 13,
