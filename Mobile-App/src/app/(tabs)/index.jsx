@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, RefreshControl, ActivityIndicator, Animated, Easing, Platform, StatusBar as RNStatusBar } from 'react-native';
+import Svg, { Defs, LinearGradient as SvgGradient, Stop, Path } from 'react-native-svg';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,18 +61,53 @@ const listFrom = (res) => {
 };
 const categoryText = (p) => `${p.category?.name || (typeof p.category === 'string' ? p.category : '')} ${p.name || ''}`;
 
-const TabItem = ({ name, icon: Icon, active, onPress }) => {
+const TabItem = ({ name, icon: Icon, active, onPress, onLayout, onContentLayout, backgroundColor }) => {
   const v = useRef(new Animated.Value(active ? 1 : 0)).current;
   useEffect(() => { Animated.timing(v, { toValue: active ? 1 : 0, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [active, v]);
-  const lift = v.interpolate({ inputRange: [0, 1], outputRange: [0, 0] });
   const scale = v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
   const color = v.interpolate({ inputRange: [0, 1], outputRange: ['rgba(255,255,255,0.72)', 'rgba(255,255,255,1)'] });
-  return <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }} style={styles.tabPress}>
-    <Animated.View style={[styles.tab, { transform: [{ translateY: lift }, { scale }] }]}>
-      <Icon size={22} color="#fff" strokeWidth={active ? 2.1 : 1.6} />
-      <Animated.Text style={[styles.tabText, active && styles.tabTextActive, { color }]}>{name}</Animated.Text>
+  return <Pressable onPress={onPress} accessibilityRole="tab" accessibilityState={{ selected: active }} onLayout={onLayout} style={styles.tabPress}>
+    <Animated.View onLayout={onContentLayout} style={styles.tab}>
+      <Animated.View style={[styles.tabIcon, { backgroundColor, transform: [{ scale }] }]}><Icon size={22} color="#fff" strokeWidth={active ? 2.1 : 1.6} /></Animated.View>
+      <Animated.Text style={[styles.tabText, active && styles.tabTextActive, { color }]} numberOfLines={2}>{name}</Animated.Text>
     </Animated.View>
   </Pressable>;
+};
+// The curve follows measured cells and content, including real font height.
+// Its roof meets the lower part of the icon (as in B); the label is INSIDE
+// the sloping shoulders, and the baseline is BELOW every label.
+const AnimatedPath = Animated.createAnimatedComponent(Path);
+const tabOutline = (width, height, cell, content) => {
+  const center = cell.x + cell.width / 2;
+  const base = height - 0.5;
+  const roof = Math.min(cell.y + content.y + 27, base - 12);
+  const halfFoot = Math.max(1, cell.width / 2 - 1);
+  const halfRoof = Math.max(1, Math.min(content.width / 2 + 3, halfFoot - 9));
+  const left = center - halfFoot, right = center + halfFoot;
+  const topLeft = center - halfRoof, topRight = center + halfRoof;
+  const rise = base - roof;
+  const midLeft = (left + topLeft) / 2, midRight = (right + topRight) / 2;
+  return `M 0 ${base} L ${left} ${base} C ${left + 3} ${base} ${midLeft - 2} ${base - rise * 0.22} ${midLeft} ${base - rise * 0.5} C ${midLeft + 2} ${roof + 3} ${topLeft - 3} ${roof} ${topLeft} ${roof} L ${topRight} ${roof} C ${topRight + 3} ${roof} ${midRight - 2} ${roof + 3} ${midRight} ${base - rise * 0.5} C ${midRight + 2} ${base - rise * 0.22} ${right - 3} ${base} ${right} ${base} L ${width} ${base}`;
+};
+const CategoryTabs = ({ tab, anim, backgroundColor, onSelect }) => {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [cells, setCells] = useState({});
+  const [contents, setContents] = useState({});
+  const record = (setter, index, layout) => setter(old => {
+    const prev = old[index];
+    return prev && ['x', 'y', 'width', 'height'].every(k => prev[k] === layout[k]) ? old : { ...old, [index]: layout };
+  });
+  const ready = size.width > 0 && TABS.every((_, i) => cells[i] && contents[i]);
+  const path = ready ? anim.interpolate({ inputRange: themeRange, outputRange: TABS.map((_, i) => tabOutline(size.width, size.height, cells[i], contents[i])), extrapolate: 'clamp' }) : null;
+  return <View style={styles.tabsWrap} onLayout={e => setSize(e.nativeEvent.layout)}>
+    {ready && <Svg pointerEvents="none" width={size.width} height={size.height} style={StyleSheet.absoluteFill}>
+      <Defs><SvgGradient id="categoryLine" x1="0%" y1="0%" x2="100%" y2="0%"><Stop offset="0%" stopColor="#fff" stopOpacity={0} /><Stop offset="12%" stopColor="#fff" stopOpacity={0.5} /><Stop offset="88%" stopColor="#fff" stopOpacity={0.5} /><Stop offset="100%" stopColor="#fff" stopOpacity={0} /></SvgGradient></Defs>
+      <AnimatedPath d={path} fill="none" stroke="url(#categoryLine)" strokeWidth={1} />
+    </Svg>}
+    <View style={styles.tabs}>
+      {TABS.map((t, i) => <TabItem key={t.name} name={t.name} icon={t.icon} active={t.name === tab} backgroundColor={backgroundColor} onPress={() => onSelect(t.name)} onLayout={e => record(setCells, i, e.nativeEvent.layout)} onContentLayout={e => record(setContents, i, e.nativeEvent.layout)} />)}
+    </View>
+  </View>;
 };
 const SEARCH_WORDS = ['Apple', 'Atta', 'Sugar', 'Milk', 'Paneer', 'Eggs'];
 const WORD_H = 18;
@@ -125,15 +161,9 @@ export default function HomeScreen() {
   const [activeParent, setActiveParent] = useState(null);
   const [tab, setTab] = useState('All');
   const themeAnim = useRef(new Animated.Value(0)).current;
-  const [tabsWidth, setTabsWidth] = useState(0);
   useEffect(() => { Animated.timing(themeAnim, { toValue: THEME_INDEX(tab), duration: 450, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start(); }, [tab, themeAnim]);
   const theme = THEMES[THEME_INDEX(tab)];
   const themeBg = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeColors });
-  const tabW = tabsWidth / TABS.length;
-  const HUMP_W = Math.min(Math.max(tabW - 8, 44), 54);
-  const humpLeft = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => i * tabW + (tabW - HUMP_W) / 2) });
-  const lineLeftW = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => i * tabW + (tabW - HUMP_W) / 2 + 16 + 1) });
-  const lineRightW = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeRange.map(i => Math.max(tabsWidth + 32 - (i * tabW + (tabW - HUMP_W) / 2 + 16 + HUMP_W - 1), 0)) });
   const backAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => { Animated.timing(backAnim, { toValue: showBackToTop ? 1 : 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start(); }, [showBackToTop, backAnim]);
   const [group, setGroup] = useState(null);
@@ -190,22 +220,7 @@ export default function HomeScreen() {
           </Pressable>
           <Pressable style={styles.bookmark} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Bookmark size={22} color="#fff" /></Pressable>
         </View>
-        <View style={styles.tabsWrap}>
-          <View onLayout={e => setTabsWidth(e.nativeEvent.layout.width)} style={styles.tabs}>
-            {TABS.map(t => <TabItem key={t.name} name={t.name} icon={t.icon} active={t.name === tab} onPress={() => { setTab(t.name); setGroup(null); }} />)}
-          </View>
-          {tabsWidth > 0 && <>
-            <Animated.View pointerEvents="none" style={[styles.lineSeg, { left: -16, width: lineLeftW }]}>
-              <LinearGradient colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.lineFade} />
-              <View style={[styles.lineSolid, { left: 56 }]} />
-            </Animated.View>
-            <Animated.View pointerEvents="none" style={[styles.lineSeg, { right: -16, width: lineRightW }]}>
-              <View style={[styles.lineSolid, { right: 56 }]} />
-              <LinearGradient colors={['rgba(255,255,255,0.5)', 'rgba(255,255,255,0)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.lineFade, { right: 0 }]} />
-            </Animated.View>
-            <Animated.View pointerEvents="none" style={[styles.hump, { left: humpLeft, width: HUMP_W }]} />
-          </>}
-        </View>
+        <CategoryTabs tab={tab} anim={themeAnim} backgroundColor={themeBg} onSelect={name => { setTab(name); setGroup(null); }} />
       </Animated.View>
       <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
         <Animated.View style={[styles.greenPanel, { backgroundColor: themeBg }]}>
@@ -264,7 +279,7 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16, overflow: 'hidden' },
   addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
   searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
-  tabs: { flexDirection: 'row', paddingTop: 16 }, tabsWrap: { position: 'relative' }, lineSeg: { position: 'absolute', bottom: 0, height: 1, overflow: 'hidden' }, lineFade: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 56 }, lineSolid: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.5)' }, hump: { position: 'absolute', top: 10, bottom: 0, borderWidth: 1, borderBottomWidth: 0, borderColor: 'rgba(255,255,255,0.5)', borderTopLeftRadius: 18, borderTopRightRadius: 18 }, rotRow: { flexDirection: 'row', alignItems: 'center', flex: 1 }, rotWindow: { height: 18, flex: 1, overflow: 'hidden' }, rotWord: { position: 'absolute', left: 0, right: 0, top: 0, lineHeight: 18 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, alignItems: 'center' }, tab: { minWidth: 52, alignItems: 'center', gap: 4, paddingHorizontal: 7, paddingTop: 9, paddingBottom: 10, borderTopLeftRadius: 16, borderTopRightRadius: 16, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, marginBottom: 0 }, tabBar: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 1 }, tabText: { fontSize: 10, color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
+  tabs: { flexDirection: 'row', paddingTop: 16, paddingHorizontal: 16 }, tabsWrap: { position: 'relative', marginHorizontal: -16 }, rotRow: { flexDirection: 'row', alignItems: 'center', flex: 1 }, rotWindow: { height: 18, flex: 1, overflow: 'hidden' }, rotWord: { position: 'absolute', left: 0, right: 0, top: 0, lineHeight: 18 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, minWidth: 0, alignItems: 'center' }, tab: { maxWidth: '100%', alignItems: 'center', gap: 4, paddingHorizontal: 3, paddingTop: 9, paddingBottom: 12 }, tabIcon: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 13 }, tabText: { fontSize: 10, lineHeight: 13, textAlign: 'center', color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
   body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', overflow: 'hidden', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
   featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, marginBottom: 12 }, sectionTitle: { flex: 1, fontSize: 18, color: '#20251F', fontFamily: typography.family.bold }, seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2 }, seeAllText: { color: '#1769FF', fontSize: 12, fontFamily: typography.family.medium }, shelf: { paddingHorizontal: 16, paddingBottom: 10 }, categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 10 }, category: { width: '25%', padding: 6, alignItems: 'center', gap: 7, marginBottom: 12 }, categoryImage: { width: '92%', height: '92%' }, categoryArt: { width: '100%', aspectRatio: 1, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, categoryName: { fontSize: 12, lineHeight: 16, textAlign: 'center', color: '#263223', fontFamily: typography.family.medium }, loading: { margin: 24 }, state: { padding: 24, gap: 10 }, stateTitle: { fontSize: 16, fontWeight: '700' }, stateText: { color: '#6B7280', fontSize: 13 }
