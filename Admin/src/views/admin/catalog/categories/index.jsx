@@ -80,11 +80,22 @@ export default function Categories() {
     data.append('image', file);
     try { 
       setUploading(true); 
-      const res = await api.post('/uploads/product-image', data, { headers: { 'Content-Type': 'multipart/form-data' } }); 
-      setFormData(prev => ({ ...prev, image: res.data.url })); 
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/uploads/product-image`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: data
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.message || 'Upload failed');
+      
+      setFormData(prev => ({ ...prev, image: resData.url })); 
       toast.success('Image uploaded'); 
     }
-    catch (err) { toast.error('Upload failed'); }
+    catch (err) { 
+      console.error('Category upload error:', err);
+      toast.error(err.message || 'Upload failed'); 
+    }
     finally { setUploading(false); }
   };
 
