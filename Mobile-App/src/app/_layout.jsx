@@ -11,6 +11,23 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 import { colors, typography } from '../constants/theme';
 
 import { useFonts } from 'expo-font';
+import { Text, TextInput, StyleSheet } from 'react-native';
+
+// Make Gilroy the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
+const withGilroyDefault = (Component) => {
+  if (!Component || typeof Component.render !== 'function' || Component.__gilroyPatched) return;
+  const original = Component.render;
+  Component.render = function render(...args) {
+    const element = original.apply(this, args);
+    const flat = StyleSheet.flatten(element?.props?.style) || {};
+    if (flat.fontFamily) return element;
+    const bold = ['600', '700', '800', '900', 'bold'].includes(String(flat.fontWeight));
+    return React.cloneElement(element, { style: [{ fontFamily: bold ? 'GilroyBold' : 'GilroyRegular' }, element.props.style] });
+  };
+  Component.__gilroyPatched = true;
+};
+withGilroyDefault(Text);
+withGilroyDefault(TextInput);
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
