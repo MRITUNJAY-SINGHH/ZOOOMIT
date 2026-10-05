@@ -5,9 +5,23 @@ import { authStorage } from './authStorage';
 import { SAMPLE_ORDERS } from './mockOrders';
 import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
+// Mock/sample-data fallbacks are OFF by default so backend errors are visible.
+// To develop offline, run in dev with EXPO_PUBLIC_USE_MOCKS=true.
+export const MOCKS_ENABLED =
+  typeof __DEV__ !== 'undefined' && __DEV__ && process.env.EXPO_PUBLIC_USE_MOCKS === 'true';
+
+// EXPO_PUBLIC_API_URL may be the bare host (https://host) or the full storefront URL.
+// Customer routes live under /api/storefront, so add it when missing.
+const normalizeBaseUrl = (raw) => {
+  const url = raw.trim().replace(/\/+$/, '');
+  if (/\/api\/storefront$/.test(url)) return url;
+  if (/\/api$/.test(url)) return `${url}/storefront`;
+  return `${url}/api/storefront`;
+};
+
 const getBaseUrl = () => {
   if (process.env.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.trim();
+    return normalizeBaseUrl(process.env.EXPO_PUBLIC_API_URL);
   }
 
   // 1. Detect Expo Metro host IP for physical device testing on local Wi-Fi
@@ -65,6 +79,7 @@ export const StorefrontAPI = {
       const res = await api.post('/auth/send-otp', { phone });
       return res.data;
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       if (
         !error.response ||
         error.response?.status >= 500 ||
@@ -90,6 +105,7 @@ export const StorefrontAPI = {
       const res = await api.post('/auth/verify-otp', { phone, otp });
       return res.data;
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       if (
         !error.response ||
         error.response?.status >= 500 ||
@@ -131,6 +147,7 @@ export const StorefrontAPI = {
     } catch (error) {
       const stored = await authStorage.getCustomer();
       if (stored) return { data: stored };
+      if (!MOCKS_ENABLED) throw error;
       return {
         data: {
           name: 'Kuiklo User',
@@ -162,6 +179,7 @@ export const StorefrontAPI = {
     try {
       return await api.get('/products', { params });
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       if (
         !error.response ||
         error.code === 'ERR_NETWORK' ||
@@ -179,6 +197,7 @@ export const StorefrontAPI = {
     try {
       return await api.get(`/products/${idOrSlug}`);
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       if (
         !error.response ||
         error.code === 'ERR_NETWORK' ||
@@ -205,6 +224,7 @@ export const StorefrontAPI = {
     try {
       return await api.post(`/wishlist/${productId}/toggle`);
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       return { data: { success: true } };
     }
   },
@@ -235,7 +255,7 @@ export const StorefrontAPI = {
   getOrders: async (params) => {
     try {
       const res = await api.get('/orders', { params });
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
+      if (!MOCKS_ENABLED || (Array.isArray(res.data?.data) && res.data.data.length > 0)) {
         return res;
       }
       return {
@@ -247,6 +267,7 @@ export const StorefrontAPI = {
         }
       };
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       console.log('[StorefrontAPI] Utilizing sample orders fallback for getOrders.');
       return {
         data: {
@@ -266,8 +287,10 @@ export const StorefrontAPI = {
         return res;
       }
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       console.log(`[StorefrontAPI] Utilizing sample order details fallback for order ID ${id}`);
     }
+    if (!MOCKS_ENABLED) throw new Error('Order not found');
     const found = SAMPLE_ORDERS.find(
       (o) =>
         o._id === id ||
@@ -281,6 +304,7 @@ export const StorefrontAPI = {
     try {
       return await api.post(`/orders/${id}/cancel`, { reason });
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       const target = SAMPLE_ORDERS.find(
         (o) =>
           o._id === id ||
@@ -300,6 +324,7 @@ export const StorefrontAPI = {
     try {
       return await api.post(`/orders/${id}/reorder`);
     } catch (error) {
+      if (!MOCKS_ENABLED) throw error;
       return { data: { success: true, message: 'Order reordered successfully' } };
     }
   },
