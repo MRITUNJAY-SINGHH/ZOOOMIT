@@ -1390,7 +1390,7 @@ const styles = StyleSheet.create({
     alignItems: 'center'
   },
   customerInfoOverlay: {
-    maxWidth: '58%'
+    maxWidth: '75%'
   },
   greetingText: {
     fontSize: 15,
@@ -1399,7 +1399,7 @@ const styles = StyleSheet.create({
     marginBottom: 2
   },
   customerName: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: typography.family.bold,
     color: colors.textPrimary,
     letterSpacing: -0.4,
@@ -1454,8 +1454,9 @@ const styles = StyleSheet.create({
   },
   quickActionsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     marginBottom: spacing.md
   },
   quickActionItem: {
@@ -1490,9 +1491,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#FFE8A3',
     borderRadius: 18,
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 14,
-    marginHorizontal: spacing.lg,
+    marginHorizontal: spacing.md,
     marginTop: spacing.xs,
     marginBottom: spacing.md
   },
@@ -1523,7 +1524,7 @@ const styles = StyleSheet.create({
   },
   menuGroupCard: {
     backgroundColor: colors.white,
-    marginHorizontal: spacing.lg,
+    marginHorizontal: spacing.md,
     marginBottom: spacing.md,
     borderRadius: 18,
     borderWidth: 1,
@@ -1575,7 +1576,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: '#FEE2E2',
-    marginHorizontal: spacing.xxl,
+    marginHorizontal: spacing.md,
     marginTop: spacing.sm,
     marginBottom: spacing.xs
   },

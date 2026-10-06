@@ -10,24 +10,34 @@ import { CartProvider } from '../context/CartContext';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { colors, typography } from '../constants/theme';
 
-import { useFonts } from 'expo-font';
+import { 
+  useFonts,
+  Inter_300Light,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_700Bold,
+  Inter_800ExtraBold,
+  Inter_900Black
+} from '@expo-google-fonts/inter';
 import { Text, TextInput, StyleSheet } from 'react-native';
 
-// Make Gilroy the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
-const withGilroyDefault = (Component) => {
-  if (!Component || typeof Component.render !== 'function' || Component.__gilroyPatched) return;
+// Make Inter the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
+const withInterDefault = (Component) => {
+  if (!Component || typeof Component.render !== 'function' || Component.__interPatched) return;
   const original = Component.render;
   Component.render = function render(...args) {
     const element = original.apply(this, args);
     const flat = StyleSheet.flatten(element?.props?.style) || {};
     if (flat.fontFamily) return element;
     const bold = ['600', '700', '800', '900', 'bold'].includes(String(flat.fontWeight));
-    return React.cloneElement(element, { style: [{ fontFamily: bold ? 'GilroyBold' : 'GilroyRegular' }, element.props.style] });
+    return React.cloneElement(element, { 
+      style: { fontFamily: bold ? 'Inter_700Bold' : 'Inter_400Regular', ...flat } 
+    });
   };
-  Component.__gilroyPatched = true;
+  Component.__interPatched = true;
 };
-withGilroyDefault(Text);
-withGilroyDefault(TextInput);
+withInterDefault(Text);
+withInterDefault(TextInput);
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -43,16 +53,23 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    GilroyLight: require('../../assets/fonts/Gilroy-Light.ttf'),
-    GilroyRegular: require('../../assets/fonts/Gilroy-Regular.ttf'),
-    GilroyMedium: require('../../assets/fonts/Gilroy-Medium.ttf'),
-    GilroyBold: require('../../assets/fonts/Gilroy-Bold.ttf'),
-    GilroyHeavy: require('../../assets/fonts/Gilroy-Heavy.ttf'),
-    'Gilroy-Light': require('../../assets/fonts/Gilroy-Light.ttf'),
-    'Gilroy-Regular': require('../../assets/fonts/Gilroy-Regular.ttf'),
-    'Gilroy-Medium': require('../../assets/fonts/Gilroy-Medium.ttf'),
-    'Gilroy-Bold': require('../../assets/fonts/Gilroy-Bold.ttf'),
-    'Gilroy-Heavy': require('../../assets/fonts/Gilroy-Heavy.ttf')
+    Inter_300Light,
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_700Bold,
+    Inter_800ExtraBold,
+    Inter_900Black,
+    // Add mapping for any leftover inline styles asking for Gilroy
+    GilroyLight: Inter_300Light,
+    GilroyRegular: Inter_400Regular,
+    GilroyMedium: Inter_500Medium,
+    GilroyBold: Inter_700Bold,
+    GilroyHeavy: Inter_800ExtraBold,
+    'Gilroy-Light': Inter_300Light,
+    'Gilroy-Regular': Inter_400Regular,
+    'Gilroy-Medium': Inter_500Medium,
+    'Gilroy-Bold': Inter_700Bold,
+    'Gilroy-Heavy': Inter_800ExtraBold
   });
 
   useEffect(() => {
