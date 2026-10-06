@@ -44,7 +44,20 @@ export default function ProductForm({ productId, onBack, onSave }) {
     isActive: true, 
     needsReview: false,
     featuredImage: '', 
-    galleryImages: []
+    galleryImages: [],
+    
+    // Professional Product Management Fields
+    shortDescription: '',
+    tags: '',
+    seoTitle: '',
+    seoDescription: '',
+    isBestseller: false,
+    dietaryPreference: '',
+    shelfLife: '',
+    storageInstructions: '',
+    nutritionInfo: '',
+    countryOfOrigin: '',
+    relatedProducts: ''
   });
   
   const [categories, setCategories] = useState([]);
@@ -114,7 +127,18 @@ export default function ProductForm({ productId, onBack, onSave }) {
         taxRate: prod.taxRate ?? 0,
         hsnCode: prod.hsnCode || '',
         hasExpiryTracking: prod.hasExpiryTracking || false,
-        galleryImages: prod.galleryImages?.length > 0 ? prod.galleryImages : (prod.featuredImage ? [prod.featuredImage] : [])
+        galleryImages: prod.galleryImages?.length > 0 ? prod.galleryImages : (prod.featuredImage ? [prod.featuredImage] : []),
+        shortDescription: prod.shortDescription || '',
+        tags: Array.isArray(prod.tags) ? prod.tags.join(', ') : (prod.tags || ''),
+        seoTitle: prod.seoTitle || '',
+        seoDescription: prod.seoDescription || '',
+        isBestseller: prod.isBestseller || false,
+        dietaryPreference: prod.dietaryPreference || '',
+        shelfLife: prod.shelfLife || '',
+        storageInstructions: prod.storageInstructions || '',
+        nutritionInfo: prod.nutritionInfo || '',
+        countryOfOrigin: prod.countryOfOrigin || '',
+        relatedProducts: Array.isArray(prod.relatedProducts) ? prod.relatedProducts.join(', ') : (prod.relatedProducts || '')
       });
       setVariants(res.variants || []);
       if (editor) editor.commands.setContent(prod.description || '');
@@ -236,7 +260,11 @@ export default function ProductForm({ productId, onBack, onSave }) {
   const [newVariant, setNewVariant] = useState({ 
     name: '', 
     sku: '', 
-    sellingPrice: '', 
+    barcode: '',
+    mrp: '',
+    sellingPrice: '',
+    stock: 0,
+    featuredImage: '',
     conversionFactor: 1, 
     conversionUnit: 'PCS' 
   });
@@ -252,7 +280,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
         await fetchApi(`/products/${productId}/variants`, { method: 'POST', body: JSON.stringify(newVariant) });
         toast.success("Variant added");
       }
-      setNewVariant({ name: '', sku: '', sellingPrice: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
+      setNewVariant({ name: '', sku: '', barcode: '', mrp: '', sellingPrice: '', stock: 0, featuredImage: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
       setEditingVariantId(null);
       loadProduct(); 
     } catch (e) { toast.error(e.message); }
@@ -262,7 +290,11 @@ export default function ProductForm({ productId, onBack, onSave }) {
     setNewVariant({ 
       name: v.name, 
       sku: v.sku || '', 
+      barcode: v.barcode || '',
+      mrp: v.mrp || '',
       sellingPrice: v.sellingPrice || '', 
+      stock: v.stock || 0,
+      featuredImage: v.featuredImage || '',
       conversionFactor: v.conversionFactor || 1, 
       conversionUnit: v.conversionUnit || formData.baseUnit || 'PCS' 
     });
@@ -375,8 +407,17 @@ export default function ProductForm({ productId, onBack, onSave }) {
                       </Col>
                     </Row>
                     
+                    <Row className="g-3 mb-3">
+                      <Col md={12}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Short Description</Form.Label>
+                          <Form.Control value={formData.shortDescription} onChange={e => setFormData({...formData, shortDescription: e.target.value})} placeholder="A quick summary (1-2 sentences)" className="py-2" />
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    
                     <Form.Group>
-                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">Description</Form.Label>
+                      <Form.Label className="fw-medium text-muted font-size-13 mb-1">Detailed Description</Form.Label>
                       <div className="form-control p-3 border-secondary-subtle" style={{ minHeight: '180px' }}>
                         <EditorContent editor={editor} />
                       </div>
@@ -387,8 +428,8 @@ export default function ProductForm({ productId, onBack, onSave }) {
                 {/* Pricing & GST Card */}
                 <Card className="border-0 shadow-sm mb-4">
                   <Card.Body className="p-4">
-                    <h6 className="fw-bold mb-4">Pricing & Taxation</h6>
-                    <Row className="g-3">
+                    <h6 className="fw-bold mb-4">Pricing, Stock & Taxation</h6>
+                    <Row className="g-3 mb-3">
                       <Col md={3}>
                         <Form.Group>
                           <Form.Label className="fw-medium text-muted font-size-13 mb-1">MRP (₹)</Form.Label>
@@ -404,7 +445,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
                       <Col md={3}>
                         <Form.Group>
                           <Form.Label className="fw-medium text-muted font-size-13 mb-1">Selling Price (₹) *</Form.Label>
-                          <Form.Control type="number" step="0.01" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} required className="py-2" />
+                          <div className="d-flex align-items-center gap-2">
+                            <Form.Control type="number" step="0.01" value={formData.sellingPrice} onChange={e => setFormData({...formData, sellingPrice: e.target.value})} required className="py-2" />
+                            {formData.mrp && formData.sellingPrice && Number(formData.mrp) > Number(formData.sellingPrice) && (
+                              <Badge bg="success" className="p-2">
+                                {Math.round(((Number(formData.mrp) - Number(formData.sellingPrice)) / Number(formData.mrp)) * 100)}% OFF
+                              </Badge>
+                            )}
+                          </div>
                         </Form.Group>
                       </Col>
                       <Col md={3}>
@@ -417,6 +465,20 @@ export default function ProductForm({ productId, onBack, onSave }) {
                             <option value="18">18% GST</option>
                             <option value="28">28% GST</option>
                           </Form.Select>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Row className="g-3">
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Current Stock Quantity</Form.Label>
+                          <Form.Control type="number" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} className="py-2" />
+                        </Form.Group>
+                      </Col>
+                      <Col md={6}>
+                        <Form.Group>
+                          <Form.Label className="fw-medium text-muted font-size-13 mb-1">Low Stock Alert Threshold</Form.Label>
+                          <Form.Control type="number" value={formData.lowStockThreshold} onChange={e => setFormData({...formData, lowStockThreshold: Number(e.target.value)})} className="py-2" />
                         </Form.Group>
                       </Col>
                     </Row>
@@ -444,11 +506,19 @@ export default function ProductForm({ productId, onBack, onSave }) {
                         </div>
                         <div className="d-flex flex-wrap gap-2">
                           {formData.galleryImages.map((img, idx) => (
-                            <div key={idx} className="position-relative border rounded p-1" style={{ width: '60px', height: '60px' }}>
-                              <img src={img} alt="" className="w-100 h-100 object-fit-cover rounded" />
-                              <button type="button" className="btn btn-danger btn-xs position-absolute top-0 end-0 p-0 d-flex align-items-center justify-content-center" style={{ width: '18px', height: '18px' }} onClick={() => removeImage(idx)}>
-                                <Trash2 size={10} />
-                              </button>
+                            <div key={idx} className="position-relative border rounded p-1" style={{ width: '80px', height: '100px', backgroundColor: '#f8f9fa' }}>
+                              <img src={img} alt="" className="w-100 h-100 object-fit-cover rounded mb-1" style={{ height: '70px' }} />
+                              <div className="d-flex justify-content-between align-items-center mt-1">
+                                <button type="button" className="btn btn-light btn-sm p-0 d-flex align-items-center justify-content-center" style={{ width: '20px', height: '20px' }} onClick={() => moveImage(idx, 'left')} disabled={idx === 0}>
+                                  <ArrowLeft size={12} />
+                                </button>
+                                <button type="button" className="btn btn-danger btn-sm p-0 d-flex align-items-center justify-content-center" style={{ width: '20px', height: '20px' }} onClick={() => removeImage(idx)}>
+                                  <Trash2 size={12} />
+                                </button>
+                                <button type="button" className="btn btn-light btn-sm p-0 d-flex align-items-center justify-content-center" style={{ width: '20px', height: '20px' }} onClick={() => moveImage(idx, 'right')} disabled={idx === formData.galleryImages.length - 1}>
+                                  <ArrowRight size={12} />
+                                </button>
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -494,6 +564,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
                         }
                         checked={formData.hasExpiryTracking}
                         onChange={e => setFormData({...formData, hasExpiryTracking: e.target.checked})}
+                      />
+
+                      <Form.Check 
+                        type="switch" 
+                        id="bestseller-switch"
+                        label="Bestseller Badge"
+                        checked={formData.isBestseller}
+                        onChange={e => setFormData({...formData, isBestseller: e.target.checked})}
                       />
 
                       <Form.Check 
@@ -661,7 +739,82 @@ export default function ProductForm({ productId, onBack, onSave }) {
           </Card>
         </Tab>
 
-        {/* TAB 3: VARIANTS */}
+        {/* TAB 3: ATTRIBUTES & SEO */}
+        <Tab eventKey="attributes" title="Attributes & SEO">
+          <Card className="border-0 shadow-sm mb-4">
+            <Card.Body className="p-4">
+              <h6 className="fw-bold mb-4">Product Attributes</h6>
+              <Row className="g-3 mb-4">
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Dietary Preference</Form.Label>
+                    <Form.Select value={formData.dietaryPreference} onChange={e => setFormData({...formData, dietaryPreference: e.target.value})} className="py-2">
+                      <option value="">None</option>
+                      <option value="VEG">Vegetarian (Green)</option>
+                      <option value="NON_VEG">Non-Vegetarian (Red)</option>
+                      <option value="EGG">Contains Egg (Brown)</option>
+                      <option value="VEGAN">Vegan</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Shelf Life</Form.Label>
+                    <Form.Control value={formData.shelfLife} onChange={e => setFormData({...formData, shelfLife: e.target.value})} placeholder="e.g. 6 Months" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Country of Origin</Form.Label>
+                    <Form.Control value={formData.countryOfOrigin} onChange={e => setFormData({...formData, countryOfOrigin: e.target.value})} placeholder="e.g. India" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Storage Instructions</Form.Label>
+                    <Form.Control value={formData.storageInstructions} onChange={e => setFormData({...formData, storageInstructions: e.target.value})} placeholder="e.g. Store in a cool, dry place" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Nutrition Information</Form.Label>
+                    <Form.Control as="textarea" rows={3} value={formData.nutritionInfo} onChange={e => setFormData({...formData, nutritionInfo: e.target.value})} placeholder="e.g. Calories: 200, Protein: 5g..." className="py-2" />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <h6 className="fw-bold mb-3 pt-3 border-top">Search Engine Optimization (SEO) & Discovery</h6>
+              <Row className="g-3">
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Tags / Keywords (Comma separated)</Form.Label>
+                    <Form.Control value={formData.tags} onChange={e => setFormData({...formData, tags: e.target.value})} placeholder="e.g. snack, spicy, chips" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">Related/Upsell Products (Comma separated Slugs or IDs)</Form.Label>
+                    <Form.Control value={formData.relatedProducts} onChange={e => setFormData({...formData, relatedProducts: e.target.value})} placeholder="e.g. chips-lays-blue, chips-kurkure" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">SEO Title</Form.Label>
+                    <Form.Control value={formData.seoTitle} onChange={e => setFormData({...formData, seoTitle: e.target.value})} placeholder="e.g. Buy Premium Chips Online" className="py-2" />
+                  </Form.Group>
+                </Col>
+                <Col md={12}>
+                  <Form.Group>
+                    <Form.Label className="fw-medium text-muted font-size-13 mb-1">SEO Meta Description</Form.Label>
+                    <Form.Control as="textarea" rows={2} value={formData.seoDescription} onChange={e => setFormData({...formData, seoDescription: e.target.value})} placeholder="Short description for search engines..." className="py-2" />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Card.Body>
+          </Card>
+        </Tab>
+
+        {/* TAB 4: VARIANTS */}
         <Tab eventKey="variants" title={`Variants (${variants.length})`}>
           <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="p-4">
@@ -673,7 +826,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
                   <Form.Control 
                     value={newVariant.name} 
                     onChange={e => setNewVariant({...newVariant, name: e.target.value})} 
-                    placeholder="e.g. 500 GM Pack, Box of 12" 
+                    placeholder="e.g. 500 GM Pack" 
                     className="py-2" 
                   />
                 </Col>
@@ -683,6 +836,36 @@ export default function ProductForm({ productId, onBack, onSave }) {
                     value={newVariant.sku} 
                     onChange={e => setNewVariant({...newVariant, sku: e.target.value})} 
                     placeholder="Auto" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">Barcode</Form.Label>
+                  <Form.Control 
+                    value={newVariant.barcode} 
+                    onChange={e => setNewVariant({...newVariant, barcode: e.target.value})} 
+                    placeholder="Scan" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={1}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">Stock</Form.Label>
+                  <Form.Control 
+                    type="number"
+                    value={newVariant.stock} 
+                    onChange={e => setNewVariant({...newVariant, stock: Number(e.target.value)})} 
+                    placeholder="0" 
+                    className="py-2" 
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label className="fw-medium text-muted font-size-13 mb-1">MRP (₹)</Form.Label>
+                  <Form.Control 
+                    type="number" 
+                    step="0.01"
+                    value={newVariant.mrp} 
+                    onChange={e => setNewVariant({...newVariant, mrp: e.target.value})} 
+                    placeholder="0.00" 
                     className="py-2" 
                   />
                 </Col>
@@ -697,6 +880,8 @@ export default function ProductForm({ productId, onBack, onSave }) {
                     className="py-2" 
                   />
                 </Col>
+              </Row>
+              <Row className="g-3 align-items-end mb-4">
                 <Col md={2}>
                   <Form.Label className="fw-medium text-muted font-size-13 mb-1">
                     Conversion Factor
@@ -720,7 +905,7 @@ export default function ProductForm({ productId, onBack, onSave }) {
                   {editingVariantId && (
                     <Button variant="outline-secondary" className="py-2" onClick={() => {
                       setEditingVariantId(null);
-                      setNewVariant({ name: '', sku: '', sellingPrice: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
+                      setNewVariant({ name: '', sku: '', barcode: '', mrp: '', sellingPrice: '', stock: 0, featuredImage: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
                     }}>
                       Cancel
                     </Button>
@@ -732,8 +917,9 @@ export default function ProductForm({ productId, onBack, onSave }) {
                 <thead className="table-light">
                   <tr>
                     <th>Variant Name</th>
-                    <th>SKU</th>
-                    <th>Selling Price</th>
+                    <th>SKU / Barcode</th>
+                    <th>Stock</th>
+                    <th>MRP / Selling Price</th>
                     <th>Inventory Deduction Factor</th>
                     <th className="text-end">Actions</th>
                   </tr>
@@ -742,8 +928,15 @@ export default function ProductForm({ productId, onBack, onSave }) {
                   {variants.map(v => (
                     <tr key={v._id}>
                       <td className="fw-bold">{v.name}</td>
-                      <td className="text-muted">{v.sku}</td>
-                      <td>{formatCurrency(v.sellingPrice || 0)}</td>
+                      <td className="text-muted">
+                        <div>SKU: {v.sku || '-'}</div>
+                        <div className="font-size-11">UPC: {v.barcode || '-'}</div>
+                      </td>
+                      <td>{v.stock || 0}</td>
+                      <td>
+                        {v.mrp && <div className="text-decoration-line-through text-muted font-size-11">{formatCurrency(v.mrp)}</div>}
+                        <div className="fw-medium text-success">{formatCurrency(v.sellingPrice || 0)}</div>
+                      </td>
                       <td>
                         <Badge bg="info" className="text-dark">
                           1 variant = {v.conversionFactor || 1} {formData.baseUnit}
