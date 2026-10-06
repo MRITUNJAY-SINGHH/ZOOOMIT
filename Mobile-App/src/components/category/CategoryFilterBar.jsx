@@ -8,7 +8,7 @@ import {
   Modal, 
   TouchableOpacity 
 } from 'react-native';
-import { SlidersHorizontal, ChevronDown, X, Check } from 'lucide-react-native';
+import { SlidersHorizontal, TrendingDown, ChevronDown, X, Check } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
 import { haptics } from '../../services/haptics';
 
@@ -29,6 +29,8 @@ export const TYPE_OPTIONS = [
 
 export const CategoryFilterBar = ({
   activeSort = 'popular',
+  priceDropOnly = false,
+  onTogglePriceDrop,
   onSortChange,
   isVegOnly = false,
   onToggleVeg,
@@ -45,7 +47,7 @@ export const CategoryFilterBar = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [modalMode, setModalMode] = useState('filter'); // 'filter' | 'sort' | 'brand' | 'type'
 
-  const hasActiveFilters = isVegOnly || inStockOnly || activeSort !== 'popular' || Boolean(selectedBrand) || (selectedType && selectedType !== 'ALL');
+  const hasActiveFilters = priceDropOnly || isVegOnly || inStockOnly || activeSort !== 'popular' || Boolean(selectedBrand) || (selectedType && selectedType !== 'ALL');
 
   const handleOpenFilter = () => {
     haptics.selection();
@@ -92,18 +94,10 @@ export const CategoryFilterBar = ({
             ]}
           >
             <SlidersHorizontal 
-              size={13} 
+              size={18} 
               color={(isVegOnly || inStockOnly) ? '#111111' : '#4B5563'} 
               style={{ marginRight: 5 }} 
             />
-            <Text 
-              style={[
-                styles.pillText,
-                (isVegOnly || inStockOnly) && styles.pillTextActive
-              ]}
-            >
-              Filter
-            </Text>
             {(isVegOnly || inStockOnly) && (
               <View style={styles.activeDot} />
             )}
@@ -132,6 +126,8 @@ export const CategoryFilterBar = ({
               style={{ marginLeft: 4 }} 
             />
           </Pressable>
+
+          <Pressable onPress={onTogglePriceDrop} style={[styles.pill, priceDropOnly && styles.pillActive]} accessibilityLabel="Price drop products" accessibilityState={{ selected: priceDropOnly }}><TrendingDown size={15} color="#D94048" style={{ marginRight: 5 }} /><Text style={styles.pillText}>Price Drop</Text></Pressable>
 
           {/* 3. Brand Pill (Screen 1) */}
           <Pressable
