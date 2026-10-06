@@ -49,6 +49,7 @@ export const ProductBottomBar = ({
 
       <View style={styles.rightActionCol}>
         <ProductQuantityControl
+          product={product}
           productId={product._id}
           variantId={activeVariantId}
           unit={activeUnit}
