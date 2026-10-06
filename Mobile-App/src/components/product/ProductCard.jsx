@@ -15,7 +15,7 @@ export const ProductCard = ({ product, onPress, onVariantPress, compact = false 
   const { isSaved, toggleSave } = useWishlist();
   const [variantIndex, setVariantIndex] = useState(0);
   if (!product) return null;
-  const variants = product.variants || [];
+  const variants = (product.variants || []).filter(v => v.isActive !== false);
   const variant = variants[variantIndex];
   const variantId = variant?._id || null;
   const price = Number(variant?.sellingPrice ?? product.sellingPrice ?? 0);
@@ -25,10 +25,11 @@ export const ProductCard = ({ product, onPress, onVariantPress, compact = false 
   const min = product.minSaleQty || 1;
   const step = product.qtyStep || 1;
   const max = product.maxSaleQty || 100;
-  const outOfStock = product.isTrackInventory && Number(product.stock || 0) <= 0;
+  const outOfStock = product.isTrackInventory && Number(variant?.stock ?? product.stock ?? 0) <= 0;
   const discount = mrp > price ? Math.round((mrp - price) / mrp * 100) : 0;
   const rating = Number(product.rating ?? product.ratingsAverage);
   const eta = product.deliveryEtaMinutes;
+  const deliveryTime = product.deliveryTime || (Number(eta) > 0 ? `${eta} MINS` : null);
   const attributes = (variant?.attributes || []).filter(a => a.key !== 'Pack' && typeof a.value === 'string');
   const badge = product.tags?.includes('popular') ? 'POPULAR' : product.isFeatured ? 'FEATURED' : null;
   const perUnitPrice = variant?.unitPrice ?? product.unitPrice;
@@ -65,7 +66,7 @@ export const ProductCard = ({ product, onPress, onVariantPress, compact = false 
     {Number.isFinite(Number(perUnitPrice)) && perUnitLabel && <Text style={styles.perUnit}>₹{perUnitPrice}/{perUnitLabel}</Text>}
     {discount > 0 && <Text style={styles.discount}>{discount}% OFF</Text>}
     <Text style={styles.name} numberOfLines={3}>{product.name}</Text>
-    {(rating > 0 || Number(eta) > 0) && <View style={styles.rating}>{rating > 0 && <><Star size={11} color="#0A946F" fill="#0A946F" /><Text style={styles.ratingText}>{rating}</Text>{Boolean(product.ratingCount || product.reviewsCount) && <Text style={styles.ratingCount}>{product.ratingCount || product.reviewsCount}</Text>}</>}{Number(eta) > 0 && <Text style={styles.ratingCount}>{eta} MINS</Text>}</View>}
+    {(rating > 0 || deliveryTime) && <View style={styles.rating}>{rating > 0 && <><Star size={11} color="#0A946F" fill="#0A946F" /><Text style={styles.ratingText}>{rating}</Text>{Boolean(product.ratingCount || product.reviewsCount) && <Text style={styles.ratingCount}>{product.ratingCount || product.reviewsCount}</Text>}</>}{deliveryTime && <Text style={styles.ratingCount}>{deliveryTime}</Text>}</View>}
     {attributes.length > 0 && <View style={styles.attributes}>{attributes.slice(0, 2).map(a => <Text key={a.key} style={styles.attribute} numberOfLines={1}>{a.value}</Text>)}</View>}
   </Pressable>;
 };
