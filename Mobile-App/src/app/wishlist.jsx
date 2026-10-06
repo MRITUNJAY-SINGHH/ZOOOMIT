@@ -6,12 +6,10 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
-  Platform,
   Modal,
   Dimensions
 } from 'react-native';
 import { Image } from 'expo-image';
-import { BlurView } from 'expo-blur';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
@@ -21,17 +19,19 @@ import {
   Plus,
   Minus,
   ShoppingBag,
-  Zap,
   Check,
-  Sparkles,
   ChevronRight
 } from 'lucide-react-native';
-import { colors, spacing, radius, typography } from '../constants/theme';
+import { colors, typography } from '../constants/theme';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { haptics } from '../services/haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GAP = 12;
+const SIDE = 16;
+const CARD_WIDTH = (SCREEN_WIDTH - SIDE * 2 - GAP) / 2;
+const F = typography.family;
 
 export default function WishlistScreen() {
   const insets = useSafeAreaInsets();
@@ -39,6 +39,7 @@ export default function WishlistScreen() {
   const { cart, addItem, updateItem, getItemQuantity } = useCart();
 
   const [showClearModal, setShowClearModal] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [isAddingAll, setIsAddingAll] = useState(false);
   const [addedAllSuccess, setAddedAllSuccess] = useState(false);
 
@@ -47,18 +48,21 @@ export default function WishlistScreen() {
 
   const handleBack = () => {
     haptics.selection();
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.push('/(tabs)/profile');
-    }
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)');
   };
 
   const handleClearAll = async () => {
+    if (isClearing) return;
     haptics.impactLight();
-    setShowClearModal(false);
-    for (const p of savedProducts) {
-      await toggleSave(p);
+    setIsClearing(true);
+    try {
+      for (const p of [...savedProducts]) {
+        await toggleSave(p);
+      }
+    } finally {
+      setIsClearing(false);
+      setShowClearModal(false);
     }
   };
 
@@ -89,137 +93,86 @@ export default function WishlistScreen() {
     const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
     const variantId = activeVariant?._id || null;
     const currentQty = getItemQuantity(item._id, variantId);
+    const imageUrl = item.featuredImage || (item.galleryImages && item.galleryImages[0]) || null;
 
-    const imageUrl = item.featuredImage || (item.galleryImages && item.galleryImages[0]) || 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=600';
+    const findCartItem = () =>
+      cart?.items?.find(
+        (i) => i.product?._id === item._id && (variantId ? i.variant?._id === variantId : !i.variant)
+      );
 
-    const handleItemAdd = () => {
+    const handleAdd = () => {
       haptics.selection();
       addItem(item._id, 1, variantId, unit);
     };
-
     const handleIncrement = () => {
       haptics.selection();
-      const cartItem = cart?.items?.find(
-        i => i.product?._id === item._id && (variantId ? i.variant?._id === variantId : !i.variant)
-      );
-      if (cartItem) {
-        updateItem(cartItem._id, currentQty + 1);
-      } else {
-        addItem(item._id, 1, variantId, unit);
-      }
+      const cartItem = findCartItem();
+      if (cartItem) updateItem(cartItem._id, currentQty + 1);
+      else addItem(item._id, 1, variantId, unit);
     };
-
     const handleDecrement = () => {
       haptics.selection();
-      const cartItem = cart?.items?.find(
-        i => i.product?._id === item._id && (variantId ? i.variant?._id === variantId : !i.variant)
-      );
-      if (cartItem) {
-        updateItem(cartItem._id, currentQty - 1);
-      }
+      const cartItem = findCartItem();
+      if (cartItem) updateItem(cartItem._id, currentQty - 1);
     };
 
     return (
       <Pressable
-        style={styles.productCard}
+        style={styles.card}
         onPress={() => {
           haptics.selection();
           router.push('/product/' + item._id);
         }}
       >
-        <View style={styles.imageCol}>
-          <Image
-            source={{ uri: imageUrl }}
-            style={styles.productImage}
-            contentFit="cover"
-            transition={200}
-          />
+        <View style={styles.imageBox}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.image} contentFit="contain" transition={200} />
+          ) : (
+            <ShoppingBag size={34} color={colors.textMuted} />
+          )}
           {discount > 0 && (
             <View style={styles.discountBadge}>
               <Text style={styles.discountText}>{discount}% OFF</Text>
             </View>
           )}
+          <Pressable
+            style={styles.heartBtn}
+            onPress={() => {
+              haptics.impactLight();
+              toggleSave(item);
+            }}
+            hitSlop={8}
+            accessibilityLabel="Remove from wishlist"
+          >
+            <Heart size={17} color="#E11D48" fill="#E11D48" />
+          </Pressable>
         </View>
 
-        <View style={styles.infoCol}>
-          <View style={styles.topRow}>
-            <View style={styles.deliveryBadge}>
-              <Zap size={10} color="#D97706" fill="#D97706" />
-              <Text style={styles.deliveryText}>10 MINS</Text>
+        <View style={styles.cardBody}>
+          <Text style={styles.unitText} numberOfLines={1}>{unit}</Text>
+          <Text style={styles.nameText} numberOfLines={2}>{item.name}</Text>
+
+          <View style={styles.bottomRow}>
+            <View>
+              <Text style={styles.priceText}>₹{price}</Text>
+              {mrp > price && <Text style={styles.mrpText}>₹{mrp}</Text>}
             </View>
 
-            <Pressable
-              style={styles.removeBtn}
-              onPress={(e) => {
-                e?.stopPropagation?.();
-                haptics.impactLight();
-                toggleSave(item);
-              }}
-              hitSlop={8}
-            >
-              <Trash2 size={16} color={colors.textSecondary} />
-            </Pressable>
-          </View>
-
-          <Text style={styles.productName} numberOfLines={2}>
-            {item.name}
-          </Text>
-
-          <Text style={styles.unitText}>
-            {unit}
-          </Text>
-
-          <View style={styles.priceAndActionRow}>
-            <View style={styles.priceCol}>
-              <View style={styles.priceRow}>
-                <Text style={styles.priceText}>₹{price}</Text>
-                {mrp > price && (
-                  <Text style={styles.mrpText}>₹{mrp}</Text>
-                )}
-              </View>
-              {mrp > price && (
-                <Text style={styles.saveText}>Save ₹{mrp - price}</Text>
-              )}
-            </View>
-
-            <View style={styles.actionCol}>
-              {currentQty > 0 ? (
-                <View style={styles.qtyControl}>
-                  <Pressable
-                    style={styles.qtyBtn}
-                    onPress={(e) => {
-                      e?.stopPropagation?.();
-                      handleDecrement();
-                    }}
-                    hitSlop={4}
-                  >
-                    <Minus size={14} color={colors.black} strokeWidth={2.5} />
-                  </Pressable>
-                  <Text style={styles.qtyValue}>{currentQty}</Text>
-                  <Pressable
-                    style={styles.qtyBtn}
-                    onPress={(e) => {
-                      e?.stopPropagation?.();
-                      handleIncrement();
-                    }}
-                    hitSlop={4}
-                  >
-                    <Plus size={14} color={colors.black} strokeWidth={2.5} />
-                  </Pressable>
-                </View>
-              ) : (
-                <Pressable
-                  style={styles.addBtn}
-                  onPress={(e) => {
-                    e?.stopPropagation?.();
-                    handleItemAdd();
-                  }}
-                >
-                  <Text style={styles.addBtnText}>ADD</Text>
-                  <Plus size={13} color={colors.black} strokeWidth={2.5} style={{ marginLeft: 3 }} />
+            {currentQty > 0 ? (
+              <View style={styles.stepper}>
+                <Pressable onPress={handleDecrement} style={styles.stepBtn} hitSlop={6}>
+                  <Minus size={14} color={colors.secondary} strokeWidth={3} />
                 </Pressable>
-              )}
-            </View>
+                <Text style={styles.stepQty}>{currentQty}</Text>
+                <Pressable onPress={handleIncrement} style={styles.stepBtn} hitSlop={6}>
+                  <Plus size={14} color={colors.secondary} strokeWidth={3} />
+                </Pressable>
+              </View>
+            ) : (
+              <Pressable onPress={handleAdd} style={styles.addBtn}>
+                <Text style={styles.addBtnText}>ADD</Text>
+              </Pressable>
+            )}
           </View>
         </View>
       </Pressable>
@@ -227,144 +180,110 @@ export default function WishlistScreen() {
   };
 
   const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconCircle}>
-        <Heart size={44} color={colors.primaryDark} strokeWidth={2.2} fill="#FFF9E8" />
+    <View style={styles.emptyWrap}>
+      <View style={styles.emptyIcon}>
+        <Heart size={38} color={colors.primaryDark} strokeWidth={1.8} />
       </View>
-      <Text style={styles.emptyTitle}>Your Wishlist is Empty</Text>
-      <Text style={styles.emptySubtitle}>
-        Save your favorite daily essentials, fresh fruits, vegetables, and snacks to order them anytime in 10 minutes.
-      </Text>
+      <Text style={styles.emptyTitle}>Your wishlist is empty</Text>
+      <Text style={styles.emptyDesc}>Tap the heart on any product to save it here for later.</Text>
       <Pressable
-        style={styles.emptyCtaBtn}
+        style={styles.emptyCta}
         onPress={() => {
           haptics.selection();
-          router.push('/(tabs)');
+          router.replace('/(tabs)');
         }}
       >
-        <ShoppingBag size={18} color={colors.black} strokeWidth={2.2} style={{ marginRight: 8 }} />
-        <Text style={styles.emptyCtaText}>Explore Groceries</Text>
+        <Text style={styles.emptyCtaText}>Start shopping</Text>
       </Pressable>
     </View>
   );
 
+  const count = savedProducts.length;
+
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
       <View style={styles.header}>
-        <Pressable
-          style={styles.headerBackBtn}
-          onPress={handleBack}
-          hitSlop={8}
-          accessibilityLabel="Back"
-        >
+        <Pressable style={styles.backBtn} onPress={handleBack} hitSlop={8} accessibilityLabel="Back">
           <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
         </Pressable>
-
         <View style={styles.headerTitleCol}>
-          <Text style={styles.headerTitle}>My Wishlist</Text>
-          <Text style={styles.headerSubtitle}>
-            {savedProducts.length} {savedProducts.length === 1 ? 'item' : 'items'} saved
-          </Text>
+          <Text style={styles.headerTitle}>Wishlist</Text>
+          <Text style={styles.headerSub}>{count} {count === 1 ? 'item' : 'items'} saved</Text>
         </View>
-
-        {savedProducts.length > 0 ? (
-          <Pressable
-            style={styles.headerClearBtn}
-            onPress={() => setShowClearModal(true)}
-            hitSlop={8}
-          >
-            <Text style={styles.headerClearText}>Clear All</Text>
+        {count > 0 ? (
+          <Pressable style={styles.clearBtn} onPress={() => setShowClearModal(true)} hitSlop={8}>
+            <Text style={styles.clearText}>Clear all</Text>
           </Pressable>
         ) : (
-          <View style={{ width: 40 }} />
+          <View style={{ width: 56 }} />
         )}
       </View>
 
-      {savedProducts.length > 0 && (
-        <View style={styles.topBanner}>
-          <View style={styles.topBannerLeft}>
-            <View style={styles.bannerBadge}>
-              <Heart size={14} color="#D97706" fill="#D97706" />
-            </View>
-            <View>
-              <Text style={styles.bannerTitle}>
-                {savedProducts.length} Saved {savedProducts.length === 1 ? 'Product' : 'Products'}
-              </Text>
-              <Text style={styles.bannerSubtitle}>Ready to order instantly</Text>
-            </View>
-          </View>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.addAllBtn,
-              pressed && { opacity: 0.9 }
-            ]}
-            onPress={handleAddAllToCart}
-            disabled={isAddingAll}
-          >
-            {isAddingAll ? (
-              <ActivityIndicator size="small" color={colors.black} />
-            ) : addedAllSuccess ? (
-              <>
-                <Check size={14} color={colors.black} strokeWidth={2.5} style={{ marginRight: 4 }} />
-                <Text style={styles.addAllText}>Added!</Text>
-              </>
-            ) : (
-              <>
-                <Plus size={14} color={colors.black} strokeWidth={2.5} style={{ marginRight: 4 }} />
-                <Text style={styles.addAllText}>Add All</Text>
-              </>
-            )}
-          </Pressable>
-        </View>
-      )}
-
       {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading your wishlist...</Text>
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={colors.primaryDark} />
         </View>
       ) : (
         <FlatList
           data={savedProducts}
           keyExtractor={(item) => item._id}
           renderItem={renderProductItem}
+          numColumns={2}
+          columnWrapperStyle={count > 0 ? styles.columnWrap : undefined}
           contentContainerStyle={[
             styles.listContent,
-            savedProducts.length === 0 && { flex: 1 },
-            cartTotalQty > 0 && { paddingBottom: 100 }
+            count === 0 && { flexGrow: 1 },
+            { paddingBottom: (cartTotalQty > 0 ? 96 : 24) + (count > 0 ? 76 : 0) + insets.bottom }
           ]}
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}
           onRefresh={refreshWishlist}
-          refreshing={isLoading}
+          refreshing={false}
         />
       )}
 
+      {count > 0 && !isLoading && (
+        <View
+          style={[
+            styles.addAllWrap,
+            { bottom: (cartTotalQty > 0 ? 76 : 0) + Math.max(insets.bottom, 12) }
+          ]}
+          pointerEvents="box-none"
+        >
+          <Pressable style={styles.addAllBtn} onPress={handleAddAllToCart} disabled={isAddingAll}>
+            {isAddingAll ? (
+              <ActivityIndicator size="small" color={colors.secondary} />
+            ) : addedAllSuccess ? (
+              <>
+                <Check size={18} color={colors.secondary} strokeWidth={3} />
+                <Text style={styles.addAllText}>Added to cart</Text>
+              </>
+            ) : (
+              <>
+                <ShoppingBag size={18} color={colors.secondary} strokeWidth={2.4} />
+                <Text style={styles.addAllText}>Add all to cart</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      )}
+
       {cartTotalQty > 0 && (
-        <View style={[styles.floatingCartWrap, { paddingBottom: Math.max(insets.bottom, 16) }]}>
+        <View style={[styles.cartBarWrap, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <Pressable
-            style={styles.floatingCartBar}
+            style={styles.cartBar}
             onPress={() => {
               haptics.selection();
               router.push('/(tabs)/cart');
             }}
           >
-            <View style={styles.floatingCartLeft}>
-              <View style={styles.cartIconCircle}>
-                <ShoppingBag size={18} color={colors.white} strokeWidth={2.4} />
-              </View>
-              <View>
-                <Text style={styles.floatingCartTitle}>
-                  {cartTotalQty} {cartTotalQty === 1 ? 'item' : 'items'} in cart
-                </Text>
-                <Text style={styles.floatingCartPrice}>₹{cartGrandTotal}</Text>
-              </View>
+            <View>
+              <Text style={styles.cartBarTitle}>{cartTotalQty} {cartTotalQty === 1 ? 'item' : 'items'} in cart</Text>
+              <Text style={styles.cartBarPrice}>₹{cartGrandTotal}</Text>
             </View>
-
-            <View style={styles.floatingCartRight}>
-              <Text style={styles.floatingCartCtaText}>View Cart</Text>
-              <ChevronRight size={18} color={colors.white} strokeWidth={2.4} />
+            <View style={styles.cartBarRight}>
+              <Text style={styles.cartBarCta}>View cart</Text>
+              <ChevronRight size={18} color={colors.white} strokeWidth={2.6} />
             </View>
           </Pressable>
         </View>
@@ -372,47 +291,25 @@ export default function WishlistScreen() {
 
       <Modal
         visible={showClearModal}
-        transparent={true}
+        transparent
         animationType="fade"
-        statusBarTranslucent={true}
-        onRequestClose={() => setShowClearModal(false)}
+        statusBarTranslucent
+        onRequestClose={() => { if (!isClearing) setShowClearModal(false); }}
       >
         <View style={styles.modalOverlay}>
-          <BlurView
-            intensity={Platform.OS === 'ios' ? 70 : 50}
-            tint="dark"
-            style={StyleSheet.absoluteFillObject}
-          />
-          <Pressable
-            style={StyleSheet.absoluteFillObject}
-            onPress={() => setShowClearModal(false)}
-          />
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => { if (!isClearing) setShowClearModal(false); }} />
           <View style={styles.modalCard}>
-            <View style={styles.modalIconBadge}>
-              <Trash2 size={24} color={colors.error} strokeWidth={2.4} />
+            <View style={styles.modalIcon}>
+              <Trash2 size={24} color={colors.error} strokeWidth={2.2} />
             </View>
-            <Text style={styles.modalTitle}>Clear Wishlist?</Text>
-            <Text style={styles.modalDesc}>
-              Are you sure you want to remove all items from your wishlist? You can add items back anytime while browsing.
-            </Text>
-            <View style={styles.modalActionsRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalCancelBtn,
-                  pressed && { backgroundColor: colors.softBackground }
-                ]}
-                onPress={() => setShowClearModal(false)}
-              >
+            <Text style={styles.modalTitle}>Clear wishlist?</Text>
+            <Text style={styles.modalDesc}>This removes all saved items. You can save them again while browsing.</Text>
+            <View style={styles.modalRow}>
+              <Pressable style={[styles.modalCancel, isClearing && { opacity: 0.5 }]} onPress={() => setShowClearModal(false)} disabled={isClearing}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </Pressable>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.modalConfirmBtn,
-                  pressed && { opacity: 0.9 }
-                ]}
-                onPress={handleClearAll}
-              >
-                <Text style={styles.modalConfirmText}>Clear All</Text>
+              <Pressable style={styles.modalConfirm} onPress={handleClearAll} disabled={isClearing}>
+                {isClearing ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.modalConfirmText}>Clear all</Text>}
               </Pressable>
             </View>
           </View>
@@ -423,432 +320,57 @@ export default function WishlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#F8FAFC'
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0'
-  },
-  headerBackBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#F1F5F9',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  headerTitleCol: {
-    alignItems: 'center'
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary,
-    marginTop: 1
-  },
-  headerClearBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 14,
-    backgroundColor: '#FEE2E2'
-  },
-  headerClearText: {
-    fontSize: 12,
-    fontFamily: typography.family.semibold,
-    color: colors.error
-  },
-  topBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFFBEB',
-    marginHorizontal: 16,
-    marginTop: 12,
-    marginBottom: 4,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#FDE68A'
-  },
-  topBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
-  },
-  bannerBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  bannerTitle: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: '#92400E'
-  },
-  bannerSubtitle: {
-    fontSize: 11,
-    fontFamily: typography.family.regular,
-    color: '#B45309'
-  },
-  addAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20
-  },
-  addAllText: {
-    fontSize: 12,
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  listContent: {
-    padding: 16,
-    gap: 12
-  },
-  productCard: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
-  },
-  imageCol: {
-    width: 96,
-    height: 96,
-    borderRadius: 16,
-    backgroundColor: '#F8FAFC',
-    overflow: 'hidden',
-    position: 'relative'
-  },
-  productImage: {
-    width: '100%',
-    height: '100%'
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: '#16A34A',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8
-  },
-  discountText: {
-    fontSize: 9,
-    fontFamily: typography.family.bold,
-    color: colors.white
-  },
-  infoCol: {
-    flex: 1,
-    marginLeft: 14,
-    justifyContent: 'space-between'
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between'
-  },
-  deliveryBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 3
-  },
-  deliveryText: {
-    fontSize: 9,
-    fontFamily: typography.family.bold,
-    color: '#B45309'
-  },
-  removeBtn: {
-    padding: 4
-  },
-  productName: {
-    fontSize: 14,
-    fontFamily: typography.family.semibold,
-    color: colors.textPrimary,
-    marginTop: 4,
-    lineHeight: 19
-  },
-  unitText: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    marginTop: 2
-  },
-  priceAndActionRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    marginTop: 8
-  },
-  priceCol: {},
-  priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6
-  },
-  priceText: {
-    fontSize: 16,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary
-  },
-  mrpText: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    textDecorationLine: 'line-through'
-  },
-  saveText: {
-    fontSize: 10,
-    fontFamily: typography.family.semibold,
-    color: '#16A34A',
-    marginTop: 1
-  },
-  actionCol: {},
-  addBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 14,
-    minWidth: 70
-  },
-  addBtnText: {
-    fontSize: 12,
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  qtyControl: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primary,
-    borderRadius: 14,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-    gap: 8
-  },
-  qtyBtn: {
-    padding: 2
-  },
-  qtyValue: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.black,
-    minWidth: 16,
-    textAlign: 'center'
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32
-  },
-  loadingText: {
-    fontSize: 14,
-    fontFamily: typography.family.medium,
-    color: colors.textSecondary,
-    marginTop: 12
-  },
-  emptyContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    paddingVertical: 64
-  },
-  emptyIconCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: '#FFFBEB',
-    borderWidth: 2,
-    borderColor: '#FDE68A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 20
-  },
-  emptyTitle: {
-    fontSize: 20,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: 8,
-    textAlign: 'center'
-  },
-  emptySubtitle: {
-    fontSize: 14,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 21,
-    marginBottom: 26
-  },
-  emptyCtaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.primary,
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 24
-  },
-  emptyCtaText: {
-    fontSize: 15,
-    fontFamily: typography.family.bold,
-    color: colors.black
-  },
-  floatingCartWrap: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    backgroundColor: 'transparent'
-  },
-  floatingCartBar: {
-    position: 'absolute',
-    bottom: spacing.lg,
-    left: spacing.lg,
-    right: spacing.lg,
-    backgroundColor: colors.primaryDark,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    borderRadius: 22
-  },
-  floatingCartLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
-  },
-  cartIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  floatingCartTitle: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.white
-  },
-  floatingCartPrice: {
-    fontSize: 12,
-    fontFamily: typography.family.regular,
-    color: '#94A3B8'
-  },
-  floatingCartRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#334155',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 14,
-    gap: 4
-  },
-  floatingCartCtaText: {
-    fontSize: 13,
-    fontFamily: typography.family.bold,
-    color: colors.white
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)'
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 320,
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
-  },
-  modalIconBadge: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FEE2E2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontFamily: typography.family.bold,
-    color: colors.textPrimary,
-    marginBottom: 8
-  },
-  modalDesc: {
-    fontSize: 13,
-    fontFamily: typography.family.regular,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 19,
-    marginBottom: 20
-  },
-  modalActionsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%'
-  },
-  modalCancelBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  modalCancelText: {
-    fontSize: 14,
-    fontFamily: typography.family.semibold,
-    color: colors.textSecondary
-  },
-  modalConfirmBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 14,
-    backgroundColor: colors.error,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  modalConfirmText: {
-    fontSize: 14,
-    fontFamily: typography.family.bold,
-    color: colors.white
-  }
+  screen: { flex: 1, backgroundColor: colors.softBackground },
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIDE, paddingVertical: 10, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
+  headerTitleCol: { flex: 1, alignItems: 'center' },
+  headerTitle: { fontSize: 18, fontFamily: F.bold, color: colors.textPrimary },
+  headerSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
+  clearBtn: { width: 56, alignItems: 'flex-end' },
+  clearText: { fontSize: 13, fontFamily: F.bold, color: colors.error },
+  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  listContent: { paddingHorizontal: SIDE, paddingTop: 14 },
+  columnWrap: { gap: GAP, marginBottom: GAP },
+  card: { width: CARD_WIDTH, backgroundColor: colors.white, borderRadius: 16, borderWidth: 1, borderColor: colors.borderLight, overflow: 'hidden' },
+  imageBox: { height: CARD_WIDTH * 0.85, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', padding: 10 },
+  image: { width: '100%', height: '100%' },
+  discountBadge: { position: 'absolute', top: 8, left: 8, backgroundColor: colors.primary, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  discountText: { fontSize: 10, fontFamily: F.bold, color: colors.secondary },
+  heartBtn: { position: 'absolute', top: 8, right: 8, width: 30, height: 30, borderRadius: 15, backgroundColor: colors.white, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.borderLight },
+  cardBody: { padding: 10, paddingTop: 4 },
+  unitText: { fontSize: 11, fontFamily: F.medium, color: colors.textSecondary },
+  nameText: { fontSize: 13, fontFamily: F.bold, color: colors.textPrimary, lineHeight: 17, minHeight: 34, marginTop: 2 },
+  bottomRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 8 },
+  priceText: { fontSize: 15, fontFamily: F.bold, color: colors.textPrimary },
+  mrpText: { fontSize: 11, fontFamily: F.regular, color: colors.textMuted, textDecorationLine: 'line-through' },
+  addBtn: { minWidth: 62, height: 32, borderRadius: 10, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 12 },
+  addBtnText: { fontSize: 12.5, fontFamily: F.bold, color: colors.secondary },
+  stepper: { flexDirection: 'row', alignItems: 'center', height: 32, borderRadius: 10, backgroundColor: colors.primary },
+  stepBtn: { width: 28, height: 32, alignItems: 'center', justifyContent: 'center' },
+  stepQty: { minWidth: 16, textAlign: 'center', fontSize: 13, fontFamily: F.bold, color: colors.secondary },
+  emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, paddingBottom: 60 },
+  emptyIcon: { width: 88, height: 88, borderRadius: 44, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontFamily: F.bold, color: colors.textPrimary, marginBottom: 6 },
+  emptyDesc: { fontSize: 13, fontFamily: F.regular, color: colors.textSecondary, textAlign: 'center', lineHeight: 19, marginBottom: 20 },
+  emptyCta: { height: 46, paddingHorizontal: 26, borderRadius: 14, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
+  emptyCtaText: { fontSize: 14, fontFamily: F.bold, color: colors.secondary },
+  addAllWrap: { position: 'absolute', left: 0, right: 0, paddingHorizontal: SIDE },
+  addAllBtn: { height: 52, borderRadius: 16, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
+  addAllText: { fontSize: 15, fontFamily: F.bold, color: colors.secondary },
+  cartBarWrap: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: SIDE, paddingTop: 8, backgroundColor: colors.softBackground },
+  cartBar: { height: 56, borderRadius: 16, backgroundColor: colors.secondary, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
+  cartBarTitle: { fontSize: 12, fontFamily: F.medium, color: '#D0D5DD' },
+  cartBarPrice: { fontSize: 15, fontFamily: F.bold, color: colors.white },
+  cartBarRight: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  cartBarCta: { fontSize: 14, fontFamily: F.bold, color: colors.white },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  modalCard: { width: '100%', maxWidth: 330, backgroundColor: colors.white, borderRadius: 20, padding: 20, alignItems: 'center' },
+  modalIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.errorSubtle, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  modalTitle: { fontSize: 17, fontFamily: F.bold, color: colors.textPrimary, marginBottom: 6 },
+  modalDesc: { fontSize: 13, fontFamily: F.regular, color: colors.textSecondary, textAlign: 'center', lineHeight: 18, marginBottom: 18 },
+  modalRow: { flexDirection: 'row', gap: 10, width: '100%' },
+  modalCancel: { flex: 1, height: 44, borderRadius: 12, backgroundColor: colors.softBackground, alignItems: 'center', justifyContent: 'center' },
+  modalCancelText: { fontSize: 14, fontFamily: F.bold, color: colors.textSecondary },
+  modalConfirm: { flex: 1, height: 44, borderRadius: 12, backgroundColor: colors.error, alignItems: 'center', justifyContent: 'center' },
+  modalConfirmText: { fontSize: 14, fontFamily: F.bold, color: '#fff' }
 });

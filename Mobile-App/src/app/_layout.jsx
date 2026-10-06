@@ -155,14 +155,7 @@ export default function RootLayout() {
                 />
                 <Stack.Screen 
                   name="addresses" 
-                  options={{ 
-                    headerShown: true, 
-                    title: 'My Addresses',
-                    headerTintColor: colors.textPrimary,
-                    headerTitleStyle: { fontFamily: typography.family.bold },
-                    headerShadowVisible: false,
-                    headerStyle: { backgroundColor: colors.surface }
-                  }} 
+                  options={{ headerShown: false }} 
                 />
               </Stack>
               </CartProvider>

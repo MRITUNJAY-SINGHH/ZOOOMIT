@@ -19,7 +19,7 @@ import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import {
   ArrowLeft,
-  Home,
+  MapPin,
   ChevronDown,
   MoreVertical,
   Trash2,
@@ -41,11 +41,13 @@ import {
   Tag,
   AlertCircle,
   Sparkles,
-  TicketPercent
+  TicketPercent,
+  ShoppingBasket
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useWishlist } from '../../context/WishlistContext';
 import { StorefrontAPI } from '../../services/api';
 import { haptics } from '../../services/haptics';
 import { MOCK_PRODUCTS } from '../../services/mockProducts';
@@ -247,6 +249,8 @@ export default function CartScreen() {
 
   const [clearModalVisible, setClearModalVisible] = useState(false);
   const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
+  const [isClearingCart, setIsClearingCart] = useState(false);
+  const { toggleSave, isSaved } = useWishlist();
   const [couponModalVisible, setCouponModalVisible] = useState(false);
   const [policyModalVisible, setPolicyModalVisible] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
@@ -358,6 +362,9 @@ export default function CartScreen() {
     haptics.selection();
     const id = item.product?._id || item._id;
     setWishlistIds((prev) => new Set(prev).add(id));
+    if (item.product?._id && toggleSave && !isSaved(item.product._id)) {
+      toggleSave(item.product);
+    }
     handleItemDelete(item);
   };
 
@@ -371,13 +378,20 @@ export default function CartScreen() {
     });
   };
 
-  const handleConfirmClearCart = () => {
+  const handleConfirmClearCart = async () => {
+    if (isClearingCart) return;
     haptics.notificationSuccess();
-    setClearModalVisible(false);
-    if (isRealCartActive && clearCart) {
-      clearCart();
-    } else {
-      setLocalItems([]);
+    setIsClearingCart(true);
+    try {
+      if (isRealCartActive && clearCart) {
+        await clearCart();
+        setLocalItems([]);
+      } else {
+        setLocalItems([]);
+      }
+    } finally {
+      setIsClearingCart(false);
+      setClearModalVisible(false);
     }
   };
 
@@ -477,8 +491,57 @@ export default function CartScreen() {
     setOrderPlacedSuccess(true);
   };
 
+  if (items.length === 0 && !isClearingCart) {
+    return (
+      <View style={styles.screenRoot}>
+        <View style={[styles.headerContainer, { paddingTop: Math.max(insets.top, 12) }]}>
+          <View style={styles.headerTopRow}>
+            <TouchableOpacity
+              style={styles.headerBackBtn}
+              onPress={() => {
+                haptics.selection();
+                if (router.canGoBack()) router.back();
+                else router.replace('/(tabs)');
+              }}
+              hitSlop={10}
+              activeOpacity={0.7}
+            >
+              <ArrowLeft size={21} color="#0F172A" strokeWidth={2.4} />
+            </TouchableOpacity>
+            <Text style={styles.cartHeaderMainTitle}>My Cart</Text>
+            <View style={{ width: 36 }} />
+          </View>
+        </View>
+        <View style={styles.emptyCartWrap}>
+          <View style={styles.emptyCartIcon}>
+            <ShoppingBasket size={40} color="#E5A900" strokeWidth={1.8} />
+          </View>
+          <Text style={styles.emptyCartTitle}>Your cart is empty</Text>
+          <Text style={styles.emptyCartDesc}>Add groceries and essentials to get them delivered in minutes.</Text>
+          <TouchableOpacity
+            style={styles.emptyCartBtn}
+            onPress={() => {
+              haptics.selection();
+              router.replace('/(tabs)');
+            }}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.emptyCartBtnText}>Start shopping</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.screenRoot}>
+      {overflowMenuVisible && (
+        <Pressable
+          style={styles.overflowBackdrop}
+          onPress={() => setOverflowMenuVisible(false)}
+          accessibilityLabel="Close menu"
+        />
+      )}
       <View style={[styles.headerContainer, { paddingTop: Math.max(insets.top, 12) }]}>
         <View style={styles.headerTopRow}>
           <TouchableOpacity
@@ -503,7 +566,7 @@ export default function CartScreen() {
             activeOpacity={0.8}
           >
             <View style={styles.headerHomeRow}>
-              <Home size={14} color="#0F172A" fill="#0F172A" style={{ marginRight: 5 }} />
+              <MapPin size={15} color="#0F172A" strokeWidth={2.4} style={{ marginRight: 5 }} />
               <Text style={styles.headerHomeTitle}>HOME</Text>
               <ChevronDown size={14} color="#0F172A" strokeWidth={2.5} style={{ marginLeft: 3 }} />
             </View>
@@ -526,7 +589,7 @@ export default function CartScreen() {
         </View>
 
         {overflowMenuVisible && (
-          <View style={styles.overflowDropdown}>
+          <View style={[styles.overflowDropdown, { top: Math.max(insets.top, 12) + 48 }]}>
             <TouchableOpacity
               style={styles.overflowDropdownItem}
               onPress={() => {
@@ -767,7 +830,7 @@ export default function CartScreen() {
         visible={clearModalVisible}
         transparent={true}
         animationType="fade"
-        onRequestClose={() => setClearModalVisible(false)}
+        onRequestClose={() => { if (!isClearingCart) setClearModalVisible(false); }}
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.clearConfirmModalCard}>
@@ -780,16 +843,22 @@ export default function CartScreen() {
             </Text>
             <View style={styles.clearModalActionsRow}>
               <TouchableOpacity
-                style={styles.clearModalCancelBtn}
+                style={[styles.clearModalCancelBtn, isClearingCart && { opacity: 0.5 }]}
+                disabled={isClearingCart}
                 onPress={() => setClearModalVisible(false)}
               >
                 <Text style={styles.clearModalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.clearModalConfirmBtn}
+                style={[styles.clearModalConfirmBtn, isClearingCart && { opacity: 0.85 }]}
+                disabled={isClearingCart}
                 onPress={handleConfirmClearCart}
               >
-                <Text style={styles.clearModalConfirmText}>Clear Cart</Text>
+                {isClearingCart ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.clearModalConfirmText}>Clear Cart</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -1147,13 +1216,67 @@ const styles = StyleSheet.create({
   overflowDropdown: {
     position: 'absolute',
     right: 14,
-    top: 50,
+    top: 56,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 6,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     zIndex: 100
+  },
+  emptyCartWrap: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 90
+  },
+  emptyCartIcon: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: '#FFF4C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 18
+  },
+  emptyCartTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6
+  },
+  emptyCartDesc: {
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 20
+  },
+  emptyCartBtn: {
+    backgroundColor: '#FFC928',
+    paddingHorizontal: 26,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  emptyCartBtnText: {
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#111827'
+  },
+  overflowBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 40
   },
   overflowDropdownItem: {
     flexDirection: 'row',

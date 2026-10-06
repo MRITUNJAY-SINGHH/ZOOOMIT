@@ -122,7 +122,6 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
           <Home
             size={iconSize}
             color={iconColor}
-            fill={isFocused ? '#0066FF' : 'transparent'}
             strokeWidth={isFocused ? 2.4 : 1.9}
           />
         );
@@ -140,7 +139,6 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
             <ShoppingCart
               size={iconSize}
               color={iconColor}
-              fill={isFocused ? '#0066FF' : 'transparent'}
               strokeWidth={isFocused ? 2.4 : 1.9}
             />
             {totalCartQty > 0 && (
