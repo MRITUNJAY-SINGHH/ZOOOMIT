@@ -27,37 +27,37 @@ export const typography = {
     heavy: '800'
   },
   family: {
-    light: 'Inter_300Light',
-    regular: 'Inter_400Regular',
-    medium: 'Inter_500Medium',
-    semibold: 'Inter_700Bold',
-    bold: 'Inter_700Bold',
-    heavy: 'Inter_800ExtraBold',
-    extraBold: 'Inter_800ExtraBold',
-    display: 'Inter_900Black',
-    largeHeading: 'Inter_700Bold',
-    heading: 'Inter_700Bold',
-    body: 'Inter_400Regular',
-    button: 'Inter_700Bold',
+    light: 'GilroyLight',
+    regular: 'GilroyRegular',
+    medium: 'GilroyMedium',
+    semibold: 'GilroyBold',
+    bold: 'GilroyBold',
+    heavy: 'GilroyHeavy',
+    extraBold: 'GilroyHeavy',
+    display: 'GilroyHeavy',
+    largeHeading: 'GilroyBold',
+    heading: 'GilroyBold',
+    body: 'GilroyRegular',
+    button: 'GilroyBold',
 
     // Direct font family access
-    GilroyLight: 'Inter_300Light',
-    GilroyRegular: 'Inter_400Regular',
-    GilroyMedium: 'Inter_500Medium',
-    GilroyBold: 'Inter_700Bold',
-    GilroyHeavy: 'Inter_800ExtraBold'
+    GilroyLight: 'GilroyLight',
+    GilroyRegular: 'GilroyRegular',
+    GilroyMedium: 'GilroyMedium',
+    GilroyBold: 'GilroyBold',
+    GilroyHeavy: 'GilroyHeavy'
   },
   fonts: {
-    light: 'Inter_300Light',
-    regular: 'Inter_400Regular',
-    medium: 'Inter_500Medium',
-    bold: 'Inter_700Bold',
-    heavy: 'Inter_800ExtraBold',
-    GilroyLight: 'Inter_300Light',
-    GilroyRegular: 'Inter_400Regular',
-    GilroyMedium: 'Inter_500Medium',
-    GilroyBold: 'Inter_700Bold',
-    GilroyHeavy: 'Inter_800ExtraBold'
+    light: 'GilroyLight',
+    regular: 'GilroyRegular',
+    medium: 'GilroyMedium',
+    bold: 'GilroyBold',
+    heavy: 'GilroyHeavy',
+    GilroyLight: 'GilroyLight',
+    GilroyRegular: 'GilroyRegular',
+    GilroyMedium: 'GilroyMedium',
+    GilroyBold: 'GilroyBold',
+    GilroyHeavy: 'GilroyHeavy'
   }
 };
 
