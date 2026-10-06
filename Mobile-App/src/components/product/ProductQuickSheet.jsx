@@ -166,7 +166,7 @@ export function ProductQuickSheet({ product, mode = 'details', initialVariantId,
         </ScrollView>
         {view === 'variants' ? <Pressable ref={addRef} collapsable={false} style={[styles.confirm, (saving || isUpdating) && { opacity: 0.6 }]} onPress={confirm} disabled={saving || isUpdating}><Text style={styles.confirmText}>Item total: ₹{total.toFixed(2)}</Text>{saving ? <ActivityIndicator color="#222" /> : <Text style={styles.confirmText}>Confirm ›</Text>}</Pressable> : <View ref={addRef} collapsable={false} style={styles.bottom}><View style={{ flex: 1 }}><Text style={styles.pack}>{selected?.name || unitOf(p, selected)} {discount > 0 ? ` · ${discount}% OFF` : ''}</Text><View style={styles.priceRow}><Text style={styles.price}>₹{price}</Text>{mrp > price && <Text style={styles.mrp}>₹{mrp}</Text>}</View></View>{qty(selected) > 0 ? controls(selected) : <Pressable disabled={saving || isUpdating || soldOut(selected)} onPress={() => change(selected, 1)} style={[styles.add, soldOut(selected) && { opacity: 0.5 }]}>{saving ? <ActivityIndicator color="#222" /> : <Text style={styles.confirmText}>{soldOut(selected) ? 'SOLD OUT' : 'ADD'}</Text>}</Pressable>}</View>}
       </Animated.View>
-      {view === 'details' && <FloatingCart bottom={Math.max(insets.bottom, 12) + 88} />}
+      {view === 'details' && <FloatingCart onOpenCart={onClose} bottom={Math.max(insets.bottom, 12) + 88} />}
     </View>
   </Modal>;
 }
