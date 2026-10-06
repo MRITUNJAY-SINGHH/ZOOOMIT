@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
+import { Platform, DeviceEventEmitter } from 'react-native';
 import Constants from 'expo-constants';
 import { authStorage } from './authStorage';
 import { SAMPLE_ORDERS } from './mockOrders';
@@ -55,6 +55,8 @@ api.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401) {
       console.warn('[StorefrontAPI] 401 response for:', error.config?.url);
+      await authStorage.clearAuth();
+      DeviceEventEmitter.emit('auth_unauthorized');
     }
     return Promise.reject(error);
   }

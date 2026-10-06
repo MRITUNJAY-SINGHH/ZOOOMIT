@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { authStorage } from '../services/authStorage';
 import { StorefrontAPI } from '../services/api';
@@ -13,6 +14,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     loadStoredAuth();
+
+    const sub = DeviceEventEmitter.addListener('auth_unauthorized', () => {
+      setToken(null);
+      setCustomer(null);
+      queryClient.clear();
+    });
+
+    return () => {
+      sub.remove();
+    };
   }, []);
 
   const loadStoredAuth = async () => {
