@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   searchBtn: { padding: 9 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
   headerTitleCol: { flex: 1, alignItems: 'flex-start' },
-  headerTitle: { fontSize: 22, fontFamily: F.bold, color: colors.textPrimary },
+  headerTitle: { fontSize: 17, fontFamily: F.bold, color: colors.textPrimary },
   headerSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
   clearBtn: { paddingHorizontal: 4, alignItems: 'flex-end' },
   clearText: { fontSize: 13, fontFamily: F.bold, color: colors.error },
