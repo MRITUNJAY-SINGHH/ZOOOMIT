@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, Leaf, Cherry, Grape, Citrus, Banana, Carrot, Wine, ChefHat, Heart, Star, Sprout, PartyPopper, ChevronDown, ChevronRight, ChevronUp, User } from 'lucide-react-native';
+import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, Leaf, Cherry, Grape, Citrus, Banana, Carrot, Wine, ChefHat, Heart, Star, Sprout, PartyPopper, ChevronDown, ChevronRight, ChevronUp, User, Mic } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -232,6 +232,17 @@ export default function HomeScreen() {
   const [tab, setTab] = useState('All');
   const themeAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => { Animated.timing(themeAnim, { toValue: THEME_INDEX(tab), duration: 450, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }).start(); }, [tab, themeAnim]);
+  const copyAnim = useRef(new Animated.Value(1)).current;
+  const artAnim = useRef(new Animated.Value(1)).current;
+  const bannerAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    copyAnim.setValue(0); artAnim.setValue(0); bannerAnim.setValue(0);
+    Animated.stagger(90, [
+      Animated.timing(copyAnim, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(artAnim, { toValue: 1, duration: 480, easing: Easing.out(Easing.back(1.4)), useNativeDriver: false }),
+      Animated.timing(bannerAnim, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: false })
+    ]).start();
+  }, [tab, copyAnim, artAnim, bannerAnim]);
   const theme = THEMES[THEME_INDEX(tab)];
   const themeBg = themeAnim.interpolate({ inputRange: themeRange, outputRange: themeColors });
   const backAnim = useRef(new Animated.Value(0)).current;
@@ -264,6 +275,7 @@ export default function HomeScreen() {
   const address = customer?.addresses?.find(a => a.isDefault) || customer?.addresses?.[0];
   const initial = (customer?.name || customer?.firstName || customer?.fullName || '').trim().charAt(0).toUpperCase();
   const addressLabel = address ? [address.street, address.city].filter(Boolean).join(', ') : 'Select delivery address';
+  const addressTitle = address ? (address.label || address.type || address.name || 'Home') : 'Add address';
   const match = group || TABS.find(t => t.name === tab)?.match;
   const visibleProducts = match ? products.filter(p => new RegExp(match, 'i').test(categoryText(p))) : products;
   const onRefresh = async () => {
@@ -278,7 +290,8 @@ export default function HomeScreen() {
         <ThemeDeco anim={themeAnim} bottomInset={84} />
         <View style={styles.addressRow}>
         <Pressable style={styles.address} onPress={() => router.push('/addresses')} accessibilityRole="button">
-          <Text style={styles.addressText} numberOfLines={1}>{addressLabel}</Text><ChevronDown size={14} color="#fff" />
+          <View style={styles.addressTop}><Text style={styles.addressLabel} numberOfLines={1}>{addressTitle}</Text><ChevronRight size={18} color="#fff" strokeWidth={2.4} /></View>
+          <Text style={styles.addressText} numberOfLines={1}>{addressLabel}</Text>
         </Pressable>
         <Pressable style={styles.avatar} onPress={() => router.push('/(tabs)/profile')} accessibilityRole="button" accessibilityLabel="Open profile">
           {initial ? <Text style={styles.avatarText}>{initial}</Text> : <User size={18} color="#fff" />}
@@ -286,18 +299,23 @@ export default function HomeScreen() {
         </View>
         <View style={styles.searchRow}>
           <Pressable style={styles.search} onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Search products" accessibilityRole="button">
-            <RotatingSearch words={searchWords} /><Search size={19} color="#637164" />
+            <Search size={21} color="#637164" /><RotatingSearch words={searchWords} /><View style={styles.micDivider} /><Mic size={20} color="#E8A400" />
           </Pressable>
-          <Pressable style={styles.bookmark} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Bookmark size={22} color="#fff" /></Pressable>
+          <Pressable style={styles.bookmark} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Text style={styles.savedText}>SAVED</Text><Heart size={22} color="#E8A400" fill="#FFC928" /></Pressable>
         </View>
         <CategoryTabs tab={tab} anim={themeAnim} backgroundColor={themeBg} onSelect={name => { setTab(name); setGroup(null); }} />
+        {parents.length > 0 && <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
+          {[{ _id: '__all', name: 'ALL' }, ...parents].map(c => { const on = c._id === '__all' ? !activeParent : activeParent === idOf(c); return <Pressable key={idOf(c)} style={styles.chip} onPress={() => { if (c._id === '__all') { setActiveParent(null); scrollRef.current?.scrollTo({ y: 0, animated: true }); } else jumpToParent(c); }} accessibilityRole="button" accessibilityState={{ selected: on }}>
+            <Text style={[styles.chipText, on && styles.chipTextActive]}>{String(c.name).toUpperCase()}</Text><View style={[styles.chipLine, !on && styles.chipLineOff]} />
+          </Pressable>; })}
+        </ScrollView>}
       </Animated.View>
       <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
         <Animated.View style={[styles.greenPanel, { backgroundColor: themeBg }]}>
           <ThemeDeco anim={themeAnim} />
           <View style={styles.hero}>
-            <View style={styles.heroCopy}><Text style={[styles.heroPink, { color: theme.accent }]}>{theme.title}</Text><Text style={styles.heroWhite}>{theme.sub}</Text><Text style={styles.heroCaption}>{theme.caption}</Text></View>
-            {tab === 'All' || tab === 'Fresh' ? <Image source={{ uri: GROUPS[0].image }} style={styles.heroImage} contentFit="cover" /> : <View style={styles.heroBadge}><theme.hero size={44} color="#fff" strokeWidth={1.5} /></View>}
+            <Animated.View style={[styles.heroCopy, { opacity: copyAnim, transform: [{ translateX: copyAnim.interpolate({ inputRange: [0, 1], outputRange: [-26, 0] }) }] }]}><Text style={[styles.heroPink, { color: theme.accent }]}>{theme.title}</Text><Text style={styles.heroWhite}>{theme.sub}</Text><Text style={styles.heroCaption}>{theme.caption}</Text></Animated.View>
+            <Animated.View style={{ opacity: artAnim, transform: [{ scale: artAnim.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }, { rotate: artAnim.interpolate({ inputRange: [0, 1], outputRange: ['-12deg', '0deg'] }) }] }}>{tab === 'All' || tab === 'Fresh' ? <Image source={{ uri: GROUPS[0].image }} style={styles.heroImage} contentFit="cover" /> : <View style={styles.heroBadge}><theme.hero size={44} color="#fff" strokeWidth={1.5} /></View>}</Animated.View>
           </View>
           <View style={styles.featuredRow}>
             {GROUPS.map(g => {
@@ -330,7 +348,7 @@ export default function HomeScreen() {
             </View>;
           })}
         </>}
-        <BannerSlider />
+        <Animated.View style={{ opacity: bannerAnim, transform: [{ translateY: bannerAnim.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }}><BannerSlider /></Animated.View>
         <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>{group ? 'Fresh picks for you' : tab === 'All' ? 'Top deals on bestsellers' : `${tab} picks`}</Text><Pressable onPress={() => router.push('/(tabs)/search')} style={styles.seeAll}><Text style={styles.seeAllText}>See All</Text><ChevronRight size={14} color="#1769FF" /></Pressable></View>
         {productsQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
         {productsQuery.isError && <View style={styles.state}><Text style={styles.stateTitle}>Couldn't load your store</Text><Text style={styles.stateText}>Check your connection and try again.</Text><Pressable onPress={onRefresh}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
@@ -348,8 +366,8 @@ const styles = StyleSheet.create({
   fullSeeAll: { marginHorizontal: 16, marginTop: 14, padding: 14, borderRadius: 14, backgroundColor: '#EDF8FE', alignItems: 'center' }, fullSeeAllText: { color: '#0066CC', fontSize: 16, fontFamily: typography.family.bold },
   backTopWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', zIndex: 20 }, backTop: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#1C1F26', paddingHorizontal: 13, paddingVertical: 8, borderRadius: 24, elevation: 5, shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 8, shadowOffset: { width: 0, height: 3 } }, backTopText: { color: '#fff', fontSize: 12, fontFamily: typography.family.medium },
   root: { flex: 1, backgroundColor: '#fff' }, header: { backgroundColor: '#437D29', paddingHorizontal: 16, overflow: 'hidden' },
-  addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 4 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, flexShrink: 1 },
-  searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 44, borderRadius: 13, backgroundColor: '#fff', paddingHorizontal: 13, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 38, height: 44, alignItems: 'center', justifyContent: 'center' },
+  addressRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 }, avatar: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5, borderColor: '#fff', alignItems: 'center', justifyContent: 'center' }, avatarText: { color: '#fff', fontSize: 15, fontFamily: typography.family.bold }, address: { flex: 1, paddingVertical: 2 }, addressTop: { flexDirection: 'row', alignItems: 'center', gap: 2 }, addressLabel: { color: '#fff', fontFamily: typography.family.bold, fontSize: 20, flexShrink: 1 }, addressText: { color: '#fff', fontFamily: typography.family.medium, fontSize: 12, opacity: 0.9, marginTop: 1 }, chipsRow: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4, gap: 22 }, chip: { paddingVertical: 8, alignItems: 'center' }, chipText: { color: 'rgba(255,255,255,0.75)', fontSize: 12.5, letterSpacing: 0.4, fontFamily: typography.family.bold }, chipTextActive: { color: '#fff' }, chipLine: { height: 3, borderRadius: 2, backgroundColor: '#fff', marginTop: 6, alignSelf: 'stretch' }, chipLineOff: { backgroundColor: 'transparent' },
+  searchRow: { flexDirection: 'row', gap: 10, alignItems: 'center' }, search: { flex: 1, height: 56, borderRadius: 16, backgroundColor: '#fff', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }, placeholder: { color: '#7B8378', fontSize: 13, fontFamily: typography.family.regular }, bookmark: { width: 54, height: 56, borderRadius: 14, backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center', gap: 3 }, savedText: { fontSize: 11, color: '#20251F', fontFamily: typography.family.bold }, micDivider: { width: 1, height: 22, backgroundColor: '#D6D9D3', marginHorizontal: 10 },
   tabs: { flexDirection: 'row', paddingTop: 16, paddingHorizontal: 16 }, tabsWrap: { position: 'relative', marginHorizontal: -16 }, rotRow: { flexDirection: 'row', alignItems: 'center', flex: 1 }, rotWindow: { height: 18, flex: 1, overflow: 'hidden' }, rotWord: { position: 'absolute', left: 0, right: 0, top: 0, lineHeight: 18 }, heroBadge: { width: 85, height: 85, borderRadius: 42, backgroundColor: 'rgba(255,255,255,0.16)', alignItems: 'center', justifyContent: 'center' }, tabPress: { flex: 1, minWidth: 0, alignItems: 'center' }, tab: { maxWidth: '100%', alignItems: 'center', gap: 4, paddingHorizontal: 3, paddingTop: 9, paddingBottom: 12 }, tabIcon: { width: 26, height: 26, alignItems: 'center', justifyContent: 'center', borderRadius: 13 }, tabText: { fontSize: 10, lineHeight: 13, textAlign: 'center', color: '#DDEBD5', fontFamily: typography.family.medium }, tabTextActive: { color: '#fff', fontFamily: typography.family.bold },
   body: { paddingBottom: Math.max(180, TOP_INSET_FALLBACK + 140) }, greenPanel: { backgroundColor: '#437D29', overflow: 'hidden', padding: 16, paddingTop: 12, borderBottomLeftRadius: 26, borderBottomRightRadius: 26 }, hero: { height: 100, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }, heroCopy: { flex: 1 }, heroPink: { color: '#FFA7CC', fontSize: 25, fontWeight: '900', fontFamily: typography.family.bold }, heroWhite: { color: '#fff', fontSize: 21, fontWeight: '900', fontFamily: typography.family.bold }, heroCaption: { color: '#E7F3DE', fontSize: 11, marginTop: 5 }, heroImage: { width: 95, height: 85, borderRadius: 18 },
   featuredRow: { flexDirection: 'row', gap: 8, marginTop: 12 }, featuredTile: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 16, overflow: 'hidden', paddingTop: 10, borderWidth: 1, borderColor: '#ffffff15' }, selectedTile: { borderColor: '#fff' }, featuredName: { textAlign: 'center', fontSize: 13, lineHeight: 15, color: '#fff', fontFamily: typography.family.medium, minHeight: 32 }, featuredImage: { width: '100%', height: 76, marginTop: 4 }, priceRibbon: { backgroundColor: '#F883AD', color: '#23331C', textAlign: 'center', paddingVertical: 5, fontSize: 10, fontWeight: '800', fontFamily: typography.family.bold },
