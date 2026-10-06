@@ -1,3 +1,5 @@
+import { FloatingCart } from '../../components/FloatingCart';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   View, 
@@ -23,6 +25,7 @@ export default function CategoryDetailsScreen() {
   const { id: rawId } = useLocalSearchParams();
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
   const { cart } = useCart();
+  const insets = useSafeAreaInsets();
 
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
   const [activeSort, setActiveSort] = useState('popular');
@@ -283,38 +286,7 @@ export default function CategoryDetailsScreen() {
         </View>
       </View>
 
-      {/* 4. Bottom Sticky Cart Pill (Only when cart has items) */}
-      {cartItemCount > 0 && (
-        <View style={styles.cartBarContainer}>
-          <Pressable
-            style={({ pressed }) => [
-              styles.cartBar,
-              pressed && styles.cartBarPressed
-            ]}
-            onPress={() => {
-              haptics.medium();
-              router.push('/(tabs)/cart');
-            }}
-          >
-            <View style={styles.cartBarLeft}>
-              <View style={styles.cartIconCircle}>
-                <ShoppingBag size={18} color="#FFFFFF" />
-              </View>
-              <View>
-                <Text style={styles.cartBarCountText}>
-                  {cartItemCount} {cartItemCount === 1 ? 'ITEM' : 'ITEMS'}
-                </Text>
-                <Text style={styles.cartBarTotalText}>₹{cartTotal}</Text>
-              </View>
-            </View>
-
-            <View style={styles.cartBarRight}>
-              <Text style={styles.cartBarActionText}>View Cart</Text>
-              <ChevronRight size={18} color="#FFFFFF" />
-            </View>
-          </Pressable>
-        </View>
-      )}
+      <FloatingCart bottom={Math.max(insets.bottom, 12) + 8} visible={!quickProduct} />
 
       {quickProduct && <ProductQuickSheet key={`${quickProduct._id}-${quickMode}`} product={quickProduct} mode={quickMode} initialVariantId={quickVariantId} onClose={() => setQuickProduct(null)} />}
 
