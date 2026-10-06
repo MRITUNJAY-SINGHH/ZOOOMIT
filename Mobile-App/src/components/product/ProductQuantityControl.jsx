@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
+import { Alert } from 'react-native';
+import { captureCartSource } from '../FloatingCart';
+import { useAuth } from '../../context/AuthContext';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -13,6 +16,7 @@ import { haptics } from '../../services/haptics';
 
 export const ProductQuantityControl = ({
   productId,
+  product,
   variantId = null,
   unit = 'PCS',
   minQty = 1,
@@ -23,7 +27,9 @@ export const ProductQuantityControl = ({
   fullWidth = false,
   style
 }) => {
-  const { getItemQuantity, addItem, updateItem, cart } = useCart();
+  const sourceRef = useRef(null);
+  const { token } = useAuth();
+  const { getItemQuantity, addItem, updateItem, cart, isUpdating } = useCart();
   const currentQty = getItemQuantity(productId, variantId);
 
   const scale = useSharedValue(1);
@@ -35,41 +41,22 @@ export const ProductQuantityControl = ({
     );
   };
 
-  const handleAdd = (e) => {
+  const change = async (direction, e) => {
     e?.stopPropagation?.();
-    if (isOutOfStock) return;
+    if (isOutOfStock || isUpdating || (direction > 0 && currentQty >= maxQty)) return;
+    if (!token) { Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.'); return; }
     animatePress();
-    haptics.impactMedium();
-    addItem(productId, minQty, variantId, unit);
+    try {
+      const source = direction > 0 ? await captureCartSource(sourceRef, product) : null;
+      const item = cart.items.find(i => i.product?._id === productId && (variantId ? i.variant?._id === variantId : !i.variant));
+      const next = Math.round((currentQty + direction * step) * 1000) / 1000;
+      if (item) await updateItem(item._id, next < minQty ? 0 : next, source);
+      else if (direction > 0) await addItem(productId, minQty, variantId, unit, source);
+    } catch (error) { Alert.alert('Cart not updated', error.message || 'Please try again.'); }
   };
-
-  const handleIncrement = (e) => {
-    e?.stopPropagation?.();
-    if (currentQty >= maxQty) return;
-    animatePress();
-    haptics.impactLight();
-    const cartItem = cart.items.find(
-      (i) => i.product._id === productId && (variantId ? i.variant?._id === variantId : !i.variant)
-    );
-    if (cartItem) {
-      updateItem(cartItem._id, Math.round((currentQty + step) * 1000) / 1000);
-    } else {
-      addItem(productId, minQty, variantId, unit);
-    }
-  };
-
-  const handleDecrement = (e) => {
-    e?.stopPropagation?.();
-    animatePress();
-    haptics.impactLight();
-    const cartItem = cart.items.find(
-      (i) => i.product._id === productId && (variantId ? i.variant?._id === variantId : !i.variant)
-    );
-    if (cartItem) {
-      const nextQty = Math.round((currentQty - step) * 1000) / 1000;
-      updateItem(cartItem._id, nextQty < minQty ? 0 : nextQty);
-    }
-  };
+  const handleAdd = e => change(1, e);
+  const handleIncrement = e => change(1, e);
+  const handleDecrement = e => change(-1, e);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }]
@@ -85,7 +72,7 @@ export const ProductQuantityControl = ({
 
   if (currentQty > 0) {
     return (
-      <Animated.View style={[animatedStyle, fullWidth && { width: '100%' }]}>
+      <Animated.View ref={sourceRef} collapsable={false} style={[animatedStyle, fullWidth && { width: '100%' }]}>
         <View style={[styles.stepperContainer, compact && styles.stepperCompact, fullWidth && styles.stepperFull, style]}>
           <Pressable
             onPress={handleDecrement}
@@ -123,7 +110,7 @@ export const ProductQuantityControl = ({
 
   // Single Add Button State
   return (
-    <Animated.View style={[animatedStyle, fullWidth && { width: '100%' }]}>
+    <Animated.View ref={sourceRef} collapsable={false} style={[animatedStyle, fullWidth && { width: '100%' }]}>
       <Pressable
         onPress={handleAdd}
         style={({ pressed }) => [
