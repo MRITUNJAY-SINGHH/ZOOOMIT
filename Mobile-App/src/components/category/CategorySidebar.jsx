@@ -22,7 +22,7 @@ export const CategorySidebar = ({
       }
     };
 
-    const imageUrl = item.image || item.iconUrl || 'https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200';
+    const imageUrl = item.image || item.iconUrl;
 
     return (
       <Pressable
@@ -43,7 +43,7 @@ export const CategorySidebar = ({
           <Image
             source={{ uri: imageUrl }}
             style={styles.image}
-            contentFit="cover"
+            contentFit="contain"
             transition={150}
           />
         </View>
@@ -73,9 +73,9 @@ export const CategorySidebar = ({
 
 const styles = StyleSheet.create({
   container: {
-    width: 78,
-    backgroundColor: '#FAFAFA',
-    borderRightWidth: 1,
+    width: 76,
+    backgroundColor: '#FFFFFF',
+    borderRightWidth: 0,
     borderRightColor: colors.borderLight,
     height: '100%'
   },
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     width: '100%',
-    paddingVertical: 10,
+    paddingVertical: 14,
     paddingHorizontal: 4,
     alignItems: 'center',
     position: 'relative',
@@ -107,9 +107,9 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 3
   },
   imageWrap: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 52,
+    height: 52,
+    borderRadius: 12,
     backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: colors.borderLight,
@@ -128,10 +128,10 @@ const styles = StyleSheet.create({
   },
   nameText: {
     fontFamily: typography.family.medium,
-    fontSize: 10.5,
+    fontSize: 11,
     color: '#4B5563',
     textAlign: 'center',
-    lineHeight: 13,
+    lineHeight: 15,
     paddingHorizontal: 2
   },
   nameTextSelected: {
