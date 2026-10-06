@@ -130,6 +130,12 @@ const RECOMMENDED_PRODUCTS = [
   }
 ];
 
+const PAYMENT_METHODS = [
+  { key: 'UPI', title: 'UPI', sub: 'GPay, PhonePe, Paytm', badge: 'UPI', Icon: Smartphone, action: 'pay' },
+  { key: 'Card', title: 'Credit / Debit Card', sub: 'Secure payment via Razorpay', badge: 'Card', Icon: CreditCard, action: 'pay' },
+  { key: 'COD', title: 'Cash on Delivery', sub: 'Pay when your order arrives', badge: 'COD', Icon: Banknote, action: 'place' }
+];
+
 const AVAILABLE_COUPONS = [
   {
     code: 'WELCOME50',
@@ -255,6 +261,8 @@ export default function CartScreen() {
   const [policyModalVisible, setPolicyModalVisible] = useState(false);
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState('UPI');
+  const activePayment = PAYMENT_METHODS.find((p) => p.key === selectedPayment) || PAYMENT_METHODS[0];
+  const ActivePayIcon = activePayment.Icon;
 
 
   const [wishlistIds, setWishlistIds] = useState(new Set());
@@ -685,24 +693,28 @@ export default function CartScreen() {
         <View style={styles.savingsSection}>
           <Text style={styles.sectionHeaderLabel}>SAVINGS CORNER</Text>
           <TouchableOpacity
-            style={styles.couponCard}
+            style={[styles.couponCard, Boolean(activeAppliedCoupon) && styles.couponCardApplied]}
             onPress={() => {
               haptics.selection();
               setCouponModalVisible(true);
             }}
             activeOpacity={0.85}
           >
-            <View style={[styles.couponIconCircle, Boolean(activeAppliedCoupon) && { backgroundColor: '#059669' }]}>
-              <Percent size={16} color={activeAppliedCoupon ? colors.white : colors.black} strokeWidth={3} />
+            <View style={[styles.couponIconCircle, Boolean(activeAppliedCoupon) && { backgroundColor: '#16A34A' }]}>
+              {activeAppliedCoupon ? (
+                <Check size={20} color={colors.white} strokeWidth={3} />
+              ) : (
+                <TicketPercent size={22} color={colors.black} strokeWidth={2.2} />
+              )}
             </View>
             <View style={styles.couponCardTextCol}>
               <Text style={styles.couponCardTitle}>
-                {activeAppliedCoupon ? `'${activeAppliedCoupon.code}' Applied` : 'Apply Coupon'}
+                {activeAppliedCoupon ? `'${activeAppliedCoupon.code}' applied` : 'Apply coupon'}
               </Text>
-              <Text style={[styles.couponCardSubtitle, Boolean(activeAppliedCoupon) && { color: '#059669', fontWeight: '600' }]}>
+              <Text style={[styles.couponCardSubtitle, Boolean(activeAppliedCoupon) && { color: '#15803D', fontWeight: '600' }]}>
                 {activeAppliedCoupon
-                  ? `Saved ₹${activeCouponDiscount} on this order`
-                  : 'Save more on your order'}
+                  ? `You saved ₹${activeCouponDiscount} on this order`
+                  : 'Unlock offers and save on this order'}
               </Text>
             </View>
             {activeAppliedCoupon ? (
@@ -715,10 +727,13 @@ export default function CartScreen() {
                 hitSlop={8}
                 activeOpacity={0.7}
               >
-                <Text style={styles.couponRemoveBtnText}>REMOVE</Text>
+                <Text style={styles.couponRemoveBtnText}>Remove</Text>
               </TouchableOpacity>
             ) : (
-              <ChevronRight size={18} color="#94A3B8" />
+              <View style={styles.couponViewPill}>
+                <Text style={styles.couponViewPillText}>View offers</Text>
+                <ChevronRight size={14} color={colors.black} strokeWidth={2.6} />
+              </View>
             )}
           </TouchableOpacity>
         </View>
@@ -808,12 +823,12 @@ export default function CartScreen() {
           activeOpacity={0.8}
         >
           <View style={styles.upiBadgeIconWrap}>
-            <Text style={styles.upiBadgeText}>Paytm</Text>
+            <ActivePayIcon size={18} color={colors.black} strokeWidth={2.3} />
           </View>
           <View style={styles.payUsingCol}>
             <Text style={styles.payUsingLabel}>Pay using</Text>
             <View style={styles.payMethodNameRow}>
-              <Text style={styles.payMethodNameText}>{selectedPayment}</Text>
+              <Text style={styles.payMethodNameText} numberOfLines={1}>{activePayment.title}</Text>
               <ChevronDown size={14} color="#0F172A" strokeWidth={2.5} style={{ marginLeft: 2 }} />
             </View>
           </View>
@@ -821,6 +836,7 @@ export default function CartScreen() {
 
         <SlideToPayButton
           amount={finalPayable}
+          mode={activePayment.action}
           onSuccess={handlePaymentSuccess}
           screenWidth={screenWidth}
         />
@@ -1034,21 +1050,30 @@ export default function CartScreen() {
               </TouchableOpacity>
             </View>
             <View style={{ gap: 10, paddingVertical: 10 }}>
-              {['UPI (GPay / PhonePe / Paytm)', 'Credit / Debit Card', 'Cash on Delivery'].map((m) => {
-                const label = m.includes('UPI') ? 'UPI' : m.includes('Card') ? 'Card' : 'COD';
-                const isSelected = selectedPayment === label;
+              {PAYMENT_METHODS.map((m) => {
+                const isSelected = selectedPayment === m.key;
+                const MIcon = m.Icon;
                 return (
                   <TouchableOpacity
-                    key={m}
+                    key={m.key}
                     style={[styles.paymentOptionItem, isSelected && styles.paymentOptionActive]}
+                    activeOpacity={0.85}
                     onPress={() => {
                       haptics.selection();
-                      setSelectedPayment(label);
+                      setSelectedPayment(m.key);
                       setPaymentModalVisible(false);
                     }}
                   >
-                    <Text style={styles.paymentOptionText}>{m}</Text>
-                    {isSelected && <Check size={18} color={colors.primaryDark} strokeWidth={3} />}
+                    <View style={styles.payOptIconTile}>
+                      <MIcon size={20} color={colors.black} strokeWidth={2.2} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.paymentOptionText}>{m.title}</Text>
+                      <Text style={styles.payOptSub}>{m.sub}</Text>
+                    </View>
+                    <View style={[styles.payRadio, isSelected && styles.payRadioActive]}>
+                      {isSelected && <Check size={13} color={colors.black} strokeWidth={3.5} />}
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -1088,7 +1113,7 @@ export default function CartScreen() {
   );
 }
 
-function SlideToPayButton({ amount, onSuccess, screenWidth }) {
+function SlideToPayButton({ amount, mode, onSuccess, screenWidth }) {
   const containerWidth = Math.min(240, Math.max(190, screenWidth * 0.58));
   const buttonHeight = 48;
   const knobSize = 40;
@@ -1137,7 +1162,7 @@ function SlideToPayButton({ amount, onSuccess, screenWidth }) {
   return (
     <View style={[styles.slideTrack, { width: containerWidth, height: buttonHeight }]}>
       <Animated.Text style={[styles.slideText, { opacity: textOpacity }]} numberOfLines={1}>
-        Slide to Pay | ₹{Math.round(amount)}
+        {mode === 'place' ? 'Slide to Place Order' : `Slide to Pay | ₹${Math.round(amount)}`}
       </Animated.Text>
 
       <Animated.View
@@ -1217,11 +1242,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 14,
     top: 56,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
     backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 6,
@@ -1724,20 +1744,41 @@ const styles = StyleSheet.create({
   couponCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.primarySoft,
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: 12
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 14
+  },
+  couponCardApplied: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#86EFAC'
+  },
+  couponViewPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    paddingLeft: 11,
+    paddingRight: 7,
+    paddingVertical: 6
+  },
+  couponViewPillText: {
+    fontFamily: FONTS.bold,
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: colors.black
   },
   couponIconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 8,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10
+    marginRight: 12
   },
   couponCardTextCol: {
     flex: 1
@@ -1761,6 +1802,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FECACA'
   },
+  payOptIconTile: { width: 40, height: 40, borderRadius: 12, backgroundColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  payOptSub: { fontFamily: FONTS.regular, fontSize: 11.5, color: '#64748B', marginTop: 1 },
+  payRadio: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#CBD5E1', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  payRadioActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   couponRemoveBtnText: {
     fontFamily: FONTS.bold,
     fontSize: 11,
@@ -1965,8 +2010,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
     paddingHorizontal: 14,
     paddingTop: 10,
     flexDirection: 'row',
@@ -1980,7 +2023,11 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   upiBadgeIconWrap: {
-    backgroundColor: colors.primarySoft,
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryLight,
     borderWidth: 1,
     borderColor: colors.primaryLight,
     borderRadius: 8,
@@ -1998,15 +2045,17 @@ const styles = StyleSheet.create({
     flex: 1
   },
   payUsingLabel: {
-    fontFamily: FONTS.regular,
-    fontSize: 10,
-    color: '#64748B'
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569'
   },
   payMethodNameRow: {
     flexDirection: 'row',
     alignItems: 'center'
   },
   payMethodNameText: {
+    flexShrink: 1,
     fontFamily: FONTS.bold,
     fontSize: 13,
     color: '#0F172A',
