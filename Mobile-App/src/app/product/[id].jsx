@@ -1,3 +1,5 @@
+import { FloatingCart } from '../../components/FloatingCart';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
@@ -13,6 +15,7 @@ import { ProductBottomBar } from '../../components/product/ProductBottomBar';
 import { ErrorState } from '../../components/ErrorState';
 
 export default function ProductDetailsScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
   const raw = Array.isArray(id) ? id[0] : id;
   const cleanId = String(raw || '').trim();
@@ -48,11 +51,12 @@ export default function ProductDetailsScreen() {
       {product.similarProducts?.length > 0 && <View style={styles.section}><SimilarProducts products={product.similarProducts} /></View>}
       
     </ScrollView>
+    <FloatingCart bottom={Math.max(insets.bottom, 12) + 86} />
     <ProductBottomBar product={product} selectedVariant={selectedVariant} />
   </View>;
 }
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' }, centered: { alignItems: 'center', justifyContent: 'center', gap: 12 }, scroll: { paddingBottom: 120 },
+  container: { flex: 1, backgroundColor: '#fff' }, centered: { alignItems: 'center', justifyContent: 'center', gap: 12 }, scroll: { paddingBottom: 212 },
   info: { padding: 20, borderBottomWidth: 1, borderBottomColor: '#EDF0EB' }, name: { fontFamily: typography.family.bold, fontSize: 22, lineHeight: 28, color: '#222A20' }, muted: { color: '#788074', fontSize: 13, marginTop: 6 }, unit: { fontSize: 13, color: '#788074', marginTop: 10, marginBottom: 8 }, priceRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 16 }, price: { fontSize: 23, fontFamily: typography.family.bold, color: '#222A20' }, mrp: { color: '#939A8F', textDecorationLine: 'line-through', fontSize: 14 }, discount: { color: '#218755', fontFamily: typography.family.bold, fontSize: 12 },
   section: { paddingVertical: 8, backgroundColor: '#fff', borderBottomWidth: 6, borderBottomColor: '#F7F8F5' }, category: { margin: 16, padding: 16, borderRadius: 12, backgroundColor: '#EEF5FF', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, categoryText: { color: '#1769FF', fontFamily: typography.family.medium, fontSize: 13 }
 });
