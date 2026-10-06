@@ -11,7 +11,8 @@ import {
   Animated,
   PanResponder,
   useWindowDimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -39,7 +40,8 @@ import {
   Banknote,
   Tag,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  TicketPercent
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
@@ -129,6 +131,7 @@ const RECOMMENDED_PRODUCTS = [
 const AVAILABLE_COUPONS = [
   {
     code: 'WELCOME50',
+    isNew: true,
     title: 'Flat ₹50 OFF',
     desc: 'Save ₹50 on your grocery orders above ₹199',
     discount: 50,
@@ -136,6 +139,7 @@ const AVAILABLE_COUPONS = [
   },
   {
     code: 'KUIKLO100',
+    isNew: true,
     title: 'Flat ₹100 OFF',
     desc: 'Save ₹100 on orders above ₹499 for superfast delivery',
     discount: 100,
@@ -156,62 +160,6 @@ const AVAILABLE_COUPONS = [
     minOrder: 249
   }
 ];
-
-const TIP_OPTIONS = [10, 20, 30, 50, 'Other'];
-
-function AnimatedDeliverySticker() {
-  const bounceAnim = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  React.useEffect(() => {
-    const bounceLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(bounceAnim, {
-          toValue: -5,
-          duration: 320,
-          useNativeDriver: true
-        }),
-        Animated.timing(bounceAnim, {
-          toValue: 0,
-          duration: 320,
-          useNativeDriver: true
-        })
-      ])
-    );
-    const pulseLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.25,
-          duration: 400,
-          useNativeDriver: true
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true
-        })
-      ])
-    );
-    bounceLoop.start();
-    pulseLoop.start();
-    return () => {
-      bounceLoop.stop();
-      pulseLoop.stop();
-    };
-  }, []);
-
-  return (
-    <View style={styles.tipAnimatedWrap}>
-      <Animated.View style={[styles.tipScooterCircle, { transform: [{ translateY: bounceAnim }] }]}>
-        <Text style={styles.tipScooterIcon}>🛵</Text>
-        <Animated.View style={[styles.tipHeartBubble, { transform: [{ scale: pulseAnim }] }]}>
-          <Text style={styles.tipHeartIcon}>❤️</Text>
-        </Animated.View>
-        <Text style={styles.tipDustIcon}>💨</Text>
-      </Animated.View>
-    </View>
-  );
-}
 
 const InteractiveStepper = ({ item, currentQty, onIncrement, onDecrement }) => {
   const scaleMinus = useRef(new Animated.Value(1)).current;
@@ -283,6 +231,7 @@ const InteractiveStepper = ({ item, currentQty, onIncrement, onDecrement }) => {
 
 export default function CartScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = 62 + (Platform.OS === 'ios' ? Math.max(insets.bottom, 10) : 8);
   const { width: screenWidth } = useWindowDimensions();
   const { customer } = useAuth();
   const {
@@ -303,9 +252,6 @@ export default function CartScreen() {
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState('UPI');
 
-  const [selectedTip, setSelectedTip] = useState(20);
-  const [customTipInput, setCustomTipInput] = useState('');
-  const [isCustomTipActive, setIsCustomTipActive] = useState(false);
 
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [couponInputText, setCouponInputText] = useState('');
@@ -352,18 +298,12 @@ export default function CartScreen() {
   const deliveryPartnerFeeOriginal = 16.0;
   const deliveryPartnerFeeActual = 0.0;
 
-  const activeTipAmount = isCustomTipActive
-    ? parseFloat(customTipInput) || 0
-    : typeof selectedTip === 'number'
-      ? selectedTip
-      : 0;
-
   const activeAppliedCoupon = cart?.appliedCoupon || localAppliedCoupon;
   const activeCouponDiscount = cart?.summary?.discount || (cart?.appliedCoupon?.discount) || (localAppliedCoupon?.discount || 0);
 
   const finalPayable = Math.max(
     0,
-    itemTotalDiscounted + handlingFeeActual + deliveryPartnerFeeActual + activeTipAmount - activeCouponDiscount
+    itemTotalDiscounted + handlingFeeActual + deliveryPartnerFeeActual - activeCouponDiscount
   );
 
   const handleQtyIncrement = (item) => {
@@ -501,18 +441,6 @@ export default function CartScreen() {
     }
   };
 
-  const handleCustomTipConfirm = () => {
-    haptics.selection();
-    const num = parseFloat(customTipInput);
-    if (isNaN(num) || num < 0) {
-      setIsCustomTipActive(false);
-      setSelectedTip(20);
-    } else {
-      setIsCustomTipActive(true);
-      setSelectedTip('Other');
-    }
-  };
-
   const handleAddRecommended = (recProduct) => {
     haptics.selection();
     if (isRealCartActive && addItem) {
@@ -615,7 +543,7 @@ export default function CartScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: 130 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabBarHeight + 100 }]}
       >
         <View style={styles.cartCard}>
           <View style={styles.cartCardHeader}>
@@ -732,67 +660,6 @@ export default function CartScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.deliveryTipCard}>
-          <View style={styles.tipTopRow}>
-            <View style={styles.tipTitleCol}>
-              <View style={styles.tipHeaderWrap}>
-                <Text style={styles.tipCardTitle}>Delivery Tip</Text>
-                <Info size={14} color="#94A3B8" style={{ marginLeft: 5 }} />
-              </View>
-              <Text style={styles.tipDescription}>
-                A small tip, a big gesture! Tip your delivery partner to show your appreciation.
-              </Text>
-            </View>
-            <AnimatedDeliverySticker />
-          </View>
-
-          <View style={styles.tipPillsRow}>
-            {TIP_OPTIONS.map((val) => {
-              const isSelected =
-                val === 'Other' ? isCustomTipActive : !isCustomTipActive && selectedTip === val;
-              return (
-                <TouchableOpacity
-                  key={val.toString()}
-                  style={[styles.tipPill, isSelected && styles.tipPillActive]}
-                  onPress={() => {
-                    haptics.selection();
-                    if (val === 'Other') {
-                      setIsCustomTipActive(true);
-                      setSelectedTip('Other');
-                    } else {
-                      setIsCustomTipActive(false);
-                      setSelectedTip(val);
-                    }
-                  }}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.tipPillText, isSelected && styles.tipPillTextActive]}>
-                    {typeof val === 'number' ? `₹${val}` : val}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {isCustomTipActive && (
-            <View style={styles.customTipRow}>
-              <Text style={styles.customTipCurrency}>₹</Text>
-              <TextInput
-                style={styles.customTipInput}
-                placeholder="Enter tip amount"
-                placeholderTextColor="#94A3B8"
-                keyboardType="numeric"
-                value={customTipInput}
-                onChangeText={setCustomTipInput}
-                autoFocus={true}
-              />
-              <TouchableOpacity style={styles.customTipConfirmBtn} onPress={handleCustomTipConfirm}>
-                <Text style={styles.customTipConfirmText}>Done</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
         <View style={styles.billCard}>
           <Text style={styles.billCardTitle}>Bill Details</Text>
 
@@ -824,13 +691,6 @@ export default function CartScreen() {
               <Text style={styles.billFreeText}>FREE</Text>
             </View>
           </View>
-
-          {activeTipAmount > 0 && (
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Delivery Partner Tip</Text>
-              <Text style={styles.billValueText}>₹{activeTipAmount.toFixed(2)}</Text>
-            </View>
-          )}
 
           {activeCouponDiscount > 0 && (
               <View style={styles.billRow}>
@@ -873,7 +733,7 @@ export default function CartScreen() {
       <View
         style={[
           styles.paymentBarContainer,
-          { paddingBottom: Math.max(insets.bottom, 12) }
+          { bottom: tabBarHeight, paddingBottom: 12 }
         ]}
       >
         <TouchableOpacity
@@ -998,52 +858,57 @@ export default function CartScreen() {
               </View>
             )}
 
-            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }}>
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }} contentContainerStyle={{ paddingTop: 10 }}>
               {AVAILABLE_COUPONS.map((cp) => {
                 const isEligible = itemTotalDiscounted >= (cp.minOrder || 0);
                 const difference = (cp.minOrder || 0) - itemTotalDiscounted;
+                const isApplied = Boolean(activeAppliedCoupon) && activeAppliedCoupon.code === cp.code;
 
                 return (
-                  <View key={cp.code} style={styles.couponVoucherCard}>
-                    <View style={styles.voucherLeftEdge} />
-                    <View style={styles.voucherContent}>
-                      <View style={styles.voucherTopRow}>
-                        <View style={styles.voucherBadge}>
-                          <Text style={styles.voucherBadgeText}>{cp.code}</Text>
-                        </View>
-                        {activeAppliedCoupon && activeAppliedCoupon.code === cp.code ? (
-                          <View style={styles.voucherAppliedBadge}>
+                  <View key={cp.code} style={styles.ticketCard}>
+                    {cp.isNew && (
+                      <View style={styles.ticketNewBadge}>
+                        <Text style={styles.ticketNewBadgeText}>New</Text>
+                      </View>
+                    )}
+                    <View style={styles.ticketNotchTop} />
+                    <View style={styles.ticketNotchBottom} />
+                    <View style={styles.ticketIconCol}>
+                      <View style={styles.ticketIconTile}>
+                        <TicketPercent size={28} color={colors.primaryDark} strokeWidth={2.2} />
+                      </View>
+                    </View>
+                    <View style={styles.ticketDivider} />
+                    <View style={styles.ticketBody}>
+                      <Text style={styles.ticketLabel}>Special Discount · {cp.code}</Text>
+                      <Text style={styles.ticketOffer}>{cp.title}</Text>
+                      <Text style={styles.ticketDesc} numberOfLines={2}>{cp.desc}</Text>
+                      <View style={styles.ticketFooterRow}>
+                        {isApplied ? (
+                          <View style={styles.ticketAppliedBadge}>
                             <Check size={12} color="#15803D" strokeWidth={2.8} />
-                            <Text style={styles.voucherAppliedText}>APPLIED</Text>
+                            <Text style={styles.ticketAppliedText}>APPLIED</Text>
                           </View>
                         ) : (
                           <TouchableOpacity
-                            style={[
-                              styles.voucherApplyBtn,
-                              !isEligible && styles.voucherApplyBtnDimmed
-                            ]}
+                            style={[styles.ticketApplyBtn, !isEligible && styles.ticketApplyBtnDimmed]}
                             onPress={() => handleApplyCouponFromList(cp.code)}
                             disabled={!isEligible}
+                            activeOpacity={0.7}
                           >
-                            <Text style={styles.voucherApplyBtnText}>APPLY</Text>
+                            <Text style={[styles.ticketApplyText, !isEligible && styles.ticketApplyTextDimmed]}>
+                              Apply
+                            </Text>
+                            <ChevronRight
+                              size={14}
+                              color={!isEligible ? '#94A3B8' : colors.primaryDark}
+                              strokeWidth={2.6}
+                            />
                           </TouchableOpacity>
                         )}
-                      </View>
-
-                      <Text style={styles.voucherTitle}>{cp.title}</Text>
-                      <Text style={styles.voucherDesc}>{cp.desc}</Text>
-
-                      <View style={styles.voucherFooterRow}>
-                        {isEligible ? (
-                          <View style={styles.voucherUnlockChip}>
-                            <Check size={11} color="#16A34A" strokeWidth={2.5} />
-                            <Text style={styles.voucherUnlockText}>Unlocked for this order!</Text>
-                          </View>
-                        ) : (
-                          <Text style={styles.voucherLockedText}>
-                            Add ₹{difference} more to unlock
-                          </Text>
-                        )}
+                        <Text style={isEligible ? styles.ticketUnlockText : styles.ticketLockedText}>
+                          {isEligible ? 'Unlocked for this order' : `Add ₹${difference} more to unlock`}
+                        </Text>
                       </View>
                     </View>
                   </View>
@@ -1483,46 +1348,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center'
   },
-  tipAnimatedWrap: {
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  tipScooterCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1.5,
-    borderColor: '#FDE68A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative'
-  },
-  tipScooterIcon: {
-    fontSize: 22
-  },
-  tipHeartBubble: {
-    position: 'absolute',
-    top: -6,
-    right: -2,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    paddingHorizontal: 2,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: '#FEE2E2'
-  },
-  tipHeartIcon: {
-    fontSize: 10
-  },
-  tipDustIcon: {
-    position: 'absolute',
-    bottom: 2,
-    left: -2,
-    fontSize: 10
-  },
   couponHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1584,92 +1409,146 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 12
   },
-  couponVoucherCard: {
+  ticketCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
+    alignItems: 'stretch',
+    backgroundColor: colors.primarySoft,
+    borderRadius: 18,
     marginBottom: 12,
-    overflow: 'hidden'
+    paddingVertical: 14,
+    paddingHorizontal: 12,
+    position: 'relative'
   },
-  voucherLeftEdge: {
-    width: 6,
-    backgroundColor: colors.primary
+  ticketNewBadge: {
+    position: 'absolute',
+    top: -7,
+    left: 16,
+    backgroundColor: colors.secondary,
+    borderRadius: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    zIndex: 2
   },
-  voucherContent: {
-    flex: 1,
-    padding: 14
-  },
-  voucherTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8
-  },
-  voucherBadge: {
-    backgroundColor: '#FFFBEB',
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: '#D97706',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4
-  },
-  voucherBadgeText: {
+  ticketNewBadgeText: {
     fontFamily: FONTS.bold,
-    fontSize: 12,
-    color: '#92400E',
+    fontSize: 9.5,
     fontWeight: '800',
-    letterSpacing: 0.5
+    color: '#FFFFFF',
+    letterSpacing: 0.4
   },
-  voucherApplyBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 12
+  ticketNotchTop: {
+    position: 'absolute',
+    top: -8,
+    left: 78,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    zIndex: 1
   },
-  voucherApplyBtnDimmed: {
-    backgroundColor: '#F1F5F9'
+  ticketNotchBottom: {
+    position: 'absolute',
+    bottom: -8,
+    left: 78,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    zIndex: 1
   },
-  voucherApplyBtnText: {
+  ticketIconCol: {
+    justifyContent: 'center'
+  },
+  ticketIconTile: {
+    width: 62,
+    height: 62,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  ticketDivider: {
+    width: 0,
+    marginHorizontal: 12,
+    borderLeftWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#E9CE7A'
+  },
+  ticketBody: {
+    flex: 1,
+    justifyContent: 'center'
+  },
+  ticketLabel: {
+    fontFamily: FONTS.medium,
+    fontSize: 11,
+    color: '#8A6D1F',
+    marginBottom: 3
+  },
+  ticketOffer: {
     fontFamily: FONTS.bold,
-    fontSize: 12,
-    color: colors.black,
-    fontWeight: '800'
-  },
-  voucherTitle: {
-    fontFamily: FONTS.bold,
-    fontSize: 14,
+    fontSize: 16,
     color: '#0F172A',
     fontWeight: '800',
-    marginBottom: 4
+    marginBottom: 2
   },
-  voucherDesc: {
+  ticketDesc: {
     fontFamily: FONTS.regular,
     fontSize: 11.5,
-    color: '#64748B',
+    color: '#7A651F',
     lineHeight: 16,
     marginBottom: 8
   },
-  voucherFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  voucherUnlockChip: {
+  ticketFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  ticketApplyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+    paddingVertical: 2
+  },
+  ticketApplyBtnDimmed: {
+    opacity: 0.5
+  },
+  ticketApplyText: {
+    fontFamily: FONTS.bold,
+    fontSize: 13,
+    color: colors.primaryDark,
+    fontWeight: '800'
+  },
+  ticketApplyTextDimmed: {
+    color: '#94A3B8'
+  },
+  ticketAppliedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
     gap: 4
   },
-  voucherUnlockText: {
-    fontFamily: FONTS.semibold,
+  ticketAppliedText: {
+    fontFamily: FONTS.bold,
     fontSize: 11,
+    fontWeight: '800',
+    color: '#15803D'
+  },
+  ticketUnlockText: {
+    fontFamily: FONTS.semibold,
+    fontSize: 10.5,
     color: '#16A34A'
   },
-  voucherLockedText: {
+  ticketLockedText: {
     fontFamily: FONTS.medium,
-    fontSize: 11,
-    color: '#D97706'
+    fontSize: 10.5,
+    color: '#B45309'
   },
 
   itemPriceCol: {
@@ -1765,23 +1644,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#DC2626'
   },
-  voucherAppliedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    gap: 4
-  },
-  voucherAppliedText: {
-    fontFamily: FONTS.bold,
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#15803D'
-  },
   recommendationsSection: {
     marginBottom: 16
   },
@@ -1867,116 +1729,6 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '800',
     marginTop: 3
-  },
-  deliveryTipCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: 14,
-    marginBottom: 16
-  },
-  tipTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12
-  },
-  tipTitleCol: {
-    flex: 1,
-    marginRight: 10
-  },
-  tipHeaderWrap: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  tipCardTitle: {
-    fontFamily: FONTS.bold,
-    fontSize: 14,
-    color: '#0F172A',
-    fontWeight: '800'
-  },
-  tipDescription: {
-    fontFamily: FONTS.regular,
-    fontSize: 11.5,
-    color: '#64748B',
-    lineHeight: 16,
-    marginTop: 3
-  },
-  tipIllustrationWrap: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primarySoft,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  tipEmojiText: {
-    fontSize: 20
-  },
-  tipPillsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6
-  },
-  tipPill: {
-    flex: 1,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  tipPillActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary
-  },
-  tipPillText: {
-    fontFamily: FONTS.bold,
-    fontSize: 12.5,
-    color: '#0F172A',
-    fontWeight: '700'
-  },
-  tipPillTextActive: {
-    color: '#FFFFFF'
-  },
-  customTipRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#E2E8F0'
-  },
-  customTipCurrency: {
-    fontFamily: FONTS.bold,
-    fontSize: 14,
-    color: '#0F172A',
-    marginRight: 6
-  },
-  customTipInput: {
-    flex: 1,
-    fontFamily: FONTS.medium,
-    fontSize: 13,
-    color: '#0F172A',
-    paddingVertical: 0
-  },
-  customTipConfirmBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6
-  },
-  customTipConfirmText: {
-    fontFamily: FONTS.bold,
-    fontSize: 11,
-    color: '#FFFFFF',
-    fontWeight: '700'
   },
   billCard: {
     backgroundColor: '#FFFFFF',
