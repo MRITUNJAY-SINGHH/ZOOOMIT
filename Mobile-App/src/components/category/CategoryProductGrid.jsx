@@ -18,6 +18,7 @@ export const CategoryProductGrid = ({
   isRefreshing = false,
   onRefresh,
   onProductPress,
+  onVariantPress,
   onRetry,
   headerComponent,
   footerComponent,
@@ -69,7 +70,8 @@ export const CategoryProductGrid = ({
       <View style={styles.cardWrapper}>
         <ProductCard 
           product={item} 
-          onPress={onProductPress} 
+          onPress={onProductPress}
+          onVariantPress={onVariantPress} 
         />
       </View>
     );
@@ -79,7 +81,7 @@ export const CategoryProductGrid = ({
     <View style={[styles.container, style]}>
       <FlatList
         data={products}
-        keyExtractor={(item) => item._id || item.slug || String(Math.random())}
+        keyExtractor={(item) => item._id || item.slug || item.name}
         renderItem={renderProductItem}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
@@ -105,12 +107,12 @@ export const CategoryProductGrid = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA'
+    backgroundColor: '#fff'
   },
   listContent: {
     paddingHorizontal: 6,
     paddingTop: 8,
-    paddingBottom: 40
+    paddingBottom: 100
   },
   columnWrapper: {
     justifyContent: 'space-between',
