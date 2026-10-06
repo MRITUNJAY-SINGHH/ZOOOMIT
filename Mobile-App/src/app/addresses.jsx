@@ -14,7 +14,7 @@ import {
   Platform
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import {
   ArrowLeft,
@@ -26,12 +26,22 @@ import {
   House,
   Briefcase,
   X,
-  CircleCheck
+  CircleCheck,
+  Search,
+  LocateFixed
 } from 'lucide-react-native';
 import { colors, typography } from '../constants/theme';
 import { StorefrontAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { haptics } from '../services/haptics';
+
+let Location = null;
+try {
+  // eslint-disable-next-line global-require
+  Location = require('expo-location');
+} catch (e) {
+  Location = null;
+}
 
 const TYPES = [
   { key: 'Home', Icon: House },
@@ -74,6 +84,7 @@ export default function AddressesScreen() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  const [locating, setLocating] = useState(false);
 
   const { data: addresses, isLoading, refetch } = useQuery({
     queryKey: ['addresses'],
@@ -117,6 +128,45 @@ export default function AddressesScreen() {
     if (saving) return;
     setFormVisible(false);
     setEditingId(null);
+  };
+
+  const handleUseCurrentLocation = async () => {
+    haptics.selection();
+    if (!Location) {
+      Alert.alert('Location not available', 'Run "npx expo install expo-location" in Mobile-App, then restart with "npx expo start -c".');
+      return;
+    }
+    setLocating(true);
+    try {
+      const perm = await Location.requestForegroundPermissionsAsync();
+      if (perm.status !== 'granted') {
+        Alert.alert('Permission needed', 'Allow location access to fill your address automatically.');
+        return;
+      }
+      const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const results = await Location.reverseGeocodeAsync({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude
+      });
+      const p = results && results[0];
+      if (!p) {
+        Alert.alert('Could not find address', 'Please type your address manually.');
+        return;
+      }
+      const street = [p.name, p.street, p.district || p.subregion].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ');
+      setForm((prev) => ({
+        ...prev,
+        street: street || prev.street,
+        city: p.city || p.subregion || prev.city,
+        state: p.region || prev.state,
+        zipCode: p.postalCode || prev.zipCode
+      }));
+      haptics.notificationSuccess();
+    } catch (e) {
+      Alert.alert('Location error', 'Could not fetch your current location. Please try again or type it manually.');
+    } finally {
+      setLocating(false);
+    }
   };
 
   const reload = async () => {
@@ -192,20 +242,15 @@ export default function AddressesScreen() {
   const list = addresses || [];
 
   return (
-    <View style={styles.screen}>
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, 12) }]}>
-        <View style={styles.headerRow}>
-          <Pressable onPress={goBack} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
-            <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
-          </Pressable>
-          <View style={styles.headerTitleCol}>
-            <Text style={styles.headerTitle}>My Addresses</Text>
-            <Text style={styles.headerSub}>
-              {list.length === 0 ? 'Where should we deliver?' : `${list.length} saved ${list.length === 1 ? 'address' : 'addresses'}`}
-            </Text>
-          </View>
-          <View style={{ width: 40 }} />
-        </View>
+    <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+      <View style={styles.header}>
+        <Pressable onPress={goBack} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Go back">
+          <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
+        </Pressable>
+        <Text style={styles.headerTitle}>My Addresses</Text>
+        <Pressable style={styles.searchBtn} accessibilityRole="button" accessibilityLabel="Search products" onPress={() => router.push('/(tabs)/search')}>
+          <Search size={22} color="#17212B" />
+        </Pressable>
       </View>
 
       <ScrollView
@@ -291,18 +336,35 @@ export default function AddressesScreen() {
         </TouchableOpacity>
       </View>
 
-      <Modal visible={formVisible} transparent animationType="slide" onRequestClose={closeForm}>
-        <KeyboardAvoidingView style={styles.sheetRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-          <Pressable style={styles.sheetBackdrop} onPress={closeForm} />
-          <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 16) }]}>
-            <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>{editingId ? 'Edit address' : 'Add new address'}</Text>
-              <Pressable onPress={closeForm} hitSlop={10} style={styles.closeBtn} accessibilityLabel="Close">
-                <X size={18} color={colors.textPrimary} />
+      {formVisible && (
+        <View style={styles.formPage}>
+          <SafeAreaView edges={['top', 'left', 'right']} style={styles.formTop}>
+            <View style={styles.header}>
+              <Pressable onPress={closeForm} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back">
+                <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
               </Pressable>
+              <Text style={styles.headerTitle}>{editingId ? 'Edit address' : 'Add new address'}</Text>
+              <View style={{ width: 40 }} />
             </View>
+          </SafeAreaView>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            >
+              <TouchableOpacity style={styles.locateBtn} onPress={handleUseCurrentLocation} disabled={locating} activeOpacity={0.85}>
+                {locating ? (
+                  <ActivityIndicator size="small" color={colors.secondary} />
+                ) : (
+                  <LocateFixed size={20} color={colors.secondary} strokeWidth={2.4} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locateTitle}>{locating ? 'Fetching your location...' : 'Use my current location'}</Text>
+                  <Text style={styles.locateSub}>Fill the address below automatically</Text>
+                </View>
+              </TouchableOpacity>
 
-            <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
               <Text style={styles.fieldLabel}>Save as</Text>
               <View style={styles.typeRow}>
                 {TYPES.map(({ key, Icon }) => {
@@ -335,19 +397,20 @@ export default function AddressesScreen() {
                 </View>
                 <Text style={styles.checkLabel}>Make this my default address</Text>
               </TouchableOpacity>
-
-              <TouchableOpacity style={[styles.saveBtn, saving && { opacity: 0.8 }]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+            </ScrollView>
+            <View style={[styles.footer, { position: 'relative', paddingBottom: Math.max(insets.bottom, 12) }]}>
+              <TouchableOpacity style={[styles.addBtn, saving && { opacity: 0.8 }]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
                 {saving ? (
                   <ActivityIndicator size="small" color={colors.secondary} />
                 ) : (
-                  <Text style={styles.saveBtnText}>{editingId ? 'Update address' : 'Save address'}</Text>
+                  <Text style={styles.addBtnText}>{editingId ? 'Update address' : 'Save address'}</Text>
                 )}
               </TouchableOpacity>
-            </ScrollView>
-          </View>
-        </KeyboardAvoidingView>
-      </Modal>
-    </View>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      )}
+    </SafeAreaView>
   );
 }
 
@@ -355,12 +418,15 @@ const F = typography.family;
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.softBackground },
-  header: { backgroundColor: colors.white, paddingHorizontal: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
-  headerRow: { flexDirection: 'row', alignItems: 'center', height: 48 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: '#F1F3F5' },
+  searchBtn: { padding: 9 },
+  formPage: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.softBackground, zIndex: 20 },
+  formTop: { backgroundColor: colors.white },
+  locateBtn: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: colors.primarySoft, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.primary, borderRadius: 16, padding: 14, marginBottom: 18 },
+  locateTitle: { fontSize: 14.5, fontFamily: F.bold, color: colors.textPrimary },
+  locateSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  headerTitleCol: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: F.bold, color: colors.textPrimary },
-  headerSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
+  headerTitle: { flex: 1, fontSize: 22, fontFamily: F.bold, color: '#17212B' },
   content: { padding: 16 },
   card: { backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.borderLight, padding: 14, marginBottom: 12 },
   cardDefault: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
