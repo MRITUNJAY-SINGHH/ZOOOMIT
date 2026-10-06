@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -16,10 +16,12 @@ import { CategorySidebar } from '../../components/category/CategorySidebar';
 import { CategoryFilterBar } from '../../components/category/CategoryFilterBar';
 import { CategoryProductGrid } from '../../components/category/CategoryProductGrid';
 import { useCart } from '../../context/CartContext';
+import { ProductQuickSheet } from '../../components/product/ProductQuickSheet';
 import { haptics } from '../../services/haptics';
 
 export default function CategoryDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: rawId } = useLocalSearchParams();
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
   const { cart } = useCart();
 
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
@@ -27,10 +29,15 @@ export default function CategoryDetailsScreen() {
   const [isVegOnly, setIsVegOnly] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
+  const [priceDropOnly, setPriceDropOnly] = useState(false);
+  const [quickProduct, setQuickProduct] = useState(null);
+  const [quickMode, setQuickMode] = useState('details');
+  const [quickVariantId, setQuickVariantId] = useState(null);
+  useEffect(() => { setSelectedSubcategoryId(null); setQuickProduct(null); }, [id]);
   const [selectedType, setSelectedType] = useState('ALL');
 
   // 1. Fetch Categories with subcategories
-  const { data: categoriesData, isLoading: isCategoriesLoading } = useQuery({
+  const { data: categoriesData, isLoading: isCategoriesLoading, isError: categoriesError, refetch: refetchCategories } = useQuery({
     queryKey: ['categories-with-subcategories'],
     queryFn: async () => {
       const res = await StorefrontAPI.getCategories({ includeSubcategories: 'true' });
@@ -70,13 +77,15 @@ export default function CategoryDetailsScreen() {
       }
     }
 
-    return categoriesData[0] || null;
+    return null;
   }, [categoriesData, id]);
 
   // Subcategories to show in sidebar
   const sidebarCategories = useMemo(() => {
     if (!activeCategory) return [];
-    const subs = activeCategory.subcategories || [];
+    const nested = activeCategory.subcategories || [];
+    const flat = (categoriesData || []).filter(c => (typeof c.parentCategory === 'string' ? c.parentCategory : c.parentCategory?._id) === activeCategory._id);
+    const subs = [...new Map([...nested, ...flat].filter(c => c.isActive !== false).map(c => [c._id, c])).values()];
     if (subs.length > 0) {
       // Include an "All" or self item at top if helpful
       return [
@@ -88,8 +97,8 @@ export default function CategoryDetailsScreen() {
         ...subs
       ];
     }
-    return [];
-  }, [activeCategory]);
+    return [{ _id: 'ALL', name: activeCategory.name, image: activeCategory.image }];
+  }, [activeCategory, categoriesData]);
 
   // Determine effective subcategory ID
   const effectiveSubcategoryId = useMemo(() => {
@@ -97,8 +106,8 @@ export default function CategoryDetailsScreen() {
       return selectedSubcategoryId === 'ALL' ? null : selectedSubcategoryId;
     }
     // Only treat id as a subcategory if it explicitly matches one of the child subcategories
-    if (activeCategory && activeCategory.subcategories) {
-      const subMatch = activeCategory.subcategories.find(
+    if (activeCategory) {
+      const subMatch = sidebarCategories.find(
         s => s._id === id || s.slug === id
       );
       if (subMatch) {
@@ -106,13 +115,14 @@ export default function CategoryDetailsScreen() {
       }
     }
     return null;
-  }, [selectedSubcategoryId, activeCategory, id]);
+  }, [selectedSubcategoryId, activeCategory, sidebarCategories, id]);
 
   // 2. Fetch Products for current category & subcategory
   const { 
     data: productsData, 
     isLoading: isProductsLoading, 
-    isRefetching, 
+    isRefetching,
+    isError: productsError,
     refetch 
   } = useQuery({
     queryKey: ['category-products', activeCategory?._id, effectiveSubcategoryId, activeSort],
@@ -126,7 +136,7 @@ export default function CategoryDetailsScreen() {
       if (!Array.isArray(list)) throw new Error('Invalid store catalog');
       return list;
     },
-    enabled: true
+    enabled: Boolean(activeCategory?._id)
   });
 
   // Dynamic list of available brands from products data
@@ -154,6 +164,7 @@ export default function CategoryDetailsScreen() {
       list = list.filter(p => !p.isTrackInventory || (p.stock || 0) > 0);
     }
 
+    if (priceDropOnly) list = list.filter(p => Number(p.mrp) > Number(p.sellingPrice) || p.variants?.some(v => Number(v.mrp) > Number(v.sellingPrice)));
     if (selectedBrand) {
       list = list.filter(p => p.brand === selectedBrand);
     }
@@ -166,8 +177,13 @@ export default function CategoryDetailsScreen() {
       list = list.filter(p => !p.isOrganic);
     }
 
+    const low = p => p.variants?.length ? Math.min(...p.variants.map(v => Number(v.sellingPrice ?? p.sellingPrice ?? 0))) : Number(p.sellingPrice || 0);
+    const discount = p => Math.max(0, ...[p, ...(p.variants || [])].map(v => Number(v.mrp) > 0 ? (Number(v.mrp) - Number(v.sellingPrice)) / Number(v.mrp) : 0));
+    if (activeSort === 'price_asc') list.sort((a, b) => low(a) - low(b));
+    if (activeSort === 'price_desc') list.sort((a, b) => low(b) - low(a));
+    if (activeSort === 'discount_desc') list.sort((a, b) => discount(b) - discount(a));
     return list;
-  }, [productsData, isVegOnly, inStockOnly, selectedBrand, selectedType]);
+  }, [productsData, isVegOnly, inStockOnly, selectedBrand, selectedType, priceDropOnly, activeSort]);
 
   const handleBackPress = () => {
     haptics.light();
@@ -184,6 +200,7 @@ export default function CategoryDetailsScreen() {
   };
 
   const handleResetFilters = () => {
+    setPriceDropOnly(false);
     setActiveSort('popular');
     setIsVegOnly(false);
     setInStockOnly(false);
@@ -191,9 +208,9 @@ export default function CategoryDetailsScreen() {
     setSelectedType('ALL');
   };
 
-  const pageTitle = activeCategory?.name || 'Fresh Vegetables';
-  const cartItemCount = cart?.totalItems || 0;
-  const cartTotal = cart?.totalAmount || 0;
+  const pageTitle = sidebarCategories.find(c => c._id === effectiveSubcategoryId)?.name || activeCategory?.name || 'Category';
+  const cartItemCount = cart?.items?.reduce((n, i) => n + Number(i.qty || 0), 0) || 0;
+  const cartTotal = cart?.summary?.grandTotal || 0;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -222,8 +239,21 @@ export default function CategoryDetailsScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 3. Main Split View: Sidebar + 2-Column Product Grid */}
+      <View style={styles.body}>
+        {sidebarCategories.length > 0 && (
+          <CategorySidebar
+            categories={sidebarCategories}
+            selectedCategoryId={selectedSubcategoryId || (effectiveSubcategoryId ? id : 'ALL')}
+            onSelectCategory={(item) => setSelectedSubcategoryId(item._id)}
+          />
+        )}
+
+        <View style={styles.productArea}>
       {/* 2. Filter / Sort Row (Exact 4 pills: Filter, Sort By, Brand, Type) */}
       <CategoryFilterBar
+        priceDropOnly={priceDropOnly}
+        onTogglePriceDrop={() => setPriceDropOnly(v => !v)}
         activeSort={activeSort}
         onSortChange={setActiveSort}
         isVegOnly={isVegOnly}
@@ -238,27 +268,18 @@ export default function CategoryDetailsScreen() {
         onResetFilters={handleResetFilters}
       />
 
-      {/* 3. Main Split View: Sidebar + 2-Column Product Grid */}
-      <View style={styles.body}>
-        {sidebarCategories.length > 0 && (
-          <CategorySidebar
-            categories={sidebarCategories}
-            selectedCategoryId={selectedSubcategoryId || (effectiveSubcategoryId ? id : 'ALL')}
-            onSelectCategory={(item) => setSelectedSubcategoryId(item._id)}
-          />
-        )}
 
-        <View style={styles.productArea}>
-          <CategoryProductGrid
+          {(categoriesError || productsError || (!isCategoriesLoading && !activeCategory)) ? <View style={styles.error}><Text style={styles.errorTitle}>{!activeCategory && !categoriesError ? 'Category not found' : 'Catalog could not be loaded'}</Text><Text style={styles.errorMessage}>Please try again. Your cart is unchanged.</Text><Pressable onPress={() => { refetchCategories(); refetch(); }} style={styles.retry}><Text>Retry</Text></Pressable></View> : <CategoryProductGrid
             products={filteredProducts}
             isLoading={isProductsLoading || isCategoriesLoading}
             isRefreshing={isRefetching}
             onRefresh={refetch}
             onProductPress={(prod) => {
-              router.push(`/product/${prod._id}`);
+              setQuickMode('details'); setQuickVariantId(null); setQuickProduct(prod);
             }}
+            onVariantPress={(prod, variantId) => { setQuickMode('variants'); setQuickVariantId(variantId); setQuickProduct(prod); }}
             onRetry={handleResetFilters}
-          />
+          />}
         </View>
       </View>
 
@@ -272,7 +293,7 @@ export default function CategoryDetailsScreen() {
             ]}
             onPress={() => {
               haptics.medium();
-              router.push('/checkout');
+              router.push('/(tabs)/cart');
             }}
           >
             <View style={styles.cartBarLeft}>
@@ -295,13 +316,14 @@ export default function CategoryDetailsScreen() {
         </View>
       )}
 
-      {/* 5. Quick Product Bottom Sheet (Screenshot 2) */}
+      {quickProduct && <ProductQuickSheet key={`${quickProduct._id}-${quickMode}`} product={quickProduct} mode={quickMode} initialVariantId={quickVariantId} onClose={() => setQuickProduct(null)} />}
 
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  error: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, gap: 10 }, errorTitle: { fontSize: 16, fontFamily: typography.family.bold, textAlign: 'center' }, errorMessage: { color: '#888', textAlign: 'center', fontSize: 12 }, retry: { backgroundColor: colors.primary, borderRadius: 10, padding: 14 },
   safeArea: {
     flex: 1,
     backgroundColor: colors.white
@@ -327,7 +349,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.bold,
     fontSize: 18,
     color: '#111827',
-    textAlign: 'center',
+    textAlign: 'left',
     fontWeight: '700',
     marginHorizontal: 8
   },
@@ -340,11 +362,11 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#FAFAFA'
+    backgroundColor: '#fff'
   },
   productArea: {
     flex: 1,
-    backgroundColor: '#FAFAFA'
+    backgroundColor: '#fff'
   },
   freeDeliveryBanner: {
     backgroundColor: '#E6FFFA',
@@ -367,14 +389,17 @@ const styles = StyleSheet.create({
     color: '#0F766E'
   },
   cartBarContainer: {
+    position: 'absolute',
+    bottom: 24,
+    left: 40,
+    right: 40,
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight
+    borderTopWidth: 0
   },
   cartBar: {
-    backgroundColor: '#1769FF',
+    backgroundColor: colors.primary,
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
