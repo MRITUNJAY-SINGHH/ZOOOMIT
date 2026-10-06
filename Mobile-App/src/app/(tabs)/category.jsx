@@ -74,7 +74,7 @@ export default function CategoriesScreen() {
           <Search size={22} color="#17212B" />
         </Pressable>
       </View>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: 88 + insets.bottom }]} refreshControl={<RefreshControl refreshing={categoriesQuery.isRefetching} onRefresh={categoriesQuery.refetch} tintColor="#0066FF" />}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.content, { paddingBottom: 164 + insets.bottom }]} refreshControl={<RefreshControl refreshing={categoriesQuery.isRefetching} onRefresh={categoriesQuery.refetch} tintColor="#0066FF" />}>
         {categoriesQuery.isLoading && <View style={styles.state}><ActivityIndicator color="#0066FF" /><Text style={styles.stateText}>Loading categories...</Text></View>}
         {categoriesQuery.isError && <View style={styles.state}><Text style={styles.stateTitle}>Couldn't load categories</Text><Text style={styles.stateText}>Check your connection and try again.</Text><Pressable onPress={() => categoriesQuery.refetch()} style={styles.retry}><Text style={styles.retryText}>Retry</Text></Pressable></View>}
         {!categoriesQuery.isLoading && !categoriesQuery.isError && !sections.length && <View style={styles.state}><Text style={styles.stateTitle}>No categories yet</Text><Text style={styles.stateText}>Active store categories will appear here.</Text></View>}
