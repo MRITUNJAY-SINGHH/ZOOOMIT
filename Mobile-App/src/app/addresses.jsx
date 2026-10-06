@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  BackHandler,
   TextInput,
   KeyboardAvoidingView,
   Platform
@@ -239,7 +240,93 @@ export default function AddressesScreen() {
     }
   };
 
+  useEffect(() => {
+    if (!formVisible) return undefined;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeForm();
+      return true;
+    });
+    return () => sub.remove();
+  }, [formVisible, saving]);
+
   const list = addresses || [];
+
+  if (formVisible) {
+    return (
+      <View style={[styles.screen, { paddingTop: 0 }]}>
+          <SafeAreaView edges={['top', 'left', 'right']} style={styles.formTop}>
+            <View style={styles.header}>
+              <Pressable onPress={closeForm} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back">
+                <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
+              </Pressable>
+              <Text style={styles.headerTitle}>{editingId ? 'Edit address' : 'Add new address'}</Text>
+              <View style={{ width: 40 }} />
+            </View>
+          </SafeAreaView>
+          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+            >
+              <TouchableOpacity style={styles.locateBtn} onPress={handleUseCurrentLocation} disabled={locating} activeOpacity={0.85}>
+                {locating ? (
+                  <ActivityIndicator size="small" color={colors.secondary} />
+                ) : (
+                  <LocateFixed size={20} color={colors.secondary} strokeWidth={2.4} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.locateTitle}>{locating ? 'Fetching your location...' : 'Use my current location'}</Text>
+                  <Text style={styles.locateSub}>Fill the address below automatically</Text>
+                </View>
+              </TouchableOpacity>
+
+              <Text style={styles.fieldLabel}>Save as</Text>
+              <View style={styles.typeRow}>
+                {TYPES.map(({ key, Icon }) => {
+                  const active = form.label === key;
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.typePill, active && styles.typePillActive]}
+                      onPress={() => setField('label', key)}
+                      activeOpacity={0.8}
+                    >
+                      <Icon size={15} color={active ? colors.secondary : colors.textSecondary} />
+                      <Text style={[styles.typeText, active && styles.typeTextActive]}>{key}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Field label="Flat / House / Street *" placeholder="e.g. Flat 402, Green Valley Apartments" value={form.street} onChangeText={(v) => setField('street', v)} />
+              <Field label="Landmark (optional)" placeholder="e.g. Near City Mall" value={form.landmark} onChangeText={(v) => setField('landmark', v)} />
+              <View style={styles.twoCol}>
+                <Field label="City *" placeholder="City" style={{ flex: 1 }} value={form.city} onChangeText={(v) => setField('city', v)} />
+                <Field label="Pincode *" placeholder="6 digits" style={{ flex: 1 }} value={form.zipCode} keyboardType="number-pad" maxLength={6} onChangeText={(v) => setField('zipCode', v)} />
+              </View>
+              <Field label="State" placeholder="State" value={form.state} onChangeText={(v) => setField('state', v)} />
+
+              <TouchableOpacity style={styles.checkRow} onPress={() => setField('isDefault', !form.isDefault)} activeOpacity={0.8}>
+                <View style={[styles.checkbox, form.isDefault && styles.checkboxActive]}>
+                  {form.isDefault && <Check size={14} color={colors.secondary} strokeWidth={3} />}
+                </View>
+                <Text style={styles.checkLabel}>Make this my default address</Text>
+              </TouchableOpacity>
+            </ScrollView>
+            <View style={[styles.footer, { position: 'relative', paddingBottom: Math.max(insets.bottom, 12) }]}>
+              <TouchableOpacity style={[styles.addBtn, saving && { opacity: 0.8 }]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+                {saving ? (
+                  <ActivityIndicator size="small" color={colors.secondary} />
+                ) : (
+                  <Text style={styles.addBtnText}>{editingId ? 'Update address' : 'Save address'}</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
@@ -336,80 +423,6 @@ export default function AddressesScreen() {
         </TouchableOpacity>
       </View>
 
-      {formVisible && (
-        <View style={styles.formPage}>
-          <SafeAreaView edges={['top', 'left', 'right']} style={styles.formTop}>
-            <View style={styles.header}>
-              <Pressable onPress={closeForm} style={styles.backBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back">
-                <ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.4} />
-              </Pressable>
-              <Text style={styles.headerTitle}>{editingId ? 'Edit address' : 'Add new address'}</Text>
-              <View style={{ width: 40 }} />
-            </View>
-          </SafeAreaView>
-          <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
-            >
-              <TouchableOpacity style={styles.locateBtn} onPress={handleUseCurrentLocation} disabled={locating} activeOpacity={0.85}>
-                {locating ? (
-                  <ActivityIndicator size="small" color={colors.secondary} />
-                ) : (
-                  <LocateFixed size={20} color={colors.secondary} strokeWidth={2.4} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.locateTitle}>{locating ? 'Fetching your location...' : 'Use my current location'}</Text>
-                  <Text style={styles.locateSub}>Fill the address below automatically</Text>
-                </View>
-              </TouchableOpacity>
-
-              <Text style={styles.fieldLabel}>Save as</Text>
-              <View style={styles.typeRow}>
-                {TYPES.map(({ key, Icon }) => {
-                  const active = form.label === key;
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      style={[styles.typePill, active && styles.typePillActive]}
-                      onPress={() => setField('label', key)}
-                      activeOpacity={0.8}
-                    >
-                      <Icon size={15} color={active ? colors.secondary : colors.textSecondary} />
-                      <Text style={[styles.typeText, active && styles.typeTextActive]}>{key}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <Field label="Flat / House / Street *" placeholder="e.g. Flat 402, Green Valley Apartments" value={form.street} onChangeText={(v) => setField('street', v)} />
-              <Field label="Landmark (optional)" placeholder="e.g. Near City Mall" value={form.landmark} onChangeText={(v) => setField('landmark', v)} />
-              <View style={styles.twoCol}>
-                <Field label="City *" placeholder="City" style={{ flex: 1 }} value={form.city} onChangeText={(v) => setField('city', v)} />
-                <Field label="Pincode *" placeholder="6 digits" style={{ flex: 1 }} value={form.zipCode} keyboardType="number-pad" maxLength={6} onChangeText={(v) => setField('zipCode', v)} />
-              </View>
-              <Field label="State" placeholder="State" value={form.state} onChangeText={(v) => setField('state', v)} />
-
-              <TouchableOpacity style={styles.checkRow} onPress={() => setField('isDefault', !form.isDefault)} activeOpacity={0.8}>
-                <View style={[styles.checkbox, form.isDefault && styles.checkboxActive]}>
-                  {form.isDefault && <Check size={14} color={colors.secondary} strokeWidth={3} />}
-                </View>
-                <Text style={styles.checkLabel}>Make this my default address</Text>
-              </TouchableOpacity>
-            </ScrollView>
-            <View style={[styles.footer, { position: 'relative', paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <TouchableOpacity style={[styles.addBtn, saving && { opacity: 0.8 }]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
-                {saving ? (
-                  <ActivityIndicator size="small" color={colors.secondary} />
-                ) : (
-                  <Text style={styles.addBtnText}>{editingId ? 'Update address' : 'Save address'}</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </KeyboardAvoidingView>
-        </View>
-      )}
     </SafeAreaView>
   );
 }
@@ -426,7 +439,7 @@ const styles = StyleSheet.create({
   locateTitle: { fontSize: 14.5, fontFamily: F.bold, color: colors.textPrimary },
   locateSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { flex: 1, fontSize: 22, fontFamily: F.bold, color: '#17212B' },
+  headerTitle: { flex: 1, fontSize: 17, fontFamily: F.bold, color: '#17212B' },
   content: { padding: 16 },
   card: { backgroundColor: colors.white, borderRadius: 18, borderWidth: 1, borderColor: colors.borderLight, padding: 14, marginBottom: 12 },
   cardDefault: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
