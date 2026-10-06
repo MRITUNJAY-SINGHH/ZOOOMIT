@@ -20,6 +20,7 @@ import {
   User,
   ChevronRight
 } from 'lucide-react-native';
+import { FloatingCart } from '../../components/FloatingCart';
 import { typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
 import { haptics } from '../../services/haptics';
@@ -45,20 +46,7 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
 
   const totalCartQty = useMemo(() => {
     if (!cart?.items?.length) return 0;
-    return cart.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  }, [cart]);
-
-  const cartThumbnails = useMemo(() => {
-    if (!cart?.items?.length) return [];
-    const thumbs = [];
-    for (const item of cart.items) {
-      const uri = item.product?.featuredImage || item.product?.galleryImages?.[0] || item.product?.images?.[0]?.url || item.product?.image;
-      if (uri && !thumbs.includes(uri)) {
-        thumbs.push(uri);
-      }
-      if (thumbs.length >= 3) break;
-    }
-    return thumbs;
+    return cart.items.reduce((sum, item) => sum + (Number(item.qty ?? item.quantity ?? 0) > 0 ? 1 : 0), 0);
   }, [cart]);
 
   const visibleRoutes = state.routes.filter(route => route.name !== 'search' && descriptors[route.key].options.href !== null);
@@ -173,6 +161,7 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
 
   return (
     <>
+      <FloatingCart bottom={totalBarHeight + 8} visible={['index', 'category'].includes(state.routes[state.index]?.name)} />
       {isHomePage && (
         <Animated.View
           style={[
@@ -196,34 +185,8 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
                 <Text style={styles.freeDeliveryNormal}>on orders above ₹99</Text>
               </Text>
             </LinearGradient>
-          ) : (
-            <TouchableOpacity
-              style={styles.blueCartPill}
-              onPress={() => {
-                haptics.medium();
-                router.push('/(tabs)/cart');
-              }}
-              activeOpacity={0.9}
-            >
-              <View style={styles.blueCartLeft}>
-                <Text style={styles.blueCartTag}>CART</Text>
-                <Text style={styles.blueCartCount}>
-                  {totalCartQty} {totalCartQty === 1 ? 'ITEM' : 'ITEMS'}
-                </Text>
-              </View>
-
-              <View style={styles.blueCartRight}>
-                <View style={styles.thumbsRow}>
-                  {cartThumbnails.map((uri, idx) => (
-                    <View key={idx} style={[styles.thumbCard, { marginLeft: idx > 0 ? -6 : 0 }]}>
-                      <Image source={{ uri }} style={styles.thumbImage} contentFit="contain" />
-                    </View>
-                  ))}
-                </View>
-                <ChevronRight size={18} color="#FFFFFF" strokeWidth={2.8} style={{ marginLeft: 6 }} />
-              </View>
-            </TouchableOpacity>
-          )}
+          ) : null
+          }
         </Animated.View>
       )}
 
@@ -476,53 +439,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#005C66'
   },
-  blueCartPill: {
-    width: SCREEN_WIDTH - 24,
-    height: 52,
-    backgroundColor: '#0052FF',
-    borderRadius: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16
-  },
-  blueCartLeft: {
-    justifyContent: 'center'
-  },
-  blueCartTag: {
-    fontFamily: typography.family.bold,
-    fontSize: 10.5,
-    color: '#FFFFFF',
-    fontWeight: '800',
-    letterSpacing: 0.8
-  },
-  blueCartCount: {
-    fontFamily: typography.family.bold,
-    fontSize: 12,
-    color: '#FFFFFF',
-    fontWeight: '700'
-  },
-  blueCartRight: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  thumbsRow: {
-    flexDirection: 'row',
-    alignItems: 'center'
-  },
-  thumbCard: {
-    width: 30,
-    height: 30,
-    borderRadius: 6,
-    backgroundColor: '#FFFFFF',
-    padding: 2,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-    overflow: 'hidden'
-  },
-  thumbImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 4
-  }
 });
