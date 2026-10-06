@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { StorefrontAPI } from '../services/api';
 import { useAuth } from './AuthContext';
 
@@ -21,6 +21,14 @@ export const CartProvider = ({ children }) => {
   const { token } = useAuth();
   const [cart, setCart] = useState({ items: [], summary: emptySummary });
   const [isLoading, setIsLoading] = useState(false);
+  const [cartFeedback, setCartFeedback] = useState(null);
+  const feedbackSequence = useRef(0);
+  const announceAddition = (data, productId, variantId, source) => {
+    if (!source) return;
+    const item = data.items?.find(i => (i.product?._id || i.product) === productId && (i.variant?._id || i.variant || null) === (variantId || null));
+    if (!item) return;
+    setCartFeedback({ ...source, id: ++feedbackSequence.current, itemKey: String(item._id || `${productId}:${variantId || 'base'}`) });
+  };
   const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
@@ -51,13 +59,14 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const addItem = async (productId, qty, variantId, unit) => {
+  const addItem = async (productId, qty, variantId, unit, source) => {
     if (!token) return;
     setIsUpdating(true);
     try {
       const res = await StorefrontAPI.addToCart({ productId, variantId, qty, unit });
       if (res.data?.data) {
         setCart(res.data.data);
+        announceAddition(res.data.data, productId, variantId, source);
       }
     } catch (e) {
       const msg = e.response?.data?.message || 'Failed to add item to cart';
@@ -67,13 +76,15 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateItem = async (itemId, qty) => {
+  const updateItem = async (itemId, qty, source) => {
     if (!token) return;
+    const previous = cart.items.find(i => i._id === itemId);
     setIsUpdating(true);
     try {
       const res = await StorefrontAPI.updateCartItem(itemId, qty);
       if (res.data?.data) {
         setCart(res.data.data);
+        if (previous && qty > Number(previous.qty || 0)) announceAddition(res.data.data, previous.product?._id || previous.product, previous.variant?._id || previous.variant, source);
       }
     } catch (e) {
       const msg = e.response?.data?.message || 'Failed to update item';
@@ -149,6 +160,7 @@ export const CartProvider = ({ children }) => {
   return (
     <CartContext.Provider value={{
       cart,
+      cartFeedback,
       isLoading,
       isUpdating,
       itemCount,
