@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     flex: 1,
     fontFamily: typography.family.bold,
-    fontSize: 18,
+    fontSize: 14,
     color: '#111827',
     textAlign: 'left',
     fontWeight: '700',
