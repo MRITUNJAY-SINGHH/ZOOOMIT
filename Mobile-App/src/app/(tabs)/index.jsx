@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, Leaf, Cherry, Grape, Citrus, Banana, Carrot, Wine, ChefHat, Heart, Star, Sprout, PartyPopper, ChevronDown, ChevronRight, ChevronUp, User, Mic } from 'lucide-react-native';
+import { Search, Bookmark, ShoppingBasket, Snowflake, Apple, Sparkles, Gift, Package, Leaf, Cherry, Grape, Citrus, Banana, Carrot, Wine, ChefHat, Heart, Star, Sprout, PartyPopper, ChevronDown, ChevronRight, ChevronUp, User, Smartphone, Laptop, Headphones, Watch, Camera, Milk, Cookie, Egg, Coffee, Droplets, Flower2, Scissors } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -44,21 +44,51 @@ const CategoryTabs = ({ tab, onSelect }) => {
   return <View style={{ flexDirection: 'row', height: 78, overflow: 'hidden' }}>{TABS.map(item => <TabItem key={item.name} item={item} width={width / 4} active={item.name === tab} onPress={() => onSelect(item.name)} />)}</View>;
 };
 // Original vector artwork and browse cards. No reference screenshot, invented offer or delivery promise.
-const PosterArt = () => <Svg width="100%" height="100%" viewBox="0 0 390 92" preserveAspectRatio="xMidYMid meet">
+const POSTER_H = 105;
+const loopValue = (v, ms, delay = 0) => Animated.loop(Animated.sequence([Animated.timing(v, { toValue: 1, duration: ms, delay, easing: Easing.inOut(Easing.sin), useNativeDriver: true }), Animated.timing(v, { toValue: 0, duration: ms, easing: Easing.inOut(Easing.sin), useNativeDriver: true })]));
+const FruitArt = () => <Svg width={62} height={62} viewBox="0 0 62 62">
   <Defs><SvgGradient id="fruit" x1="0" y1="0" x2="1" y2="1"><Stop offset="0" stopColor="#FFCB24"/><Stop offset="1" stopColor="#E17400"/></SvgGradient></Defs>
-  <Path d="M29 38C5 27 7 70 28 77C50 70 53 26 29 38" fill="url(#fruit)"/><Path d="M28 36Q23 21 39 20Q43 31 28 36" fill="#82AD38"/>
-  <Path d="m354 25 19 9-4 35-24-4-4-34z" fill="#EF1596"/><Path d="M349 32Q350 12 364 28" stroke="#FFC82E" strokeWidth="4" fill="none"/>
-  <Path d="m65 29 3 7 7 3-7 3-3 7-3-7-7-3 7-3zM324 59l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#FFF0CC"/>
+  <Path d="M31 20C6 8 7 56 30 62C54 56 56 8 31 20" fill="url(#fruit)"/><Path d="M30 18Q24 2 41 1Q46 13 30 18" fill="#82AD38"/>
 </Svg>;
-const COLLECTIONS = {
-  Groceries: [['Fresh picks', 'Fruit & vegetables', 'fruit|vegetable', Apple], ['Daily picks', 'Fill your cupboard', 'milk|atta|rice|sugar', ShoppingBasket], ['Little treats', 'Snacks & more', 'snack|sweet|chocolate', Gift]],
-  Zooommart: [['Everyday finds', 'Explore the store', '', ShoppingBasket], ['Home favourites', 'For your space', 'home|clean|house', Package], ['Self care', 'Your daily routine', 'beauty|skin|hair', Sparkles]],
-  Electronics: [['Tech finds', 'Browse electronics', 'electronic|phone|laptop', Package], ['Accessories', 'The little extras', 'accessor|cable|charger', Gift], ['Explore more', 'All store products', '', ShoppingBasket]],
-  Beauty: [['Self care', 'Skin & hair', 'skin|hair|beauty', Sparkles], ['Beauty picks', 'Explore cosmetics', 'cosmetic|makeup|beauty', Heart], ['Explore more', 'All store products', '', ShoppingBasket]]
+const BagArt = () => <Svg width={58} height={62} viewBox="0 0 58 62">
+  <Path d="m26 14 22 10-5 40-28-5-5-39z" fill="#EF1596"/><Path d="M22 22Q23 0 40 18" stroke="#FFC82E" strokeWidth="4" fill="none"/>
+</Svg>;
+const SparkArt = ({ size }) => <Svg width={size} height={size} viewBox="0 0 20 20"><Path d="m10 0 2.6 7.4L20 10l-7.4 2.6L10 20l-2.6-7.4L0 10l7.4-2.6z" fill="#FFF0CC"/></Svg>;
+const PosterArt = () => {
+  const a = useRef(new Animated.Value(0)).current;
+  const b = useRef(new Animated.Value(0)).current;
+  const c = useRef(new Animated.Value(0)).current;
+  const d = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    const loops = [loopValue(a, 1500), loopValue(b, 1700, 300), loopValue(c, 1100), loopValue(d, 1300, 500)];
+    loops.forEach(l => l.start());
+    return () => loops.forEach(l => l.stop());
+  }, [a, b, c, d]);
+  const spin = (v, deg) => v.interpolate({ inputRange: [0, 1], outputRange: [`${-deg}deg`, `${deg}deg`] });
+  const rise = (v, px) => v.interpolate({ inputRange: [0, 1], outputRange: [px, -px] });
+  return <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <Animated.View style={{ position: 'absolute', left: 14, top: 18, transform: [{ translateY: rise(a, 5) }, { rotate: spin(a, 10) }] }}><FruitArt /></Animated.View>
+    <Animated.View style={{ position: 'absolute', right: 16, top: 16, transform: [{ translateY: rise(b, -5) }, { rotate: spin(b, -10) }] }}><BagArt /></Animated.View>
+    <Animated.View style={{ position: 'absolute', left: 72, top: 20, opacity: c, transform: [{ scale: c.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.15] }) }] }}><SparkArt size={16} /></Animated.View>
+    <Animated.View style={{ position: 'absolute', right: 78, top: 70, opacity: d, transform: [{ scale: d.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1.1] }) }] }}><SparkArt size={12} /></Animated.View>
+  </View>;
 };
+const COLLECTIONS = {
+  Groceries: [['Fresh picks', 'Fruit & vegetables', 'fruit|vegetable', Apple], ['Daily picks', 'Fill your cupboard', 'milk|atta|rice|sugar', ShoppingBasket], ['Little treats', 'Snacks & more', 'snack|sweet|chocolate', Gift], ['Dairy', 'Milk & more', 'milk|dairy|paneer|curd', Milk], ['Biscuits', 'Tea-time bites', 'biscuit|cookie|snack', Cookie], ['Eggs', 'Protein picks', 'egg|meat|chicken', Egg], ['Tea & coffee', 'Start your day', 'tea|coffee', Coffee]],
+  Zooommart: [['Everyday finds', 'Explore the store', '', ShoppingBasket], ['Home favourites', 'For your space', 'home|clean|house', Package], ['Self care', 'Your daily routine', 'beauty|skin|hair', Sparkles], ['Little treats', 'Snacks & more', 'snack|sweet|chocolate', Gift], ['Fresh picks', 'Fruit & vegetables', 'fruit|vegetable', Apple], ['Tech finds', 'Phones & more', 'electronic|phone|laptop', Smartphone], ['Tea & coffee', 'Start your day', 'tea|coffee', Coffee]],
+  Electronics: [['Phones', 'Browse mobiles', 'phone|mobile', Smartphone], ['Laptops', 'Work & play', 'laptop|computer', Laptop], ['Audio', 'Headphones', 'headphone|earphone|speaker|audio', Headphones], ['Watches', 'Wear it', 'watch|band', Watch], ['Cameras', 'Capture more', 'camera', Camera], ['Accessories', 'The little extras', 'accessor|cable|charger', Gift], ['Explore more', 'All store products', '', ShoppingBasket]],
+  Beauty: [['Skin care', 'Glow routine', 'skin|face|cream', Droplets], ['Hair care', 'Strong & shiny', 'hair|shampoo', Scissors], ['Makeup', 'Explore cosmetics', 'cosmetic|makeup', Heart], ['Fragrance', 'Smell good', 'perfume|fragrance|deo', Flower2], ['Self care', 'Skin & hair', 'skin|hair|beauty', Sparkles], ['Gifting', 'Treat someone', 'gift', Gift], ['Explore more', 'All store products', '', ShoppingBasket]]
+};
+const PulseTitle = () => {
+  const v = useRef(new Animated.Value(0)).current;
+  useEffect(() => { const l = loopValue(v, 1200); l.start(); return () => l.stop(); }, [v]);
+  return <Animated.Text style={[newStyles.posterTitle, { transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }]}>ZOOOM FINDS</Animated.Text>;
+};
+const DISC = ['#FFE167', '#5C174D', '#126342', '#2A4FA8', '#B85C00', '#6A2C91', '#0F6E78'];
+const DISC_ICON = ['#751239', '#FFF0B2', '#FFF0B2', '#DCE7FF', '#FFE7C2', '#F2DAFF', '#CFF6FA'];
 const HomePoster = ({ tab, onBrowse }) => <View style={newStyles.posterPanel}>
-  <View style={newStyles.poster}><View style={StyleSheet.absoluteFill}><PosterArt /></View><Text style={newStyles.posterTitle}>ZOOOM FINDS</Text><Pressable onPress={() => onBrowse('')} accessibilityRole="button" accessibilityLabel="Explore store"><Text style={newStyles.posterCta}>EXPLORE NOW</Text></Pressable></View>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={newStyles.promoRow}>{COLLECTIONS[tab].map(([title, caption, match, Icon], i) => <Pressable key={title} onPress={() => onBrowse(match)} accessibilityRole="button" accessibilityLabel={`Browse ${title}`} style={newStyles.promoCard}><Text style={newStyles.promoTitle}>{title}</Text><Text style={newStyles.promoCaption}>{caption}</Text><View style={[newStyles.artDisc, { backgroundColor: ['#FFE167', '#5C174D', '#126342'][i] }]}><Icon size={46} color={i === 0 ? '#751239' : '#FFF0B2'} strokeWidth={1.5}/></View><Text style={newStyles.browse}>BROWSE ›</Text></Pressable>)}</ScrollView>
+  <View style={newStyles.poster}><PosterArt /><PulseTitle /><Pressable onPress={() => onBrowse('')} accessibilityRole="button" accessibilityLabel="Explore store"><Text style={newStyles.posterCta}>EXPLORE NOW</Text></Pressable></View>
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={newStyles.promoRow} snapToInterval={112} decelerationRate="fast">{COLLECTIONS[tab].map(([title, caption, match, Icon], i) => <Pressable key={title} onPress={() => onBrowse(match)} accessibilityRole="button" accessibilityLabel={`Browse ${title}`} style={newStyles.promoCard}><Text style={newStyles.promoTitle}>{title}</Text><Text style={newStyles.promoCaption}>{caption}</Text><View style={[newStyles.artDisc, { backgroundColor: DISC[i % DISC.length] }]}><Icon size={46} color={DISC_ICON[i % DISC_ICON.length]} strokeWidth={1.5}/></View><Text style={newStyles.browse}>BROWSE ›</Text></Pressable>)}</ScrollView>
 </View>;
 const listFrom = (res) => {
   const data = res.data?.data ?? res.data;
@@ -114,7 +144,11 @@ export default function HomeScreen() {
   const scrollRef = useRef(null);
   const sectionOffsets = useRef({});
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const topPad = Math.max(insets.top, TOP_INSET_FALLBACK);
+  const headerHeight = topPad + 78;
+  const [topH, setTopH] = useState(170);
+  const [panelH, setPanelH] = useState(76);
+  const scrollY = useRef(new Animated.Value(0)).current;
   const lastY = useRef(0);
   const downFrom = useRef(0);
   const [activeParent, setActiveParent] = useState(null);
@@ -175,7 +209,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <Animated.View onLayout={e => setHeaderHeight(e.nativeEvent.layout.height)} style={[styles.header, { backgroundColor: '#1A0009', paddingTop: Math.max(insets.top, TOP_INSET_FALLBACK) + 8 }]}>
+      <Animated.ScrollView ref={scrollRef} onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false, listener: handleScroll })} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} progressViewOffset={topPad} />}>
+      <View onLayout={e => setTopH(e.nativeEvent.layout.height)} style={[styles.header, { backgroundColor: '#1A0009', paddingTop: topPad + 8 }]}>
         
         <View style={styles.addressRow}>
         <Pressable style={styles.address} onPress={() => router.push('/addresses')} accessibilityRole="button">
@@ -187,16 +222,8 @@ export default function HomeScreen() {
         </Pressable>
         </View>
         <CategoryTabs tab={tab} onSelect={name => { setTab(name); setGroup(null); }} />
-        <View style={[styles.lowerPanel, newStyles.lowerPanel]}>
-        <View style={styles.searchRow}>
-          <Pressable style={[styles.search, newStyles.search]} onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Search products" accessibilityRole="button">
-            <Search size={21} color="#637164" /><RotatingSearch words={searchWords} /><View style={styles.micDivider} /><Mic size={20} color="#E8A400" />
-          </Pressable>
-          <Pressable style={[styles.bookmark, newStyles.heartButton]} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Heart size={26} color="#A50046" /></Pressable>
-        </View>
-        </View>
-      </Animated.View>
-      <ScrollView ref={scrollRef} onScroll={handleScroll} scrollEventThrottle={16} showsVerticalScrollIndicator={false} contentContainerStyle={styles.body} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#fff" colors={['#1769FF']} />}>
+      </View>
+        <View style={{ height: panelH, backgroundColor: '#50001B' }} />
         <Animated.View style={{ opacity: bannerAnim, transform: [{ translateY: bannerAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }}><HomePoster tab={tab} onBrowse={value => { setGroup(value || null); scrollRef.current?.scrollTo({ y: sectionOffsets.current.__products || 0, animated: true }); }} /></Animated.View>
         {categoriesQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
         {categoriesQuery.isError && <View style={styles.state}><Text style={styles.stateText}>Couldn't load categories.</Text><Pressable onPress={() => categoriesQuery.refetch()}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
@@ -225,7 +252,17 @@ export default function HomeScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(0, 12).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView>
         {visibleProducts.length > 0 && <Pressable style={styles.fullSeeAll} onPress={() => router.push('/(tabs)/search')} accessibilityRole="button"><Text style={styles.fullSeeAllText}>See All »</Text></Pressable>}
         {visibleProducts.length > 12 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>More everyday essentials</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(12, 24).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView></>}
-      </ScrollView>
+        <View pointerEvents="none" style={{ position: 'absolute', top: -700, left: 0, right: 0, height: 700, backgroundColor: '#1A0009' }} />
+      </Animated.ScrollView>
+      <Animated.View onLayout={e => setPanelH(e.nativeEvent.layout.height)} style={[styles.lowerPanel, newStyles.lowerPanel, newStyles.stickyPanel, { transform: [{ translateY: scrollY.interpolate({ inputRange: [0, Math.max(topH - topPad, 1)], outputRange: [topH, topPad], extrapolateRight: 'clamp' }) }] }]}>
+        <View style={styles.searchRow}>
+          <Pressable style={[styles.search, newStyles.search]} onPress={() => router.push('/(tabs)/search')} accessibilityLabel="Search products" accessibilityRole="button">
+            <RotatingSearch words={searchWords} /><Search size={22} color="#A50046" strokeWidth={2.4} />
+          </Pressable>
+          <Pressable style={[styles.bookmark, newStyles.heartButton]} onPress={() => router.push('/wishlist')} accessibilityLabel="Wishlist" accessibilityRole="button"><Bookmark size={25} color="#A50046" strokeWidth={2.2} /></Pressable>
+        </View>
+      </Animated.View>
+      <Animated.View pointerEvents="none" style={[newStyles.statusCover, { height: topPad, opacity: scrollY.interpolate({ inputRange: [Math.max(topH - topPad - 8, 0), Math.max(topH - topPad, 1)], outputRange: [0, 1], extrapolate: 'clamp' }) }]} />
       <Animated.View pointerEvents={showBackToTop ? 'box-none' : 'none'} style={[styles.backTopWrap, { top: headerHeight + 10, opacity: backAnim, transform: [{ translateY: backAnim.interpolate({ inputRange: [0, 1], outputRange: [-14, 0] }) }] }]}><Pressable style={styles.backTop} onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })} accessibilityRole="button" accessibilityLabel="Back to top"><ChevronUp size={16} color="#fff" /><Text style={styles.backTopText}>Back to top</Text></Pressable></Animated.View>
     </View>
   );
@@ -255,10 +292,12 @@ const styles = StyleSheet.create({
 const newStyles = StyleSheet.create({
   avatar: { width: 38, height: 32, borderRadius: 22, borderColor: '#5C3543', borderWidth: 1, backgroundColor: '#140007' },
   lowerPanel: { backgroundColor: '#50001B', paddingBottom: 10 },
+  stickyPanel: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, elevation: 6, shadowColor: '#000', shadowOpacity: 0.28, shadowRadius: 6, shadowOffset: { width: 0, height: 3 } },
+  statusCover: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 11, backgroundColor: '#50001B' },
   search: { height: 52, borderRadius: 12, gap: 8, paddingHorizontal: 12, shadowColor: '#000', shadowOpacity: 0.16, shadowRadius: 5, shadowOffset: { width: 0, height: 3 }, elevation: 3 },
-  heartButton: { width: 44, height: 52, borderRadius: 12 },
+  heartButton: { width: 48, height: 52, borderRadius: 12, borderWidth: 1.5, borderColor: '#A50046' },
   posterPanel: { backgroundColor: '#50001B', paddingBottom: 22, borderBottomLeftRadius: 25, borderBottomRightRadius: 25, overflow: 'hidden' },
-  poster: { height: 90, alignItems: 'center', justifyContent: 'center', gap: 7 },
+  poster: { height: POSTER_H, alignItems: 'center', justifyContent: 'center', gap: 7 },
   posterTitle: { color: '#FFE62D', fontSize: 31, fontWeight: '900', letterSpacing: -1.6, fontFamily: typography.family.heavy || typography.family.bold, textShadowColor: '#AC4F00', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 1 },
   posterCta: { color: '#FFE62D', fontSize: 10, fontFamily: typography.family.bold, borderWidth: 1, borderColor: '#9D275A', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 3 },
   promoRow: { paddingHorizontal: 12, gap: 13, paddingTop: 4 },
