@@ -61,22 +61,25 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
     return thumbs;
   }, [cart]);
 
-  const tabCount = state.routes.length;
+  const visibleRoutes = state.routes.filter(route => route.name !== 'search' && descriptors[route.key].options.href !== null);
+  const focusedIndex = visibleRoutes.findIndex(route => route.key === state.routes[state.index]?.key);
+  const activeIndex = Math.max(focusedIndex, 0);
+  const tabCount = visibleRoutes.length;
   const tabWidth = containerWidth / tabCount;
   const pillWidth = tabWidth - (PILL_PADDING_H * 2);
 
-  const slideAnim = useRef(new Animated.Value(state.index * tabWidth + PILL_PADDING_H)).current;
+  const slideAnim = useRef(new Animated.Value(activeIndex * tabWidth + PILL_PADDING_H)).current;
   const animY = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.spring(slideAnim, {
-      toValue: state.index * tabWidth + PILL_PADDING_H,
+      toValue: activeIndex * tabWidth + PILL_PADDING_H,
       damping: 22,
       stiffness: 240,
       mass: 0.7,
       useNativeDriver: true,
     }).start();
-  }, [state.index, tabWidth]);
+  }, [activeIndex, tabWidth]);
 
   useEffect(() => {
     const unsubscribe = subscribe((visible) => {
@@ -90,6 +93,10 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
     });
     return unsubscribe;
   }, [subscribe]);
+
+  useEffect(() => {
+    Animated.spring(animY, { toValue: 0, damping: 24, stiffness: 260, mass: 0.6, useNativeDriver: true }).start();
+  }, [state.index, animY]);
 
   const menuTranslateY = animY.interpolate({
     inputRange: [0, 1],
@@ -248,16 +255,17 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
               styles.activePill,
               {
                 width: pillWidth,
+                opacity: focusedIndex < 0 ? 0 : 1,
                 transform: [{ translateX: slideAnim }]
               }
             ]}
             pointerEvents="none"
           />
 
-          {state.routes.map((route, index) => {
+          {visibleRoutes.map((route, index) => {
             const { options } = descriptors[route.key];
             const label = options.title !== undefined ? options.title : route.name;
-            const isFocused = state.index === index;
+            const isFocused = state.routes[state.index]?.key === route.key;
 
             const onPress = () => {
               const event = navigation.emit({
@@ -323,7 +331,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="category"
           options={{
-            title: 'Category'
+            title: 'Categories'
           }}
         />
         <Tabs.Screen
@@ -344,6 +352,7 @@ export default function TabLayout() {
             title: 'Profile'
           }}
         />
+        <Tabs.Screen name="search" options={{ href: null }} />
       </Tabs>
     </TabBarVisibilityProvider>
   );
