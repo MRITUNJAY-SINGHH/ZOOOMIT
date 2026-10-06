@@ -36,7 +36,7 @@ function CartThumb({ item, index, feedback, reducedMotion }) {
   return <Animated.View style={[styles.thumb, { position: 'absolute', left: 0, zIndex: 4 - index, opacity: slide, transform: [{ translateX: Animated.add(slot, slide.interpolate({ inputRange: [0, 1], outputRange: [24, 0] })) }, { scale: slide.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>{uri ? <Image source={{ uri }} style={styles.photo} contentFit="contain" /> : <Package size={21} color={colors.textSecondary} />}</Animated.View>;
 }
 // Mount inside each browsing surface so native Modal product sheets can animate too.
-export function FloatingCart({ bottom = 20, visible = true }) {
+export function FloatingCart({ bottom = 20, visible = true, onOpenCart }) {
   const { cart, cartFeedback } = useCart();
   const { width } = useWindowDimensions();
   const target = useRef(null);
@@ -99,7 +99,7 @@ export function FloatingCart({ bottom = 20, visible = true }) {
   const pillWidth = Math.min(248, width - 32);
   return <View ref={root} collapsable={false} style={styles.overlay} pointerEvents="box-none">
     <Animated.View style={[styles.position, { bottom, opacity: appear, transform: [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: pulse }] }]}>
-      <Pressable accessibilityRole="button" accessibilityLabel={`View cart, ${count} ${count === 1 ? 'item' : 'items'}`} onPress={() => router.push('/(tabs)/cart')} style={({ pressed }) => [styles.pill, { width: pillWidth }, pressed && { opacity: 0.92 }]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`View cart, ${count} ${count === 1 ? 'item' : 'items'}`} onPress={() => { onOpenCart?.(); router.push('/(tabs)/cart'); }} style={({ pressed }) => [styles.pill, { width: pillWidth }, pressed && { opacity: 0.92 }]}>
         <View style={styles.copy} accessible accessibilityLiveRegion="polite"><Text style={styles.title}>CART</Text><Text style={styles.count}>{count} {count === 1 ? 'ITEM' : 'ITEMS'}</Text></View>
         <View ref={target} collapsable={false} style={[styles.thumbnails, { width: 34 + Math.max(0, thumbnails.length - 1) * 26 }]}>{thumbnails.map((item, index) => <CartThumb key={cartKey(item)} item={item} index={index} feedback={cartFeedback} reducedMotion={reducedMotion} />)}</View>
         <ChevronRight size={20} color={colors.textPrimary} strokeWidth={2.4} />
