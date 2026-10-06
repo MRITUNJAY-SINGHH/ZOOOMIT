@@ -19,6 +19,12 @@ export function captureCartSource(ref, product) {
 }
 function CartThumb({ item, index, feedback, reducedMotion }) {
   const slide = useRef(new Animated.Value(1)).current;
+  const slot = useRef(new Animated.Value(index * 26)).current;
+  useEffect(() => {
+    const animation = Animated.spring(slot, { toValue: index * 26, damping: 22, stiffness: 220, mass: 0.7, useNativeDriver: true });
+    if (reducedMotion) slot.setValue(index * 26); else animation.start();
+    return () => animation.stop();
+  }, [index, reducedMotion]);
   useEffect(() => {
     if (!feedback || feedback.itemKey !== cartKey(item) || reducedMotion) return;
     slide.setValue(0);
@@ -27,7 +33,7 @@ function CartThumb({ item, index, feedback, reducedMotion }) {
     return () => animation.stop();
   }, [feedback?.id, reducedMotion]);
   const uri = cartImage(item.variant) || cartImage(item.product);
-  return <Animated.View style={[styles.thumb, { marginLeft: index ? -8 : 0, zIndex: 4 - index, opacity: slide, transform: [{ translateX: slide.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: slide.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>{uri ? <Image source={{ uri }} style={styles.photo} contentFit="contain" /> : <Package size={21} color={colors.textSecondary} />}</Animated.View>;
+  return <Animated.View style={[styles.thumb, { position: 'absolute', left: 0, zIndex: 4 - index, opacity: slide, transform: [{ translateX: Animated.add(slot, slide.interpolate({ inputRange: [0, 1], outputRange: [24, 0] })) }, { scale: slide.interpolate({ inputRange: [0, 1], outputRange: [0.8, 1] }) }] }]}>{uri ? <Image source={{ uri }} style={styles.photo} contentFit="contain" /> : <Package size={21} color={colors.textSecondary} />}</Animated.View>;
 }
 // Mount inside each browsing surface so native Modal product sheets can animate too.
 export function FloatingCart({ bottom = 20, visible = true }) {
@@ -95,7 +101,7 @@ export function FloatingCart({ bottom = 20, visible = true }) {
     <Animated.View style={[styles.position, { bottom, opacity: appear, transform: [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: pulse }] }]}>
       <Pressable accessibilityRole="button" accessibilityLabel={`View cart, ${count} ${count === 1 ? 'item' : 'items'}`} onPress={() => router.push('/(tabs)/cart')} style={({ pressed }) => [styles.pill, { width: pillWidth }, pressed && { opacity: 0.92 }]}>
         <View style={styles.copy} accessible accessibilityLiveRegion="polite"><Text style={styles.title}>CART</Text><Text style={styles.count}>{count} {count === 1 ? 'ITEM' : 'ITEMS'}</Text></View>
-        <View ref={target} collapsable={false} style={styles.thumbnails}>{thumbnails.map((item, index) => <CartThumb key={cartKey(item)} item={item} index={index} feedback={cartFeedback} reducedMotion={reducedMotion} />)}</View>
+        <View ref={target} collapsable={false} style={[styles.thumbnails, { width: 34 + Math.max(0, thumbnails.length - 1) * 26 }]}>{thumbnails.map((item, index) => <CartThumb key={cartKey(item)} item={item} index={index} feedback={cartFeedback} reducedMotion={reducedMotion} />)}</View>
         <ChevronRight size={20} color={colors.textPrimary} strokeWidth={2.4} />
         <View style={styles.track}><Animated.View style={[styles.line, { transform: [{ scaleX: line }] }]} /></View>
       </Pressable>
