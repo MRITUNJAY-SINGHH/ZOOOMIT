@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { captureCartSource } from '../FloatingCart';
+import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, useWindowDimensions } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -9,6 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 
 export const ProductCard = ({ product, onPress, onVariantPress, compact = false }) => {
+  const imageRef = useRef(null);
   const { width } = useWindowDimensions();
   const { getItemQuantity, addItem, updateItem, cart, isUpdating } = useCart();
   const { token } = useAuth();
@@ -42,15 +44,16 @@ export const ProductCard = ({ product, onPress, onVariantPress, compact = false 
     if (direction > 0 && variants.length > 1 && onVariantPress) { onVariantPress(product, variantId); return; }
     if (!token) { Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.'); return; }
     try {
+      const source = direction > 0 ? await captureCartSource(imageRef, product) : null;
       const item = cart?.items?.find(i => i.product?._id === product._id && (variantId ? i.variant?._id === variantId : !i.variant));
       const next = Math.round((qty + direction * step) * 1000) / 1000;
       if (direction > 0 && qty > 0 && next > max) return;
-      if (item) await updateItem(item._id, next < min ? 0 : next);
-      else if (direction > 0) await addItem(product._id, min, variantId, unit);
+      if (item) await updateItem(item._id, next < min ? 0 : next, source);
+      else if (direction > 0) await addItem(product._id, min, variantId, unit, source);
     } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); }
   };
   return <Pressable style={[styles.card, compact && [styles.compact, { width: Math.max(96, Math.min(160, (width - 56) / 3)) }]]} onPress={open} accessibilityRole="button" accessibilityLabel={`View ${product.name}`}>
-    <View style={styles.imageBox}>
+    <View ref={imageRef} collapsable={false} style={styles.imageBox}>
       {image ? <Image source={{ uri: image }} style={styles.image} contentFit="contain" /> : <Package size={40} color="#9BA69B" />}
       <Pressable style={styles.bookmark} onPress={e => { e.stopPropagation(); toggleSave(product); }} accessibilityLabel={`Save ${product.name}`}><Bookmark size={17} color="#70757B" fill={isSaved(product._id) ? colors.primary : 'none'} /></Pressable>
       {badge && <Text style={styles.badge}>{badge}</Text>}
