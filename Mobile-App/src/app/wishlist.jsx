@@ -14,6 +14,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { router } from 'expo-router';
 import {
   ArrowLeft,
+  Search,
   Heart,
   Trash2,
   Plus,
@@ -210,13 +211,14 @@ export default function WishlistScreen() {
           <Text style={styles.headerTitle}>Wishlist</Text>
           <Text style={styles.headerSub}>{count} {count === 1 ? 'item' : 'items'} saved</Text>
         </View>
-        {count > 0 ? (
+        {count > 0 && (
           <Pressable style={styles.clearBtn} onPress={() => setShowClearModal(true)} hitSlop={8}>
             <Text style={styles.clearText}>Clear all</Text>
           </Pressable>
-        ) : (
-          <View style={{ width: 56 }} />
         )}
+        <Pressable style={styles.searchBtn} accessibilityRole="button" accessibilityLabel="Search products" onPress={() => router.push('/(tabs)/search')}>
+          <Search size={22} color="#17212B" />
+        </Pressable>
       </View>
 
       {isLoading ? (
@@ -321,12 +323,13 @@ export default function WishlistScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.softBackground },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: SIDE, paddingVertical: 10, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.borderLight },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 18, paddingVertical: 10, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: '#F1F3F5' },
+  searchBtn: { padding: 9 },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.primaryLight, alignItems: 'center', justifyContent: 'center' },
-  headerTitleCol: { flex: 1, alignItems: 'center' },
-  headerTitle: { fontSize: 18, fontFamily: F.bold, color: colors.textPrimary },
+  headerTitleCol: { flex: 1, alignItems: 'flex-start' },
+  headerTitle: { fontSize: 22, fontFamily: F.bold, color: colors.textPrimary },
   headerSub: { fontSize: 12, fontFamily: F.regular, color: colors.textSecondary, marginTop: 1 },
-  clearBtn: { width: 56, alignItems: 'flex-end' },
+  clearBtn: { paddingHorizontal: 4, alignItems: 'flex-end' },
   clearText: { fontSize: 13, fontFamily: F.bold, color: colors.error },
   loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   listContent: { paddingHorizontal: SIDE, paddingTop: 14 },
