@@ -99,7 +99,7 @@ export default function OtpVerificationScreen() {
     <ImageBackground source={require('../../../assets/images/auth/auth_verify_bg.jpg')} style={styles.background} resizeMode="cover">
       <View style={styles.overlay} />
       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
-        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={styles.keyboardView} behavior="padding" keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}>
           <ScrollView contentContainerStyle={styles.page} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
             <Animated.View entering={FadeIn.duration(250)} style={styles.topBar}>
               <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Change mobile number"><ArrowLeft size={20} color={colors.textPrimary} strokeWidth={2.5} /></Pressable>

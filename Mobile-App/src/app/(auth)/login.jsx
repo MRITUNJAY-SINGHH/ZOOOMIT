@@ -257,7 +257,7 @@ export default function MobileLoginScreen() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
             style={styles.keyboardView}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            behavior="padding" keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
           >
             <ScrollView 
               contentContainerStyle={styles.scrollContainer}
@@ -443,7 +443,7 @@ export default function MobileLoginScreen() {
           </TouchableWithoutFeedback>
 
           <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            behavior="padding" keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             style={styles.sheetContainer}
           >
             <View style={styles.halfScreenCard}>
