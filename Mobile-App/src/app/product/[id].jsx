@@ -5,10 +5,10 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-nat
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { Pressable } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, ArrowLeft } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
-import { ProductImageGallery } from '../../components/product/ProductImageGallery';
+import { ProductCard } from '../../components/product/ProductCard';
 import { ProductVariantSelector } from '../../components/product/ProductVariantSelector';
 import { SimilarProducts } from '../../components/product/SimilarProducts';
 import { ProductBottomBar } from '../../components/product/ProductBottomBar';
@@ -38,14 +38,8 @@ export default function ProductDetailsScreen() {
   const categoryId = product.category?._id || (typeof product.category === 'string' ? product.category : null);
   return <View style={styles.container}>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-      <ProductImageGallery product={product} />
-      <View style={styles.info}>
-        <Text style={styles.name}>{product.name}</Text>
-        {Boolean(product.subtitle) && <Text style={styles.muted}>{product.subtitle}</Text>}
-        <Text style={styles.unit}>{selectedVariant?.name || `${product.minSaleQty || 1} ${product.sellingUnit || product.baseUnit || 'PCS'}`}</Text>
-        <View style={styles.priceRow}><Text style={styles.price}>₹{price}</Text>{mrp > price && <><Text style={styles.mrp}>₹{mrp}</Text><Text style={styles.discount}>{Math.round((mrp - price) / mrp * 100)}% OFF</Text></>}</View>
-        {variants.length > 0 && <ProductVariantSelector variants={variants} selectedVariantId={selectedVariant?._id} onSelectVariant={setSelectedVariantId} defaultProduct={product} />}
-      </View>
+      <Pressable onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')} style={{ paddingHorizontal: 16, paddingTop: insets.top + 8, paddingBottom: 12 }} accessibilityLabel="Go back"><ArrowLeft size={24} color="#242628" /></Pressable>
+      <View style={styles.info}><ProductCard product={product} detailed selectedVariantId={selectedVariant?._id || null} onSelectVariant={setSelectedVariantId} /></View>
       <View style={[styles.section, { padding: 20 }]}><Text style={styles.name}>Product details</Text><Text style={styles.muted}>{product.description || 'No description provided by the store.'}</Text>{Boolean(product.brand) && <Text style={styles.muted}>Brand: {product.brand}</Text>}{Boolean(product.storageInfo) && <Text style={styles.muted}>Storage: {product.storageInfo}</Text>}</View>
       {categoryId && <Pressable style={styles.category} onPress={() => router.push(`/category/${categoryId}`)}><Text style={styles.categoryText}>Explore {product.category?.name || 'this category'}</Text><ChevronRight size={18} color="#1769FF" /></Pressable>}
       {product.similarProducts?.length > 0 && <View style={styles.section}><SimilarProducts products={product.similarProducts} /></View>}
