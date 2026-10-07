@@ -62,7 +62,7 @@ const purchaseEntrySchema = new mongoose.Schema({
 
 // Prevent duplicate supplier invoices
 purchaseEntrySchema.index({ supplier: 1, supplierInvoiceNo: 1, invoiceDate: 1 }, { unique: true, partialFilterExpression: { supplierInvoiceNo: { $type: "string" } } });
-purchaseEntrySchema.index({ entryNumber: 1 });
+
 
 const PurchaseEntry = mongoose.model('PurchaseEntry', purchaseEntrySchema);
 export default PurchaseEntry;

@@ -32,7 +32,7 @@ const purchaseReturnSchema = new mongoose.Schema({
 
 purchaseReturnSchema.index({ supplier: 1 });
 purchaseReturnSchema.index({ purchaseEntry: 1 });
-purchaseReturnSchema.index({ returnNumber: 1 });
+
 
 const PurchaseReturn = mongoose.model('PurchaseReturn', purchaseReturnSchema);
 export default PurchaseReturn;

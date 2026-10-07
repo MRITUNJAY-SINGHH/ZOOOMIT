@@ -36,7 +36,7 @@ const purchaseOrderSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 purchaseOrderSchema.index({ supplier: 1, status: 1 });
-purchaseOrderSchema.index({ orderNumber: 1 });
+
 
 const PurchaseOrder = mongoose.model('PurchaseOrder', purchaseOrderSchema);
 export default PurchaseOrder;

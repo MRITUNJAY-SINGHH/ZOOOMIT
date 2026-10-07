@@ -143,7 +143,7 @@ export default function MobileLoginScreen() {
   // Send the code, then continue to the dedicated verification screen.
   const handleContinue = async () => {
     if (!isComplete) {
-      triggerShake();
+      triggerErrorShake();
       setErrorMessage('Please enter a valid 10-digit mobile number');
       inputRef.current?.focus();
       return;

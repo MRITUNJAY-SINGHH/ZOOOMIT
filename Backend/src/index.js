@@ -41,7 +41,7 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     if (
-      origin.startsWith('http://localhost') || 
+      origin.startsWith('http://localhost') || origin.startsWith('http://192.168.') || origin.startsWith('http://10.') ||
       origin.endsWith('.vercel.app') || 
       origin === process.env.ADMIN_URL
     ) {
