@@ -12,7 +12,7 @@ import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
-import { ProductCard } from '../../components/product/ProductCard';
+import { ProductCard, ProductGrid } from '../../components/product/ProductCard';
 
 const TABS = [
   { name: 'Groceries', match: '', art: 'Shopping%20bags/3D/shopping_bags_3d.png' },
@@ -249,9 +249,9 @@ export default function HomeScreen() {
         {productsQuery.isLoading && <ActivityIndicator color="#1769FF" style={styles.loading} />}
         {productsQuery.isError && <View style={styles.state}><Text style={styles.stateTitle}>Couldn't load your store</Text><Text style={styles.stateText}>Check your connection and try again.</Text><Pressable onPress={onRefresh}><Text style={styles.seeAllText}>Retry</Text></Pressable></View>}
         {!productsQuery.isLoading && !productsQuery.isError && !visibleProducts.length && <View style={styles.state}><Text style={styles.stateText}>No products in this collection yet.</Text><Pressable onPress={() => { setTab('Groceries'); setGroup(null); }}><Text style={styles.seeAllText}>Browse all products</Text></Pressable></View>}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(0, 12).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView>
+        <ProductGrid products={visibleProducts.slice(0, 12)} />
         {visibleProducts.length > 0 && <Pressable style={styles.fullSeeAll} onPress={() => router.push('/(tabs)/search')} accessibilityRole="button"><Text style={styles.fullSeeAllText}>See All »</Text></Pressable>}
-        {visibleProducts.length > 12 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>More everyday essentials</Text></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.shelf}>{visibleProducts.slice(12, 24).map(p => <ProductCard key={p._id} product={p} compact />)}</ScrollView></>}
+        {visibleProducts.length > 12 && <><View style={styles.sectionHeader}><Text style={styles.sectionTitle}>More everyday essentials</Text></View><ProductGrid products={visibleProducts.slice(12, 24)} /></>}
         <View pointerEvents="none" style={{ position: 'absolute', top: -700, left: 0, right: 0, height: 700, backgroundColor: '#1A0009' }} />
       </Animated.ScrollView>
       <Animated.View onLayout={e => setPanelH(e.nativeEvent.layout.height)} style={[styles.lowerPanel, newStyles.lowerPanel, newStyles.stickyPanel, { transform: [{ translateY: scrollY.interpolate({ inputRange: [0, Math.max(topH - topPad, 1)], outputRange: [topH, topPad], extrapolateRight: 'clamp' }) }] }]}>
