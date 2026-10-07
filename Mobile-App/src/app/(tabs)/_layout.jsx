@@ -159,6 +159,9 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
     }
   };
 
+  // Search owns its full-screen layout and floating cart.
+  if (state.routes[state.index]?.name === 'search') return null;
+
   return (
     <>
       <FloatingCart bottom={totalBarHeight + 8} visible={['index', 'category'].includes(state.routes[state.index]?.name)} />
