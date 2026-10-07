@@ -28,7 +28,7 @@ const getBaseUrl = () => {
   }
 
   // 3. Default localhost fallback
-  return 'http://localhost:5000/api/storefront';
+  return 'https://zooomit-backend.onrender.com/api/storefront';
 };
 
 export const api = axios.create({

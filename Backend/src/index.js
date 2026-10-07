@@ -38,19 +38,11 @@ import storefrontRoutes from './routes/storefrontRoutes.js';
 app.use(express.json());
 const corsOptions = {
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    if (
-      origin.startsWith('http://localhost') || origin.startsWith('http://192.168.') || origin.startsWith('http://10.') ||
-      origin.endsWith('.vercel.app') || 
-      origin === process.env.ADMIN_URL
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow all origins to prevent CORS errors during testing/usage
+    callback(null, true);
   },
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  credentials: true
 };
 app.use(cors(corsOptions));
 app.use(helmet());
