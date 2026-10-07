@@ -4,7 +4,12 @@ const productVariantSchema = new mongoose.Schema({
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
   name: { type: String, required: true }, // e.g., "500 GM Pack", "Box of 12"
   sku: { type: String, required: true, unique: true },
-  barcode: { type: String, unique: true, sparse: true },
+  barcode: { 
+    type: String, 
+    unique: true, 
+    sparse: true,
+    set: v => v === '' ? undefined : v
+  },
   
   // Pack & Unit Conversion mapping to Base Product
   conversionFactor: { type: Number, default: 1 }, // e.g. 0.5 for 500g in KG base, or 12 for Box of 12 PCS

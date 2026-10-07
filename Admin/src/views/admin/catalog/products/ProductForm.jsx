@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Form, Button, Tabs, Tab, Row, Col, Table, Spinner, Modal, Badge } from 'react-bootstrap';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -66,7 +66,10 @@ export default function ProductForm({ productId, onBack, onSave }) {
   const [variants, setVariants] = useState([]);
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEdit);
   const [uploading, setUploading] = useState(false);
+
+  const fileInputRef = useRef(null);
 
   const editor = useEditor({
     extensions: [StarterKit],
@@ -77,7 +80,9 @@ export default function ProductForm({ productId, onBack, onSave }) {
   useEffect(() => {
     loadCategories();
     loadSuppliers();
-    if (isEdit) loadProduct();
+    if (isEdit) {
+      loadProduct().finally(() => setInitialLoading(false));
+    }
   }, [productId]);
 
   const loadCategories = async () => {
@@ -242,6 +247,10 @@ export default function ProductForm({ productId, onBack, onSave }) {
         needsReview: false, // Clearing needsReview on manual save
         description: editor ? editor.getHTML() : '' 
       };
+      if (payload.preferredSupplier === '') {
+        payload.preferredSupplier = null;
+      }
+      
       if (isEdit) {
         await fetchApi(`/products/${productId}`, { method: 'PUT', body: JSON.stringify(payload) });
         toast.success('Product updated successfully');
@@ -272,12 +281,18 @@ export default function ProductForm({ productId, onBack, onSave }) {
 
   const handleAddVariant = async () => {
     if (!newVariant.name) { toast.error("Variant name is required"); return; }
+    
+    const variantPayload = { ...newVariant };
+    if (!variantPayload.sku) {
+      variantPayload.sku = (formData.baseSku || formData.name).substring(0, 4).toUpperCase() + '-' + Math.floor(1000 + Math.random() * 9000);
+    }
+    
     try {
       if (editingVariantId) {
-        await fetchApi(`/products/${productId}/variants/${editingVariantId}`, { method: 'PUT', body: JSON.stringify(newVariant) });
+        await fetchApi(`/products/${productId}/variants/${editingVariantId}`, { method: 'PUT', body: JSON.stringify(variantPayload) });
         toast.success("Variant updated");
       } else {
-        await fetchApi(`/products/${productId}/variants`, { method: 'POST', body: JSON.stringify(newVariant) });
+        await fetchApi(`/products/${productId}/variants`, { method: 'POST', body: JSON.stringify(variantPayload) });
         toast.success("Variant added");
       }
       setNewVariant({ name: '', sku: '', barcode: '', mrp: '', sellingPrice: '', stock: 0, featuredImage: '', conversionFactor: 1, conversionUnit: formData.baseUnit || 'PCS' });
@@ -316,6 +331,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
   };
 
   const parentCategories = categories.filter(c => !c.parentCategory);
+
+  if (initialLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -492,10 +515,10 @@ export default function ProductForm({ productId, onBack, onSave }) {
                   <Card.Body className="p-4">
                     <div className="d-flex justify-content-between align-items-center mb-4">
                        <h6 className="fw-bold mb-0">Media Gallery</h6>
-                       <input type="file" id="image-upload" multiple accept="image/*" className="d-none" onChange={handleUpload} disabled={uploading} />
-                       <label htmlFor="image-upload" className={`btn btn-sm btn-outline-primary d-flex align-items-center gap-1 shadow-sm px-3 ${uploading ? 'disabled' : ''}`} style={{ cursor: 'pointer', borderWidth: '1.5px' }}>
+                       <input type="file" ref={fileInputRef} multiple accept="image/*" className="d-none" onChange={handleUpload} disabled={uploading} />
+                       <Button variant="outline-primary" size="sm" className={`d-flex align-items-center gap-1 shadow-sm px-3 ${uploading ? 'disabled' : ''}`} style={{ borderWidth: '1.5px' }} onClick={() => fileInputRef.current?.click()} disabled={uploading}>
                           <Upload size={14} /> {uploading ? 'Uploading...' : 'Upload'}
-                       </label>
+                       </Button>
                     </div>
 
                     {formData.galleryImages?.length > 0 ? (
@@ -815,9 +838,14 @@ export default function ProductForm({ productId, onBack, onSave }) {
         </Tab>
 
         {/* TAB 4: VARIANTS */}
-        <Tab eventKey="variants" title={`Variants (${variants.length})`}>
+        <Tab eventKey="variants" title={`Variants (${variants.length})`} disabled={!isEdit}>
           <Card className="border-0 shadow-sm mb-4">
             <Card.Body className="p-4">
+              {!isEdit && (
+                <div className="alert alert-info border-0 shadow-sm mb-4">
+                  Please save the product first to start adding variants.
+                </div>
+              )}
               <h6 className="fw-bold mb-3">{editingVariantId ? 'Edit Variant' : 'Add Pack / Size Variant'}</h6>
               
               <Row className="g-3 align-items-end mb-4">

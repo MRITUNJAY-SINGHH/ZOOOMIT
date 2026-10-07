@@ -37,7 +37,12 @@ const productSchema = new mongoose.Schema({
 
   // Base Identifiers
   baseSku: { type: String },
-  barcode: { type: String, unique: true, sparse: true },
+  barcode: { 
+    type: String, 
+    unique: true, 
+    sparse: true,
+    set: v => v === '' ? undefined : v
+  },
   
   // Pricing (can be overridden by variants)
   mrp: { type: Number },
@@ -46,6 +51,7 @@ const productSchema = new mongoose.Schema({
   
   // Description & Media
   description: { type: String },
+  shortDescription: { type: String },
   featuredImage: { type: String },
   galleryImages: [{ type: String }],
   
