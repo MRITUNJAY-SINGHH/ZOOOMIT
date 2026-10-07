@@ -8,7 +8,7 @@ import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { ChevronLeft, Search, X, ChevronDown, SlidersHorizontal, Tag, TrendingDown, Plus, Minus, Bookmark, Package, Star, Check, Clock } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
-import { api } from '../../services/api';
+import { api, StorefrontAPI } from '../../services/api';
 import { productImages, productUnitRate } from '../../components/product/ProductCard';
 import { FloatingCart, captureCartSource } from '../../components/FloatingCart';
 import { useCart } from '../../context/CartContext';
@@ -43,6 +43,19 @@ async function loadCatalog() {
     totalPages = Math.max(1, Number(payload?.totalPages || 1)); page += 1;
   } while (page <= totalPages);
   return products;
+}
+const catId = c => typeof c === 'string' ? c : c?._id || c?.id;
+export function pickSearchCategories(list, max = 10) {
+  const all = new Map();
+  const add = (c, parent) => { const id = catId(c); if (!id) return; all.set(id, { ...all.get(id), ...c, parentCategory: catId(c.parentCategory) || parent || all.get(id)?.parentCategory || null }); (c.subcategories || []).forEach(k => add(k, id)); };
+  (list || []).forEach(c => add(c));
+  const rows = [...all.values()].filter(c => c.status === 'Active' && c.name);
+  const children = rows.filter(c => c.parentCategory), pool = children.length >= 8 ? children : rows;
+  return [...pool.filter(c => c.image), ...pool.filter(c => !c.image)].slice(0, max);
+}
+function CategoryTile({ category, onPress }) {
+  const [failed, setFailed] = useState(false);
+  return <Pressable style={styles.catTile} onPress={onPress} accessibilityRole="button" accessibilityLabel={`Shop ${category.name}`}><View style={styles.catArt}>{category.image && !failed ? <Image source={{ uri: category.image }} contentFit="contain" style={styles.full} onError={() => setFailed(true)} /> : <Package size={28} color="#C49700" />}</View><Text numberOfLines={2} style={styles.catName}>{category.name}</Text></Pressable>;
 }
 const SORTS = [{ id: 'default', name: 'Relevance' }, { id: 'price_asc', name: 'Price: low to high' }, { id: 'price_desc', name: 'Price: high to low' }, { id: 'popular', name: 'Popularity' }];
 
@@ -92,6 +105,9 @@ export default function SearchScreen() {
   const [category, setCategory] = useState(''), [sort, setSort] = useState('default'), [brand, setBrand] = useState(''), [min, setMin] = useState(''), [max, setMax] = useState(''), [stock, setStock] = useState(false), [rating, setRating] = useState(0), [offers, setOffers] = useState(false), [priceDrop, setPriceDrop] = useState(false), [modal, setModal] = useState(null);
   const { data: catalog = [], isLoading, isError, refetch, isFetching } = useQuery({ queryKey: ['search-catalog-dynamic-v1'], queryFn: loadCatalog, staleTime: 60000 });
   useEffect(() => { let alive = true; (async () => { try { const raw = Platform.OS === 'web' ? globalThis.localStorage?.getItem(RECENT_KEY) : await SecureStore.getItemAsync(RECENT_KEY); const saved = raw ? JSON.parse(raw) : []; if (alive && Array.isArray(saved)) setRecent(saved.filter(x => typeof x === 'string')); } catch {} })(); return () => { alive = false; }; }, []);
+  const { data: storeCategories = [] } = useQuery({ queryKey: ['search-home-categories'], queryFn: async () => { const r = await StorefrontAPI.getCategories({ includeSubcategories: 'true' }); const d = r.data?.data ?? r.data; if (!Array.isArray(d)) throw new Error('Invalid store categories'); return d; }, staleTime: 60000 });
+  const homeCategories = useMemo(() => pickSearchCategories(storeCategories, 10), [storeCategories]);
+  const clearRecent = async () => { setRecent([]); try { if (Platform.OS === 'web') globalThis.localStorage?.removeItem(RECENT_KEY); else await SecureStore.deleteItemAsync(RECENT_KEY); } catch {} };
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
     const matched = catalog.filter(p => matchesSearch(p, query)), rows = new Map();
@@ -128,7 +144,7 @@ export default function SearchScreen() {
       {isLoading ? <View style={styles.empty}><ActivityIndicator color={INK} /><Text style={styles.emptyText}>Loading products...</Text></View> : isError ? <View style={styles.empty}><Text style={styles.emptyText}>Could not load the catalog</Text><Pressable onPress={() => refetch()} style={styles.primary}><Text>Try again</Text></Pressable></View> : products.length ? <View style={styles.grid}>{products.map(p => <View key={p._id} style={styles.cell}><SearchProduct product={p} /></View>)}</View> : <View style={styles.empty}><Search size={32} color="#8A8E96" /><Text style={styles.emptyTitle}>{matching.length ? 'No products match these filters' : `No results for "${submitted}"`}</Text>{matching.length > 0 && <Pressable style={styles.primary} onPress={() => { clearFilters(); setCategory(''); }}><Text>Clear filters</Text></Pressable>}</View>}
     </ScrollView> : <ScrollView style={styles.scroll} contentContainerStyle={styles.suggestionList} keyboardShouldPersistTaps="handled">
       {isError && <Pressable onPress={() => refetch()} style={styles.retry}><Text style={styles.emptyText}>Could not load suggestions. Tap to retry.</Text></Pressable>}
-      {query.trim() ? <>{isLoading && <ActivityIndicator color={INK} style={{ margin: 20 }} />}{suggestions.map((s, i) => <Pressable key={`${s.name}:${i}`} style={styles.suggestion} onPress={() => submit(s.name)}>{thumbnail(s.image)}<Text numberOfLines={2} style={styles.suggestionName}>{s.name}</Text><Search size={21} color="#999DA0" /></Pressable>)}<Pressable style={styles.suggestion} onPress={() => submit(query)}><View style={styles.showAllIcon}><Search size={25} color={INK} /></View><Text style={styles.showAll}>Show all results for <Text style={{ fontFamily: typography.family.bold }}>'{query.trim()}'</Text></Text></Pressable></> : <>{recent.length > 0 && <Text style={styles.sectionTitle}>Recent searches</Text>}{recent.map(term => <Pressable key={term} style={styles.suggestion} onPress={() => submit(term)}><View style={styles.showAllIcon}><Clock size={20} color={INK} /></View><Text style={styles.suggestionName}>{term}</Text><Search size={20} color="#999DA0" /></Pressable>)}{!recent.length && !isFetching && <View style={styles.empty}><Search size={30} color="#999DA0" /><Text style={styles.emptyText}>Search your store's products</Text></View>}</>}
+      {query.trim() ? <>{isLoading && <ActivityIndicator color={INK} style={{ margin: 20 }} />}{suggestions.map((s, i) => <Pressable key={`${s.name}:${i}`} style={styles.suggestion} onPress={() => submit(s.name)}>{thumbnail(s.image)}<Text numberOfLines={2} style={styles.suggestionName}>{s.name}</Text><Search size={21} color="#999DA0" /></Pressable>)}<Pressable style={styles.suggestion} onPress={() => submit(query)}><View style={styles.showAllIcon}><Search size={25} color={INK} /></View><Text style={styles.showAll}>Show all results for <Text style={{ fontFamily: typography.family.bold }}>'{query.trim()}'</Text></Text></Pressable></> : <>{recent.length > 0 && <View style={styles.recentHead}><Text style={styles.recentTitle}>Recent searches</Text><Pressable onPress={clearRecent} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel="Clear recent searches"><Text style={styles.clearText}>Clear all</Text></Pressable></View>}{recent.map(term => <Pressable key={term} style={styles.suggestion} onPress={() => submit(term)}><View style={styles.showAllIcon}><Clock size={20} color={INK} /></View><Text style={styles.suggestionName}>{term}</Text><Search size={20} color="#999DA0" /></Pressable>)}{homeCategories.length > 0 && <><Text style={styles.sectionTitle}>Shop by category</Text><View style={styles.catGrid}>{homeCategories.map(c => <CategoryTile key={catId(c)} category={c} onPress={() => router.push({ pathname: '/category/[id]', params: { id: catId(c) } })} />)}</View></>}</>}
     </ScrollView>}
     <FloatingCart visible={resultsVisible} bottom={24} />
     <Modal transparent visible={modal !== null} animationType="slide" onRequestClose={() => setModal(null)}><View style={styles.modalOverlay}><Pressable style={styles.backdrop} onPress={() => setModal(null)} accessibilityLabel="Close filters" /><View style={styles.sheet}><View style={styles.sheetTitle}><Text style={styles.emptyTitle}>{modal === 'sort' ? 'Sort by' : 'Filters'}</Text><Pressable onPress={() => setModal(null)} accessibilityLabel="Close"><X size={23} color={INK} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled">
@@ -137,6 +153,8 @@ export default function SearchScreen() {
   </SafeAreaView></Animated.View>;
 }
 const styles = StyleSheet.create({
+  recentHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 }, recentTitle: { fontFamily: typography.family.bold, fontSize: 15, color: INK }, clearBtn: { backgroundColor: YELLOW, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 5 }, clearText: { fontFamily: typography.family.bold, fontSize: 12, color: INK },
+  catGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 }, catTile: { width: '25%', paddingHorizontal: 4, marginBottom: 16, alignItems: 'center' }, catArt: { width: '100%', aspectRatio: 0.9, borderRadius: 12, backgroundColor: '#FFF7D6', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, catName: { fontFamily: typography.family.bold, fontSize: 13, lineHeight: 17, color: INK, textAlign: 'center', paddingTop: 8, width: '100%' },
   screen: { flex: 1, backgroundColor: '#fff' }, full: { width: '100%', height: '100%' }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, scroll: { flex: 1 },
   searchHeader: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 12, backgroundColor: '#fff' }, headerYellow: { backgroundColor: '#FFF7D6' }, searchBox: { backgroundColor: '#F2F1F5', borderRadius: 14, height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 12 }, input: { flex: 1, fontFamily: typography.family.medium, fontSize: 18, color: INK, paddingVertical: 8 },
   suggestionList: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 90 }, suggestion: { flexDirection: 'row', alignItems: 'center', gap: 13, minHeight: 59, paddingVertical: 8 }, suggestionName: { flex: 1, fontFamily: typography.family.medium, fontSize: 17, color: INK }, showAllIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#FFF4C6', alignItems: 'center', justifyContent: 'center' }, showAll: { flex: 1, fontFamily: typography.family.medium, fontSize: 16, color: INK },
