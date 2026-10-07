@@ -45,13 +45,15 @@ async function loadCatalog() {
   return products;
 }
 const catId = c => typeof c === 'string' ? c : c?._id || c?.id;
-export function pickSearchCategories(list, max = 10) {
+const daySeed = () => { const d = new Date(); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+const seededShuffle = (arr, seed) => { let s = (seed >>> 0) || 1; const rand = () => { s = (s + 0x6D2B79F5) >>> 0; let t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; const out = [...arr]; for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); const tmp = out[i]; out[i] = out[j]; out[j] = tmp; } return out; };
+export function pickSearchCategories(list, max = 16) {
   const all = new Map();
   const add = (c, parent) => { const id = catId(c); if (!id) return; all.set(id, { ...all.get(id), ...c, parentCategory: catId(c.parentCategory) || parent || all.get(id)?.parentCategory || null }); (c.subcategories || []).forEach(k => add(k, id)); };
   (list || []).forEach(c => add(c));
   const rows = [...all.values()].filter(c => c.status === 'Active' && c.name);
   const children = rows.filter(c => c.parentCategory), pool = children.length >= 8 ? children : rows;
-  return [...pool.filter(c => c.image), ...pool.filter(c => !c.image)].slice(0, max);
+  return seededShuffle(pool, daySeed()).slice(0, max);
 }
 function CategoryTile({ category, onPress }) {
   const [failed, setFailed] = useState(false);
@@ -87,7 +89,7 @@ function SearchProduct({ product }) {
   };
   return <View style={styles.product}>
     <View ref={imageRef} collapsable={false} style={styles.productImage} onLayout={e => setImageWidth(e.nativeEvent.layout.width)}>
-      {images.length ? <ScrollView ref={gallery} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }} onMomentumScrollEnd={e => setActiveImage(Math.max(0, Math.min(images.length - 1, Math.round(e.nativeEvent.contentOffset.x / Math.max(1, imageWidth)))))}>{images.map((uri, i) => <Pressable key={uri} onPress={open} style={{ width: imageWidth || 1, height: '100%' }} accessibilityLabel={`${product.name}, image ${i + 1}`}><Image source={{ uri }} contentFit="contain" style={styles.full} /></Pressable>)}</ScrollView> : <Pressable onPress={open} style={styles.center}><Package size={34} color="#9AA0A7" /></Pressable>}
+      {images.length ? <ScrollView ref={gallery} horizontal pagingEnabled directionalLockEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }} onMomentumScrollEnd={e => setActiveImage(Math.max(0, Math.min(images.length - 1, Math.round(e.nativeEvent.contentOffset.x / Math.max(1, imageWidth)))))}>{images.map((uri, i) => <Pressable key={uri} onPress={open} style={{ width: imageWidth || 1, height: '100%' }} accessibilityLabel={`${product.name}, image ${i + 1}`}>{Math.abs(i - activeImage) <= 1 && <Image source={{ uri }} contentFit="contain" transition={160} style={styles.full} />}</Pressable>)}</ScrollView> : <Pressable onPress={open} style={styles.center}><Package size={34} color="#9AA0A7" /></Pressable>}
       <Pressable onPress={async () => { try { await toggleSave(product); } catch (e) { Alert.alert('Wishlist not updated', e.message || 'Try again.'); } }} style={styles.bookmark} accessibilityLabel={`Save ${product.name}`}><Bookmark size={17} color={INK} fill={isSaved(product._id) ? YELLOW : 'none'} /></Pressable>
       <View style={styles.imageFooter} pointerEvents="none">{typeof product.isVeg === 'boolean' && <View style={[styles.veg, { borderColor: product.isVeg ? '#009B69' : '#AE302E' }]}><View style={[styles.vegDot, { backgroundColor: product.isVeg ? '#009B69' : '#AE302E' }]} /></View>}{images.length > 1 && <View style={styles.dots}>{images.map((uri, i) => <View key={uri} style={[styles.dot, i === activeImage && styles.dotActive]} />)}</View>}</View>
       <View style={styles.addPosition}>{busy ? <View style={styles.add}><ActivityIndicator size="small" color={INK} /></View> : qty > 0 ? <View style={styles.stepper}><Pressable disabled={isUpdating} onPress={() => change(-1)} style={styles.step} accessibilityLabel={`Decrease ${product.name}`}><Minus size={15} color={INK} /></Pressable><Text style={styles.quantity}>{qty}</Text><Pressable disabled={isUpdating || soldOut || qty >= max} onPress={() => change(1)} style={styles.step} accessibilityLabel={`Increase ${product.name}`}><Plus size={15} color={INK} /></Pressable></View> : soldOut ? <Text style={styles.soldOut}>Sold out</Text> : <Pressable disabled={isUpdating} onPress={() => change(1)} style={styles.add} accessibilityLabel={`Add ${product.name}`}><Plus size={25} color={INK} /></Pressable>}</View>
@@ -106,7 +108,7 @@ export default function SearchScreen() {
   const { data: catalog = [], isLoading, isError, refetch, isFetching } = useQuery({ queryKey: ['search-catalog-dynamic-v1'], queryFn: loadCatalog, staleTime: 60000 });
   useEffect(() => { let alive = true; (async () => { try { const raw = Platform.OS === 'web' ? globalThis.localStorage?.getItem(RECENT_KEY) : await SecureStore.getItemAsync(RECENT_KEY); const saved = raw ? JSON.parse(raw) : []; if (alive && Array.isArray(saved)) setRecent(saved.filter(x => typeof x === 'string')); } catch {} })(); return () => { alive = false; }; }, []);
   const { data: storeCategories = [] } = useQuery({ queryKey: ['search-home-categories'], queryFn: async () => { const r = await StorefrontAPI.getCategories({ includeSubcategories: 'true' }); const d = r.data?.data ?? r.data; if (!Array.isArray(d)) throw new Error('Invalid store categories'); return d; }, staleTime: 60000 });
-  const homeCategories = useMemo(() => pickSearchCategories(storeCategories, 10), [storeCategories]);
+  const homeCategories = useMemo(() => pickSearchCategories(storeCategories, 16), [storeCategories]);
   const clearRecent = async () => { setRecent([]); try { if (Platform.OS === 'web') globalThis.localStorage?.removeItem(RECENT_KEY); else await SecureStore.deleteItemAsync(RECENT_KEY); } catch {} };
   const suggestions = useMemo(() => {
     if (!query.trim()) return [];
