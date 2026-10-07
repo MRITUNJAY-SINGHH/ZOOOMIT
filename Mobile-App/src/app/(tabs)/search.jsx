@@ -33,7 +33,7 @@ import {
 } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { api } from '../../services/api';
-import { ProductCard } from '../../components/product/ProductCard';
+import { ProductCard, ProductGrid } from '../../components/product/ProductCard';
 import { searchService } from '../../services/searchService';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -619,9 +619,7 @@ export default function SearchScreen() {
                 </TouchableOpacity>
               </View>
             ) : (
-              <View style={styles.productsGrid}>
-                {searchResults.map(product => <View key={product._id} style={{ width: '48%' }}><ProductCard product={product} /></View>)}
-              </View>
+              <ProductGrid products={searchResults} />
             )}
           </ScrollView>
         </View>
