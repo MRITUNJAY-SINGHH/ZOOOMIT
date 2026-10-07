@@ -22,7 +22,7 @@ export const SkeletonBox = ({
 export const ProductCardSkeleton = () => {
   return (
     <View style={styles.card}>
-      <SkeletonBox height={110} style={{ marginBottom: spacing.sm }} />
+      <SkeletonBox height={undefined} style={{ aspectRatio: 0.85, marginBottom: spacing.sm }} />
       <SkeletonBox height={12} width="40%" style={{ marginBottom: spacing.xs }} />
       <SkeletonBox height={16} width="90%" style={{ marginBottom: spacing.xs }} />
       <SkeletonBox height={16} width="60%" style={{ marginBottom: spacing.md }} />
@@ -42,8 +42,8 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.white,
     borderRadius: 16,
-    padding: spacing.sm,
-    borderWidth: 1,
+    padding: 0,
+    borderWidth: 0,
     borderColor: colors.border,
     marginBottom: spacing.md
   },
