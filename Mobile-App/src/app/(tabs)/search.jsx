@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Modal, Switch, ActivityIndicator, Alert, Keyboard } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable, ScrollView, Modal, Switch, ActivityIndicator, Alert, Keyboard, Animated, Easing } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
@@ -86,6 +86,8 @@ function SearchProduct({ product }) {
 
 export default function SearchScreen() {
   const input = useRef(null), resultsScroll = useRef(null);
+  const enter = useRef(new Animated.Value(0)).current;
+  useEffect(() => { Animated.timing(enter, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start(); }, [enter]);
   const [query, setQuery] = useState(''), [submitted, setSubmitted] = useState(''), [editing, setEditing] = useState(true), [recent, setRecent] = useState([]);
   const [category, setCategory] = useState(''), [sort, setSort] = useState('default'), [brand, setBrand] = useState(''), [min, setMin] = useState(''), [max, setMax] = useState(''), [stock, setStock] = useState(false), [rating, setRating] = useState(0), [offers, setOffers] = useState(false), [priceDrop, setPriceDrop] = useState(false), [modal, setModal] = useState(null);
   const { data: catalog = [], isLoading, isError, refetch, isFetching } = useQuery({ queryKey: ['search-catalog-dynamic-v1'], queryFn: loadCatalog, staleTime: 60000 });
@@ -114,7 +116,7 @@ export default function SearchScreen() {
   const filterCount = Number(Boolean(brand)) + Number(min !== '' || max !== '') + Number(stock) + Number(rating > 0);
   const resultsVisible = !editing && Boolean(submitted);
   const thumbnail = (uri, size = 40) => <View style={{ width: size, height: size, borderRadius: 9, backgroundColor: '#F4F4F6', alignItems: 'center', justifyContent: 'center' }}>{uri ? <Image source={{ uri }} contentFit="contain" style={styles.full} /> : <Package size={24} color="#9AA0A7" />}</View>;
-  return <SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
+  return <Animated.View style={{ flex: 1, backgroundColor: '#fff', opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}><SafeAreaView style={styles.screen} edges={['top', 'left', 'right']}>
     <View style={[styles.searchHeader, resultsVisible && styles.headerYellow]}><View style={[styles.searchBox, resultsVisible && { backgroundColor: '#fff' }]}><Pressable onPress={() => { if (resultsVisible) { setEditing(true); input.current?.focus(); } else if (router.canGoBack()) router.back(); else router.replace('/'); }} accessibilityLabel="Go back"><ChevronLeft size={25} color={INK} /></Pressable><TextInput ref={input} style={[styles.input, Platform.OS === 'web' && { outlineStyle: 'none' }]} value={query} placeholder="Search products" placeholderTextColor="#94969C" selectionColor={YELLOW} returnKeyType="search" onChangeText={v => { setQuery(v); setEditing(true); }} onFocus={() => setEditing(true)} onSubmitEditing={() => submit(query)} autoCorrect={false} /><Pressable onPress={() => { setQuery(''); setSubmitted(''); setEditing(true); input.current?.focus(); }} accessibilityLabel="Clear search"><X size={25} color="#82868C" /></Pressable></View></View>
     {resultsVisible ? <ScrollView ref={resultsScroll} stickyHeaderIndices={[0]} style={styles.scroll} contentContainerStyle={{ paddingBottom: 155 }} keyboardShouldPersistTaps="handled">
       <View style={styles.sticky}>
@@ -132,7 +134,7 @@ export default function SearchScreen() {
     <Modal transparent visible={modal !== null} animationType="slide" onRequestClose={() => setModal(null)}><View style={styles.modalOverlay}><Pressable style={styles.backdrop} onPress={() => setModal(null)} accessibilityLabel="Close filters" /><View style={styles.sheet}><View style={styles.sheetTitle}><Text style={styles.emptyTitle}>{modal === 'sort' ? 'Sort by' : 'Filters'}</Text><Pressable onPress={() => setModal(null)} accessibilityLabel="Close"><X size={23} color={INK} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled">
       {modal === 'sort' ? SORTS.filter(s => s.id !== 'popular' || matching.some(p => Number(p.totalOrders) > 0)).map(s => <Pressable key={s.id} style={styles.option} onPress={() => { setSort(s.id); setPriceDrop(false); setModal(null); }}><Text style={styles.optionText}>{s.name}</Text>{sort === s.id && <Check size={20} color={INK} />}</Pressable>) : <><Text style={styles.sectionTitle}>Price range</Text><View style={styles.range}><TextInput style={styles.rangeInput} keyboardType="decimal-pad" placeholder="Min ₹" value={min} onChangeText={v => setMin(v.replace(/[^\d.]/g, ''))} /><TextInput style={styles.rangeInput} keyboardType="decimal-pad" placeholder="Max ₹" value={max} onChangeText={v => setMax(v.replace(/[^\d.]/g, ''))} /></View><View style={styles.option}><Text style={styles.optionText}>In stock only</Text><Switch value={stock} onValueChange={setStock} trackColor={{ true: YELLOW }} /></View>{brands.length > 0 && <><Text style={styles.sectionTitle}>Brand</Text>{['', ...brands].map(b => <Pressable key={b || 'all'} style={styles.option} onPress={() => setBrand(b)}><Text style={styles.optionText}>{b || 'All brands'}</Text>{brand === b && <Check size={19} color={INK} />}</Pressable>)}</>}{matching.some(p => ratingOf(p) > 0) && <><Text style={styles.sectionTitle}>Minimum rating</Text>{[0, ...[...new Set(matching.map(p => Math.floor(ratingOf(p))).filter(v => v > 0))].sort((a, b) => b - a)].map(v => <Pressable key={v} style={styles.option} onPress={() => setRating(v)}><Text style={styles.optionText}>{v ? `${v} stars & above` : 'Any rating'}</Text>{rating === v && <Check size={19} color={INK} />}</Pressable>)}</>}</>}
       </ScrollView>{modal === 'filters' && <View style={styles.sheetActions}><Pressable onPress={clearFilters}><Text style={styles.optionText}>Reset</Text></Pressable><Pressable style={styles.primary} onPress={() => { if ((min !== '' && !Number.isFinite(Number(min))) || (max !== '' && !Number.isFinite(Number(max))) || (min !== '' && max !== '' && Number(min) > Number(max))) { Alert.alert('Check price range', 'Enter a valid minimum and maximum price.'); return; } setModal(null); }}><Text style={styles.optionText}>Show {products.length} products</Text></Pressable></View>}</View></View></Modal>
-  </SafeAreaView>;
+  </SafeAreaView></Animated.View>;
 }
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#fff' }, full: { width: '100%', height: '100%' }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, scroll: { flex: 1 },
