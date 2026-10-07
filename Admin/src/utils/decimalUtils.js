@@ -1,5 +1,5 @@
 /**
- * Decimal-safe arithmetic and validation utilities for Kuiklo Frontend & POS
+ * Decimal-safe arithmetic and validation utilities for ZOOOMIT Frontend & POS
  */
 
 export const roundTo = (val, decimals = 3) => {

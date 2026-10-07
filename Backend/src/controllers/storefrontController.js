@@ -142,7 +142,7 @@ export const verifyCustomerOtp = async (req, res) => {
       // Auto-create new customer
       try {
         customer = new Customer({
-          name: `Kuiklo User ${cleanPhone.slice(-4)}`,
+          name: `ZOOOMIT User ${cleanPhone.slice(-4)}`,
           phone: cleanPhone,
           customerType: 'APP',
           status: 'Active'
@@ -152,7 +152,7 @@ export const verifyCustomerOtp = async (req, res) => {
         console.warn('[AUTH] Database save error, using mock customer object:', saveErr.message);
         customer = {
           _id: 'cust_' + cleanPhone,
-          name: `Kuiklo User ${cleanPhone.slice(-4)}`,
+          name: `ZOOOMIT User ${cleanPhone.slice(-4)}`,
           phone: cleanPhone,
           customerType: 'APP',
           status: 'Active',
@@ -1909,7 +1909,7 @@ export const verifyDeliveryOtp = async (req, res) => {
     // Notify Customer
     await Notification.create({
       title: 'Order Delivered! 🎉',
-      message: `Your order #${order.orderNumber} was successfully delivered. Thank you for choosing Kuiklo!`,
+      message: `Your order #${order.orderNumber} was successfully delivered. Thank you for choosing ZOOOMIT!`,
       type: 'Order Delivered',
       recipientType: 'Customer',
       customer: order.customer,

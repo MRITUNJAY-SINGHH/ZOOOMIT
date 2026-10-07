@@ -36,7 +36,7 @@ class NotificationService {
       });
 
       const mailOptions = {
-        from: `"${process.env.STORE_NAME || 'Zooom Store'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
+        from: `"${process.env.STORE_NAME || 'ZOOOMIT Store'}" <${process.env.SMTP_FROM || process.env.SMTP_USER}>`,
         to,
         subject,
         text,

@@ -11,7 +11,7 @@ dotenv.config();
 
 const runTests = async () => {
   console.log('\n==================================================');
-  console.log('  KUIKLO DASHBOARD ERP ANALYTICS TEST SUITE');
+  console.log('  ZOOOMIT DASHBOARD ERP ANALYTICS TEST SUITE');
   console.log('==================================================\n');
 
   await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/kuiklo_db');

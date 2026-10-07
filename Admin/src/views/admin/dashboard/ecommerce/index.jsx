@@ -137,7 +137,7 @@ export default function Dashboard() {
   if (loading && !statsData) {
     return (
       <div>
-        <PageHeader title="Dashboard" description="Welcome back to Kuiklo ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
+        <PageHeader title="Dashboard" description="Welcome back to ZOOOMIT ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
         <LoadingSkeleton type="cards" cards={8} />
       </div>
     );
@@ -146,7 +146,7 @@ export default function Dashboard() {
   if (error && !statsData) {
     return (
       <div>
-        <PageHeader title="Dashboard" description="Welcome back to Kuiklo ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
+        <PageHeader title="Dashboard" description="Welcome back to ZOOOMIT ERP." breadcrumbs={[{ label: 'Dashboard' }]} />
         <ErrorState message={errorMessage} onRetry={handleManualRefresh} />
       </div>
     );
@@ -157,7 +157,7 @@ export default function Dashboard() {
       {/* Native Template Page Header with Integrated Date & Refresh Controls */}
       <PageHeader
         title="Dashboard"
-        description="Welcome back to Kuiklo ERP."
+        description="Welcome back to ZOOOMIT ERP."
         breadcrumbs={[{ label: 'Dashboard' }]}
         rightContent={
           <div className="d-flex align-items-center gap-2">

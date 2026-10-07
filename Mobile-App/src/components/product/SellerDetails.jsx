@@ -11,7 +11,7 @@ export const SellerDetails = ({ product }) => {
   const seller = product?.sellerDetails || {
     name: 'PJIT TECHNOLOGIES PVT LTD',
     fssaiNumber: '12725052000372',
-    address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+    address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
   };
 
   const countryOfOrigin = product?.countryOfOrigin || 'India';

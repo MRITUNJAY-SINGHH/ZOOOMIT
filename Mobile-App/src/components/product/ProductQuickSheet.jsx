@@ -141,7 +141,7 @@ export function ProductQuickSheet({ product, mode = 'details', initialVariantId,
         <View {...pan.panHandlers} style={styles.topbar}>
           <Pressable onPress={() => { if (!saving) expanded ? move(compactHeight, false) : onClose(); }} style={styles.round} accessibilityLabel={expanded ? 'Collapse product details' : 'Close product preview'}>{view === 'variants' ? <X size={22} /> : <ChevronDown size={24} />}</Pressable>
           <Text style={styles.topTitle} numberOfLines={1}>{view === 'variants' ? 'Choose your options' : expanded ? 'Product details' : 'Quick view'}</Text>
-          {view === 'details' && <><Pressable style={styles.round} onPress={() => toggleSave(p)} accessibilityLabel="Save to wishlist"><Bookmark size={21} fill={isSaved(p._id) ? colors.primary : 'none'} color="#333" /></Pressable><Pressable style={styles.round} onPress={() => Share.share({ message: `${p.name} - ₹${price} on Zooom` })} accessibilityLabel="Share product"><Share2 size={20} /></Pressable></>}
+          {view === 'details' && <><Pressable style={styles.round} onPress={() => toggleSave(p)} accessibilityLabel="Save to wishlist"><Bookmark size={21} fill={isSaved(p._id) ? colors.primary : 'none'} color="#333" /></Pressable><Pressable style={styles.round} onPress={() => Share.share({ message: `${p.name} - ₹${price} on ZOOOMIT` })} accessibilityLabel="Share product"><Share2 size={20} /></Pressable></>}
         </View>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {view === 'variants' ? <>

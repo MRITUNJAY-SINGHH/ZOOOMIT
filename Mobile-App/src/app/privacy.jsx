@@ -47,7 +47,7 @@ export default function PrivacyPolicyScreen() {
           </View>
           <Text style={styles.heroTitle}>Your Privacy Matters</Text>
           <Text style={styles.heroSubtitle}>
-            Kuiklo Quick Commerce Private Limited • Effective September 2026
+            ZOOOMIT Quick Commerce Private Limited • Effective September 2026
           </Text>
         </View>
 
@@ -58,7 +58,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.cardSectionTitle}>1. Information We Collect</Text>
           </View>
           <Text style={styles.paragraph}>
-            When you use Kuiklo, we collect information necessary to deliver groceries quickly and reliably:
+            When you use ZOOOMIT, we collect information necessary to deliver groceries quickly and reliably:
           </Text>
           <Text style={styles.bulletPoint}>• Mobile number and OTP verification credentials</Text>
           <Text style={styles.bulletPoint}>• Delivery addresses, floor/apartment details, and delivery instructions</Text>
@@ -88,7 +88,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.cardSectionTitle}>3. Payment & Data Security</Text>
           </View>
           <Text style={styles.paragraph}>
-            Kuiklo does not store your full debit/credit card numbers or UPI MPINs. All payment transactions are processed through RBI-authorized, PCI-DSS compliant payment gateways with bank-grade 256-bit SSL encryption.
+            ZOOOMIT does not store your full debit/credit card numbers or UPI MPINs. All payment transactions are processed through RBI-authorized, PCI-DSS compliant payment gateways with bank-grade 256-bit SSL encryption.
           </Text>
         </View>
 

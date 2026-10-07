@@ -99,7 +99,7 @@ export default function ProfileScreen() {
     ? `+91 ${rawPhone.slice(-10, -5)} ${rawPhone.slice(-5)}`
     : rawPhone ? `+91 ${rawPhone}` : '+91 99999 99999';
 
-  const displayName = customer?.name || 'Kuiklo User 9999';
+  const displayName = customer?.name || 'ZOOOMIT User 9999';
 
   const insets = useSafeAreaInsets();
   const COMPACT_HEADER_HEIGHT = insets.top + 56;
@@ -265,7 +265,7 @@ export default function ProfileScreen() {
 
   const handleOpenEmail = () => {
     haptics.selection();
-    Linking.openURL('mailto:support@kuiklo.com?subject=Kuiklo%20Support%20Request').catch(() => {});
+    Linking.openURL('mailto:support@kuiklo.com?subject=ZOOOMIT%20Support%20Request').catch(() => {});
   };
 
   if (!token) {
@@ -280,7 +280,7 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={styles.guestCard}>
-            <Text style={styles.guestGreeting}>Welcome to Kuiklo</Text>
+            <Text style={styles.guestGreeting}>Welcome to ZOOOMIT</Text>
             <Text style={styles.guestSubtitle}>
               Sign in to manage your grocery orders, saved addresses, exclusive coupons, and lightning-fast delivery tracking.
             </Text>
@@ -468,13 +468,13 @@ export default function ProfileScreen() {
               setShowKuikloPlusModal(true);
             }}
             accessibilityRole="button"
-            accessibilityLabel="Kuiklo Plus"
+            accessibilityLabel="ZOOOMIT Plus"
           >
             <View style={styles.crownCircle}>
               <Crown size={22} color="#D97706" strokeWidth={2.4} />
             </View>
             <View style={styles.highlightTextCol}>
-              <Text style={styles.highlightTitle}>Kuiklo Plus</Text>
+              <Text style={styles.highlightTitle}>ZOOOMIT Plus</Text>
               <Text style={styles.highlightSubtitle}>
                 Exclusive offers, free delivery and more
               </Text>
@@ -515,7 +515,7 @@ export default function ProfileScreen() {
             <View style={styles.itemDivider} />
             <MenuItemRow
               icon={<Info size={20} color={colors.black} strokeWidth={2.2} />}
-              title="About Kuiklo"
+              title="About ZOOOMIT"
               subtitle="App version, policies and more"
               onPress={() => {
                 haptics.selection();
@@ -528,7 +528,7 @@ export default function ProfileScreen() {
             <MenuItemRow
               icon={<MessageSquare size={20} color={colors.black} strokeWidth={2.2} />}
               title="Give Feedback"
-              subtitle="Share your suggestions to improve Kuiklo"
+              subtitle="Share your suggestions to improve ZOOOMIT"
               onPress={() => {
                 haptics.selection();
                 setShowFeedbackModal(true);
@@ -586,7 +586,7 @@ export default function ProfileScreen() {
 
           <View style={styles.footerBrandRow}>
             <Text style={styles.footerVersionText}>
-              Kuiklo Grocery • Version {appVersion}
+              ZOOOMIT Grocery • Version {appVersion}
             </Text>
           </View>
         </View>
@@ -712,7 +712,7 @@ export default function ProfileScreen() {
             <View style={styles.modalHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Crown size={24} color="#D97706" strokeWidth={2.6} />
-                <Text style={styles.modalTitle}>Kuiklo Plus Membership</Text>
+                <Text style={styles.modalTitle}>ZOOOMIT Plus Membership</Text>
               </View>
               <Pressable
                 onPress={() => setShowKuikloPlusModal(false)}
@@ -723,7 +723,7 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={styles.plusModalDesc}>
-              Enjoy an elevated quick-commerce grocery experience with Kuiklo Plus benefits on every order:
+              Enjoy an elevated quick-commerce grocery experience with ZOOOMIT Plus benefits on every order:
             </Text>
 
             <View style={styles.plusPerkRow}>
@@ -865,7 +865,7 @@ export default function ProfileScreen() {
           <Pressable style={styles.modalBackdrop} onPress={() => setShowAboutModal(false)} />
           <View style={styles.modalContentCard}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>About Kuiklo</Text>
+              <Text style={styles.modalTitle}>About ZOOOMIT</Text>
               <Pressable
                 onPress={() => setShowAboutModal(false)}
                 style={styles.modalCloseCircle}
@@ -875,11 +875,11 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.aboutBrandHeader}>
-              <Text style={styles.aboutBrandName}>Kuiklo Quick Commerce</Text>
+              <Text style={styles.aboutBrandName}>ZOOOMIT Quick Commerce</Text>
               <Text style={styles.aboutVersionBadge}>v{appVersion}</Text>
             </View>
             <Text style={styles.aboutDescription}>
-              Kuiklo is your neighborhood quick-commerce companion delivering farm-fresh produce, dairy, bakery, daily essentials, and household goods right to your doorstep in 10–15 minutes.
+              ZOOOMIT is your neighborhood quick-commerce companion delivering farm-fresh produce, dairy, bakery, daily essentials, and household goods right to your doorstep in 10–15 minutes.
             </Text>
 
             <View style={styles.aboutLegalLinks}>
@@ -947,7 +947,7 @@ export default function ProfileScreen() {
             </View>
 
             <Text style={styles.helpIntroText}>
-              Kuiklo supports all major secure payment gateways during checkout:
+              ZOOOMIT supports all major secure payment gateways during checkout:
             </Text>
 
             <View style={styles.paymentMethodCard}>
@@ -1057,7 +1057,7 @@ export default function ProfileScreen() {
                 <Check size={40} color={colors.success} />
                 <Text style={styles.feedbackSuccessTitle}>Thank you for your feedback!</Text>
                 <Text style={styles.feedbackSuccessDesc}>
-                  Your feedback helps us make Kuiklo deliveries faster and better every day.
+                  Your feedback helps us make ZOOOMIT deliveries faster and better every day.
                 </Text>
                 <Pressable
                   style={({ pressed }) => [
@@ -1075,7 +1075,7 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <>
-                <Text style={styles.helpIntroText}>How would you rate your Kuiklo experience?</Text>
+                <Text style={styles.helpIntroText}>How would you rate your ZOOOMIT experience?</Text>
                 <View style={styles.starRatingRow}>
                   {[1, 2, 3, 4, 5].map((starVal) => (
                     <Pressable
@@ -1156,7 +1156,7 @@ export default function ProfileScreen() {
             </View>
             <Text style={styles.alertTitle}>Sign Out</Text>
             <Text style={styles.alertMessage}>
-              Are you sure you want to sign out of your Kuiklo account?
+              Are you sure you want to sign out of your ZOOOMIT account?
             </Text>
             <View style={styles.alertActionsRow}>
               <Pressable

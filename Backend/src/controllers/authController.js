@@ -87,7 +87,7 @@ export const forgotPassword = async (req, res) => {
         email: user.email,
         subject: 'Password reset token',
         message,
-        html: getResetPasswordTemplate(resetUrl, process.env.STORE_NAME || 'Zooom Supermart')
+        html: getResetPasswordTemplate(resetUrl, process.env.STORE_NAME || 'ZOOOMIT Supermart')
       });
       res.status(200).json({ message: 'Email sent' });
     } catch (err) {

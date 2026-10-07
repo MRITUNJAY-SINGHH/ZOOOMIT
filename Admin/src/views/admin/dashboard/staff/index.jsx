@@ -11,7 +11,7 @@ export default function StaffDashboard() {
     <div>
       <PageHeader
         title="Workspace"
-        description="Welcome back to Zooom ERP."
+        description="Welcome back to ZOOOMIT ERP."
         breadcrumbs={[{ label: 'Workspace' }]}
       />
 

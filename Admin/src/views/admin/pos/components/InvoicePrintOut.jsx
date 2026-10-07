@@ -87,11 +87,11 @@ export default function InvoicePrintOut({ invoice, onBack }) {
             <img src={settings.storeLogo} alt="Logo" style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: '15px' }} />
           ) : (
             <h2 className="mb-2 fw-bold text-uppercase" style={{ fontSize: '1.8rem', letterSpacing: '1px', color: '#333' }}>
-              {settings.storeName || 'Zooom STORE'}
+              {settings.storeName || 'ZOOOMIT STORE'}
             </h2>
           )}
           <div style={{ fontSize: '0.85rem', color: '#555', lineHeight: '1.5' }}>
-            <div>{settings.storeName || 'Zooom STORE'}</div>
+            <div>{settings.storeName || 'ZOOOMIT STORE'}</div>
             <div>{settings.address || 'Address Not Set'}</div>
             {settings.storePhone && <div>Tel: {settings.storePhone}</div>}
             {settings.gstNumber && <div>GST: {settings.gstNumber}</div>}

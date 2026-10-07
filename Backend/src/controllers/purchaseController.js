@@ -177,7 +177,7 @@ export const finalizePurchaseEntry = async (req, res) => {
     const supplier = await Supplier.findById(entry.supplier).session(session);
     if (supplier) {
         // We do not overwrite Preferred Supplier rules. But we can track last interaction date if needed.
-        // Wait, Kuiklo's standard Supplier model might not have lastPurchaseDate right now, but let's check or just let addStock handle stock logic.
+        // Wait, ZOOOMIT's standard Supplier model might not have lastPurchaseDate right now, but let's check or just let addStock handle stock logic.
     }
 
     // 4. Mark Finalized

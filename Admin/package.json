@@ -1,7 +1,7 @@
 {
-  "name": "Zooom",
+  "name": "ZOOOMIT",
   "version": "8.0.0",
-  "description": "Zooom is a modern, responsive ERP and POS system.",
+  "description": "ZOOOMIT is a modern, responsive ERP and POS system.",
   "author": "MRITUNJAY SINGH",
   "scripts": {
     "dev": "vite",

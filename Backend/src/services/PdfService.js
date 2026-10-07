@@ -264,7 +264,7 @@ export default class PdfService {
       y = doc.y;
     }
 
-    doc.font('Helvetica-Bold').fontSize(12).text(settings?.storeName || 'Zooom STORE', margin, y, { align: 'center', width });
+    doc.font('Helvetica-Bold').fontSize(12).text(settings?.storeName || 'ZOOOMIT STORE', margin, y, { align: 'center', width });
     y = doc.y + 2;
     doc.font('Helvetica').fontSize(8).text(settings?.address || 'Address Not Set', margin, y, { align: 'center', width });
     if (settings?.storePhone) {
@@ -364,11 +364,11 @@ export default class PdfService {
     if (logoBuffer) {
       doc.image(logoBuffer, 40, 40, { fit: [100, 50] });
     } else {
-      doc.fillColor('#333').fontSize(20).text(settings?.storeName || 'Zooom STORE', 40, 40);
+      doc.fillColor('#333').fontSize(20).text(settings?.storeName || 'ZOOOMIT STORE', 40, 40);
     }
     
     doc.fillColor('#333').fontSize(10)
-       .text(settings?.storeName || 'Zooom STORE', 40, 100)
+       .text(settings?.storeName || 'ZOOOMIT STORE', 40, 100)
        .text(settings?.address || 'Address Not Set', 40, 115)
        .text(`Tel: ${settings?.storePhone || ''}`, 40, 130)
        .text(settings?.gstNumber ? `GST: ${settings.gstNumber}` : '', 40, 145);

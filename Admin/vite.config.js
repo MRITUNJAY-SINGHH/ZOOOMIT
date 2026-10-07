@@ -44,9 +44,9 @@ export default defineConfig({
         ]
       },
       manifest: {
-        name: 'Zooom ERP',
-        short_name: 'Zooom',
-        description: 'Zooom Point of Sale and ERP System',
+        name: 'ZOOOMIT ERP',
+        short_name: 'ZOOOMIT',
+        description: 'ZOOOMIT Point of Sale and ERP System',
         theme_color: '#ffffff',
         icons: [
           {

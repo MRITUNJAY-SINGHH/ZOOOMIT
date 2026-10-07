@@ -192,7 +192,7 @@ export default function ViewInvoice() {
               </Row>
 
               <div className="Zooom-invoice-signature">
-                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" /> : <strong>{settings?.storeName || 'Zooom'}</strong>}
+                {settings?.authorizedSignature ? <img src={settings.authorizedSignature} alt="Authorized signature" /> : <strong>{settings?.storeName || 'ZOOOMIT'}</strong>}
                 <span>Authorized Signature</span>
               </div>
             </Card.Body>

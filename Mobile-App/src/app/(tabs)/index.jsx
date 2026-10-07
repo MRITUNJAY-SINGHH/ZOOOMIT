@@ -82,7 +82,7 @@ const COLLECTIONS = {
 const PulseTitle = () => {
   const v = useRef(new Animated.Value(0)).current;
   useEffect(() => { const l = loopValue(v, 1200); l.start(); return () => l.stop(); }, [v]);
-  return <Animated.Text style={[newStyles.posterTitle, { transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }]}>ZOOOM FINDS</Animated.Text>;
+  return <Animated.Text style={[newStyles.posterTitle, { transform: [{ scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) }] }]}>ZOOOMIT FINDS</Animated.Text>;
 };
 const DISC = ['#FFE167', '#5C174D', '#126342', '#2A4FA8', '#B85C00', '#6A2C91', '#0F6E78'];
 const DISC_ICON = ['#751239', '#FFF0B2', '#FFF0B2', '#DCE7FF', '#FFE7C2', '#F2DAFF', '#CFF6FA'];

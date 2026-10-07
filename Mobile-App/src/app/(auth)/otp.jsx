@@ -92,7 +92,7 @@ export default function OtpVerificationScreen() {
   };
 
   if (isSuccess) {
-    return <View style={styles.successScreen}><Animated.View entering={FadeIn.duration(220)} style={styles.successContent}><View style={styles.successIcon}><Check size={36} color={colors.black} strokeWidth={3.5} /></View><Text style={styles.successTitle}>Number verified</Text><Text style={styles.successSubtitle}>Opening your Kuiklo store…</Text></Animated.View></View>;
+    return <View style={styles.successScreen}><Animated.View entering={FadeIn.duration(220)} style={styles.successContent}><View style={styles.successIcon}><Check size={36} color={colors.black} strokeWidth={3.5} /></View><Text style={styles.successTitle}>Number verified</Text><Text style={styles.successSubtitle}>Opening your ZOOOMIT store…</Text></Animated.View></View>;
   }
 
   return (

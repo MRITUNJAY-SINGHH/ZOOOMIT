@@ -46,7 +46,7 @@ export default function TermsOfUseScreen() {
           </View>
           <Text style={styles.heroTitle}>Customer Agreement</Text>
           <Text style={styles.heroSubtitle}>
-            Kuiklo Quick Commerce Private Limited • Effective September 2026
+            ZOOOMIT Quick Commerce Private Limited • Effective September 2026
           </Text>
         </View>
 
@@ -57,7 +57,7 @@ export default function TermsOfUseScreen() {
             <Text style={styles.cardSectionTitle}>1. Account & OTP Verification</Text>
           </View>
           <Text style={styles.paragraph}>
-            By creating an account on Kuiklo via your verified mobile phone number, you agree that you are solely responsible for all activities that occur under your account. You agree to safeguard your one-time passwords (OTP) and never share verification codes with third parties or delivery riders.
+            By creating an account on ZOOOMIT via your verified mobile phone number, you agree that you are solely responsible for all activities that occur under your account. You agree to safeguard your one-time passwords (OTP) and never share verification codes with third parties or delivery riders.
           </Text>
         </View>
 
@@ -68,7 +68,7 @@ export default function TermsOfUseScreen() {
             <Text style={styles.cardSectionTitle}>2. Fast Delivery & Dark Store Service</Text>
           </View>
           <Text style={styles.paragraph}>
-            Kuiklo strives to deliver grocery orders within 10-15 minutes from hyper-local fulfillment centers. Delivery estimates are subject to extreme weather, regional traffic restrictions, and order surge conditions. We will promptly notify you of any unexpected delay.
+            ZOOOMIT strives to deliver grocery orders within 10-15 minutes from hyper-local fulfillment centers. Delivery estimates are subject to extreme weather, regional traffic restrictions, and order surge conditions. We will promptly notify you of any unexpected delay.
           </Text>
         </View>
 
@@ -79,11 +79,11 @@ export default function TermsOfUseScreen() {
             <Text style={styles.cardSectionTitle}>3. Freshness Guarantee & Returns</Text>
           </View>
           <Text style={styles.paragraph}>
-            Kuiklo guarantees fresh dairy, fruits, vegetables, and packaged daily staples. If an item arrives damaged, expired, or substandard:
+            ZOOOMIT guarantees fresh dairy, fruits, vegetables, and packaged daily staples. If an item arrives damaged, expired, or substandard:
           </Text>
           <Text style={styles.bulletPoint}>• Report the item via the Orders screen within 2 hours of delivery</Text>
           <Text style={styles.bulletPoint}>• Upload a photo of the affected product for instant approval</Text>
-          <Text style={styles.bulletPoint}>• Refunds are credited immediately to your Kuiklo balance or original payment method</Text>
+          <Text style={styles.bulletPoint}>• Refunds are credited immediately to your ZOOOMIT balance or original payment method</Text>
         </View>
 
         {/* Section 4 */}
@@ -93,7 +93,7 @@ export default function TermsOfUseScreen() {
             <Text style={styles.cardSectionTitle}>4. Support & Grievance Redressal</Text>
           </View>
           <Text style={styles.paragraph}>
-            For complaints, service inquiries, or legal concerns regarding your Kuiklo shopping experience, contact our Grievance Officer at:
+            For complaints, service inquiries, or legal concerns regarding your ZOOOMIT shopping experience, contact our Grievance Officer at:
           </Text>
           <Text style={styles.contactEmail}>support@kuiklo.com</Text>
         </View>

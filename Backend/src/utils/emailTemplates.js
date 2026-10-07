@@ -1,5 +1,5 @@
 const getZooomLogo = (storeName) => {
-    // If the store is Zooom, render the stylized logo, else just the store name in white
+    // If the store is ZOOOMIT, render the stylized logo, else just the store name in white
     if (storeName.toLowerCase().includes('zooom')) {
         return `<span style="color: #ffffff; font-size: 32px; font-weight: 800; font-style: italic; letter-spacing: -1px;">Z<span style="color: #3b82f6;">ooo</span>m</span>`;
     }

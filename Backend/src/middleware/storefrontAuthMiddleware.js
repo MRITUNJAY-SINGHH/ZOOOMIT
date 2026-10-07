@@ -20,7 +20,7 @@ export const protectCustomer = async (req, res, next) => {
         let customer = await Customer.findOne({ status: { $ne: 'Blocked' } });
         if (!customer) {
           customer = new Customer({
-            name: 'Kuiklo User',
+            name: 'ZOOOMIT User',
             phone: '9876543210',
             status: 'Active',
             customerType: 'APP'
@@ -56,7 +56,7 @@ export const protectCustomer = async (req, res, next) => {
       }
 
       if (customer.status === 'Blocked') {
-        return res.status(403).json({ message: 'Account is blocked. Please contact Kuiklo support.' });
+        return res.status(403).json({ message: 'Account is blocked. Please contact ZOOOMIT support.' });
       }
 
       req.customer = customer;

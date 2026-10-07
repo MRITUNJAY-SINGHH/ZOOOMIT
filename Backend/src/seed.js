@@ -243,7 +243,7 @@ const seedDatabase = async () => {
     let settings = await Settings.findOne();
     if (!settings) {
       settings = new Settings({
-        storeName: 'Zooom Retail & Grocery ERP',
+        storeName: 'ZOOOMIT Retail & Grocery ERP',
         storePhone: '+91 9876543210',
         storeEmail: 'support@zooom.example',
         address: 'Main Retail Hub, Sector 18, Commercial Belt, New Delhi 110001',
@@ -251,7 +251,7 @@ const seedDatabase = async () => {
         taxMode: 'INCLUSIVE',
         invoicePrefixOnline: 'INV-2026-',
         invoicePrefixOffline: 'POS-2026-',
-        invoiceFooter: 'Thank you for shopping at Zooom! Save paper, shop fresh.',
+        invoiceFooter: 'Thank you for shopping at ZOOOMIT! Save paper, shop fresh.',
         allowNegativeStock: false
       });
       await settings.save();

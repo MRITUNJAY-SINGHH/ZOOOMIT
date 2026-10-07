@@ -63,7 +63,7 @@ export default function IndexScreen() {
             style={styles.logoRow}
           >
             <View style={styles.logoWrapper}>
-              <Text style={styles.brandTitle}>Kuiklo</Text>
+              <Text style={styles.brandTitle}>ZOOOMIT</Text>
               <View style={styles.leafIconBadge}>
                 <Text style={styles.leafEmoji}>🍃</Text>
               </View>

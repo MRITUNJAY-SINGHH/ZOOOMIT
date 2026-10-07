@@ -152,7 +152,7 @@ export default function Settings() {
                       </div>
                       <div className="col-md-6">
                         <Form.Label className="fw-medium text-muted small text-uppercase">Store Email</Form.Label>
-                        <Form.Control type="email" name="storeEmail" value={settings.storeEmail || ''} onChange={handleChange} placeholder="contact@Zooom.com" />
+                        <Form.Control type="email" name="storeEmail" value={settings.storeEmail || ''} onChange={handleChange} placeholder="contact@ZOOOMIT.com" />
                       </div>
                       <div className="col-md-12">
                         <Form.Label className="fw-medium text-muted small text-uppercase">Address</Form.Label>

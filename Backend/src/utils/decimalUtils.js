@@ -1,5 +1,5 @@
 /**
- * Decimal-safe arithmetic and validation utilities for Kuiklo ERP & POS
+ * Decimal-safe arithmetic and validation utilities for ZOOOMIT ERP & POS
  * Eliminates JavaScript floating-point representation anomalies.
  */
 

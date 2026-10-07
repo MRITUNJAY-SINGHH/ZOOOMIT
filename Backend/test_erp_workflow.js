@@ -20,7 +20,7 @@ dotenv.config();
 
 const runVerificationTests = async () => {
   console.log('🧪 ==========================================');
-  console.log('🧪 STARTING KUIKLO ERP 16-POINT TEST MATRIX');
+  console.log('🧪 STARTING ZOOOMIT ERP 16-POINT TEST MATRIX');
   console.log('🧪 ==========================================\n');
 
   await connectDB();

@@ -639,7 +639,7 @@ export default function OrderDetailsScreen() {
               onPress={() => openSupportWithTopic('General order support')}
             >
               <MessageSquare size={18} color={colors.black} style={{ marginRight: 8 }} />
-              <Text style={styles.chatAssistantText}>Chat with Kuiklo Assistant</Text>
+              <Text style={styles.chatAssistantText}>Chat with ZOOOMIT Assistant</Text>
               <ChevronRight size={18} color={colors.black} strokeWidth={2.6} style={{ marginLeft: 6 }} />
             </Pressable>
           </View>

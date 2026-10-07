@@ -278,7 +278,7 @@ export const QuickProductSheet = ({
     haptics.selection();
     try {
       await Share.share({
-        message: `Check out ${product.name} on Kuiklo! Fresh essentials delivered in 17 mins.`,
+        message: `Check out ${product.name} on ZOOOMIT! Fresh essentials delivered in 17 mins.`,
         title: product.name
       });
     } catch (e) {}

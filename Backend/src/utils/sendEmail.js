@@ -20,7 +20,7 @@ const sendEmail = async (options) => {
   });
 
   const mailOptions = {
-    from: `${process.env.FROM_NAME || 'Zooom ERP'} <${process.env.FROM_EMAIL || 'noreply@Zooom.com'}>`,
+    from: `${process.env.FROM_NAME || 'ZOOOMIT ERP'} <${process.env.FROM_EMAIL || 'noreply@ZOOOMIT.com'}>`,
     to: options.email,
     subject: options.subject,
     text: options.message,

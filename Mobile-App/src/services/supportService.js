@@ -56,7 +56,7 @@ export const supportService = {
       const res = await StorefrontAPI.createSupportTicket({
         orderId,
         issueType: 'Return Request',
-        description: reason || 'Customer requested refund via Kuiklo Assistant',
+        description: reason || 'Customer requested refund via ZOOOMIT Assistant',
         items
       });
       return {
@@ -173,7 +173,7 @@ export const supportService = {
         card: {
           type: 'action_card',
           title: 'Report Missing Items',
-          subtitle: 'Instant credit to Kuiklo balance or bank',
+          subtitle: 'Instant credit to ZOOOMIT balance or bank',
           actionText: 'Report Missing Item',
           actionType: 'REPORT_MISSING',
           orderId: order?._id
@@ -183,7 +183,7 @@ export const supportService = {
 
     if (lower.includes('wrong') || lower.includes('damaged') || lower.includes('quality') || lower.includes('expired')) {
       return {
-        text: `We sincerely apologize! Kuiklo guarantees 100% fresh grocery quality. Let us replace the item or issue a full refund immediately.`,
+        text: `We sincerely apologize! ZOOOMIT guarantees 100% fresh grocery quality. Let us replace the item or issue a full refund immediately.`,
         card: {
           type: 'action_card',
           title: 'Replacement or Refund',

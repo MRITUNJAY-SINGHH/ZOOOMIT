@@ -41,7 +41,7 @@ export const ProductImageGallery = ({
     haptics.selection();
     try {
       await Share.share({
-        message: `Check out ${product?.name} on Zooom.`,
+        message: `Check out ${product?.name} on ZOOOMIT.`,
         title: product?.name
       });
     } catch (e) {

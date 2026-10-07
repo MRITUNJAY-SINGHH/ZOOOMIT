@@ -1,14 +1,15 @@
 {
   "expo": {
-    "name": "Zooom",
-    "slug": "jooom",
+    "name": "ZOOOMIT",
+    "slug": "zooomit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "kuiklo",
+    "scheme": "zooomit",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.zooomit.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.aeternsteam.jooom"
+      "package": "com.zooomit.app"
     },
     "web": {
       "output": "static",
@@ -41,8 +42,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "36cbb05f-df92-440d-97bf-416c5c7ec30f"
-      }
+        "projectId": "a21518a8-4a05-4bcf-a9ab-19156020677d"
+      },
+      "router": {}
     },
     "owner": "aeterns-team"
   }

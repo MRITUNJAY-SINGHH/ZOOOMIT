@@ -9,7 +9,7 @@ import Category from '../models/Category.js';
 dotenv.config();
 
 export const runDataMigration = async () => {
-  console.log('🚀 Starting Kuiklo ERP Data Migration...');
+  console.log('🚀 Starting ZOOOMIT ERP Data Migration...');
   
   // 1. Migrate Products
   const products = await Product.find({});

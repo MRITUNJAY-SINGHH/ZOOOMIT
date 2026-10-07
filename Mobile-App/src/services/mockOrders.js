@@ -1,5 +1,5 @@
 /**
- * Realistic Mock Orders for Kuiklo Quick-Commerce Application
+ * Realistic Mock Orders for ZOOOMIT Quick-Commerce Application
  * Used for development fallback and when customer account has no order history.
  * Matches Option 2 approved design reference.
  */

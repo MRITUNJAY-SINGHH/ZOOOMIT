@@ -8,7 +8,7 @@ const run = async () => {
     console.log("Sending demo email...");
     await sendEmail({
       email: "zugija@polkaroad.net",
-      subject: "Test Demo Email from Kuiklo",
+      subject: "Test Demo Email from ZOOOMIT",
       message: "Hello! This is a demo email to check if the mailing service is working properly."
     });
     console.log("Email sent successfully!");

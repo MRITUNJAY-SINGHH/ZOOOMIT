@@ -89,7 +89,7 @@ app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 app.use('/api/storefront', storefrontRoutes);
 
 app.get('/', (req, res) => {
-  res.send('Zooom API is running...');
+  res.send('ZOOOMIT API is running...');
 });
 
 import mongoose from 'mongoose';

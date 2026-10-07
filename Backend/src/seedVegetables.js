@@ -138,7 +138,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567890',
@@ -184,7 +184,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567891',
@@ -229,7 +229,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567892',
@@ -275,7 +275,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567893',
@@ -318,7 +318,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567894',
@@ -361,7 +361,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567895',
@@ -403,7 +403,7 @@ const seedVegetables = async () => {
         sellerDetails: {
           name: 'PJIT TECHNOLOGIES PVT LTD',
           fssaiNumber: '12725052000372',
-          address: 'Kuiklo Fulfillment Center, Sector 62, Noida, UP'
+          address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, UP'
         },
         countryOfOrigin: 'India',
         ean: '8901234567896',

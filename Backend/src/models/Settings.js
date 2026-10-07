@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const settingsSchema = new mongoose.Schema({
-  storeName: { type: String, default: 'Zooom' },
+  storeName: { type: String, default: 'ZOOOMIT' },
   storeLogo: { type: String },
   storePhone: { type: String },
   storeEmail: { type: String },

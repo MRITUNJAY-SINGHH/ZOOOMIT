@@ -44,7 +44,7 @@ export const generatePremiumInvoicePDF = async (invoice, settings = {}, mode = '
       doc.setFontSize(22);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 41, 59); // text-slate-800
-      doc.text(settings?.storeName || 'Zooom', 14, currentY);
+      doc.text(settings?.storeName || 'ZOOOMIT', 14, currentY);
       currentY += 8;
     }
 
@@ -258,7 +258,7 @@ export const generatePremiumInvoicePDF = async (invoice, settings = {}, mode = '
       doc.setFontSize(14);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(30, 41, 59);
-      doc.text(settings?.storeName || 'Zooom', sigX, sigY - 5);
+      doc.text(settings?.storeName || 'ZOOOMIT', sigX, sigY - 5);
     }
     
     doc.setDrawColor(203, 213, 225);

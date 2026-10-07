@@ -109,7 +109,7 @@ export const StorefrontAPI = {
           token: 'mock_jwt_token_for_testing_' + Date.now(),
           customer: {
             id: 'mock_cust_' + cleanPhone,
-            name: `Kuiklo User ${cleanPhone.slice(-4)}`,
+            name: `ZOOOMIT User ${cleanPhone.slice(-4)}`,
             phone: cleanPhone,
             customerType: 'APP',
             addresses: []
@@ -136,7 +136,7 @@ export const StorefrontAPI = {
       if (stored) return { data: stored };
       return {
         data: {
-          name: 'Kuiklo User',
+          name: 'ZOOOMIT User',
           phone: '9876543210',
           addresses: []
         }

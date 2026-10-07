@@ -72,7 +72,7 @@ export const MOCK_PRODUCTS = [
     sellerDetails: {
       name: 'PJIT TECHNOLOGIES PVT LTD',
       fssaiNumber: '12725052000372',
-      address: 'Kuiklo Fulfillment Center, Sector 62, Noida, Uttar Pradesh'
+      address: 'ZOOOMIT Fulfillment Center, Sector 62, Noida, Uttar Pradesh'
     },
     countryOfOrigin: 'India',
     ean: '2116'

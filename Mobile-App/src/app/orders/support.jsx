@@ -180,7 +180,7 @@ export default function SupportChatScreen() {
           <ArrowLeft size={22} color={colors.textPrimary} strokeWidth={2.4} />
         </Pressable>
         <View style={styles.headerTitleWrap}>
-          <Text style={styles.headerTitle}>Kuiklo Assistant</Text>
+          <Text style={styles.headerTitle}>ZOOOMIT Assistant</Text>
           <View style={styles.onlineBadgeRow}>
             <View style={styles.onlineDot} />
             <Text style={styles.onlineText}>Online • Instant Help</Text>
@@ -216,7 +216,7 @@ export default function SupportChatScreen() {
               />
             </View>
             <View style={styles.heroSpeechBubble}>
-              <Text style={styles.heroGreetingTitle}>Hi! I'm Kuiklo Assistant</Text>
+              <Text style={styles.heroGreetingTitle}>Hi! I'm ZOOOMIT Assistant</Text>
               <Text style={styles.heroGreetingText}>
                 I can help you with your order, delivery, refund, product or any other query.
               </Text>
@@ -410,7 +410,7 @@ export default function SupportChatScreen() {
                   {
                     id: 'msg_welcome',
                     sender: 'assistant',
-                    text: 'Chat cleared! How else can I help with your Kuiklo orders?',
+                    text: 'Chat cleared! How else can I help with your ZOOOMIT orders?',
                     timestamp: 'Just now'
                   }
                 ]);

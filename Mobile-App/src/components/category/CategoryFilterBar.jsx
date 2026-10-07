@@ -328,7 +328,7 @@ export const CategoryFilterBar = ({
                   {!selectedBrand && <Check size={18} color="#111111" strokeWidth={2.5} />}
                 </TouchableOpacity>
 
-                {(availableBrands.length > 0 ? availableBrands : ['Kuiklo Fresh', 'Organic Tattva', 'Fresho', 'Safal']).map((b) => {
+                {(availableBrands.length > 0 ? availableBrands : ['ZOOOMIT Fresh', 'Organic Tattva', 'Fresho', 'Safal']).map((b) => {
                   const isSelected = selectedBrand === b;
                   return (
                     <TouchableOpacity
