@@ -1522,8 +1522,47 @@ export const placeOrder = async (req, res) => {
       razorpaySignature 
     } = req.body;
 
+    // Optional "Order for someone else" recipient. Absent = unchanged behaviour.
+    let recipient = null;
+    if (req.body.recipient !== undefined && req.body.recipient !== null) {
+      const r = req.body.recipient;
+      const clean = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+      const rName = clean(r && r.name, 80);
+      const rPhone = clean(r && r.phone, 20).replace(/[\s-]/g, '').replace(/^(\+91|91|0)(?=\d{10}$)/, '');
+      const rStreet = clean(r && r.street, 200);
+      const rCity = clean(r && r.city, 80);
+      const rZip = clean(r && r.zipCode, 10);
+      if (rName.length < 2) {
+        return res.status(400).json({ message: 'Recipient name is required' });
+      }
+      if (!/^[6-9]\d{9}$/.test(rPhone)) {
+        return res.status(400).json({ message: 'Please enter a valid 10-digit recipient phone number' });
+      }
+      if (rStreet.length < 5) {
+        return res.status(400).json({ message: 'Recipient address is required' });
+      }
+      if (!rCity) {
+        return res.status(400).json({ message: 'Recipient city is required' });
+      }
+      if (!/^\d{6}$/.test(rZip)) {
+        return res.status(400).json({ message: 'Please enter a valid 6-digit recipient pincode' });
+      }
+      recipient = {
+        name: rName,
+        phone: rPhone,
+        street: rStreet,
+        landmark: clean(r.landmark, 120),
+        city: rCity,
+        state: clean(r.state, 80),
+        zipCode: rZip,
+        notes: clean(r.notes, 250)
+      };
+    }
+
     const customer = await Customer.findById(req.customer._id);
-    const address = customer.addresses.id(addressId) || customer.addresses.find(a => a.isDefault) || customer.addresses[0];
+    const address = recipient
+      ? { label: 'Someone else', country: 'India' }
+      : (customer.addresses.id(addressId) || customer.addresses.find(a => a.isDefault) || customer.addresses[0]);
 
     if (!address) {
       return res.status(400).json({ message: 'Please provide a valid delivery address' });
@@ -1602,7 +1641,18 @@ export const placeOrder = async (req, res) => {
       paymentMethod: paymentMethod === 'Razorpay' ? 'Razorpay' : 'COD',
       razorpayOrderId,
       razorpayPaymentId,
-      shippingAddress: {
+      shippingAddress: recipient ? {
+        label: 'Someone else',
+        street: recipient.street,
+        landmark: recipient.landmark,
+        city: recipient.city,
+        state: recipient.state,
+        zipCode: recipient.zipCode,
+        country: 'India',
+        formattedAddress: [recipient.street, recipient.landmark && `Near ${recipient.landmark}`, recipient.city, recipient.state, recipient.zipCode].filter(Boolean).join(', ') + (recipient.notes ? ` | Delivery note: ${recipient.notes}` : ''),
+        contactName: recipient.name,
+        contactPhone: recipient.phone
+      } : {
         label: address.label,
         street: address.street,
         landmark: address.landmark,
