@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Alert } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, ActivityIndicator } from 'react-native';
 import { captureCartSource } from '../FloatingCart';
 import { useAuth } from '../../context/AuthContext';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
@@ -27,9 +27,11 @@ export const ProductQuantityControl = ({
   fullWidth = false,
   style
 }) => {
-  const sourceRef = useRef(null);
+  const sourceRef = useRef(null), requestRef = useRef(false);
+  const [busy, setBusy] = useState(false);
   const { token } = useAuth();
-  const { getItemQuantity, addItem, updateItem, cart, isUpdating } = useCart();
+  const { getItemQuantity, addItem, updateItem, cart, getItemPending } = useCart();
+  const pending = getItemPending(productId, variantId);
   const currentQty = getItemQuantity(productId, variantId);
 
   const scale = useSharedValue(1);
@@ -43,16 +45,19 @@ export const ProductQuantityControl = ({
 
   const change = async (direction, e) => {
     e?.stopPropagation?.();
-    if (isOutOfStock || isUpdating || (direction > 0 && currentQty >= maxQty)) return;
+    if (isOutOfStock || busy || pending || requestRef.current || (direction > 0 && currentQty >= maxQty)) return;
     if (!token) { Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.'); return; }
+    requestRef.current = true;
+    setBusy(true);
     animatePress();
     try {
-      const source = direction > 0 ? await captureCartSource(sourceRef, product) : null;
+      const source = direction > 0 ? captureCartSource(sourceRef, product) : null;
       const item = cart.items.find(i => i.product?._id === productId && (variantId ? i.variant?._id === variantId : !i.variant));
       const next = Math.round((currentQty + direction * step) * 1000) / 1000;
       if (item) await updateItem(item._id, next < minQty ? 0 : next, source);
       else if (direction > 0) await addItem(productId, minQty, variantId, unit, source);
     } catch (error) { Alert.alert('Cart not updated', error.message || 'Please try again.'); }
+    finally { requestRef.current = false; setBusy(false); }
   };
   const handleAdd = e => change(1, e);
   const handleIncrement = e => change(1, e);
@@ -75,6 +80,7 @@ export const ProductQuantityControl = ({
       <Animated.View ref={sourceRef} collapsable={false} style={[animatedStyle, fullWidth && { width: '100%' }]}>
         <View style={[styles.stepperContainer, compact && styles.stepperCompact, fullWidth && styles.stepperFull, style]}>
           <Pressable
+            disabled={busy || Boolean(pending)}
             onPress={handleDecrement}
             style={({ pressed }) => [
               styles.stepBtn,
@@ -84,7 +90,7 @@ export const ProductQuantityControl = ({
             accessibilityRole="button"
             accessibilityLabel="Decrease quantity"
           >
-            <Minus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />
+            {pending < 0 ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Minus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />}
           </Pressable>
 
           <Text style={[styles.qtyText, compact && styles.qtyTextCompact]}>
@@ -92,6 +98,7 @@ export const ProductQuantityControl = ({
           </Text>
 
           <Pressable
+            disabled={busy || Boolean(pending) || currentQty >= maxQty}
             onPress={handleIncrement}
             style={({ pressed }) => [
               styles.stepBtn,
@@ -101,7 +108,7 @@ export const ProductQuantityControl = ({
             accessibilityRole="button"
             accessibilityLabel="Increase quantity"
           >
-            <Plus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />
+            {pending > 0 ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Plus size={compact ? 13 : 16} color="#FFFFFF" strokeWidth={2.6} />}
           </Pressable>
         </View>
       </Animated.View>
@@ -112,6 +119,7 @@ export const ProductQuantityControl = ({
   return (
     <Animated.View ref={sourceRef} collapsable={false} style={[animatedStyle, fullWidth && { width: '100%' }]}>
       <Pressable
+        disabled={busy || Boolean(pending)}
         onPress={handleAdd}
         style={({ pressed }) => [
           styles.addBtn,
@@ -123,9 +131,9 @@ export const ProductQuantityControl = ({
         accessibilityRole="button"
         accessibilityLabel="Add to cart"
       >
-        <Text style={[styles.addBtnText, compact && styles.addBtnTextCompact]}>
+        {busy || pending ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={[styles.addBtnText, compact && styles.addBtnTextCompact]}>
           ADD
-        </Text>
+        </Text>}
       </Pressable>
     </Animated.View>
   );
