@@ -162,7 +162,7 @@ export default function OrderForSomeoneElse({ recipient, onChange }) {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginHorizontal: 12, marginTop: 12, borderWidth: 1, borderColor: '#F1F5F9' },
+  card: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, marginHorizontal: 0, marginTop: 0, marginBottom: 16, borderWidth: 1, borderColor: '#F1F5F9' },
   headerRow: { flexDirection: 'row', alignItems: 'center' },
   iconTile: { width: 38, height: 38, borderRadius: 12, backgroundColor: BRAND, alignItems: 'center', justifyContent: 'center' },
   headerText: { flex: 1, marginHorizontal: 12 },
