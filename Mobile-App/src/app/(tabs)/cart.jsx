@@ -49,6 +49,8 @@ import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { StorefrontAPI } from '../../services/api';
+import OrderForSomeoneElse from '../../components/cart/OrderForSomeoneElse';
+import { setOrderRecipient } from '../../services/recipientStore';
 import { haptics } from '../../services/haptics';
 import { MOCK_PRODUCTS } from '../../services/mockProducts';
 
@@ -280,6 +282,7 @@ export default function CartScreen() {
     return item.qty || 1;
   };
   const [orderPlacedSuccess, setOrderPlacedSuccess] = useState(false);
+  const [recipient, setRecipient] = useState(null);
 
   const isRealCartActive = Boolean(cart?.items && cart.items.length > 0);
   const items = isRealCartActive ? cart.items : localItems;
@@ -492,6 +495,11 @@ export default function CartScreen() {
         ];
       });
     }
+  };
+
+  const handleRecipientChange = (next) => {
+    setRecipient(next);
+    setOrderRecipient(next);
   };
 
   const handlePaymentSuccess = () => {
@@ -737,6 +745,8 @@ export default function CartScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        <OrderForSomeoneElse recipient={recipient} onChange={handleRecipientChange} />
 
         <View style={styles.billCard}>
           <Text style={styles.billCardTitle}>Bill Details</Text>
