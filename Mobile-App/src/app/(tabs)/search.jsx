@@ -84,39 +84,42 @@ function CategoryTile({ category, onPress }) {
 const SORTS = [{ id: 'default', name: 'Relevance' }, { id: 'price_asc', name: 'Price: low to high' }, { id: 'price_desc', name: 'Price: high to low' }, { id: 'popular', name: 'Popularity' }];
 
 function SearchProduct({ product }) {
+  const requestRef = useRef(false);
   const imageRef = useRef(null), gallery = useRef(null);
-  const { cart, getItemQuantity, addItem, updateItem, isUpdating } = useCart();
+  const { cart, getItemQuantity, addItem, updateItem, getItemPending } = useCart();
   const { token } = useAuth(); const { isSaved, toggleSave } = useWishlist();
   const [variantId, setVariantId] = useState(null), [imageWidth, setImageWidth] = useState(0), [activeImage, setActiveImage] = useState(0), [busy, setBusy] = useState(false);
   const variants = activeVariants(product), variant = variants.find(v => v._id === variantId) || variants[0];
   const id = variant?._id || null, price = Number(variant?.sellingPrice ?? product.sellingPrice ?? 0), mrp = Number(variant?.mrp ?? product.mrp ?? 0);
   const qty = getItemQuantity(product._id, id), images = productImages(product);
+  const pending = getItemPending(product._id, id);
   const soldOut = product.isTrackInventory && Number(variant?.stock ?? product.stock ?? 0) <= 0;
   const min = Number(product.minSaleQty) > 0 ? Number(product.minSaleQty) : 1, step = Number(product.qtyStep) > 0 ? Number(product.qtyStep) : 1, max = Number(product.maxSaleQty) > 0 ? Number(product.maxSaleQty) : 100;
   const unit = variant?.conversionUnit || product.sellingUnit || product.baseUnit || 'PCS';
   const rate = productUnitRate(product, variant, price), rating = ratingOf(product), count = product.ratingCount ?? product.reviewCount ?? product.rating?.count;
   const open = () => router.push(`/product/${product._id}`);
   const change = async direction => {
-    if (busy || isUpdating || (direction > 0 && (soldOut || qty >= max))) return;
+    if (busy || pending || requestRef.current || (direction > 0 && (soldOut || qty >= max))) return;
     if (!token) { Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.'); return; }
+    requestRef.current = true;
     setBusy(true);
     try {
-      const source = direction > 0 ? await captureCartSource(imageRef, { ...product, featuredImage: images[activeImage] || images[0] }) : null;
+      const source = direction > 0 ? captureCartSource(imageRef, { ...product, featuredImage: images[activeImage] || images[0] }) : null;
       const item = cart?.items?.find(i => String(i.product?._id || i.product) === String(product._id) && String(i.variant?._id || i.variant || '') === String(id || ''));
       const next = Math.round((qty + direction * step) * 1000) / 1000;
       if (direction > 0 && qty > 0 && next > max) return;
       if (item) await updateItem(item._id, next < min ? 0 : next, source);
       else if (direction > 0) await addItem(product._id, min, id, unit, source);
-    } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); } finally { setBusy(false); }
+    } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); } finally { requestRef.current = false; setBusy(false); }
   };
   return <View style={styles.product}>
     <View ref={imageRef} collapsable={false} style={styles.productImage} onLayout={e => setImageWidth(e.nativeEvent.layout.width)}>
       {images.length ? <ScrollView ref={gallery} horizontal pagingEnabled directionalLockEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }} onMomentumScrollEnd={e => setActiveImage(Math.max(0, Math.min(images.length - 1, Math.round(e.nativeEvent.contentOffset.x / Math.max(1, imageWidth)))))}>{images.map((uri, i) => <Pressable key={uri} onPress={open} style={{ width: imageWidth || 1, height: '100%' }} accessibilityLabel={`${product.name}, image ${i + 1}`}>{Math.abs(i - activeImage) <= 1 && <Image source={{ uri }} contentFit="contain" transition={160} style={styles.full} />}</Pressable>)}</ScrollView> : <Pressable onPress={open} style={styles.center}><Package size={34} color="#9AA0A7" /></Pressable>}
       <Pressable onPress={async () => { try { await toggleSave(product); } catch (e) { Alert.alert('Wishlist not updated', e.message || 'Try again.'); } }} style={styles.bookmark} accessibilityLabel={`Save ${product.name}`}><Bookmark size={17} color={INK} fill={isSaved(product._id) ? YELLOW : 'none'} /></Pressable>
       <View style={styles.imageFooter} pointerEvents="none">{typeof product.isVeg === 'boolean' && <View style={[styles.veg, { borderColor: product.isVeg ? '#009B69' : '#AE302E' }]}><View style={[styles.vegDot, { backgroundColor: product.isVeg ? '#009B69' : '#AE302E' }]} /></View>}{images.length > 1 && <View style={styles.dots}>{images.map((uri, i) => <View key={uri} style={[styles.dot, i === activeImage && styles.dotActive]} />)}</View>}</View>
-      <View style={styles.addPosition}>{busy ? <View style={styles.add}><ActivityIndicator size="small" color={INK} /></View> : qty > 0 ? <View style={styles.stepper}><Pressable disabled={isUpdating} onPress={() => change(-1)} style={styles.step} accessibilityLabel={`Decrease ${product.name}`}><Minus size={15} color={INK} /></Pressable><Text style={styles.quantity}>{qty}</Text><Pressable disabled={isUpdating || soldOut || qty >= max} onPress={() => change(1)} style={styles.step} accessibilityLabel={`Increase ${product.name}`}><Plus size={15} color={INK} /></Pressable></View> : soldOut ? <Text style={styles.soldOut}>Sold out</Text> : <Pressable disabled={isUpdating} onPress={() => change(1)} style={styles.add} accessibilityLabel={`Add ${product.name}`}><Plus size={25} color={INK} /></Pressable>}</View>
+      <View style={styles.addPosition}>{qty > 0 ? <View style={styles.stepper}><Pressable disabled={busy || Boolean(pending)} onPress={() => change(-1)} style={({ pressed }) => [styles.step, pressed && { opacity: 0.65 }]} accessibilityLabel={`Decrease ${product.name}`}>{pending < 0 ? <ActivityIndicator size="small" color={INK} /> : <Minus size={15} color={INK} />}</Pressable><Text style={styles.quantity}>{qty}</Text><Pressable disabled={busy || Boolean(pending) || soldOut || qty >= max} onPress={() => change(1)} style={({ pressed }) => [styles.step, pressed && { opacity: 0.65 }]} accessibilityLabel={`Increase ${product.name}`}>{pending > 0 ? <ActivityIndicator size="small" color={INK} /> : <Plus size={15} color={INK} />}</Pressable></View> : soldOut ? <Text style={styles.soldOut}>Sold out</Text> : <Pressable disabled={busy || Boolean(pending)} onPress={() => change(1)} style={({ pressed }) => [styles.add, pressed && { opacity: 0.75, transform: [{ scale: 0.94 }] }]} accessibilityLabel={`Add ${product.name}`}>{busy || pending ? <ActivityIndicator size="small" color={INK} /> : <Plus size={25} color={INK} />}</Pressable>}</View>
     </View>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.packRow} contentContainerStyle={{ gap: 4 }}>{variants.length ? variants.map(v => <Pressable key={v._id} onPress={() => setVariantId(v._id)} style={[styles.pack, v._id === id && styles.packSelected]} accessibilityState={{ selected: v._id === id }}><Text style={styles.packText}>{v.name}</Text></Pressable>) : <Text style={[styles.pack, styles.packText]}>{min} {unit.toLowerCase()}</Text>}</ScrollView>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.packRow} contentContainerStyle={{ gap: 4 }}>{variants.length ? variants.map(v => <Pressable key={v._id} disabled={busy || Boolean(pending)} onPress={() => setVariantId(v._id)} style={[styles.pack, v._id === id && styles.packSelected]} accessibilityState={{ selected: v._id === id }}><Text style={styles.packText}>{v.name}</Text></Pressable>) : <Text style={[styles.pack, styles.packText]}>{min} {unit.toLowerCase()}</Text>}</ScrollView>
     <Pressable onPress={open}><View style={styles.priceRow}><Text style={styles.price}>₹{price}</Text>{mrp > price && <Text style={styles.mrp}>₹{mrp}</Text>}</View>{rate && <Text style={styles.unitRate}>{rate}</Text>}{mrp > price && <Text style={styles.discount}>{Math.round((mrp - price) / mrp * 100)}% OFF</Text>}<Text style={styles.productName} numberOfLines={3}>{product.name}</Text>{rating > 0 && <View style={styles.ratingRow}><Star size={11} fill="#009B69" color="#009B69" /><Text style={styles.rating}>{rating.toFixed(1)}</Text>{count != null && <Text style={styles.unitRate}>({count})</Text>}</View>}</Pressable>
   </View>;
 }
