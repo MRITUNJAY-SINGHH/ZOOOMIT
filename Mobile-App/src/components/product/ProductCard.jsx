@@ -1,6 +1,6 @@
 import { captureCartSource } from '../FloatingCart';
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, ScrollView, Animated, AccessibilityInfo } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView, Animated, AccessibilityInfo, ActivityIndicator } from 'react-native';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { Plus, Minus, Package, Bookmark } from 'lucide-react-native';
@@ -25,8 +25,9 @@ export function productUnitRate(product, variant, price) {
   return `₹${rate}/100 ${unit === 'KG' || unit === 'GM' ? 'g' : 'ml'}`;
 }
 export const ProductCard = ({ product, onPress, compact = false, detailed = false, selectedVariantId, onSelectVariant }) => {
+  const requestRef = useRef(false);
   const imageRef = useRef(null), galleryRef = useRef(null);
-  const { getItemQuantity, addItem, updateItem, cart, isUpdating } = useCart();
+  const { getItemQuantity, addItem, updateItem, cart, getItemPending } = useCart();
   const { token } = useAuth();
   const { isSaved, toggleSave } = useWishlist();
   const [localVariantId, setLocalVariantId] = useState(null);
@@ -44,6 +45,7 @@ export const ProductCard = ({ product, onPress, compact = false, detailed = fals
   const variantId = variant?._id || null;
   const price = Number(variant?.sellingPrice ?? product?.sellingPrice ?? 0);
   const mrp = Number(variant?.mrp ?? product?.mrp ?? 0);
+  const pending = getItemPending(product?._id, variantId);
   const qty = product ? getItemQuantity(product._id, variantId) : 0;
   useEffect(() => {
     if (reducedMotion.current) return;
@@ -63,18 +65,19 @@ export const ProductCard = ({ product, onPress, compact = false, detailed = fals
   const open = () => !detailed && (onPress ? onPress(product) : router.push(`/product/${product._id}`));
   const choose = v => { setLocalVariantId(v._id); onSelectVariant?.(v._id); };
   const change = async direction => {
-    if (outOfStock || busy || isUpdating || (direction > 0 && qty >= max)) return;
+    if (outOfStock || busy || pending || requestRef.current || (direction > 0 && qty >= max)) return;
     if (!token) { Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.'); return; }
+    requestRef.current = true;
     setBusy(true);
     try {
-      const source = direction > 0 ? await captureCartSource(imageRef, { ...product, featuredImage: images[activeImage] || images[0] }) : null;
+      const source = direction > 0 ? captureCartSource(imageRef, { ...product, featuredImage: images[activeImage] || images[0] }) : null;
       const item = cart?.items?.find(i => i.product?._id === product._id && (variantId ? i.variant?._id === variantId : !i.variant));
       const next = Math.round((qty + direction * step) * 1000) / 1000;
       if (direction > 0 && qty > 0 && next > max) return;
       if (item) await updateItem(item._id, next < min ? 0 : next, source);
       else if (direction > 0) await addItem(product._id, min, variantId, unit, source);
     } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); }
-    finally { setBusy(false); }
+    finally { requestRef.current = false; setBusy(false); }
   };
   return <View style={[styles.card, compact && styles.compact, detailed && styles.detailed]}>
     <View ref={imageRef} collapsable={false} style={[styles.imageBox, detailed && styles.detailImage]} onLayout={e => setImageWidth(e.nativeEvent.layout.width)}>
@@ -88,13 +91,13 @@ export const ProductCard = ({ product, onPress, compact = false, detailed = fals
       </View>
       <Animated.View style={[styles.action, { transform: [{ scale }] }]}>
         {outOfStock ? <Text style={styles.soldOut}>Sold out</Text> : qty > 0 ? <View style={styles.stepper}>
-          <Pressable disabled={busy || isUpdating} onPress={() => change(-1)} style={styles.step} accessibilityRole="button" accessibilityLabel={`Decrease ${product.name}`}><Minus size={19} color={BLUE} /></Pressable>
-          <Text style={styles.qty}>{qty}</Text><Pressable disabled={busy || isUpdating || qty >= max} onPress={() => change(1)} style={styles.step} accessibilityRole="button" accessibilityLabel={`Increase ${product.name}`}><Plus size={20} color={BLUE} /></Pressable>
-        </View> : <Pressable disabled={busy || isUpdating} style={styles.plus} onPress={() => change(1)} accessibilityRole="button" accessibilityLabel={`Add ${product.name}, ${variant?.name || unit}`}><Plus size={26} color={BLUE} strokeWidth={2.4} /></Pressable>}
+          <Pressable disabled={busy || Boolean(pending)} onPress={() => change(-1)} style={({ pressed }) => [styles.step, pressed && { backgroundColor: '#EAF2FF' }]} accessibilityRole="button" accessibilityLabel={`Decrease ${product.name}`}>{pending < 0 ? <ActivityIndicator size="small" color={BLUE} /> : <Minus size={19} color={BLUE} />}</Pressable>
+          <Text style={styles.qty}>{qty}</Text><Pressable disabled={busy || Boolean(pending) || qty >= max} onPress={() => change(1)} style={({ pressed }) => [styles.step, pressed && { backgroundColor: '#EAF2FF' }]} accessibilityRole="button" accessibilityLabel={`Increase ${product.name}`}>{pending > 0 ? <ActivityIndicator size="small" color={BLUE} /> : <Plus size={20} color={BLUE} />}</Pressable>
+        </View> : <Pressable disabled={busy || Boolean(pending)} style={({ pressed }) => [styles.plus, pressed && { backgroundColor: '#EAF2FF', transform: [{ scale: 0.94 }] }]} onPress={() => change(1)} accessibilityRole="button" accessibilityLabel={`Add ${product.name}, ${variant?.name || unit}`}>{busy || pending ? <ActivityIndicator size="small" color={BLUE} /> : <Plus size={26} color={BLUE} strokeWidth={2.4} />}</Pressable>}
       </Animated.View>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.variants} style={styles.variantScroll}>
-      {variants.length ? variants.map(v => <Pressable key={v._id} onPress={() => choose(v)} style={[styles.variant, v._id === variantId && styles.selectedVariant]} accessibilityRole="button" accessibilityState={{ selected: v._id === variantId }}><Text style={[styles.variantText, v._id === variantId && styles.variantTextOn]}>{v.name}</Text></Pressable>) : <Text style={styles.unit}>{min} {unit.toLowerCase()}</Text>}
+      {variants.length ? variants.map(v => <Pressable key={v._id} disabled={busy || Boolean(pending)} onPress={() => choose(v)} style={[styles.variant, v._id === variantId && styles.selectedVariant]} accessibilityRole="button" accessibilityState={{ selected: v._id === variantId }}><Text style={[styles.variantText, v._id === variantId && styles.variantTextOn]}>{v.name}</Text></Pressable>) : <Text style={styles.unit}>{min} {unit.toLowerCase()}</Text>}
     </ScrollView>
     <Pressable onPress={open} disabled={detailed} accessibilityLabel={`View ${product.name}`}>
       <View style={styles.prices}><Text style={[styles.price, detailed && styles.detailPrice]}>₹{price}</Text>{mrp > price && <Text style={styles.mrp}>₹{mrp}</Text>}</View>
