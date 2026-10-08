@@ -30,6 +30,37 @@ export const CartProvider = ({ children }) => {
     setCartFeedback({ ...source, id: ++feedbackSequence.current, itemKey: String(item._id || `${productId}:${variantId || 'base'}`) });
   };
   const [isUpdating, setIsUpdating] = useState(false);
+  const [pendingItems, setPendingItems] = useState({});
+  const pendingRef = useRef({});
+  const mutationQueue = useRef(Promise.resolve());
+  const itemKey = (productId, variantId) => `${productId}:${variantId || 'base'}`;
+  const getItemPending = (productId, variantId) => pendingItems[itemKey(productId, variantId)] || 0;
+  // Lock only this product/variant synchronously, including duplicate cards.
+  // Queue full-cart snapshots so a slower response cannot overwrite a newer cart.
+  const mutateItem = async (productId, variantId, direction, request, source) => {
+    const key = itemKey(productId, variantId);
+    if (pendingRef.current[key]) return;
+    pendingRef.current = { ...pendingRef.current, [key]: direction };
+    setPendingItems(pendingRef.current);
+    setIsUpdating(true);
+    const work = mutationQueue.current.then(async () => {
+      const [res, origin] = await Promise.all([request(), Promise.resolve(source)]);
+      const data = res.data?.data;
+      if (!data?.items) throw new Error('Cart not updated. Please try again.');
+      setCart(data);
+      if (direction > 0) announceAddition(data, productId, variantId, origin);
+      return data;
+    });
+    mutationQueue.current = work.catch(() => {});
+    try { return await work; }
+    finally {
+      const next = { ...pendingRef.current };
+      delete next[key];
+      pendingRef.current = next;
+      setPendingItems(next);
+      setIsUpdating(Object.keys(next).length > 0);
+    }
+  };
 
   useEffect(() => {
     if (token) {
@@ -61,36 +92,25 @@ export const CartProvider = ({ children }) => {
 
   const addItem = async (productId, qty, variantId, unit, source) => {
     if (!token) return;
-    setIsUpdating(true);
     try {
-      const res = await StorefrontAPI.addToCart({ productId, variantId, qty, unit });
-      if (res.data?.data) {
-        setCart(res.data.data);
-        announceAddition(res.data.data, productId, variantId, source);
-      }
+      return await mutateItem(productId, variantId, 1,
+        () => StorefrontAPI.addToCart({ productId, variantId, qty, unit }), source);
     } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to add item to cart';
-      throw new Error(msg);
-    } finally {
-      setIsUpdating(false);
+      throw new Error(e.response?.data?.message || e.message || 'Failed to add item to cart');
     }
   };
 
   const updateItem = async (itemId, qty, source) => {
     if (!token) return;
     const previous = cart.items.find(i => i._id === itemId);
-    setIsUpdating(true);
+    if (!previous) throw new Error('This cart item has changed. Please try again.');
+    const productId = previous.product?._id || previous.product;
+    const variantId = previous.variant?._id || previous.variant;
     try {
-      const res = await StorefrontAPI.updateCartItem(itemId, qty);
-      if (res.data?.data) {
-        setCart(res.data.data);
-        if (previous && qty > Number(previous.qty || 0)) announceAddition(res.data.data, previous.product?._id || previous.product, previous.variant?._id || previous.variant, source);
-      }
+      return await mutateItem(productId, variantId, qty > Number(previous.qty || 0) ? 1 : -1,
+        () => StorefrontAPI.updateCartItem(itemId, qty), source);
     } catch (e) {
-      const msg = e.response?.data?.message || 'Failed to update item';
-      throw new Error(msg);
-    } finally {
-      setIsUpdating(false);
+      throw new Error(e.response?.data?.message || e.message || 'Failed to update item');
     }
   };
 
@@ -165,6 +185,7 @@ export const CartProvider = ({ children }) => {
       isUpdating,
       itemCount,
       getItemQuantity,
+      getItemPending,
       refreshCart,
       addItem,
       updateItem,
