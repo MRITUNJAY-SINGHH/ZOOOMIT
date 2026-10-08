@@ -22,6 +22,7 @@ import { StorefrontAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { AppButton } from '../../components/AppButton';
+import { getOrderRecipient, clearOrderRecipient } from '../../services/recipientStore';
 
 export default function CheckoutScreen() {
   const { customer, refreshProfile } = useAuth();
@@ -78,6 +79,7 @@ export default function CheckoutScreen() {
     }
 
     setIsPlacingOrder(true);
+    const recipient = getOrderRecipient();
     try {
       if (paymentMethod === 'Razorpay') {
         const intentRes = await StorefrontAPI.createPaymentIntent();
@@ -85,6 +87,7 @@ export default function CheckoutScreen() {
 
         const placeRes = await StorefrontAPI.placeOrder({
           addressId: selectedAddressId,
+          ...(recipient ? { recipient } : {}),
           paymentMethod: 'Razorpay',
           razorpayOrderId: rzpOrderId,
           razorpayPaymentId: `pay_mock_${Date.now()}`,
@@ -92,16 +95,19 @@ export default function CheckoutScreen() {
         });
 
         await clearCart();
+        clearOrderRecipient();
         await refreshProfile();
 
         router.replace(`/orders/${placeRes.data.order.id}`);
       } else {
         const placeRes = await StorefrontAPI.placeOrder({
           addressId: selectedAddressId,
+          ...(recipient ? { recipient } : {}),
           paymentMethod: 'COD'
         });
 
         await clearCart();
+        clearOrderRecipient();
         await refreshProfile();
 
         router.replace(`/orders/${placeRes.data.order.id}`);
