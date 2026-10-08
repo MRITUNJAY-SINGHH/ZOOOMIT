@@ -19,10 +19,10 @@ export function captureCartSource(ref, product) {
 }
 function CartThumb({ item, index, feedback, reducedMotion }) {
   const slide = useRef(new Animated.Value(1)).current;
-  const slot = useRef(new Animated.Value(index * 23)).current;
+  const slot = useRef(new Animated.Value(index * 17)).current;
   useEffect(() => {
-    const animation = Animated.spring(slot, { toValue: index * 23, damping: 22, stiffness: 220, mass: 0.7, useNativeDriver: true, isInteraction: false });
-    if (reducedMotion) slot.setValue(index * 23); else animation.start();
+    const animation = Animated.spring(slot, { toValue: index * 17, damping: 22, stiffness: 220, mass: 0.7, useNativeDriver: true, isInteraction: false });
+    if (reducedMotion) slot.setValue(index * 17); else animation.start();
     return () => animation.stop();
   }, [index, reducedMotion]);
   useEffect(() => {
@@ -107,13 +107,13 @@ export function FloatingCart({ bottom = 20, visible = true, onOpenCart }) {
     return () => { clearTimeout(timer); travel.stopAnimation(); setFlight(null); };
   }, [cartFeedback?.id, visible, Boolean(count), reducedMotion]);
   if (!rendered && !(visible && count)) return null;
-  const pillWidth = Math.min(216, width - 40);
+  const pillWidth = Math.min(216 * 0.8, width - 40);
   return <View ref={root} collapsable={false} style={styles.overlay} pointerEvents="box-none">
     <Animated.View pointerEvents={visible && count ? 'auto' : 'none'} style={[styles.position, { bottom, opacity: appear, transform: [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }, { scale: pulse }] }]}>
       <Pressable accessibilityRole="button" accessibilityLabel={`View cart, ${displayCount} ${displayCount === 1 ? 'item' : 'items'}`} onPress={() => { onOpenCart?.(); router.push('/(tabs)/cart'); }} style={({ pressed }) => [styles.pill, { width: pillWidth }, pressed && { opacity: 0.92 }]}>
-        <View style={styles.copy} accessible accessibilityLiveRegion="polite"><Text style={styles.title}>CART</Text><Text style={styles.count}>{displayCount} {displayCount === 1 ? 'ITEM' : 'ITEMS'}</Text></View>
-        <View ref={target} collapsable={false} style={[styles.thumbnails, { width: 30 + Math.max(0, thumbnails.length - 1) * 23 }]}>{thumbnails.map((item, index) => <CartThumb key={cartKey(item)} item={item} index={index} feedback={cartFeedback} reducedMotion={reducedMotion} />)}</View>
-        <ChevronRight size={20} color={colors.textPrimary} strokeWidth={2.4} />
+        <View style={styles.copy} accessible accessibilityLiveRegion="polite"><Text style={styles.title}>CART</Text><Text numberOfLines={1} adjustsFontSizeToFit style={styles.count}>{displayCount} {displayCount === 1 ? 'ITEM' : 'ITEMS'}</Text></View>
+        <View ref={target} collapsable={false} style={[styles.thumbnails, { width: 26 + Math.max(0, thumbnails.length - 1) * 17 }]}>{thumbnails.map((item, index) => <CartThumb key={cartKey(item)} item={item} index={index} feedback={cartFeedback} reducedMotion={reducedMotion} />)}</View>
+        <ChevronRight size={18} color={colors.textPrimary} strokeWidth={2.4} />
         <View style={styles.track}><Animated.View style={[styles.line, { transform: [{ scaleX: line }] }]} /></View>
       </Pressable>
     </Animated.View>
@@ -123,9 +123,9 @@ export function FloatingCart({ bottom = 20, visible = true, onOpenCart }) {
 const styles = StyleSheet.create({
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 1100 },
   position: { position: 'absolute', alignSelf: 'center' },
-  pill: { height: 56, borderRadius: 15, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingBottom: 4, gap: 7, shadowColor: '#735B09', shadowOpacity: 0.18, shadowOffset: { width: 0, height: 5 }, shadowRadius: 12, elevation: 8 },
-  copy: { flex: 1 }, title: { fontFamily: typography.family.bold, fontSize: 14, fontWeight: '700', lineHeight: 17, color: colors.textPrimary }, count: { fontFamily: typography.family.medium, fontSize: 10, lineHeight: 15, color: '#473B14' },
-  thumbnails: { flexDirection: 'row', alignItems: 'center', height: 32 }, thumb: { width: 30, height: 32, padding: 2, borderRadius: 7, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#FFF8DA', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, photo: { width: '100%', height: '100%' },
+  pill: { height: 56, borderRadius: 17, backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingBottom: 4, gap: 5, borderWidth: 1, borderColor: '#E6BA26', shadowColor: '#735B09', shadowOpacity: 0.18, shadowOffset: { width: 0, height: 5 }, shadowRadius: 12, elevation: 8 },
+  copy: { flex: 1, minWidth: 0 }, title: { fontFamily: typography.family.bold, fontSize: 13, fontWeight: '700', lineHeight: 17, color: colors.textPrimary }, count: { fontFamily: typography.family.medium, fontSize: 10, lineHeight: 15, color: '#473B14' },
+  thumbnails: { flexDirection: 'row', alignItems: 'center', height: 32 }, thumb: { width: 26, height: 30, padding: 2, borderRadius: 7, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#F0DA91', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, photo: { width: '100%', height: '100%' },
   track: { position: 'absolute', bottom: 6, left: 12, right: 12, height: 3, backgroundColor: 'rgba(255,255,255,0.35)', borderRadius: 2, overflow: 'hidden' }, line: { height: 3, backgroundColor: '#FFF', borderRadius: 2 },
   flying: { position: 'absolute', left: 0, top: 0, width: 50, height: 50, padding: 4, borderRadius: 12, backgroundColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 12 }
 });
