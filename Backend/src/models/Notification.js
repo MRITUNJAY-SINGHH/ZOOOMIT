@@ -8,7 +8,10 @@ const notificationSchema = new mongoose.Schema({
       'Low Stock', 'Expiring Product', 'New Order', 'Cancelled Order', 'Returned Order', 
       'Refund Failure', 'Stock Adjustment', 'Rider Assigned',
       'Order Placed', 'Order Confirmed', 'Order Out For Delivery', 'Order Delivered', 
-      'Order Cancelled', 'Refund Update', 'Support Update', 'Promotion'
+      'Order Cancelled', 'Refund Update', 'Support Update', 'Promotion',
+      'New Order Available', 'Order Accepted', 'Payment Received', 'Incentive', 
+      'New Incentive', 'Payout Processed', 'Rating', 'High Rating Received', 'App Update',
+      'Earning Recorded', 'Store Cash Settlement'
     ],
     required: true
   },

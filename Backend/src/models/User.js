@@ -43,6 +43,9 @@ const userSchema = new mongoose.Schema({
     vehicleType: { type: String, default: 'Motorcycle' },
     vehicleNumber: { type: String, default: '' }
   },
+  // Admin-managed compensation override (0 = fallback to Settings rate)
+  perDeliveryRate: { type: Number, default: 0 },
+  // Legacy bankDetails preserved for historical schema compatibility
   bankDetails: {
     accountHolderName: { type: String, default: '' },
     accountNumber: { type: String, default: '' },

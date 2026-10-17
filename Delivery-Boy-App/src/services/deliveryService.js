@@ -16,6 +16,16 @@ export const deliveryService = {
     return res.data;
   },
 
+  async updateProfile(data) {
+    const res = await api.put('/delivery/profile', data);
+    return res.data;
+  },
+
+  async submitFeedback(category, message, orderId = '') {
+    const res = await api.post('/delivery/feedback', { category, message, orderId });
+    return res.data;
+  },
+
   async toggleOnline(isOnline) {
     const res = await api.put('/delivery/toggle-online', { isOnline });
     return res.data;
@@ -37,8 +47,23 @@ export const deliveryService = {
     return res.data;
   },
 
-  async getEarnings(period = 'today') {
+  async getEarnings(period = 'overview') {
     const res = await api.get('/delivery/earnings', { params: { period } });
+    return res.data;
+  },
+
+  async getSettlements() {
+    const res = await api.get('/delivery/settlements');
+    return res.data;
+  },
+
+  async confirmStoreCashSettlement(riderId, amountCollected, notes = '', storeName = '') {
+    const res = await api.post('/delivery/settlements/confirm', {
+      riderId,
+      amountCollected,
+      notes,
+      storeName
+    });
     return res.data;
   },
 
@@ -48,9 +73,9 @@ export const deliveryService = {
     return res.data;
   },
 
-  async getOrders(status = 'all', page = 1, limit = 20) {
+  async getOrders(status = 'in_progress', page = 1, limit = 20, search = '') {
     const res = await api.get('/delivery/orders', {
-      params: { status, page, limit }
+      params: { status, page, limit, search }
     });
     return res.data;
   },
@@ -81,8 +106,34 @@ export const deliveryService = {
     return res.data;
   },
 
+  async regenerateDeliveryOtp(orderId) {
+    const res = await api.post(`/delivery/orders/${orderId}/regenerate-otp`);
+    return res.data;
+  },
+
   async cancelOrder(orderId, reason, details = '') {
     const res = await api.post(`/delivery/orders/${orderId}/cancel`, { reason, details });
+    return res.data;
+  },
+
+  // Notifications
+  async getNotifications() {
+    const res = await api.get('/notifications');
+    return res.data;
+  },
+
+  async markNotificationRead(notificationId) {
+    const res = await api.put(`/notifications/${notificationId}/read`);
+    return res.data;
+  },
+
+  async markAllNotificationsRead() {
+    const res = await api.post('/notifications/mark-all');
+    return res.data;
+  },
+
+  async clearAllNotifications() {
+    const res = await api.delete('/notifications/clear-all');
     return res.data;
   }
 };

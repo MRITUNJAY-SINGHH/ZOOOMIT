@@ -15,8 +15,11 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { typography, radius } from '../constants/theme';
+import { hapticFeedback } from '../services/haptics';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const BIKE_WIDTH = 220;
+const BIKE_HEIGHT = 200;
 
 function LogoLockIcon() {
   return (
@@ -53,130 +56,155 @@ export default function SplashScreenComponent() {
 
   // Animation values
   const bgOpacity = useRef(new Animated.Value(0)).current;
-  const bgScale = useRef(new Animated.Value(1.08)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
-  const logoTranslateY = useRef(new Animated.Value(-30)).current;
-  const logoScale = useRef(new Animated.Value(0.85)).current;
+  const logoTranslateY = useRef(new Animated.Value(-24)).current;
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const bottomBadgeOpacity = useRef(new Animated.Value(0)).current;
   const screenFade = useRef(new Animated.Value(1)).current;
 
-  // Pulse animation for the status capsule
-  const pulseAnim = useRef(new Animated.Value(1)).current;
+  // Bike specific motion: starts completely off-screen on the left
+  const bikeTranslateX = useRef(new Animated.Value(-BIKE_WIDTH - 80)).current;
+  const bikeBounceY = useRef(new Animated.Value(0)).current;
+  const bikeTilt = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Hide Expo default splash as soon as our custom animated splash mounts
+    // Hide Expo default splash as soon as our animated splash screen loads
     SplashScreen.hideAsync().catch(() => {});
 
-    // Start entrance animations sequence
-    Animated.parallel([
-      // 1. Background image fade-in and smooth camera zoom settling
-      Animated.timing(bgOpacity, {
-        toValue: 1,
-        duration: 700,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true
-      }),
-      Animated.timing(bgScale, {
-        toValue: 1.0,
-        duration: 1400,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true
-      }),
-
-      // 2. Logo entrance with bounce & drop
+    // 1. Continuous engine suspension bounce while driving
+    const bounceLoop = Animated.loop(
       Animated.sequence([
-        Animated.delay(200),
-        Animated.parallel([
-          Animated.timing(logoOpacity, {
-            toValue: 1,
-            duration: 500,
-            useNativeDriver: true
-          }),
-          Animated.spring(logoTranslateY, {
-            toValue: 0,
-            friction: 6,
-            tension: 50,
-            useNativeDriver: true
-          }),
-          Animated.spring(logoScale, {
-            toValue: 1,
-            friction: 5,
-            tension: 60,
-            useNativeDriver: true
-          })
-        ]),
-        // 3. Tagline fade in
+        Animated.timing(bikeBounceY, {
+          toValue: -2.5,
+          duration: 120,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true
+        }),
+        Animated.timing(bikeBounceY, {
+          toValue: 2,
+          duration: 120,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true
+        })
+      ])
+    );
+    bounceLoop.start();
+
+    // 2. Initial Splash Screen Elements Appearance (City background + ZOOOMIT Logo)
+    Animated.sequence([
+      // First: City background and logo fade in smoothly
+      Animated.parallel([
+        Animated.timing(bgOpacity, {
+          toValue: 1,
+          duration: 450,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: true
+        }),
+        Animated.timing(logoOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true
+        }),
+        Animated.spring(logoTranslateY, {
+          toValue: 0,
+          friction: 7,
+          tension: 60,
+          useNativeDriver: true
+        }),
         Animated.timing(taglineOpacity, {
           toValue: 1,
           duration: 400,
           useNativeDriver: true
         }),
-        // 4. Bottom status pill fade in
         Animated.timing(bottomBadgeOpacity, {
           toValue: 1,
-          duration: 350,
+          duration: 400,
           useNativeDriver: true
         })
-      ])
-    ]).start();
+      ]),
 
-    // Subtle pulsing for the status indicator
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 600,
-          easing: Easing.inOut(Easing.ease),
+      // Brief gentle pause so the user sees the splash screen clearly
+      Animated.delay(350),
+
+      // 3. Smooth, continuous bike run: comes from left side and goes all the way to right side
+      Animated.parallel([
+        Animated.timing(bikeTilt, {
+          toValue: 1, // subtle forward riding angle
+          duration: 300,
           useNativeDriver: true
         }),
-        Animated.timing(pulseAnim, {
-          toValue: 1.0,
-          duration: 600,
-          easing: Easing.inOut(Easing.ease),
+        Animated.timing(bikeTranslateX, {
+          toValue: SCREEN_WIDTH + 80,
+          duration: 1950, // smooth, natural riding speed across the screen
+          easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
           useNativeDriver: true
         })
       ])
-    ).start();
+    ]).start(() => {
+      // Haptic confirmation upon bike run completion
+      hapticFeedback.light?.();
 
-    // Transition timer to seamlessly route to Login Screen
-    const timer = setTimeout(() => {
-      // Smooth fade-out before navigation
+      // 4. Smoothly fade out and open the Login screen
       Animated.timing(screenFade, {
         toValue: 0,
-        duration: 400,
+        duration: 320,
         easing: Easing.in(Easing.ease),
         useNativeDriver: true
       }).start(() => {
+        bounceLoop.stop();
         if (!isLoading && isAuthenticated) {
           router.replace('/(tabs)');
         } else {
           router.replace('/login');
         }
       });
-    }, 2500);
+    });
 
-    return () => clearTimeout(timer);
+    return () => bounceLoop.stop();
   }, [isAuthenticated, isLoading, router]);
+
+  // Subtle natural riding angle
+  const bikeRotation = bikeTilt.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '-1.5deg']
+  });
 
   return (
     <Animated.View style={[styles.container, { opacity: screenFade }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFC928" translucent={false} />
 
-      {/* Full-bleed Animated Background & Delivery Cityscape */}
+      {/* Cityscape & Yellow Road Background */}
       <Animated.View
         style={[
           StyleSheet.absoluteFillObject,
+          { opacity: bgOpacity }
+        ]}
+      >
+        <Image
+          source={require('../../assets/images/splash-city-bg.jpg')}
+          style={styles.heroBackground}
+          contentFit="cover"
+          priority="high"
+        />
+      </Animated.View>
+
+      {/* Animated Delivery Scooter: Rides smoothly from Left to Right */}
+      <Animated.View
+        style={[
+          styles.bikeContainer,
           {
-            opacity: bgOpacity,
-            transform: [{ scale: bgScale }]
+            transform: [
+              { translateX: bikeTranslateX },
+              { translateY: bikeBounceY },
+              { rotate: bikeRotation }
+            ]
           }
         ]}
       >
         <Image
-          source={require('../../assets/images/splash-hero-bg.jpg')}
-          style={styles.heroBackground}
-          contentFit="cover"
+          source={require('../../assets/images/rider-scooter.png')}
+          style={styles.bikeImage}
+          contentFit="contain"
           priority="high"
         />
       </Animated.View>
@@ -189,10 +217,7 @@ export default function SplashScreenComponent() {
               styles.logoBlock,
               {
                 opacity: logoOpacity,
-                transform: [
-                  { translateY: logoTranslateY },
-                  { scale: logoScale }
-                ]
+                transform: [{ translateY: logoTranslateY }]
               }
             ]}
           >
@@ -209,10 +234,7 @@ export default function SplashScreenComponent() {
         <Animated.View
           style={[
             styles.bottomStatusArea,
-            {
-              opacity: bottomBadgeOpacity,
-              transform: [{ scale: pulseAnim }]
-            }
+            { opacity: bottomBadgeOpacity }
           ]}
         >
           <View style={styles.statusPill}>
@@ -240,7 +262,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18
+    paddingVertical: 18,
+    zIndex: 10
   },
 
   // Top Branding
@@ -266,6 +289,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3
   },
 
+  // Animated Bike Container positioned naturally on the road level
+  bikeContainer: {
+    position: 'absolute',
+    bottom: SCREEN_HEIGHT * 0.18,
+    width: BIKE_WIDTH,
+    height: BIKE_HEIGHT,
+    zIndex: 5
+  },
+  bikeImage: {
+    width: '100%',
+    height: '100%'
+  },
+
   // Bottom Status Pill
   bottomStatusArea: {
     marginBottom: 20,
@@ -274,7 +310,7 @@ const styles = StyleSheet.create({
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: radius.pill,

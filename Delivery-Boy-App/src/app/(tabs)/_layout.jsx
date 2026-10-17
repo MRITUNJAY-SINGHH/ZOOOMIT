@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tabs, Redirect } from 'expo-router';
-import { LayoutDashboard, Package, Wallet, User } from 'lucide-react-native';
-import { colors, typography, spacing } from '../../constants/theme';
+import { Home, ShoppingBag, Wallet, User } from 'lucide-react-native';
+import { colors, typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -24,15 +24,19 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.secondary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: colors.textPrimary,
+        tabBarInactiveTintColor: '#94A3B8',
         tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopWidth: 1.5,
-          borderTopColor: colors.borderLight,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#E2E8F0',
           height: 64,
           paddingBottom: 8,
-          paddingTop: 8
+          paddingTop: 8,
+          elevation: 0,
+          shadowOpacity: 0,
+          shadowRadius: 0,
+          shadowOffset: { width: 0, height: 0 }
         },
         tabBarLabelStyle: {
           fontFamily: typography.family.bold,
@@ -44,8 +48,14 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size, focused }) => (
-            <LayoutDashboard size={focused ? 22 : 20} color={focused ? colors.secondary : color} />
+          tabBarIcon: ({ focused }) => (
+            focused ? (
+              <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FFC928', alignItems: 'center', justifyContent: 'center' }}>
+                <Home size={18} color="#111827" strokeWidth={2.4} />
+              </View>
+            ) : (
+              <Home size={20} color="#94A3B8" strokeWidth={1.8} />
+            )
           )
         }}
       />
@@ -53,8 +63,14 @@ export default function TabsLayout() {
         name="orders"
         options={{
           title: 'Orders',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Package size={focused ? 22 : 20} color={focused ? colors.secondary : color} />
+          tabBarIcon: ({ focused }) => (
+            focused ? (
+              <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FFC928', alignItems: 'center', justifyContent: 'center' }}>
+                <ShoppingBag size={18} color="#111827" strokeWidth={2.4} />
+              </View>
+            ) : (
+              <ShoppingBag size={20} color="#94A3B8" strokeWidth={1.8} />
+            )
           )
         }}
       />
@@ -62,8 +78,14 @@ export default function TabsLayout() {
         name="earnings"
         options={{
           title: 'Earnings',
-          tabBarIcon: ({ color, size, focused }) => (
-            <Wallet size={focused ? 22 : 20} color={focused ? colors.secondary : color} />
+          tabBarIcon: ({ focused }) => (
+            focused ? (
+              <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FFC928', alignItems: 'center', justifyContent: 'center' }}>
+                <Wallet size={18} color="#111827" strokeWidth={2.4} />
+              </View>
+            ) : (
+              <Wallet size={20} color="#94A3B8" strokeWidth={1.8} />
+            )
           )
         }}
       />
@@ -71,8 +93,14 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size, focused }) => (
-            <User size={focused ? 22 : 20} color={focused ? colors.secondary : color} />
+          tabBarIcon: ({ focused }) => (
+            focused ? (
+              <View style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: '#FFC928', alignItems: 'center', justifyContent: 'center' }}>
+                <User size={18} color="#111827" strokeWidth={2.4} />
+              </View>
+            ) : (
+              <User size={20} color="#94A3B8" strokeWidth={1.8} />
+            )
           )
         }}
       />

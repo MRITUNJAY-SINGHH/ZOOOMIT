@@ -81,10 +81,18 @@ const orderSchema = new mongoose.Schema({
     verifiedAt: { type: Date }
   },
   
-  // Rider Assignment
+  // Rider Assignment & Store Cash Settlement
   assignedRider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   assignedAt: { type: Date },
   deliveredAt: { type: Date },
+  riderEarnings: { type: Number, default: 0 }, // Authoritative earned amount locked upon delivery
+  riderSettlementStatus: { 
+    type: String, 
+    enum: ['Unsettled', 'Settled'], 
+    default: 'Unsettled' 
+  },
+  riderSettledAt: { type: Date },
+  riderSettlementId: { type: mongoose.Schema.Types.ObjectId, ref: 'RiderSettlement' },
   
   // Cancellation Details
   cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

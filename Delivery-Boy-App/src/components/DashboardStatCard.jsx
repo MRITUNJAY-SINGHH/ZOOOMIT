@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, typography, radius, spacing } from '../constants/theme';
 
 export const DashboardStatCard = ({
@@ -8,12 +8,16 @@ export const DashboardStatCard = ({
   subtitle,
   icon: Icon,
   variant = 'default', // 'default' | 'highlight'
-  style
+  style,
+  onPress
 }) => {
   const isHighlight = variant === 'highlight';
+  const CardWrapper = onPress ? TouchableOpacity : View;
 
   return (
-    <View
+    <CardWrapper
+      activeOpacity={0.8}
+      onPress={onPress}
       style={[
         styles.card,
         isHighlight ? styles.highlightCard : styles.defaultCard,
@@ -34,7 +38,7 @@ export const DashboardStatCard = ({
           {subtitle}
         </Text>
       )}
-    </View>
+    </CardWrapper>
   );
 };
 

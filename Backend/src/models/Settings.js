@@ -26,7 +26,10 @@ const settingsSchema = new mongoose.Schema({
   
   lowStockThresholdDefault: { type: Number, default: 10 },
   expiryAlertDays: { type: [Number], default: [30, 15, 10, 5] },
-  allowNegativeStock: { type: Boolean, default: false }
+  allowNegativeStock: { type: Boolean, default: false },
+  
+  // Delivery Partner Compensation Settings (Admin configured)
+  deliveryPartnerRatePerOrder: { type: Number, default: 30 }
 }, { timestamps: true });
 
 const Settings = mongoose.model('Settings', settingsSchema);

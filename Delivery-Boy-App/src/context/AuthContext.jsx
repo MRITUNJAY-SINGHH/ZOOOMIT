@@ -90,10 +90,20 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     hapticFeedback.light();
-    await authStorage.clearAuth();
-    setToken(null);
-    setPartner(null);
-    setIsOnline(false);
+    try {
+      if (isOnline) {
+        try {
+          await deliveryService.toggleOnline(false);
+        } catch {
+          // ignore offline toggle error during cleanup
+        }
+      }
+    } finally {
+      await authStorage.clearAuth();
+      setToken(null);
+      setPartner(null);
+      setIsOnline(false);
+    }
   };
 
   const toggleOnline = async () => {

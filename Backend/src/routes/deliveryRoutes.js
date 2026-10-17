@@ -10,10 +10,15 @@ import {
   rejectOrder,
   updateOrderStatusStep,
   verifyOtpAndDeliver,
+  regenerateDeliveryOtp,
   cancelOrderWithReason,
   getRiderOrders,
   getRiderOrderDetails,
-  getRiderEarnings
+  getRiderEarnings,
+  getRiderSettlements,
+  confirmStoreCashSettlement,
+  updateDeliveryProfile,
+  submitPartnerFeedback
 } from '../controllers/deliveryController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 
@@ -24,13 +29,19 @@ router.use(protect, restrictTo('DeliveryBoy', 'Admin'));
 
 // Profile & Status
 router.get('/profile', getDeliveryProfile);
+router.put('/profile', updateDeliveryProfile);
 router.put('/toggle-online', toggleOnline);
 router.put('/push-token', updatePushToken);
 router.put('/location', updateLocation);
 
-// Dashboard & Stats
+// Partner Feedback & Support
+router.post('/feedback', submitPartnerFeedback);
+
+// Dashboard, Earnings & Store Cash Settlements
 router.get('/dashboard', getDashboardStats);
 router.get('/earnings', getRiderEarnings);
+router.get('/settlements', getRiderSettlements);
+router.post('/settlements/confirm', confirmStoreCashSettlement);
 
 // Orders Management
 router.get('/orders/available', getAvailableOrders);
@@ -42,6 +53,7 @@ router.post('/orders/:id/accept', acceptOrder);
 router.post('/orders/:id/reject', rejectOrder);
 router.put('/orders/:id/status', updateOrderStatusStep);
 router.post('/orders/:id/verify-otp', verifyOtpAndDeliver);
+router.post('/orders/:id/regenerate-otp', regenerateDeliveryOtp);
 router.post('/orders/:id/cancel', cancelOrderWithReason);
 
 export default router;

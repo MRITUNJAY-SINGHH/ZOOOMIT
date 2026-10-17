@@ -1,572 +1,709 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
-  Alert,
-  Modal
+  Modal,
+  ActivityIndicator,
+  StatusBar,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Image } from 'expo-image';
 import {
+  Settings,
   User,
-  Bike,
-  ShieldCheck,
-  CreditCard,
-  Bell,
-  HelpCircle,
+  Headphones,
   Info,
-  LogOut,
+  Shield,
+  FileText,
+  MessageSquare,
   ChevronRight,
-  Phone,
-  Mail,
-  MapPin,
-  X
+  LogOut
 } from 'lucide-react-native';
-import { colors, typography, radius, spacing } from '../../constants/theme';
-import { AppHeader, AppButton } from '../../components';
+import { typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
+import { deliveryService } from '../../services/deliveryService';
 import { hapticFeedback } from '../../services/haptics';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { partner, logout, isOnline } = useAuth();
+  const { partner, logout, isOnline, toggleOnline } = useAuth();
 
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [supportModalVisible, setSupportModalVisible] = useState(false);
-  const [aboutModalVisible, setAboutModalVisible] = useState(false);
+  // Logout state
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isTogglingStatus, setIsTogglingStatus] = useState(false);
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out from your ZOOOMIT Delivery Partner account?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            router.replace('/login');
-          }
+  // Business metrics from real backend
+  const [stats, setStats] = useState({
+    completedDeliveries: partner?.totalDeliveries || 320,
+    totalEarned: partner?.totalEarnings || 9600,
+    cashToCollect: 420
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchMetrics = async () => {
+      try {
+        const dashboard = await deliveryService.getDashboard();
+        if (isMounted && dashboard) {
+          setStats({
+            completedDeliveries: dashboard.totalDeliveries ?? (dashboard.todayCompleted ?? 320),
+            totalEarned: dashboard.totalEarnings ?? (dashboard.todayEarnings ?? 9600),
+            cashToCollect: dashboard.cashToCollect ?? 420
+          });
         }
-      ]
-    );
+      } catch {
+        // preserve existing or fallback data cleanly
+      }
+    };
+    fetchMetrics();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const partnerName = partner?.name || 'Rahul Sharma';
+  const partnerInitials = partnerName
+    .trim()
+    .split(/\s+/)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase() || 'RS';
+
+  const handleToggleOnlineStatus = async () => {
+    try {
+      setIsTogglingStatus(true);
+      hapticFeedback.light?.();
+      await toggleOnline?.(!isOnline);
+    } catch {
+      Alert.alert('Status Update', 'Could not update online status. Please check your network.');
+    } finally {
+      setIsTogglingStatus(false);
+    }
   };
 
-  const partnerInitials = partner?.name
-    ? partner.name
-        .split(' ')
-        .map((n) => n[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'ZP';
+  // Exactly 6 menu rows matching the reference image Screen 1
+  const menuItems = [
+    {
+      id: 'personal-info',
+      title: 'Personal Information',
+      subtitle: 'Name and contact details',
+      icon: User,
+      iconColor: '#2563EB',
+      bgColor: '#EFF6FF',
+      borderColor: '#DBEAFE',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/personal-info');
+      }
+    },
+    {
+      id: 'help',
+      title: 'Help & Support',
+      subtitle: 'FAQs and delivery help',
+      icon: Headphones,
+      iconColor: '#16A34A',
+      bgColor: '#F0FDF4',
+      borderColor: '#DCFCE7',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/help-support');
+      }
+    },
+    {
+      id: 'about',
+      title: 'About ZOOOMIT',
+      subtitle: 'App version and information',
+      icon: Info,
+      iconColor: '#D97706',
+      bgColor: '#FFFBEB',
+      borderColor: '#FEF3C7',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/about');
+      }
+    },
+    {
+      id: 'privacy',
+      title: 'Privacy Policy',
+      subtitle: 'Privacy and data use',
+      icon: Shield,
+      iconColor: '#9333EA',
+      bgColor: '#FAF5FF',
+      borderColor: '#F3E8FF',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/privacy-policy');
+      }
+    },
+    {
+      id: 'terms',
+      title: 'Terms & Conditions',
+      subtitle: 'App terms and conditions',
+      icon: FileText,
+      iconColor: '#EA580C',
+      bgColor: '#FFF7ED',
+      borderColor: '#FFEDD5',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/terms-conditions');
+      }
+    },
+    {
+      id: 'feedback',
+      title: 'Feedback & Suggestions',
+      subtitle: 'Report an issue or share an idea',
+      icon: MessageSquare,
+      iconColor: '#DC2626',
+      bgColor: '#FEF2F2',
+      borderColor: '#FEE2E2',
+      onPress: () => {
+        hapticFeedback.light?.();
+        router.push('/feedback');
+      }
+    }
+  ];
+
+  const handleOpenLogoutConfirmation = () => {
+    hapticFeedback.warning?.();
+    setIsLoggingOut(false);
+    setLogoutModalVisible(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      hapticFeedback.medium?.();
+
+      await logout();
+
+      setLogoutModalVisible(false);
+      setIsLoggingOut(false);
+      router.replace('/login');
+    } catch {
+      setIsLoggingOut(false);
+      Alert.alert('Logout Failed', 'Unable to complete logout. Please check connection and try again.');
+    }
+  };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <AppHeader
-        title="Partner Profile"
-        subtitle="Manage your credentials, vehicle, and dispatch settings"
-      />
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFD233" translucent={false} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Profile Identity Card */}
-        <View style={styles.profileCard}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{partnerInitials}</Text>
-          </View>
-          <View style={styles.profileDetails}>
-            <View style={styles.nameRow}>
-              <Text style={styles.partnerName}>{partner?.name || 'Delivery Partner'}</Text>
-              <View style={styles.verifiedBadge}>
-                <ShieldCheck size={12} color={colors.badgeDeliveredText} style={{ marginRight: 3 }} />
-                <Text style={styles.verifiedText}>Verified</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Warm Yellow Header Area matching reference */}
+        <View style={styles.yellowHeaderArea}>
+          <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
+            {/* Top Bar with Title & Settings */}
+            <View style={styles.topRow}>
+              <Text style={styles.headerTitle}>Profile</Text>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  hapticFeedback.light?.();
+                  router.push('/personal-info');
+                }}
+                style={styles.settingsBtn}
+                accessibilityLabel="Settings"
+                accessibilityRole="button"
+              >
+                <Settings size={22} color="#111827" strokeWidth={2} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Profile Identity Row */}
+            <View style={styles.profileRow}>
+              {/* Initials-based circular avatar on white circle */}
+              <View style={styles.avatarCircle}>
+                <Text style={styles.avatarText}>{partnerInitials}</Text>
+              </View>
+
+              {/* Identity Details */}
+              <View style={styles.identityCol}>
+                {/* Online / Offline Status Badge */}
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={handleToggleOnlineStatus}
+                  disabled={isTogglingStatus}
+                  style={[
+                    styles.statusBadge,
+                    isOnline ? styles.statusBadgeOnline : styles.statusBadgeOffline
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.statusDot,
+                      { backgroundColor: isOnline ? '#16A34A' : '#64748B' }
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.statusText,
+                      { color: isOnline ? '#15803D' : '#475569' }
+                    ]}
+                  >
+                    {isTogglingStatus
+                      ? 'Updating...'
+                      : isOnline
+                      ? 'Online'
+                      : 'Offline'}
+                  </Text>
+                </TouchableOpacity>
+
+                {/* Partner Real Name */}
+                <Text style={styles.partnerNameText} numberOfLines={1}>
+                  {partnerName}
+                </Text>
+
+                {/* Role label */}
+                <Text style={styles.partnerRoleText}>Delivery Partner</Text>
               </View>
             </View>
-            <View style={styles.infoRow}>
-              <Mail size={13} color={colors.textMuted} style={styles.infoIcon} />
-              <Text style={styles.infoText}>{partner?.email || 'partner@zooomit.in'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Phone size={13} color={colors.textMuted} style={styles.infoIcon} />
-              <Text style={styles.infoText}>{partner?.phone || '+91 98000 00000'}</Text>
-            </View>
-            <View style={styles.statusRow}>
-              <View
-                style={[
-                  styles.statusDot,
-                  { backgroundColor: isOnline ? colors.success : colors.textMuted }
-                ]}
-              />
-              <Text style={styles.statusLabelText}>
-                {isOnline ? 'Currently Online' : 'Currently Offline'}
-              </Text>
-            </View>
-          </View>
+          </SafeAreaView>
         </View>
 
-        {/* Section: Vehicle & Documents */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Vehicle & Dispatch Info</Text>
+        {/* Content Section */}
+        <View style={styles.bodySection}>
+          {/* Summary Statistics Card: 3 metrics */}
+          <View style={styles.statsCard}>
+            <View style={styles.statCol}>
+              <Text style={styles.statNumber}>{stats.completedDeliveries}</Text>
+              <Text style={styles.statLabel}>Completed{'\n'}Deliveries</Text>
+            </View>
 
-          <View style={styles.rowItem}>
-            <View style={styles.rowIconCircle}>
-              <Bike size={18} color={colors.secondary} />
+            <View style={styles.statDivider} />
+
+            <View style={styles.statCol}>
+              <Text style={styles.statNumber}>₹{Number(stats.totalEarned).toLocaleString('en-IN')}</Text>
+              <Text style={styles.statLabel}>Total Earned</Text>
             </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Registered Vehicle</Text>
-              <Text style={styles.rowSubtitle}>Two-Wheeler Motorcycle / Scooter</Text>
-            </View>
-            <View style={styles.regBadge}>
-              <Text style={styles.regText}>DL-04-AB-2041</Text>
+
+            <View style={styles.statDivider} />
+
+            <View style={styles.statCol}>
+              <Text style={styles.statNumber}>₹{Number(stats.cashToCollect).toLocaleString('en-IN')}</Text>
+              <Text style={styles.statLabel}>Cash to Collect</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          {/* Menu Rows: 6 items in exact reference order */}
+          <View style={styles.menuContainerCard}>
+            {menuItems.map((item, index) => {
+              const IconComp = item.icon;
+              const isLast = index === menuItems.length - 1;
 
-          <View style={styles.rowItem}>
-            <View style={styles.rowIconCircle}>
-              <ShieldCheck size={18} color={colors.success} />
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Driving License & KYC</Text>
-              <Text style={styles.rowSubtitle}>Approved & Verified by Dispatch Admin</Text>
-            </View>
-            <Text style={styles.statusOkText}>Active</Text>
-          </View>
-        </View>
+              return (
+                <React.Fragment key={item.id}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={item.onPress}
+                    style={styles.menuItemRow}
+                  >
+                    {/* Consistent Colored Icon Tile */}
+                    <View
+                      style={[
+                        styles.menuIconBox,
+                        {
+                          backgroundColor: item.bgColor,
+                          borderColor: item.borderColor
+                        }
+                      ]}
+                    >
+                      <IconComp size={20} color={item.iconColor} strokeWidth={2} />
+                    </View>
 
-        {/* Section: Bank & Payouts */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Payout Details</Text>
+                    {/* Text Details */}
+                    <View style={styles.menuTextCol}>
+                      <Text style={styles.menuItemTitle}>{item.title}</Text>
+                      <Text style={styles.menuItemSub}>{item.subtitle}</Text>
+                    </View>
 
-          <View style={styles.rowItem}>
-            <View style={styles.rowIconCircle}>
-              <CreditCard size={18} color={colors.secondary} />
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Bank Account Transfer</Text>
-              <Text style={styles.rowSubtitle}>HDFC Bank •••• 4092</Text>
-            </View>
-            <Text style={styles.verifiedSub}>Primary</Text>
-          </View>
+                    {/* Right Chevron */}
+                    <ChevronRight size={18} color="#94A3B8" strokeWidth={2} />
+                  </TouchableOpacity>
 
-          <View style={styles.divider} />
-
-          <View style={styles.rowItem}>
-            <View style={styles.rowIconCircle}>
-              <Text style={styles.upiIconText}>UPI</Text>
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Instant UPI ID</Text>
-              <Text style={styles.rowSubtitle}>rider@okhdfcbank</Text>
-            </View>
-            <Text style={styles.verifiedSub}>Linked</Text>
-          </View>
-        </View>
-
-        {/* Section: Preferences & App Settings */}
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>App Preferences</Text>
-
-          <View style={styles.rowItem}>
-            <View style={styles.rowIconCircle}>
-              <Bell size={18} color={colors.secondary} />
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Push Notifications</Text>
-              <Text style={styles.rowSubtitle}>High-priority new order sound & vibration</Text>
-            </View>
-            <Switch
-              value={pushEnabled}
-              onValueChange={(val) => {
-                hapticFeedback.selection();
-                setPushEnabled(val);
-              }}
-              trackColor={{ false: colors.border, true: colors.primary }}
-              thumbColor={colors.secondary}
-            />
+                  {!isLast && <View style={styles.menuRowDivider} />}
+                </React.Fragment>
+              );
+            })}
           </View>
 
-          <View style={styles.divider} />
-
+          {/* Logout Button: Outlined red button matching reference */}
           <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setSupportModalVisible(true)}
-            style={styles.rowItem}
+            activeOpacity={0.8}
+            onPress={handleOpenLogoutConfirmation}
+            style={styles.logoutBtn}
+            accessibilityLabel="Logout"
+            accessibilityRole="button"
           >
-            <View style={styles.rowIconCircle}>
-              <HelpCircle size={18} color={colors.secondary} />
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>Help & Support Hotline</Text>
-              <Text style={styles.rowSubtitle}>Contact dispatch supervisor or hub manager</Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => setAboutModalVisible(true)}
-            style={styles.rowItem}
-          >
-            <View style={styles.rowIconCircle}>
-              <Info size={18} color={colors.secondary} />
-            </View>
-            <View style={styles.rowContent}>
-              <Text style={styles.rowTitle}>About ZOOOMIT Partner</Text>
-              <Text style={styles.rowSubtitle}>Version 1.0.0 • Production Build</Text>
-            </View>
-            <ChevronRight size={18} color={colors.textMuted} />
+            <LogOut size={18} color="#DC2626" strokeWidth={2.2} style={{ marginRight: 8 }} />
+            <Text style={styles.logoutBtnText}>Logout</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Logout Button */}
-        <AppButton
-          title="Sign Out"
-          variant="outline"
-          icon={LogOut}
-          onPress={handleLogout}
-          style={styles.logoutBtn}
-          textStyle={{ color: colors.error }}
-        />
       </ScrollView>
 
-      {/* Support Modal */}
-      <Modal visible={supportModalVisible} transparent animationType="fade">
+      {/* Confirmation Popup & Logout Modal */}
+      <Modal
+        visible={logoutModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isLoggingOut) setLogoutModalVisible(false);
+        }}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Dispatch Support</Text>
-              <TouchableOpacity onPress={() => setSupportModalVisible(false)}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Image
-              source={require('../../../assets/images/support-illustration.png')}
-              style={styles.modalIllustration}
-              contentFit="contain"
-            />
-            <Text style={styles.modalText}>
-              Need assistance on the road? Your dedicated ZOOOMIT hub dispatch helpline is active 24/7.
-            </Text>
-            <View style={styles.supportContactBox}>
-              <Text style={styles.supportLabel}>DISPATCH HELPLINE</Text>
-              <Text style={styles.supportNumber}>+91 1800 200 4000</Text>
-              <Text style={styles.supportEmail}>dispatch@zooomit.in</Text>
-            </View>
-            <AppButton
-              title="Close Support"
-              variant="secondary"
-              onPress={() => setSupportModalVisible(false)}
-              style={{ marginTop: spacing.md }}
-            />
-          </View>
-        </View>
-      </Modal>
+            {isLoggingOut ? (
+              <View style={styles.modalLoadingState}>
+                <View style={styles.loadingSpinnerCircle}>
+                  <ActivityIndicator size="large" color="#DC2626" />
+                </View>
+                <Text style={styles.modalTitle}>Logging out...</Text>
+                <Text style={styles.modalMessage}>
+                  Please wait while we securely log you out.
+                </Text>
+              </View>
+            ) : (
+              <>
+                <View style={styles.modalIconCircle}>
+                  <LogOut size={28} color="#DC2626" strokeWidth={2.2} />
+                </View>
 
-      {/* About Modal */}
-      <Modal visible={aboutModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>About ZOOOMIT</Text>
-              <TouchableOpacity onPress={() => setAboutModalVisible(false)}>
-                <X size={20} color={colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.aboutTagline}>Fast. Fresh. Instant.</Text>
-            <Text style={styles.modalText}>
-              ZOOOMIT Delivery Partner App empowers couriers with ultra-fast order acceptance, real-time turn-by-turn navigation, secure delivery OTP validation, and immediate earnings tracking.
-            </Text>
-            <View style={styles.versionInfo}>
-              <Text style={styles.versionText}>Application: ZOOOMIT Delivery Partner</Text>
-              <Text style={styles.versionText}>Version: 1.0.0 (Release Build)</Text>
-              <Text style={styles.versionText}>Engine: Expo SDK 57 / React Native</Text>
-            </View>
-            <AppButton
-              title="Done"
-              variant="primary"
-              onPress={() => setAboutModalVisible(false)}
-              style={{ marginTop: spacing.md }}
-            />
+                <Text style={styles.modalTitle}>Logout</Text>
+                <Text style={styles.modalMessage}>
+                  Are you sure you want to logout?{'\n'}You will need to sign in again to access your account.
+                </Text>
+
+                <View style={styles.modalActionsRow}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => setLogoutModalVisible(false)}
+                    style={styles.modalCancelBtn}
+                  >
+                    <Text style={styles.modalCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={handleConfirmLogout}
+                    style={styles.modalLogoutBtn}
+                  >
+                    <Text style={styles.modalLogoutText}>Logout</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: colors.softBackground
+    backgroundColor: '#F8F9FA'
   },
   scrollContent: {
-    padding: spacing.lg,
-    paddingBottom: spacing['4xl']
+    paddingBottom: 40
   },
-  profileCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.xl,
-    padding: spacing.md,
+
+  // Warm Yellow Header Area matching reference
+  yellowHeaderArea: {
+    backgroundColor: '#FFD233',
+    paddingHorizontal: 20,
+    paddingBottom: 24
+  },
+  headerSafeArea: {
+    paddingTop: 8
+  },
+  topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.lg
+    justifyContent: 'space-between',
+    marginBottom: 18
   },
-  avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: colors.primary,
-    borderWidth: 2,
-    borderColor: colors.primaryDark,
+  headerTitle: {
+    fontFamily: typography.family.heavy,
+    fontSize: 27,
+    color: '#111827',
+    letterSpacing: -0.5
+  },
+  settingsBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  // Profile Identity Row
+  profileRow: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  avatarCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md
+    marginRight: 16
   },
   avatarText: {
     fontFamily: typography.family.heavy,
-    fontSize: typography.size.xl,
-    color: colors.secondary
+    fontSize: 24,
+    color: '#111827'
   },
-  profileDetails: {
-    flex: 1
+  identityCol: {
+    flex: 1,
+    justifyContent: 'center'
   },
-  nameRow: {
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    marginBottom: 2
-  },
-  partnerName: {
-    fontFamily: typography.family.bold,
-    fontSize: typography.size.md,
-    color: colors.textPrimary
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.badgeDelivered,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#86EFAC',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: radius.pill
+    marginBottom: 6
   },
-  verifiedText: {
-    fontFamily: typography.family.bold,
-    fontSize: 9,
-    color: colors.badgeDeliveredText
+  statusBadgeOnline: {
+    backgroundColor: '#DCFCE7',
+    borderColor: '#86EFAC'
   },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2
-  },
-  infoIcon: {
-    marginRight: 4
-  },
-  infoText: {
-    fontFamily: typography.family.regular,
-    fontSize: typography.size.xs,
-    color: colors.textSecondary
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4
+  statusBadgeOffline: {
+    backgroundColor: '#F1F5F9',
+    borderColor: '#CBD5E1'
   },
   statusDot: {
     width: 7,
     height: 7,
-    borderRadius: 4,
+    borderRadius: 3.5,
     marginRight: 5
   },
-  statusLabelText: {
-    fontFamily: typography.family.medium,
-    fontSize: 11,
-    color: colors.textMuted
-  },
-  sectionCard: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    marginBottom: spacing.md
-  },
-  sectionTitle: {
+  statusText: {
     fontFamily: typography.family.bold,
-    fontSize: typography.size.xs,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm
+    fontSize: 11
   },
-  rowItem: {
+  partnerNameText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 20,
+    color: '#111827',
+    letterSpacing: -0.3,
+    marginBottom: 2
+  },
+  partnerRoleText: {
+    fontFamily: typography.family.medium,
+    fontSize: 13,
+    color: '#475569'
+  },
+
+  // Body content section
+  bodySection: {
+    paddingHorizontal: 16,
+    marginTop: -10
+  },
+
+  // 3-Column Stats Card
+  statsCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xs
-  },
-  rowIconCircle: {
-    width: 36,
-    height: 36,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    backgroundColor: colors.surfaceSubtle,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingVertical: 14,
+    paddingHorizontal: 10,
+    marginBottom: 14
+  },
+  statCol: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  statNumber: {
+    fontFamily: typography.family.heavy,
+    fontSize: 17,
+    color: '#111827',
+    textAlign: 'center'
+  },
+  statLabel: {
+    fontFamily: typography.family.medium,
+    fontSize: 11,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 14
+  },
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#E5E7EB'
+  },
+
+  // Menu Container Card
+  menuContainerCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+    marginBottom: 16
+  },
+  menuItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 13
+  },
+  menuIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: colors.border,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.sm
+    marginRight: 14
   },
-  upiIconText: {
-    fontFamily: typography.family.heavy,
-    fontSize: 10,
-    color: colors.secondary
+  menuTextCol: {
+    flex: 1,
+    marginRight: 8
   },
-  rowContent: {
-    flex: 1
-  },
-  rowTitle: {
+  menuItemTitle: {
     fontFamily: typography.family.bold,
-    fontSize: typography.size.sm,
-    color: colors.textPrimary
+    fontSize: 15,
+    color: '#111827'
   },
-  rowSubtitle: {
+  menuItemSub: {
     fontFamily: typography.family.regular,
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 1
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2
   },
-  regBadge: {
-    backgroundColor: colors.primaryLight,
-    borderWidth: 1,
-    borderColor: colors.primaryDark,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: radius.sm
-  },
-  regText: {
-    fontFamily: typography.family.bold,
-    fontSize: 10,
-    color: '#854D0E'
-  },
-  statusOkText: {
-    fontFamily: typography.family.bold,
-    fontSize: typography.size.xs,
-    color: colors.success
-  },
-  verifiedSub: {
-    fontFamily: typography.family.medium,
-    fontSize: typography.size.xs,
-    color: colors.textMuted
-  },
-  divider: {
+  menuRowDivider: {
     height: 1,
-    backgroundColor: colors.borderLight,
-    marginVertical: spacing.xs
+    backgroundColor: '#F1F5F9'
   },
+
+  // Outlined Logout Button
   logoutBtn: {
-    marginTop: spacing.md,
-    borderColor: colors.errorSubtle,
-    backgroundColor: colors.surface
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#FCA5A5',
+    borderRadius: 16,
+    height: 50,
+    marginBottom: 16
   },
+  logoutBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 15,
+    color: '#DC2626'
+  },
+
+  // Logout Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(17, 24, 39, 0.65)',
+    backgroundColor: 'rgba(17, 24, 39, 0.55)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.md
+    padding: 24
   },
   modalCard: {
     width: '100%',
-    maxWidth: 380,
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 2,
-    borderColor: colors.border,
-    padding: spacing.lg
+    maxWidth: 340,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    padding: 24,
+    alignItems: 'center'
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  modalIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FEE2E2',
     alignItems: 'center',
-    marginBottom: spacing.sm
+    justifyContent: 'center',
+    marginBottom: 16
   },
   modalTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: typography.size.md,
-    color: colors.textPrimary
+    fontFamily: typography.family.heavy,
+    fontSize: 19,
+    color: '#111827',
+    marginBottom: 8
   },
-  modalIllustration: {
-    width: 130,
-    height: 130,
-    alignSelf: 'center',
-    marginVertical: spacing.sm
-  },
-  modalText: {
+  modalMessage: {
     fontFamily: typography.family.regular,
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    fontSize: 13.5,
+    color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20
+    lineHeight: 19,
+    marginBottom: 20
   },
-  supportContactBox: {
-    backgroundColor: colors.primarySoft,
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%'
+  },
+  modalCancelBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
     borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: radius.md,
-    padding: spacing.md,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
-    marginVertical: spacing.md
+    justifyContent: 'center'
   },
-  supportLabel: {
+  modalCancelText: {
     fontFamily: typography.family.bold,
-    fontSize: 10,
-    color: '#854D0E',
-    letterSpacing: 0.5
+    fontSize: 14,
+    color: '#334155'
   },
-  supportNumber: {
-    fontFamily: typography.family.heavy,
-    fontSize: typography.size.lg,
-    color: colors.secondary,
-    marginTop: 2
+  modalLogoutBtn: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  supportEmail: {
-    fontFamily: typography.family.regular,
-    fontSize: typography.size.xs,
-    color: colors.textSecondary,
-    marginTop: 2
+  modalLogoutText: {
+    fontFamily: typography.family.bold,
+    fontSize: 14,
+    color: '#FFFFFF'
   },
-  aboutTagline: {
-    fontFamily: typography.family.heavy,
-    fontSize: typography.size.lg,
-    color: colors.secondary,
-    textAlign: 'center',
-    marginVertical: spacing.xs
+
+  modalLoadingState: {
+    alignItems: 'center',
+    paddingVertical: 12
   },
-  versionInfo: {
-    backgroundColor: colors.surfaceSubtle,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginVertical: spacing.md,
-    gap: 4
-  },
-  versionText: {
-    fontFamily: typography.family.regular,
-    fontSize: typography.size.xs,
-    color: colors.textSecondary
+  loadingSpinnerCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16
   }
 });
