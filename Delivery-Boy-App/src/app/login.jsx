@@ -1,29 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
+  TextInput,
+  TouchableOpacity,
   StyleSheet,
   ScrollView,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
-  Alert
+  Alert,
+  ActivityIndicator,
+  Dimensions,
+  StatusBar
 } from 'react-native';
 import { Image } from 'expo-image';
-import { Mail, Lock, ShieldCheck } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import Svg, { Rect, Path, Circle } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, typography, radius, spacing } from '../constants/theme';
-import { AppButton, AppInput } from '../components';
 import { useAuth } from '../context/AuthContext';
+import { hapticFeedback } from '../services/haptics';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+function LogoLockIcon() {
+  return (
+    <Svg width={36} height={40} viewBox="0 0 24 28" fill="none">
+      <Path
+        d="M6 10V6.5C6 3.46 8.46 1 11.5 1h1C15.54 1 18 3.46 18 6.5V10"
+        stroke="#111827"
+        strokeWidth="2.8"
+        strokeLinecap="round"
+      />
+      <Rect
+        x="2"
+        y="10"
+        width="20"
+        height="16"
+        rx="3.5"
+        stroke="#111827"
+        strokeWidth="2.8"
+      />
+      <Circle cx="12" cy="16.5" r="1.6" fill="#111827" />
+      <Path
+        d="M12 18.1v2.4"
+        stroke="#111827"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login, isAuthenticated } = useAuth();
+  const scrollViewRef = useRef(null);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [emailFocused, setEmailFocused] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -31,226 +74,432 @@ export default function LoginScreen() {
     }
   }, [isAuthenticated, router]);
 
+  // Listen for keyboard events to allow smooth auto-scroll & extra scrollable padding
+  useEffect(() => {
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, () => {
+      setKeyboardVisible(true);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const handleEmailChange = (val) => {
+    // Tactile haptic click on every keystroke
+    hapticFeedback.type?.();
+    setEmail(val);
+    if (errorMessage) setErrorMessage('');
+  };
+
+  const handlePasswordChange = (val) => {
+    // Tactile haptic click on every keystroke
+    hapticFeedback.type?.();
+    setPassword(val);
+    if (errorMessage) setErrorMessage('');
+  };
+
+  const handleEmailFocus = () => {
+    hapticFeedback.light?.();
+    setEmailFocused(true);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 160, animated: true });
+    }, 120);
+  };
+
+  const handlePasswordFocus = () => {
+    hapticFeedback.light?.();
+    setPasswordFocused(true);
+    setTimeout(() => {
+      scrollViewRef.current?.scrollTo({ y: 230, animated: true });
+    }, 120);
+  };
+
+  const handleTogglePassword = () => {
+    hapticFeedback.selection?.();
+    setShowPassword((prev) => !prev);
+  };
+
   const validate = () => {
-    const errs = {};
     if (!email.trim()) {
-      errs.email = 'Please enter your registered email address';
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
-      errs.email = 'Please enter a valid email format';
+      setErrorMessage('Please enter your partner email address.');
+      return false;
     }
-
+    if (!/\S+@\S+\.\S+/.test(email.trim())) {
+      setErrorMessage('Please enter a valid email address.');
+      return false;
+    }
     if (!password) {
-      errs.password = 'Please enter your password';
-    } else if (password.length < 4) {
-      errs.password = 'Password must be at least 4 characters';
+      setErrorMessage('Please enter your account password.');
+      return false;
     }
-
-    setErrors(errs);
-    return Object.keys(errs).length === 0;
+    if (password.length < 4) {
+      setErrorMessage('Password must be at least 4 characters.');
+      return false;
+    }
+    return true;
   };
 
   const handleSignIn = async () => {
-    if (!validate()) return;
+    Keyboard.dismiss();
+    setErrorMessage('');
+    if (!validate()) {
+      hapticFeedback.warning?.();
+      return;
+    }
+
     setLoading(true);
-    setErrors({});
+    hapticFeedback.medium?.();
 
     try {
       await login(email.trim(), password);
+      hapticFeedback.success?.();
       router.replace('/(tabs)');
     } catch (err) {
-      const msg = err.response?.data?.message || err.message || 'Login failed. Please check credentials.';
-      Alert.alert('Authentication Failed', msg);
-      setErrors({ global: msg });
+      hapticFeedback.error?.();
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        'Authentication failed. Please verify your credentials.';
+      setErrorMessage(msg);
+      Alert.alert('Sign In Failed', msg);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleForgotPassword = () => {
+    Keyboard.dismiss();
+    hapticFeedback.light?.();
+    Alert.alert(
+      'Forgot Password',
+      'Please contact your ZOOOMIT hub dispatch administrator to verify your identity and reset your partner account password.',
+      [{ text: 'OK' }]
+    );
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardContainer}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
+    <View style={styles.screenContainer}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFC928" translucent={false} />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardContainer}
         >
-          {/* Header Brand */}
-          <View style={styles.brandHeader}>
-            <Image
-              source={require('../../assets/images/delivery-partner-hero.png')}
-              style={styles.heroImage}
-              contentFit="contain"
-            />
-            <View style={styles.brandBadge}>
-              <Text style={styles.brandName}>ZOOOMIT</Text>
-              <View style={styles.roleTag}>
-                <ShieldCheck size={13} color="#854D0E" style={{ marginRight: 4 }} />
-                <Text style={styles.roleText}>DELIVERY PARTNER</Text>
+          <ScrollView
+            ref={scrollViewRef}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { paddingBottom: keyboardVisible ? 280 : 40 }
+            ]}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            bounces={false}
+          >
+            {/* Top Yellow Hero & Branding Section */}
+            <View style={styles.topHeroSection}>
+              {/* App Logo */}
+              <View style={styles.logoBlock}>
+                <LogoLockIcon />
+                <Text style={styles.logoBrand}>ZOOOMIT</Text>
+                <Text style={styles.logoTagline}>Delivery Partner</Text>
+              </View>
+
+              {/* Delivery Boy & City Hero Image */}
+              <View
+                style={[
+                  styles.heroImageWrapper,
+                  keyboardVisible && styles.heroImageWrapperCompact
+                ]}
+              >
+                <Image
+                  source={require('../../assets/images/login-hero.jpg')}
+                  style={styles.heroImage}
+                  contentFit="cover"
+                  contentPosition="bottom center"
+                  priority="high"
+                />
               </View>
             </View>
-            <Text style={styles.title}>Partner Sign In</Text>
-            <Text style={styles.subtitle}>
-              Sign in with the credentials assigned by your administrator.
-            </Text>
-          </View>
 
-          {/* Form */}
-          <View style={styles.formCard}>
-            {Boolean(errors.global) && (
-              <View style={styles.globalErrorBox}>
-                <Text style={styles.globalErrorText}>{errors.global}</Text>
-              </View>
-            )}
-
-            <AppInput
-              label="Registered Email"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
-              }}
-              placeholder="e.g. rider@example.com"
-              keyboardType="email-address"
-              icon={Mail}
-              error={errors.email}
-            />
-
-            <AppInput
-              label="Password"
-              value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: null }));
-              }}
-              placeholder="Enter your secret password"
-              secureTextEntry
-              icon={Lock}
-              error={errors.password}
-            />
-
-            <AppButton
-              title="Sign In to Dashboard"
-              variant="primary"
-              onPress={handleSignIn}
-              loading={loading}
-              style={styles.signInBtn}
-            />
-
-            {/* Note */}
-            <View style={styles.footerNote}>
-              <Text style={styles.footerNoteText}>
-                Need assistance with your partner account? Contact your local ZOOOMIT hub dispatch administrator.
+            {/* Bottom White Sheet Form */}
+            <View style={styles.bottomSheetCard}>
+              <Text style={styles.sheetTitle}>Sign in to your account</Text>
+              <Text style={styles.sheetSubtitle}>
+                Welcome back! Continue to deliver with ZOOOMIT
               </Text>
+
+              {/* Error Banner */}
+              {Boolean(errorMessage) && (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorBannerText}>{errorMessage}</Text>
+                </View>
+              )}
+
+              {/* Email Input */}
+              <View
+                style={[
+                  styles.inputFieldBox,
+                  emailFocused && styles.inputFieldBoxFocused,
+                  Boolean(errorMessage && !email.trim()) && styles.inputFieldBoxError
+                ]}
+              >
+                <Mail
+                  size={20}
+                  color={emailFocused ? colors.secondary : '#6B7280'}
+                  style={styles.inputLeftIcon}
+                />
+                <TextInput
+                  value={email}
+                  onChangeText={handleEmailChange}
+                  placeholder="partner@zooomit.com"
+                  placeholderTextColor="#9CA3AF"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onFocus={handleEmailFocus}
+                  onBlur={() => setEmailFocused(false)}
+                  style={styles.textInputField}
+                />
+              </View>
+
+              {/* Password Input */}
+              <View
+                style={[
+                  styles.inputFieldBox,
+                  passwordFocused && styles.inputFieldBoxFocused,
+                  Boolean(errorMessage && !password) && styles.inputFieldBoxError
+                ]}
+              >
+                <Lock
+                  size={20}
+                  color={passwordFocused ? colors.secondary : '#6B7280'}
+                  style={styles.inputLeftIcon}
+                />
+                <TextInput
+                  value={password}
+                  onChangeText={handlePasswordChange}
+                  placeholder="••••••••"
+                  placeholderTextColor="#9CA3AF"
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  onFocus={handlePasswordFocus}
+                  onBlur={() => setPasswordFocused(false)}
+                  style={styles.textInputField}
+                />
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleTogglePassword}
+                  hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                  style={styles.eyeToggleBtn}
+                >
+                  {showPassword ? (
+                    <EyeOff size={20} color="#6B7280" />
+                  ) : (
+                    <Eye size={20} color="#6B7280" />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              {/* Sign In Button */}
+              <TouchableOpacity
+                activeOpacity={0.85}
+                onPress={handleSignIn}
+                disabled={loading}
+                style={[styles.signInButton, loading && styles.signInButtonDisabled]}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#111827" />
+                ) : (
+                  <Text style={styles.signInButtonText}>Sign In</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Forgot Password Link */}
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={handleForgotPassword}
+                style={styles.forgotPasswordContainer}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screenContainer: {
+    flex: 1,
+    backgroundColor: '#FFC928'
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.softBackground
+    backgroundColor: '#FFC928'
   },
   keyboardContainer: {
     flex: 1
   },
   scrollContent: {
-    padding: spacing.lg,
     flexGrow: 1,
-    justifyContent: 'center'
+    backgroundColor: '#FFFFFF'
   },
-  brandHeader: {
+
+  // Top Yellow Section
+  topHeroSection: {
+    backgroundColor: '#FFC928',
     alignItems: 'center',
-    marginBottom: spacing.lg
+    paddingTop: 10
+  },
+  logoBlock: {
+    alignItems: 'center',
+    marginBottom: 6
+  },
+  logoBrand: {
+    fontFamily: typography.family.black,
+    fontSize: 32,
+    letterSpacing: 2,
+    color: '#111827',
+    marginTop: 6
+  },
+  logoTagline: {
+    fontFamily: typography.family.medium,
+    fontSize: 16,
+    color: '#111827',
+    marginTop: 1,
+    letterSpacing: 0.2
+  },
+
+  // Hero Image
+  heroImageWrapper: {
+    width: SCREEN_WIDTH,
+    height: 250,
+    overflow: 'hidden'
+  },
+  heroImageWrapperCompact: {
+    height: 150
   },
   heroImage: {
-    width: 150,
-    height: 150,
-    marginBottom: spacing.sm
+    width: '100%',
+    height: '100%'
   },
-  brandBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    marginBottom: spacing.xs
+
+  // Bottom White Card
+  bottomSheetCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 36,
+    borderTopRightRadius: 36,
+    marginTop: -18,
+    paddingHorizontal: spacing.xl,
+    paddingTop: 26,
+    paddingBottom: 32
   },
-  brandName: {
-    fontFamily: typography.family.heavy,
-    fontSize: typography.size['2xl'],
-    color: colors.secondary,
-    letterSpacing: 1
-  },
-  roleTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.primaryLight,
-    borderWidth: 1,
-    borderColor: colors.primaryDark,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radius.pill
-  },
-  roleText: {
+  sheetTitle: {
     fontFamily: typography.family.bold,
-    fontSize: 10,
-    color: '#854D0E',
-    letterSpacing: 0.5
-  },
-  title: {
-    fontFamily: typography.family.bold,
-    fontSize: typography.size.xl,
-    color: colors.textPrimary,
-    marginTop: spacing.xs
-  },
-  subtitle: {
-    fontFamily: typography.family.regular,
-    fontSize: typography.size.sm,
-    color: colors.textSecondary,
+    fontSize: 22,
+    color: '#111827',
     textAlign: 'center',
-    marginTop: 4,
-    maxWidth: 290
+    letterSpacing: -0.3
   },
-  formCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    padding: spacing.lg
+  sheetSubtitle: {
+    fontFamily: typography.family.regular,
+    fontSize: 14,
+    color: '#6B7280',
+    textAlign: 'center',
+    marginTop: 6,
+    marginBottom: 24,
+    lineHeight: 20
   },
-  globalErrorBox: {
-    backgroundColor: colors.errorSubtle,
+
+  // Error Banner
+  errorBanner: {
+    backgroundColor: '#FEF2F2',
     borderWidth: 1,
-    borderColor: colors.error,
+    borderColor: '#FCA5A5',
     borderRadius: radius.md,
-    padding: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     marginBottom: spacing.md
   },
-  globalErrorText: {
+  errorBannerText: {
     fontFamily: typography.family.medium,
     fontSize: typography.size.xs,
-    color: colors.error,
+    color: '#DC2626',
     textAlign: 'center'
   },
-  signInBtn: {
-    marginTop: spacing.sm
+
+  // Inputs
+  inputFieldBox: {
+    height: 54,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    marginBottom: 16
   },
-  footerNote: {
-    marginTop: spacing.lg,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.borderLight
+  inputFieldBoxFocused: {
+    borderColor: '#FFC928'
   },
-  footerNoteText: {
-    fontFamily: typography.family.regular,
-    fontSize: 11,
-    color: colors.textMuted,
-    textAlign: 'center',
-    lineHeight: 16
+  inputFieldBoxError: {
+    borderColor: '#DC2626'
+  },
+  inputLeftIcon: {
+    marginRight: 12
+  },
+  textInputField: {
+    flex: 1,
+    height: '100%',
+    fontFamily: typography.family.medium,
+    fontSize: 15,
+    color: '#111827'
+  },
+  eyeToggleBtn: {
+    padding: 6
+  },
+
+  // Sign In Button
+  signInButton: {
+    height: 52,
+    backgroundColor: '#FFC928',
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    marginBottom: 16
+  },
+  signInButtonDisabled: {
+    opacity: 0.65
+  },
+  signInButtonText: {
+    fontFamily: typography.family.bold,
+    fontSize: 16,
+    color: '#111827'
+  },
+
+  // Forgot Password
+  forgotPasswordContainer: {
+    alignSelf: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12
+  },
+  forgotPasswordText: {
+    fontFamily: typography.family.semibold,
+    fontSize: 14,
+    color: '#2563EB'
   }
 });

@@ -57,13 +57,6 @@ function NavigationManager() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // Redirect to login if unauthenticated once loaded
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.replace('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
-
   // Listen for push notifications when opened
   useEffect(() => {
     const subscription = notificationService.addNotificationResponseReceivedListener((response) => {

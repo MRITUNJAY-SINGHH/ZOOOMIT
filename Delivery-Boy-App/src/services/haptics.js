@@ -24,5 +24,12 @@ export const hapticFeedback = {
   },
   selection() {
     if (isSupported) Haptics.selectionAsync().catch(() => {});
+  },
+  type() {
+    if (isSupported) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {
+        Haptics.selectionAsync().catch(() => {});
+      });
+    }
   }
 };
