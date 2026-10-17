@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Switch,
-  Alert
+  Alert,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -24,6 +25,33 @@ import { hapticFeedback } from '../services/haptics';
 
 export default function NotificationSettingsScreen() {
   const router = useRouter();
+  const isNavigatingBack = useRef(false);
+
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 400);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
 
   const [masterPush, setMasterPush] = useState(true);
   const [loudAlert, setLoudAlert] = useState(true);
@@ -44,10 +72,7 @@ export default function NotificationSettingsScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => {
-            hapticFeedback.light();
-            router.back();
-          }}
+          onPress={handleBack}
           style={styles.backBtn}
           accessibilityLabel="Back"
           accessibilityRole="button"

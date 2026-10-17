@@ -1,107 +1,271 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Home, ShoppingBag, Wallet, User } from 'lucide-react-native';
-import { typography } from '../constants/theme';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Extrapolation,
+  Easing
+} from 'react-native-reanimated';
+import {
+  House,
+  Home,
+  ClipboardList,
+  ShoppingBag,
+  Wallet,
+  CircleUserRound,
+  CircleUser,
+  UserRound,
+  User
+} from 'lucide-react-native';
+import { colors, typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
 
-export default function PartnerBottomBar({ activeTab = 'profile' }) {
-  const router = useRouter();
+const HomeIcon = House || Home;
+const OrdersIcon = ClipboardList || ShoppingBag;
+const EarningsIcon = Wallet;
+const ProfileIcon = CircleUserRound || CircleUser || UserRound || User;
 
-  const handleTabPress = (tabName, route) => {
-    hapticFeedback.light?.();
-    if (tabName === activeTab && route === '/(tabs)/profile') {
-      // already on profile or subpage, if on subpage go back to profile
-      router.replace('/(tabs)/profile');
-      return;
-    }
-    router.replace(route);
-  };
+function TabItem({ tab, isActive, onPress, onLongPress }) {
+  const progress = useSharedValue(isActive ? 1 : 0);
 
-  const tabs = [
-    { name: 'home', label: 'Home', icon: Home, route: '/(tabs)' },
-    { name: 'orders', label: 'Orders', icon: ShoppingBag, route: '/(tabs)/orders' },
-    { name: 'earnings', label: 'Earnings', icon: Wallet, route: '/(tabs)/earnings' },
-    { name: 'profile', label: 'Profile', icon: User, route: '/(tabs)/profile' }
-  ];
+  useEffect(() => {
+    progress.value = withTiming(isActive ? 1 : 0, {
+      duration: 140,
+      easing: Easing.out(Easing.cubic)
+    });
+  }, [isActive]);
+
+  const animatedCapsuleStyle = useAnimatedStyle(() => {
+    const scale = interpolate(progress.value, [0, 1], [0.82, 1], Extrapolation.CLAMP);
+    const opacity = interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity,
+      transform: [{ scale }]
+    };
+  });
+
+  const animatedIconStyle = useAnimatedStyle(() => {
+    const scale = interpolate(progress.value, [0, 1], [1, 1.08], Extrapolation.CLAMP);
+    const translateY = interpolate(progress.value, [0, 1], [0, -1.5], Extrapolation.CLAMP);
+    return {
+      transform: [{ scale }, { translateY }]
+    };
+  });
+
+  const animatedLabelStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(progress.value, [0, 1], [0.75, 1], Extrapolation.CLAMP);
+    return {
+      opacity
+    };
+  });
+
+  const IconComp = tab.icon;
 
   return (
-    <View style={styles.tabBar}>
-      {tabs.map((tab) => {
-        const isActive = activeTab === tab.name;
-        const IconComp = tab.icon;
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      onLongPress={onLongPress}
+      style={styles.tabButton}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isActive }}
+      accessibilityLabel={tab.label}
+    >
+      <View style={styles.iconContainer}>
+        <Animated.View style={[styles.activeCapsule, animatedCapsuleStyle]} />
+        <Animated.View style={animatedIconStyle}>
+          <IconComp
+            size={20}
+            color={isActive ? colors.secondary : '#64748B'}
+            strokeWidth={isActive ? 2.4 : 2}
+          />
+        </Animated.View>
+      </View>
 
-        return (
-          <TouchableOpacity
-            key={tab.name}
-            activeOpacity={0.75}
-            onPress={() => handleTabPress(tab.name, tab.route)}
-            style={styles.tabButton}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isActive }}
-            accessibilityLabel={tab.label}
-          >
-            {isActive ? (
-              <View style={styles.activeIconBox}>
-                <IconComp size={18} color="#111827" strokeWidth={2.4} />
-              </View>
-            ) : (
-              <View style={styles.inactiveIconBox}>
-                <IconComp size={20} color="#94A3B8" strokeWidth={1.8} />
-              </View>
-            )}
-            <Text style={[styles.tabLabel, isActive ? styles.tabLabelActive : styles.tabLabelInactive]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      <Animated.Text
+        numberOfLines={1}
+        style={[
+          styles.tabLabel,
+          isActive ? styles.tabLabelActive : styles.tabLabelInactive,
+          animatedLabelStyle
+        ]}
+      >
+        {tab.label}
+      </Animated.Text>
+    </TouchableOpacity>
+  );
+}
+
+export default function PartnerBottomBar(props) {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const isNavigatingRef = useRef(false);
+
+  // Dynamic bottom padding: handles Android gesture bar, 3-button bar, and iOS home indicator
+  const bottomPadding = Math.max(insets.bottom, 10);
+
+  // Determine if running as Expo Router custom tab bar or standalone
+  const isExpoTabs = !!(props.state && props.navigation);
+
+  const TABS = [
+    { key: 'home', routeName: 'index', label: 'Home', icon: HomeIcon, routePath: '/(tabs)' },
+    { key: 'orders', routeName: 'orders', label: 'Orders', icon: OrdersIcon, routePath: '/(tabs)/orders' },
+    { key: 'earnings', routeName: 'earnings', label: 'Earnings', icon: EarningsIcon, routePath: '/(tabs)/earnings' },
+    { key: 'profile', routeName: 'profile', label: 'Profile', icon: ProfileIcon, routePath: '/(tabs)/profile' }
+  ];
+
+  // Active key in Expo Router Tabs mode
+  const currentRouteName = isExpoTabs
+    ? props.state.routes[props.state.index]?.name
+    : null;
+
+  // Active key in Standalone mode
+  const standaloneActive = props.activeTab || 'profile';
+
+  // Optimistic tab tracking so visual selection updates instantly (0ms) upon user tap
+  const [optimisticTab, setOptimisticTab] = useState(null);
+
+  useEffect(() => {
+    setOptimisticTab(null);
+  }, [currentRouteName, standaloneActive]);
+
+  const activeTabKey = optimisticTab || (isExpoTabs ? currentRouteName : standaloneActive);
+
+  return (
+    <View style={[styles.barContainer, { paddingBottom: bottomPadding }]}>
+      <View style={styles.tabsRow}>
+        {TABS.map((tab) => {
+          const isActuallyActive = isExpoTabs
+            ? currentRouteName === tab.routeName
+            : standaloneActive === tab.key;
+          const isVisuallyActive = isExpoTabs
+            ? activeTabKey === tab.routeName
+            : activeTabKey === tab.key;
+
+          const handlePress = () => {
+            if (isActuallyActive) {
+              // If on a subscreen and tapping current tab, quickly return
+              if (!isExpoTabs && tab.key === standaloneActive) {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.navigate(tab.routePath);
+                }
+              }
+              return;
+            }
+
+            if (isNavigatingRef.current) return;
+            isNavigatingRef.current = true;
+
+            // Trigger immediate optimistic visual update
+            setOptimisticTab(isExpoTabs ? tab.routeName : tab.key);
+            hapticFeedback.light?.();
+
+            if (isExpoTabs) {
+              const route = props.state.routes.find((r) => r.name === tab.routeName);
+              if (route) {
+                const event = props.navigation.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true
+                });
+
+                if (!event.defaultPrevented) {
+                  props.navigation.navigate(route.name);
+                }
+              }
+            } else {
+              // Standalone mode on nested screen
+              router.navigate(tab.routePath);
+            }
+
+            setTimeout(() => {
+              isNavigatingRef.current = false;
+            }, 100);
+          };
+
+          const handleLongPress = () => {
+            if (isExpoTabs) {
+              const route = props.state.routes.find((r) => r.name === tab.routeName);
+              if (route) {
+                props.navigation.emit({
+                  type: 'tabLongPress',
+                  target: route.key
+                });
+              }
+            }
+          };
+
+          return (
+            <TabItem
+              key={tab.key}
+              tab={tab}
+              isActive={isVisuallyActive}
+              onPress={handlePress}
+              onLongPress={handleLongPress}
+            />
+          );
+        })}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  tabBar: {
+  barContainer: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingTop: 8,
+    elevation: 0,
+    shadowOpacity: 0
+  },
+  tabsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E2E8F0',
-    height: 64,
-    paddingBottom: 6,
-    paddingTop: 6,
-    elevation: 0,
-    shadowOpacity: 0
+    width: '100%',
+    paddingHorizontal: 6
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    paddingVertical: 2
   },
-  activeIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#FFC928',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  inactiveIconBox: {
-    width: 32,
+  iconContainer: {
+    width: 52,
     height: 32,
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    position: 'relative'
+  },
+  activeCapsule: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 12,
+    backgroundColor: '#FFC928'
   },
   tabLabel: {
-    fontFamily: typography.family.bold,
-    fontSize: 11,
-    marginTop: 2
+    fontSize: 11.5,
+    lineHeight: 15,
+    marginTop: 3,
+    textAlign: 'center'
   },
   tabLabelActive: {
+    fontFamily: typography.family.bold,
     color: '#111827'
   },
   tabLabelInactive: {
-    color: '#94A3B8'
+    fontFamily: typography.family.medium,
+    color: '#64748B'
   }
 });

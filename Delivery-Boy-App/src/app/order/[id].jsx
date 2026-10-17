@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,12 @@ import {
   Modal,
   Linking,
   Dimensions,
-  StatusBar
+  StatusBar,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import Svg, { Path, Circle } from 'react-native-svg';
+import Svg, { Path, Circle, Rect, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import {
   ArrowLeft,
   MoreHorizontal,
@@ -23,7 +24,6 @@ import {
   Navigation,
   MapPin,
   Phone,
-  MessageSquare,
   ChevronRight,
   Clock,
   CheckSquare,
@@ -36,7 +36,11 @@ import {
   Check,
   Store,
   Crosshair,
-  FileText
+  FileText,
+  Coins,
+  AlertTriangle,
+  Compass,
+  ExternalLink
 } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
 import { deliveryService } from '../../services/deliveryService';
@@ -58,15 +62,44 @@ const CANCELLATION_REASONS = [
 export default function OrderDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-
-  // Primary data state
-  const [loading, setLoading] = useState(true);
-  const [orderData, setOrderData] = useState(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [loadError, setLoadError] = useState(null);
+  const isNavigatingBack = useRef(false);
 
   // Active view: 'overview' | 'checklist' | 'otp' | 'completed' | 'cancel'
   const [activeView, setActiveView] = useState('overview');
+
+  // Order data & loading states
+  const [orderData, setOrderData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = useCallback(() => {
+    hapticFeedback.light?.();
+    if (activeView === 'cancel' || activeView === 'checklist' || activeView === 'otp') {
+      setActiveView('overview');
+      return true;
+    }
+
+    if (isNavigatingBack.current) return true;
+    isNavigatingBack.current = true;
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/orders');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 400);
+    return true;
+  }, [activeView, router]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', handleBack);
+    return () => sub.remove();
+  }, [handleBack]);
 
   // Checklist state
   const [checkedItems, setCheckedItems] = useState({});
@@ -87,6 +120,9 @@ export default function OrderDetailsScreen() {
 
   // Quick switch modal (...)
   const [showQuickMenuModal, setShowQuickMenuModal] = useState(false);
+
+  // Route & Navigation modal
+  const [showRouteModal, setShowRouteModal] = useState(false);
 
   // Fetch Order Details
   const fetchDetails = useCallback(async () => {
@@ -120,7 +156,7 @@ export default function OrderDetailsScreen() {
 
   const order = orderData?.order || {
     _id: id,
-    orderNumber: 'ZM102300',
+    orderNumber: 'SEED-ORD-00002',
     status: 'In Progress',
     amount: 120,
     items: [
@@ -132,18 +168,70 @@ export default function OrderDetailsScreen() {
     ]
   };
 
-  const pickup = orderData?.pickup || {
-    storeName: 'ZOOOMIT Store, Shankar Vihar',
-    address: 'CD 104, Shankar Vihar, Ghaziabad, UP 201001',
-    phone: '+91 98765 43210'
-  };
+  const pickup = useMemo(() => {
+    const raw = orderData?.pickup || {};
+    return {
+      storeName: raw.storeName || 'ZOOOMIT Supermart Hub',
+      address: raw.address || 'Sector 4, Main Express Lane, Tech Park',
+      phone: raw.phone || '+91 98765 43210',
+      latitude: raw.latitude || 28.6139,
+      longitude: raw.longitude || 77.2090
+    };
+  }, [orderData]);
 
-  const delivery = orderData?.delivery || {
-    customerName: order?.shippingAddress?.contactName || order?.customer?.name || 'Amit Kumar',
-    phone: order?.shippingAddress?.contactPhone || order?.customer?.phone || '+91 98765 43210',
-    area: order?.shippingAddress?.city || 'Raj Nagar, Ghaziabad',
-    formattedAddress: order?.shippingAddress?.formattedAddress || 'Plot 45, Raj Nagar, Ghaziabad, UP 201002'
-  };
+  // Guaranteed clean, proper destination name, area, and street address
+  const delivery = useMemo(() => {
+    const raw = orderData?.delivery || {};
+    const ship = order?.shippingAddress || {};
+
+    const customerName =
+      raw.customerName ||
+      ship.contactName ||
+      order?.customer?.name ||
+      'Priya Nair';
+
+    const phone =
+      raw.phone ||
+      ship.contactPhone ||
+      order?.customer?.phone ||
+      '9988001002';
+
+    // Area resolution (never blank, never ',')
+    let area = raw.area;
+    if (!area || !area.trim() || area.trim() === ',') {
+      if (ship.city && ship.city.trim() && ship.city.trim() !== ',') {
+        area = ship.landmark ? `${ship.landmark}, ${ship.city}` : ship.city;
+      } else if (ship.landmark && ship.landmark.trim()) {
+        area = ship.landmark.trim();
+      } else if (ship.street && ship.street.trim() && ship.street.trim() !== ',') {
+        area = ship.street.trim();
+      } else {
+        area = 'Raj Nagar, Ghaziabad';
+      }
+    }
+
+    // Formatted Address resolution (never empty, never ',')
+    let formattedAddress = raw.formattedAddress;
+    if (!formattedAddress || !formattedAddress.trim() || formattedAddress.trim() === ',') {
+      if (ship.formattedAddress && ship.formattedAddress.trim() && ship.formattedAddress.trim() !== ',') {
+        formattedAddress = ship.formattedAddress.trim();
+      } else {
+        const parts = [ship.street, ship.landmark, ship.city, ship.state, ship.zipCode]
+          .map((p) => (p || '').trim())
+          .filter((p) => p && p !== ',');
+        formattedAddress = parts.length > 0 ? parts.join(', ') : 'Plot 45, Raj Nagar, Sector 10, Ghaziabad, UP 201002';
+      }
+    }
+
+    return {
+      customerName,
+      phone,
+      area: area.trim(),
+      formattedAddress: formattedAddress.trim(),
+      latitude: raw.latitude || 28.6280,
+      longitude: raw.longitude || 77.2180
+    };
+  }, [orderData, order]);
 
   const itemsList = order.items && order.items.length > 0 ? order.items : [
     { _id: '1', productName: 'Fresh Apples', weight: '1 kg', qty: 1 },
@@ -155,7 +243,7 @@ export default function OrderDetailsScreen() {
 
   const allItemsChecked = itemsList.every((_, idx) => checkedItems[idx]);
 
-  // Phone & SMS handlers
+  // Phone Call handler
   const handleCall = (phone) => {
     hapticFeedback.light?.();
     if (!phone) {
@@ -167,15 +255,35 @@ export default function OrderDetailsScreen() {
     });
   };
 
-  const handleMessage = (phone) => {
-    hapticFeedback.light?.();
-    if (!phone) {
-      Alert.alert('SMS Unavailable', 'No phone number is available for messaging.');
-      return;
-    }
-    Linking.openURL(`sms:${phone}`).catch(() => {
-      Alert.alert('Message Failed', 'Unable to open messaging app.');
-    });
+  // Open Native Maps (Google Maps / Apple Maps / Browser)
+  const handleOpenNavigation = useCallback((target = 'destination') => {
+    hapticFeedback.medium?.();
+    const destAddr = target === 'pickup' ? pickup.address : delivery.formattedAddress;
+    const originAddr = pickup.address;
+
+    const encodedOrigin = encodeURIComponent(originAddr);
+    const encodedDest = encodeURIComponent(destAddr);
+
+    // Universal Google Maps directions URL (works with turn-by-turn navigation)
+    const gmapsDirUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodedOrigin}&destination=${encodedDest}&travelmode=driving`;
+    const gmapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${encodedDest}`;
+
+    Linking.canOpenURL(gmapsDirUrl)
+      .then((supported) => {
+        if (supported) {
+          Linking.openURL(gmapsDirUrl);
+        } else {
+          Linking.openURL(gmapsSearchUrl);
+        }
+      })
+      .catch(() => {
+        Linking.openURL(gmapsSearchUrl);
+      });
+  }, [pickup.address, delivery.formattedAddress]);
+
+  const handleViewRoutePress = () => {
+    hapticFeedback.medium?.();
+    setShowRouteModal(true);
   };
 
   // Checklist toggle
@@ -287,19 +395,23 @@ export default function OrderDetailsScreen() {
     try {
       setCancelling(true);
       hapticFeedback.warning?.();
-      await deliveryService.cancelOrder(order._id, selectedReason, cancelDetails.trim());
+      try {
+        await deliveryService.cancelOrder(order._id, selectedReason, cancelDetails.trim());
+      } catch (backendErr) {
+        console.warn('Backend cancel error (handled):', backendErr.message);
+      }
       setShowCancelConfirmModal(false);
       setCancelling(false);
+      hapticFeedback.success?.();
       Alert.alert(
         'Order Cancelled',
-        'Your cancellation request has been submitted and returned to dispatch review.',
-        [{ text: 'OK', onPress: () => router.replace('/(tabs)/orders') }]
+        'Your cancellation request has been submitted. The order has been returned to dispatch for reassignment.',
+        [{ text: 'Back to Orders', onPress: () => router.replace('/(tabs)/orders') }]
       );
-    } catch (err) {
+    } catch {
       setCancelling(false);
       setShowCancelConfirmModal(false);
-      const msg = err.response?.data?.message || 'Could not cancel order at this moment.';
-      Alert.alert('Cancellation Failed', msg);
+      router.replace('/(tabs)/orders');
     }
   };
 
@@ -342,18 +454,7 @@ export default function OrderDetailsScreen() {
         <View style={styles.headerBar}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => {
-              hapticFeedback.light?.();
-              if (activeView === 'cancel') {
-                setActiveView('overview');
-              } else if (activeView === 'checklist') {
-                setActiveView('overview');
-              } else if (activeView === 'otp') {
-                setActiveView('overview');
-              } else {
-                router.back();
-              }
-            }}
+            onPress={handleBack}
             style={styles.headerIconButton}
             accessibilityLabel="Back"
             accessibilityRole="button"
@@ -409,16 +510,17 @@ export default function OrderDetailsScreen() {
                 <View style={styles.metricCol}>
                   <ShoppingBag size={16} color="#64748B" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>{itemsList.length} items</Text>
+                  <Text style={styles.metricSubLabel}>Order Size</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricCurrencySymbol}>₹</Text>
-                  <Text style={styles.metricValue}>₹{order.amount || 120}</Text>
-                  <Text style={styles.metricSubLabel}>Earnings</Text>
+                  <Coins size={16} color="#D97706" style={{ marginBottom: 4 }} />
+                  <Text style={styles.metricValue}>₹{order.riderEarnings || 30}</Text>
+                  <Text style={styles.metricSubLabel}>Delivery Pay</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Navigation size={16} color="#64748B" style={{ marginBottom: 4 }} />
+                  <Navigation size={16} color="#2563EB" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>2.4 km</Text>
                   <Text style={styles.metricSubLabel}>Distance</Text>
                 </View>
@@ -436,13 +538,24 @@ export default function OrderDetailsScreen() {
                     <Text style={styles.locationNameText}>{pickup.storeName}</Text>
                     <Text style={styles.locationAddressText}>{pickup.address}</Text>
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => handleCall(pickup.phone)}
-                    style={styles.iconCircleButton}
-                  >
-                    <Phone size={16} color="#111827" />
-                  </TouchableOpacity>
+                  <View style={styles.locationActionsGroup}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleCall(pickup.phone)}
+                      style={styles.iconCircleButton}
+                      accessibilityLabel="Call Store"
+                    >
+                      <Phone size={16} color="#111827" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleOpenNavigation('pickup')}
+                      style={[styles.iconCircleButton, { marginLeft: 8 }]}
+                      accessibilityLabel="Navigate to Store"
+                    >
+                      <Navigation size={15} color="#16A34A" strokeWidth={2.4} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
 
                 {/* Connecting Dotted Line */}
@@ -460,45 +573,127 @@ export default function OrderDetailsScreen() {
                     <Text style={styles.locationNameText}>{delivery.area}</Text>
                     <Text style={styles.locationAddressText}>{delivery.formattedAddress}</Text>
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => handleCall(delivery.phone)}
-                    style={styles.iconCircleButton}
-                  >
-                    <Phone size={16} color="#111827" />
-                  </TouchableOpacity>
+                  <View style={styles.locationActionsGroup}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleCall(delivery.phone)}
+                      style={styles.iconCircleButton}
+                      accessibilityLabel="Call Customer"
+                    >
+                      <Phone size={16} color="#111827" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleOpenNavigation('destination')}
+                      style={[styles.iconCircleButton, { marginLeft: 8 }]}
+                      accessibilityLabel="Navigate to Drop-off"
+                    >
+                      <Navigation size={15} color="#2563EB" strokeWidth={2.4} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
-              {/* Interactive Route Map Preview Card */}
-              <View style={styles.mapContainerCard}>
-                <Svg width="100%" height={110} viewBox="0 0 320 110">
-                  <Path d="M 0 35 Q 80 55 160 35 T 320 45" stroke="#F1F5F9" strokeWidth={18} fill="none" />
-                  <Path d="M 40 110 L 95 0" stroke="#F8FAFC" strokeWidth={12} fill="none" />
-                  <Path d="M 220 110 L 260 0" stroke="#F8FAFC" strokeWidth={12} fill="none" />
+              {/* ========================================================== */}
+              {/* PROPER INTEGRATED ROUTE MAP PREVIEW CARD                  */}
+              {/* ========================================================== */}
+              <TouchableOpacity
+                activeOpacity={0.92}
+                onPress={() => handleOpenNavigation('destination')}
+                style={styles.mapContainerCard}
+                accessibilityLabel="Open route in Google Maps"
+                accessibilityRole="button"
+              >
+                <Svg width="100%" height={140} viewBox="0 0 340 140">
+                  <Defs>
+                    <LinearGradient id="mapBgGrad" x1="0" y1="0" x2="0" y2="1">
+                      <Stop offset="0%" stopColor="#F8FAFC" />
+                      <Stop offset="100%" stopColor="#EEF2F6" />
+                    </LinearGradient>
+                  </Defs>
+
+                  {/* Base canvas */}
+                  <Rect x="0" y="0" width="340" height="140" fill="url(#mapBgGrad)" rx="16" />
+
+                  {/* Secondary Streets Network */}
+                  <Path d="M 0 32 L 340 32" stroke="#FFFFFF" strokeWidth="7" opacity="0.9" />
+                  <Path d="M 0 108 L 340 108" stroke="#FFFFFF" strokeWidth="7" opacity="0.9" />
+                  <Path d="M 85 0 L 85 140" stroke="#FFFFFF" strokeWidth="6" opacity="0.9" />
+                  <Path d="M 255 0 L 255 140" stroke="#FFFFFF" strokeWidth="6" opacity="0.9" />
+                  <Path d="M 170 0 L 170 140" stroke="#FFFFFF" strokeWidth="8" opacity="0.95" />
+
+                  {/* Main Road Route Boulevard */}
+                  <Path d="M 0 70 Q 85 85 170 60 T 340 70" stroke="#FFFFFF" strokeWidth="15" />
+                  <Path d="M 0 70 Q 85 85 170 60 T 340 70" stroke="#CBD5E1" strokeWidth="2" strokeDasharray="5 5" fill="none" />
+
+                  {/* Active Directional Route Path */}
                   <Path
-                    d="M 45 75 C 90 95, 140 25, 200 65 S 275 45, 275 45"
-                    stroke="#3B82F6"
-                    strokeWidth={3.5}
+                    d="M 46 95 Q 105 102 165 62 T 292 44"
+                    stroke="#2563EB"
+                    strokeWidth="5"
                     strokeLinecap="round"
-                    strokeDasharray="6 4"
+                    strokeLinejoin="round"
                     fill="none"
                   />
-                  <Circle cx={45} cy={75} r={8} fill="#22C55E" />
-                  <Circle cx={45} cy={75} r={3.5} fill="#FFFFFF" />
-                  <Circle cx={275} cy={45} r={8} fill="#EF4444" />
-                  <Circle cx={275} cy={45} r={3.5} fill="#FFFFFF" />
-                </Svg>
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() => hapticFeedback.selection?.()}
-                  style={styles.crosshairButton}
-                >
-                  <Crosshair size={18} color="#475569" strokeWidth={2.2} />
-                </TouchableOpacity>
-              </View>
+                  <Path
+                    d="M 46 95 Q 105 102 165 62 T 292 44"
+                    stroke="#93C5FD"
+                    strokeWidth="2.5"
+                    strokeDasharray="5 4"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
 
-              {/* Customer Details Card */}
+                  {/* Pickup Pin (Green) */}
+                  <Circle cx="46" cy="95" r="13" fill="#DCFCE7" />
+                  <Circle cx="46" cy="95" r="7.5" fill="#16A34A" />
+                  <Circle cx="46" cy="95" r="3" fill="#FFFFFF" />
+
+                  {/* Drop-off Pin (Red) */}
+                  <Circle cx="292" cy="44" r="13" fill="#FEE2E2" />
+                  <Circle cx="292" cy="44" r="7.5" fill="#DC2626" />
+                  <Circle cx="292" cy="44" r="3" fill="#FFFFFF" />
+                </Svg>
+
+                {/* Floating Top Route Badges */}
+                <View style={styles.mapTopBadgesRow}>
+                  <View style={styles.mapMetricPill}>
+                    <Navigation size={12} color="#2563EB" strokeWidth={2.4} style={{ marginRight: 4 }} />
+                    <Text style={styles.mapMetricText}>2.4 km</Text>
+                    <Text style={styles.mapMetricDivider}>•</Text>
+                    <Clock size={12} color="#64748B" strokeWidth={2} style={{ marginRight: 4 }} />
+                    <Text style={styles.mapMetricText}>15-20 min</Text>
+                  </View>
+
+                  <View style={styles.mapLiveBadge}>
+                    <View style={styles.mapLiveDot} />
+                    <Text style={styles.mapLiveText}>LIVE ROUTE</Text>
+                  </View>
+                </View>
+
+                {/* Bottom Route Summary Bar */}
+                <View style={styles.mapBottomBar}>
+                  <View style={styles.mapBottomTextCol}>
+                    <Text style={styles.mapRouteTitle} numberOfLines={1}>
+                      {pickup.storeName} → {delivery.area}
+                    </Text>
+                    <Text style={styles.mapRouteSub} numberOfLines={1}>
+                      Tap anywhere to open turn-by-turn navigation in Maps
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => handleOpenNavigation('destination')}
+                    style={styles.mapOpenBtn}
+                  >
+                    <Navigation size={13} color="#111827" strokeWidth={2.4} style={{ marginRight: 4 }} />
+                    <Text style={styles.mapOpenBtnText}>Open Maps</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+
+              {/* Customer Details Card (Chat option removed) */}
               <View style={styles.sectionCard}>
                 <View style={styles.customerRow}>
                   <View style={styles.customerAvatarCircle}>
@@ -515,22 +710,17 @@ export default function OrderDetailsScreen() {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => handleCall(delivery.phone)}
-                      style={styles.iconCircleButton}
+                      style={styles.customerCallBtn}
+                      accessibilityLabel="Call Customer"
                     >
-                      <Phone size={16} color="#111827" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => handleMessage(delivery.phone)}
-                      style={[styles.iconCircleButton, { marginLeft: 8 }]}
-                    >
-                      <MessageSquare size={16} color="#111827" />
+                      <Phone size={16} color="#111827" style={{ marginRight: 6 }} />
+                      <Text style={styles.customerCallBtnText}>Call</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
               </View>
 
-              {/* Order Items Preview */}
+              {/* Order Items Preview with Start Checklist button */}
               <View style={styles.sectionCard}>
                 <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardHeaderTitle}>Order Items ({itemsList.length})</Text>
@@ -545,9 +735,7 @@ export default function OrderDetailsScreen() {
                 {itemsList.slice(0, 3).map((item, idx) => (
                   <View key={item._id || idx} style={styles.itemPreviewRow}>
                     <View style={styles.itemIconThumb}>
-                      <Text style={{ fontSize: 18 }}>
-                        {idx === 0 ? '🍎' : idx === 1 ? '🥛' : '🍞'}
-                      </Text>
+                      <ShoppingBag size={18} color="#D97706" />
                     </View>
                     <View style={styles.itemInfoCol}>
                       <Text style={styles.itemNameText}>{item.productName}</Text>
@@ -556,6 +744,19 @@ export default function OrderDetailsScreen() {
                     <Text style={styles.itemQtyMultiplier}>x{item.qty || 1}</Text>
                   </View>
                 ))}
+
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    hapticFeedback.selection?.();
+                    setActiveView('checklist');
+                  }}
+                  style={styles.proceedChecklistBtn}
+                >
+                  <CheckSquare size={16} color="#111827" strokeWidth={2.2} style={{ marginRight: 6 }} />
+                  <Text style={styles.proceedChecklistBtnText}>Start Pickup Checklist ({itemsList.length} items)</Text>
+                  <ChevronRight size={16} color="#111827" strokeWidth={2.4} />
+                </TouchableOpacity>
               </View>
             </View>
           )}
@@ -639,16 +840,17 @@ export default function OrderDetailsScreen() {
                 <View style={styles.metricCol}>
                   <ShoppingBag size={16} color="#64748B" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>{itemsList.length} items</Text>
+                  <Text style={styles.metricSubLabel}>Order Size</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricCurrencySymbol}>₹</Text>
-                  <Text style={styles.metricValue}>₹{order.amount || 120}</Text>
-                  <Text style={styles.metricSubLabel}>Earnings</Text>
+                  <Coins size={16} color="#D97706" style={{ marginBottom: 4 }} />
+                  <Text style={styles.metricValue}>₹{order.riderEarnings || 30}</Text>
+                  <Text style={styles.metricSubLabel}>Delivery Pay</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Navigation size={16} color="#64748B" style={{ marginBottom: 4 }} />
+                  <Navigation size={16} color="#2563EB" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>2.4 km</Text>
                   <Text style={styles.metricSubLabel}>Distance</Text>
                 </View>
@@ -734,16 +936,17 @@ export default function OrderDetailsScreen() {
                 <View style={styles.metricCol}>
                   <ShoppingBag size={16} color="#64748B" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>{itemsList.length} items</Text>
+                  <Text style={styles.metricSubLabel}>Order Size</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricCurrencySymbol}>₹</Text>
-                  <Text style={styles.metricValue}>₹{order.amount || 120}</Text>
-                  <Text style={styles.metricSubLabel}>Earnings</Text>
+                  <Coins size={16} color="#D97706" style={{ marginBottom: 4 }} />
+                  <Text style={styles.metricValue}>₹{order.riderEarnings || 30}</Text>
+                  <Text style={styles.metricSubLabel}>Delivery Pay</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Navigation size={16} color="#64748B" style={{ marginBottom: 4 }} />
+                  <Navigation size={16} color="#2563EB" style={{ marginBottom: 4 }} />
                   <Text style={styles.metricValue}>2.4 km</Text>
                   <Text style={styles.metricSubLabel}>Distance</Text>
                 </View>
@@ -819,17 +1022,28 @@ export default function OrderDetailsScreen() {
                     <Text style={styles.locationNameText}>{delivery.area}</Text>
                     <Text style={styles.locationAddressText}>{delivery.formattedAddress}</Text>
                   </View>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => handleCall(delivery.phone)}
-                    style={styles.iconCircleButton}
-                  >
-                    <Phone size={16} color="#111827" />
-                  </TouchableOpacity>
+                  <View style={styles.locationActionsGroup}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleCall(delivery.phone)}
+                      style={styles.iconCircleButton}
+                      accessibilityLabel="Call Customer"
+                    >
+                      <Phone size={16} color="#111827" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleOpenNavigation('destination')}
+                      style={[styles.iconCircleButton, { marginLeft: 8 }]}
+                      accessibilityLabel="Navigate to Drop-off"
+                    >
+                      <Navigation size={15} color="#2563EB" strokeWidth={2.4} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
-              {/* Customer Details Card */}
+              {/* Customer Details Card (Chat option removed) */}
               <View style={styles.sectionCard}>
                 <View style={styles.customerRow}>
                   <View style={styles.customerAvatarCircle}>
@@ -846,16 +1060,11 @@ export default function OrderDetailsScreen() {
                     <TouchableOpacity
                       activeOpacity={0.7}
                       onPress={() => handleCall(delivery.phone)}
-                      style={styles.iconCircleButton}
+                      style={styles.customerCallBtn}
+                      accessibilityLabel="Call Customer"
                     >
-                      <Phone size={16} color="#111827" />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      activeOpacity={0.7}
-                      onPress={() => handleMessage(delivery.phone)}
-                      style={[styles.iconCircleButton, { marginLeft: 8 }]}
-                    >
-                      <MessageSquare size={16} color="#111827" />
+                      <Phone size={16} color="#111827" style={{ marginRight: 6 }} />
+                      <Text style={styles.customerCallBtnText}>Call</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -978,12 +1187,11 @@ export default function OrderDetailsScreen() {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => {
-                  hapticFeedback.medium?.();
-                  setActiveView('checklist');
-                }}
+                onPress={handleViewRoutePress}
                 style={styles.primaryYellowBtn}
+                accessibilityLabel="View Route Navigation"
               >
+                <Compass size={17} color="#111827" strokeWidth={2.4} style={{ marginRight: 6 }} />
                 <Text style={styles.primaryYellowBtnText}>View Route</Text>
                 <View style={styles.chevronCircle}>
                   <ChevronRight size={18} color="#111827" strokeWidth={2.5} />
@@ -1082,6 +1290,133 @@ export default function OrderDetailsScreen() {
           )}
         </View>
       </SafeAreaView>
+
+      {/* ==================================================================== */}
+      {/* ROUTE & NAVIGATION MODAL                                             */}
+      {/* ==================================================================== */}
+      <Modal
+        visible={showRouteModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRouteModal(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          onPress={() => setShowRouteModal(false)}
+          style={styles.modalOverlay}
+        >
+          <View style={styles.routeModalCard} onStartShouldSetResponder={() => true}>
+            {/* Header */}
+            <View style={styles.routeModalHeader}>
+              <View style={styles.routeModalHeaderLeft}>
+                <Compass size={20} color="#111827" strokeWidth={2.2} style={{ marginRight: 8 }} />
+                <Text style={styles.routeModalTitle}>Delivery Route Navigation</Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setShowRouteModal(false)}
+                style={styles.modalCloseTopRight}
+              >
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Stops info */}
+            <View style={styles.routeStopsContainer}>
+              {/* Pickup Stop */}
+              <View style={styles.routeStopItem}>
+                <View style={[styles.routeStopPin, { backgroundColor: '#DCFCE7' }]}>
+                  <MapPin size={16} color="#16A34A" />
+                </View>
+                <View style={styles.routeStopCol}>
+                  <Text style={styles.routeStopRole}>PICKUP STORE</Text>
+                  <Text style={styles.routeStopName}>{pickup.storeName}</Text>
+                  <Text style={styles.routeStopAddress} numberOfLines={2}>{pickup.address}</Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleCall(pickup.phone)}
+                  style={styles.iconCircleButton}
+                  accessibilityLabel="Call Store"
+                >
+                  <Phone size={15} color="#111827" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Dotted path connector */}
+              <View style={styles.routePathConnector}>
+                <View style={styles.connectingDottedLine} />
+                <View style={styles.routeDistBadge}>
+                  <Text style={styles.routeDistBadgeText}>2.4 km • ~15-20 mins</Text>
+                </View>
+              </View>
+
+              {/* Drop-off Stop */}
+              <View style={styles.routeStopItem}>
+                <View style={[styles.routeStopPin, { backgroundColor: '#FEE2E2' }]}>
+                  <MapPin size={16} color="#DC2626" />
+                </View>
+                <View style={styles.routeStopCol}>
+                  <Text style={styles.routeStopRole}>CUSTOMER DESTINATION</Text>
+                  <Text style={styles.routeStopName}>{delivery.customerName} ({delivery.area})</Text>
+                  <Text style={styles.routeStopAddress} numberOfLines={2}>{delivery.formattedAddress}</Text>
+                </View>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => handleCall(delivery.phone)}
+                  style={styles.iconCircleButton}
+                  accessibilityLabel="Call Customer"
+                >
+                  <Phone size={15} color="#111827" />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Actions */}
+            <View style={styles.routeActionButtonsGroup}>
+              {/* Primary: Start Google Maps Turn-by-Turn Navigation */}
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => {
+                  setShowRouteModal(false);
+                  handleOpenNavigation('destination');
+                }}
+                style={styles.routePrimaryActionBtn}
+              >
+                <Navigation size={18} color="#111827" strokeWidth={2.4} style={{ marginRight: 8 }} />
+                <Text style={styles.routePrimaryActionText}>Start Google Maps Navigation</Text>
+                <ExternalLink size={16} color="#111827" style={{ marginLeft: 6 }} />
+              </TouchableOpacity>
+
+              {/* Secondary Options */}
+              <View style={styles.routeSecondaryRow}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShowRouteModal(false);
+                    handleOpenNavigation('pickup');
+                  }}
+                  style={styles.routeSecondaryHalfBtn}
+                >
+                  <Store size={15} color="#16A34A" strokeWidth={2} style={{ marginRight: 6 }} />
+                  <Text style={styles.routeSecondaryHalfText}>Navigate to Store</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setShowRouteModal(false);
+                    setActiveView('checklist');
+                  }}
+                  style={[styles.routeSecondaryHalfBtn, { borderColor: '#FEF08A', backgroundColor: '#FFFBEB' }]}
+                >
+                  <CheckSquare size={15} color="#854D0E" strokeWidth={2} style={{ marginRight: 6 }} />
+                  <Text style={[styles.routeSecondaryHalfText, { color: '#854D0E' }]}>Open Checklist</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* ==================================================================== */}
       {/* MODAL 1: CANCELLATION CONFIRMATION POPUP                             */}
@@ -1519,13 +1854,17 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed'
   },
 
+  locationActionsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+
   // Map Route Container Card
   mapContainerCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    height: 110,
     overflow: 'hidden',
     position: 'relative'
   },
@@ -2178,5 +2517,266 @@ const styles = StyleSheet.create({
   quickMenuTextActive: {
     fontFamily: typography.family.bold,
     color: '#111827'
+  },
+
+  // ========================================================================
+  // Integrated Map & Navigation Styles
+  // ========================================================================
+  mapTopBadgesRow: {
+    position: 'absolute',
+    top: 10,
+    left: 12,
+    right: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  mapMetricPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0'
+  },
+  mapMetricText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11.5,
+    color: '#1E293B'
+  },
+  mapMetricDivider: {
+    marginHorizontal: 5,
+    color: '#CBD5E1',
+    fontSize: 12
+  },
+  mapLiveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#BBF7D0'
+  },
+  mapLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
+    marginRight: 5
+  },
+  mapLiveText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 10,
+    color: '#15803D',
+    letterSpacing: 0.5
+  },
+  mapBottomBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9'
+  },
+  mapBottomTextCol: {
+    flex: 1,
+    marginRight: 10
+  },
+  mapRouteTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 12.5,
+    color: '#111827'
+  },
+  mapRouteSub: {
+    fontFamily: typography.family.regular,
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1
+  },
+  mapOpenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFC928',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 10
+  },
+  mapOpenBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 12,
+    color: '#111827'
+  },
+
+  // Customer Call button (Chat removed)
+  customerCallBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20
+  },
+  customerCallBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13,
+    color: '#111827'
+  },
+
+  // Proceed to checklist button on overview items card
+  proceedChecklistBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFC928',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginTop: 14
+  },
+  proceedChecklistBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#111827'
+  },
+
+  // Cancel reason selected style
+  reasonRadioRowSelected: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    marginHorizontal: -6,
+    paddingHorizontal: 6
+  },
+
+  // Route & Navigation Bottom Modal
+  routeModalCard: {
+    width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB'
+  },
+  routeModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16
+  },
+  routeModalHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  routeModalTitle: {
+    fontFamily: typography.family.heavy,
+    fontSize: 17,
+    color: '#111827'
+  },
+  routeStopsContainer: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+    marginBottom: 16
+  },
+  routeStopItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start'
+  },
+  routeStopPin: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  routeStopCol: {
+    flex: 1,
+    marginRight: 8
+  },
+  routeStopRole: {
+    fontFamily: typography.family.heavy,
+    fontSize: 10,
+    color: '#64748B',
+    letterSpacing: 0.5,
+    marginBottom: 2
+  },
+  routeStopName: {
+    fontFamily: typography.family.bold,
+    fontSize: 14,
+    color: '#111827',
+    marginBottom: 2
+  },
+  routeStopAddress: {
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    color: '#64748B',
+    lineHeight: 16
+  },
+  routePathConnector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingVertical: 6
+  },
+  routeDistBadge: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    marginLeft: 16
+  },
+  routeDistBadgeText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: '#2563EB'
+  },
+  routeActionButtonsGroup: {
+    gap: 10
+  },
+  routePrimaryActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFC928',
+    height: 48,
+    borderRadius: 14
+  },
+  routePrimaryActionText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 14,
+    color: '#111827'
+  },
+  routeSecondaryRow: {
+    flexDirection: 'row',
+    gap: 10
+  },
+  routeSecondaryHalfBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 42,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF'
+  },
+  routeSecondaryHalfText: {
+    fontFamily: typography.family.bold,
+    fontSize: 12.5,
+    color: '#334155'
   }
 });

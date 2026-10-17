@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,13 +6,14 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Modal,
-  Linking,
   StatusBar,
-  Alert
+  BackHandler,
+  LayoutAnimation,
+  Platform,
+  UIManager
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   Headphones,
@@ -23,131 +24,107 @@ import {
   Coins,
   Clock,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   MessageSquare,
-  PhoneCall,
-  MessageCircle,
+  HelpCircle,
   X
 } from 'lucide-react-native';
 import { typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
+import { FAQ_CATEGORIES, FAQ_ITEMS } from '../constants/faqData';
 import PartnerBottomBar from '../components/PartnerBottomBar';
+
+const isFabric = Boolean(global.nativeFabricUIManager || global._IS_FABRIC);
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental && !isFabric) {
+  try {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  } catch {}
+}
+
+const ICON_MAP = {
+  Package,
+  RotateCw,
+  Bell,
+  Coins,
+  Clock
+};
 
 export default function HelpSupportScreen() {
   const router = useRouter();
+  const { from } = useLocalSearchParams();
+  const isNavigatingBack = useRef(false);
+  const isNavigatingRef = useRef(false);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [contactModalVisible, setContactModalVisible] = useState(false);
+  const [expandedSearchId, setExpandedSearchId] = useState(null);
 
-  // 5 Popular Topics matching reference Screen 3 exactly
-  const allTopics = [
-    {
-      id: 'orders',
-      title: 'Orders and assignments',
-      subtitle: 'New orders, accepting and cancellations',
-      icon: Package,
-      iconColor: '#EA580C',
-      bgColor: '#FFF7ED',
-      borderColor: '#FFEDD5',
-      content: {
-        heading: 'Orders & Assignment Protocol',
-        points: [
-          '• When a new order is assigned, you have 60 seconds to review the pickup location, delivery distance, and estimated compensation.',
-          '• Tapping "Accept Order" reserves the assignment exclusively for you.',
-          '• If you cannot fulfill an order due to a vehicle breakdown or emergency, notify dispatch immediately or use the Cancel with Reason feature to reassign safely without penalties.'
-        ]
-      }
-    },
-    {
-      id: 'pickup_delivery',
-      title: 'Pickup and delivery',
-      subtitle: 'Pickup process, delivery process',
-      icon: RotateCw,
-      iconColor: '#16A34A',
-      bgColor: '#F0FDF4',
-      borderColor: '#DCFCE7',
-      content: {
-        heading: 'Pickup & Delivery Process',
-        points: [
-          '• Arrive at the store dispatch counter and check the order bill number.',
-          '• Confirm that all grocery bags are safely sealed and tagged with the matching customer order number.',
-          '• Follow the in-app GPS navigation to the customer delivery address and notify customer upon arrival.'
-        ]
-      }
-    },
-    {
-      id: 'delivery_otp',
-      title: 'Delivery OTP problems',
-      subtitle: 'Issues with OTP verification',
-      icon: Bell,
-      iconColor: '#DC2626',
-      bgColor: '#FEF2F2',
-      borderColor: '#FEE2E2',
-      content: {
-        heading: 'OTP Verification Troubleshooting',
-        points: [
-          '• The customer receives a 4-digit verification code via SMS when your status is "Out for Delivery".',
-          '• If the customer did not receive the OTP, tap "Resend OTP" on the order delivery card.',
-          '• Never leave parcels without entering the verified customer OTP to ensure guaranteed delivery credit.'
-        ]
-      }
-    },
-    {
-      id: 'earnings_cash',
-      title: 'Earnings and cash collection',
-      subtitle: 'Delivery earnings and store collection',
-      icon: Coins,
-      iconColor: '#15803D',
-      bgColor: '#F0FDF4',
-      borderColor: '#BBF7D0',
-      content: {
-        heading: 'Earnings & Cash Settlement',
-        points: [
-          '• You earn a fixed rate per completed delivery configured by the dispatch administration (e.g. ₹20 or ₹30 per order).',
-          '• Uncollected earnings accumulate in your "Cash to Collect" account balance.',
-          '• Collect your physical cash directly from the store hub counter at the end of your shift upon staff verification.'
-        ]
-      }
-    },
-    {
-      id: 'app_login',
-      title: 'App or login issue',
-      subtitle: 'Login, account and technical issues',
-      icon: Clock,
-      iconColor: '#2563EB',
-      bgColor: '#EFF6FF',
-      borderColor: '#DBEAFE',
-      content: {
-        heading: 'Technical & Login Support',
-        points: [
-          '• If you encounter network connection drops, switch airplane mode off and on to re-establish the connection.',
-          '• Keep location permissions set to "Allow all the time" so dispatch can match you with nearby orders.',
-          '• For forgotten passwords or locked accounts, contact dispatch manager for an instant credential reset.'
-        ]
-      }
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
     }
-  ];
 
-  const filteredTopics = allTopics.filter(
-    (t) =>
-      t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.subtitle.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const handleCallDispatcher = () => {
-    hapticFeedback.medium?.();
-    Linking.openURL('tel:18002004000').catch(() => {
-      Alert.alert('Dispatch Helpline', 'Direct Helpline: +91 1800 200 4000');
-    });
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 100);
   };
 
-  const handleWhatsAppSupport = () => {
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
+
+  const handleCategoryPress = (categoryId) => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
     hapticFeedback.light?.();
-    Linking.openURL(
-      'whatsapp://send?phone=919876543210&text=Hello%20ZOOOMIT%20Dispatch%2C%20I%20am%20a%20delivery%20partner%20and%20need%20assistance.'
-    ).catch(() => {
-      Alert.alert('WhatsApp Care', 'WhatsApp Support: +91 98765 43210');
+    router.push({
+      pathname: '/help-topic',
+      params: { categoryId }
     });
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
+  };
+
+  const handleContactSupportPress = () => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    hapticFeedback.medium?.();
+    router.push('/contact-support');
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
+  };
+
+  // Global search filtering across all questions
+  const isSearching = searchQuery.trim().length > 0;
+  const filteredFaqs = isSearching
+    ? FAQ_ITEMS.filter((item) => {
+        const query = searchQuery.toLowerCase().trim();
+        return (
+          item.question.toLowerCase().includes(query) ||
+          item.answer.toLowerCase().includes(query) ||
+          item.keywords.some((kw) => kw.toLowerCase().includes(query))
+        );
+      })
+    : [];
+
+  const toggleSearchExpand = (id) => {
+    hapticFeedback.selection?.();
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpandedSearchId(expandedSearchId === id ? null : id);
   };
 
   return (
@@ -159,12 +136,10 @@ export default function HelpSupportScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => {
-              hapticFeedback.light?.();
-              router.back();
-            }}
+            onPress={handleBack}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.backBtn}
-            accessibilityLabel="Back"
+            accessibilityLabel="Back to Profile"
             accessibilityRole="button"
           >
             <ArrowLeft size={22} color="#111827" strokeWidth={2.2} />
@@ -177,8 +152,9 @@ export default function HelpSupportScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {/* Intro Section matching reference */}
+        {/* Intro Section matching reference Screen 3 */}
         <View style={styles.heroSection}>
           <View style={styles.heroIconCircle}>
             <Headphones size={26} color="#111827" strokeWidth={2.2} />
@@ -189,7 +165,7 @@ export default function HelpSupportScreen() {
           </Text>
         </View>
 
-        {/* Search Field */}
+        {/* Functional Search Field */}
         <View style={styles.searchContainer}>
           <Search size={18} color="#94A3B8" strokeWidth={2} style={styles.searchIcon} />
           <TextInput
@@ -199,65 +175,140 @@ export default function HelpSupportScreen() {
             placeholderTextColor="#94A3B8"
             style={styles.searchInput}
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={styles.clearSearchBtn}
+            >
+              <X size={16} color="#64748B" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Section Heading */}
-        <Text style={styles.sectionHeading}>Popular Topics</Text>
+        {/* Dynamic Content: Search Results OR 5 Popular Category Rows */}
+        {isSearching ? (
+          <View style={styles.searchResultsContainer}>
+            <View style={styles.searchHeadingRow}>
+              <Text style={styles.sectionHeading}>
+                Search Results ({filteredFaqs.length})
+              </Text>
+            </View>
 
-        {/* Topics Container Card */}
-        <View style={styles.topicsCard}>
-          {filteredTopics.map((topic, index) => {
-            const IconComp = topic.icon;
-            const isLast = index === filteredTopics.length - 1;
+            {filteredFaqs.length === 0 ? (
+              <View style={styles.emptySearchCard}>
+                <HelpCircle size={36} color="#94A3B8" strokeWidth={1.8} style={{ marginBottom: 10 }} />
+                <Text style={styles.emptySearchTitle}>No matching questions found</Text>
+                <Text style={styles.emptySearchText}>
+                  We couldn't find any FAQs matching "{searchQuery}". Try different keywords or contact our dispatch team below.
+                </Text>
+              </View>
+            ) : (
+              filteredFaqs.map((faq) => {
+                const isExpanded = expandedSearchId === faq.id;
+                const cat = FAQ_CATEGORIES.find((c) => c.id === faq.categoryId);
 
-            return (
-              <React.Fragment key={topic.id}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  onPress={() => {
-                    hapticFeedback.light?.();
-                    setSelectedTopic(topic);
-                  }}
-                  style={styles.topicRow}
-                  accessibilityRole="button"
-                  accessibilityLabel={topic.title}
-                >
-                  {/* Icon Tile */}
+                return (
                   <View
+                    key={faq.id}
                     style={[
-                      styles.iconTile,
-                      {
-                        backgroundColor: topic.bgColor,
-                        borderColor: topic.borderColor
-                      }
+                      styles.searchFaqCard,
+                      isExpanded && styles.searchFaqCardExpanded
                     ]}
                   >
-                    <IconComp size={20} color={topic.iconColor} strokeWidth={2} />
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => toggleSearchExpand(faq.id)}
+                      style={styles.searchFaqHeader}
+                      accessibilityRole="button"
+                    >
+                      <View style={{ flex: 1 }}>
+                        {cat && (
+                          <View
+                            style={[
+                              styles.catBadgePill,
+                              { backgroundColor: cat.bgColor, borderColor: cat.borderColor }
+                            ]}
+                          >
+                            <Text style={[styles.catBadgeText, { color: cat.iconColor }]}>
+                              {cat.shortTitle}
+                            </Text>
+                          </View>
+                        )}
+                        <Text style={styles.searchFaqQuestion}>{faq.question}</Text>
+                      </View>
+                      {isExpanded ? (
+                        <ChevronUp size={20} color="#D97706" strokeWidth={2.2} style={styles.searchChevron} />
+                      ) : (
+                        <ChevronDown size={20} color="#94A3B8" strokeWidth={2} style={styles.searchChevron} />
+                      )}
+                    </TouchableOpacity>
+
+                    {isExpanded && (
+                      <View style={styles.searchFaqAnswerBox}>
+                        <Text style={styles.searchFaqAnswerText}>{faq.answer}</Text>
+                      </View>
+                    )}
                   </View>
+                );
+              })
+            )}
+          </View>
+        ) : (
+          <>
+            {/* Section Heading */}
+            <Text style={styles.sectionHeading}>Popular Topics</Text>
 
-                  {/* Text Details */}
-                  <View style={styles.topicTextCol}>
-                    <Text style={styles.topicTitle}>{topic.title}</Text>
-                    <Text style={styles.topicSubtitle}>{topic.subtitle}</Text>
-                  </View>
+            {/* 5 Popular Categories matching reference Screen 3 */}
+            <View style={styles.topicsCard}>
+              {FAQ_CATEGORIES.map((cat, index) => {
+                const IconComp = ICON_MAP[cat.iconName] || Package;
+                const isLast = index === FAQ_CATEGORIES.length - 1;
 
-                  {/* Right Chevron */}
-                  <ChevronRight size={18} color="#94A3B8" strokeWidth={2} />
-                </TouchableOpacity>
+                return (
+                  <React.Fragment key={cat.id}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => handleCategoryPress(cat.id)}
+                      style={styles.topicRow}
+                      accessibilityRole="button"
+                      accessibilityLabel={cat.title}
+                    >
+                      {/* Consistent Icon Tile */}
+                      <View
+                        style={[
+                          styles.iconTile,
+                          {
+                            backgroundColor: cat.bgColor,
+                            borderColor: cat.borderColor
+                          }
+                        ]}
+                      >
+                        <IconComp size={20} color={cat.iconColor} strokeWidth={2} />
+                      </View>
 
-                {!isLast && <View style={styles.rowDivider} />}
-              </React.Fragment>
-            );
-          })}
-        </View>
+                      {/* Text Details */}
+                      <View style={styles.topicTextCol}>
+                        <Text style={styles.topicTitle}>{cat.title}</Text>
+                        <Text style={styles.topicSubtitle}>{cat.subtitle}</Text>
+                      </View>
 
-        {/* Full-width Yellow Contact Support Button */}
+                      {/* Right Chevron */}
+                      <ChevronRight size={18} color="#94A3B8" strokeWidth={2} />
+                    </TouchableOpacity>
+
+                    {!isLast && <View style={styles.rowDivider} />}
+                  </React.Fragment>
+                );
+              })}
+            </View>
+          </>
+        )}
+
+        {/* Full-width Yellow Contact Support Button matching reference */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => {
-            hapticFeedback.medium?.();
-            setContactModalVisible(true);
-          }}
+          onPress={handleContactSupportPress}
           style={styles.contactSupportBtn}
           accessibilityLabel="Contact Support"
           accessibilityRole="button"
@@ -267,100 +318,8 @@ export default function HelpSupportScreen() {
         </TouchableOpacity>
       </ScrollView>
 
-      {/* Fixed Bottom Navigation matching reference */}
+      {/* Fixed Bottom Navigation */}
       <PartnerBottomBar activeTab="profile" />
-
-      {/* Topic Details Modal */}
-      <Modal
-        visible={Boolean(selectedTopic)}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedTopic(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeadingText} numberOfLines={1}>
-                {selectedTopic?.content?.heading || selectedTopic?.title}
-              </Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setSelectedTopic(null)}
-                style={styles.modalCloseBtn}
-              >
-                <X size={20} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
-              {selectedTopic?.content?.points?.map((pt, idx) => (
-                <Text key={idx} style={styles.topicPointText}>
-                  {pt}
-                </Text>
-              ))}
-            </ScrollView>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => setSelectedTopic(null)}
-              style={styles.modalOkBtn}
-            >
-              <Text style={styles.modalOkBtnText}>Got it</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Contact Support Action Modal */}
-      <Modal
-        visible={contactModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setContactModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalHeadingText}>Contact Dispatch Support</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => setContactModalVisible(false)}
-                style={styles.modalCloseBtn}
-              >
-                <X size={20} color="#64748B" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.contactModalSub}>
-              Our dispatch management desk is available 24/7 to assist active delivery riders.
-            </Text>
-
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={handleCallDispatcher}
-              style={styles.channelCallBtn}
-            >
-              <PhoneCall size={18} color="#FFFFFF" strokeWidth={2.2} style={{ marginRight: 10 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.channelCallTitle}>Call Dispatch Helpline</Text>
-                <Text style={styles.channelCallSub}>+91 1800 200 4000 (Toll Free)</Text>
-              </View>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.75}
-              onPress={handleWhatsAppSupport}
-              style={styles.channelWhatsAppBtn}
-            >
-              <MessageCircle size={18} color="#15803D" strokeWidth={2.2} style={{ marginRight: 10 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.channelWhatsAppTitle}>WhatsApp Chat Support</Text>
-                <Text style={styles.channelWhatsAppSub}>Instant chat for active deliveries</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -397,7 +356,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 18,
-    paddingBottom: 24
+    paddingBottom: 110
   },
 
   // Hero section
@@ -453,6 +412,9 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.medium,
     fontSize: 14,
     color: '#111827'
+  },
+  clearSearchBtn: {
+    padding: 4
   },
 
   // Section Heading
@@ -523,109 +485,84 @@ const styles = StyleSheet.create({
     color: '#111827'
   },
 
-  // Modals
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(17, 24, 39, 0.55)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24
+  // Search Results
+  searchResultsContainer: {
+    marginBottom: 18
   },
-  modalCard: {
-    width: '100%',
-    maxWidth: 340,
+  searchHeadingRow: {
+    marginBottom: 8
+  },
+  searchFaqCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
-    padding: 20
+    marginBottom: 10,
+    overflow: 'hidden'
   },
-  modalHeaderRow: {
+  searchFaqCardExpanded: {
+    borderColor: '#FCD34D'
+  },
+  searchFaqHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12
+    padding: 14
   },
-  modalHeadingText: {
-    fontFamily: typography.family.heavy,
-    fontSize: 17,
+  catBadgePill: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 6
+  },
+  catBadgeText: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5
+  },
+  searchFaqQuestion: {
+    fontFamily: typography.family.bold,
+    fontSize: 14,
     color: '#111827',
-    flex: 1,
-    marginRight: 8
+    lineHeight: 19
   },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center'
+  searchChevron: {
+    marginLeft: 8
   },
-  topicPointText: {
+  searchFaqAnswerBox: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9'
+  },
+  searchFaqAnswerText: {
     fontFamily: typography.family.regular,
     fontSize: 13,
     color: '#475569',
-    lineHeight: 19,
-    marginBottom: 10
+    lineHeight: 19
   },
-  modalOkBtn: {
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#FFC928',
+  emptySearchCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    padding: 24,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8
+    marginBottom: 12
   },
-  modalOkBtnText: {
+  emptySearchTitle: {
     fontFamily: typography.family.bold,
-    fontSize: 14,
-    color: '#111827'
+    fontSize: 15,
+    color: '#111827',
+    marginBottom: 6
   },
-
-  // Contact Channels
-  contactModalSub: {
+  emptySearchText: {
     fontFamily: typography.family.regular,
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#64748B',
-    lineHeight: 18,
-    marginBottom: 16
-  },
-  channelCallBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#111827',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10
-  },
-  channelCallTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: 14,
-    color: '#FFFFFF'
-  },
-  channelCallSub: {
-    fontFamily: typography.family.regular,
-    fontSize: 11.5,
-    color: '#94A3B8',
-    marginTop: 2
-  },
-  channelWhatsAppBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DCFCE7',
-    borderWidth: 1,
-    borderColor: '#86EFAC',
-    borderRadius: 14,
-    padding: 14
-  },
-  channelWhatsAppTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: 14,
-    color: '#15803D'
-  },
-  channelWhatsAppSub: {
-    fontFamily: typography.family.regular,
-    fontSize: 11.5,
-    color: '#166534',
-    marginTop: 2
+    textAlign: 'center',
+    lineHeight: 18
   }
 });

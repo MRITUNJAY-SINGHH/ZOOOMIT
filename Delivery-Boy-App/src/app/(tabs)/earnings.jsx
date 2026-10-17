@@ -1228,7 +1228,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 14
+    paddingTop: 14,
+    paddingBottom: 110
   },
   stateWrapper: {
     width: '100%'

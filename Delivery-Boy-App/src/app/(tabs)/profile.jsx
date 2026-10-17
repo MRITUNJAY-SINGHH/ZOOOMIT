@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Modal,
   ActivityIndicator,
   StatusBar,
   Alert
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import Animated, {
+  useSharedValue,
+  useAnimatedScrollHandler,
+  useAnimatedStyle,
+  useAnimatedReaction,
+  interpolate,
+  Extrapolation,
+  runOnJS
+} from 'react-native-reanimated';
 import {
   Settings,
   User,
@@ -30,6 +38,7 @@ import { hapticFeedback } from '../../services/haptics';
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { partner, logout, isOnline, toggleOnline } = useAuth();
 
   // Logout state
@@ -87,6 +96,110 @@ export default function ProfileScreen() {
     }
   };
 
+  // Dimensions for collapsible header animation
+  const COMPACT_HEADER_HEIGHT = insets.top + 54;
+  const EXPANDED_HEADER_HEIGHT = insets.top + 180;
+  const SCROLL_DISTANCE = EXPANDED_HEADER_HEIGHT - COMPACT_HEADER_HEIGHT;
+
+  const scrollY = useSharedValue(0);
+  const [isCompactVisible, setIsCompactVisible] = useState(false);
+
+  const scrollHandler = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      scrollY.value = event.contentOffset.y;
+    }
+  });
+
+  useAnimatedReaction(
+    () => scrollY.value > SCROLL_DISTANCE * 0.45,
+    (visible, prev) => {
+      if (visible !== prev) {
+        runOnJS(setIsCompactVisible)(visible);
+      }
+    }
+  );
+
+  // Reanimated Interpolations
+  const expandedHeaderAnimatedStyle = useAnimatedStyle(() => {
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE],
+      [0, -SCROLL_DISTANCE],
+      Extrapolation.CLAMP
+    );
+    return {
+      transform: [{ translateY }]
+    };
+  });
+
+  const topRowAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.4],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity
+    };
+  });
+
+  const identityAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.55],
+      [1, 0],
+      Extrapolation.CLAMP
+    );
+    const scale = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.55],
+      [1, 0.88],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [0, SCROLL_DISTANCE * 0.55],
+      [0, -18],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      transform: [{ translateY }, { scale }]
+    };
+  });
+
+  const compactHeaderAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [SCROLL_DISTANCE * 0.4, SCROLL_DISTANCE],
+      [0, 1],
+      Extrapolation.CLAMP
+    );
+    const translateY = interpolate(
+      scrollY.value,
+      [SCROLL_DISTANCE * 0.4, SCROLL_DISTANCE],
+      [-8, 0],
+      Extrapolation.CLAMP
+    );
+    return {
+      opacity,
+      transform: [{ translateY }]
+    };
+  });
+
+  // Fast responsive menu navigation
+  const isNavigatingRef = useRef(false);
+  const handleMenuPress = (pathname) => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    hapticFeedback.light?.();
+    router.navigate({ pathname, params: { from: 'profile' } });
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 100);
+  };
+
   // Exactly 6 menu rows matching the reference image Screen 1
   const menuItems = [
     {
@@ -97,10 +210,7 @@ export default function ProfileScreen() {
       iconColor: '#2563EB',
       bgColor: '#EFF6FF',
       borderColor: '#DBEAFE',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/personal-info');
-      }
+      onPress: () => handleMenuPress('/personal-info')
     },
     {
       id: 'help',
@@ -110,10 +220,7 @@ export default function ProfileScreen() {
       iconColor: '#16A34A',
       bgColor: '#F0FDF4',
       borderColor: '#DCFCE7',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/help-support');
-      }
+      onPress: () => handleMenuPress('/help-support')
     },
     {
       id: 'about',
@@ -123,10 +230,7 @@ export default function ProfileScreen() {
       iconColor: '#D97706',
       bgColor: '#FFFBEB',
       borderColor: '#FEF3C7',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/about');
-      }
+      onPress: () => handleMenuPress('/about')
     },
     {
       id: 'privacy',
@@ -136,10 +240,7 @@ export default function ProfileScreen() {
       iconColor: '#9333EA',
       bgColor: '#FAF5FF',
       borderColor: '#F3E8FF',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/privacy-policy');
-      }
+      onPress: () => handleMenuPress('/privacy-policy')
     },
     {
       id: 'terms',
@@ -149,10 +250,7 @@ export default function ProfileScreen() {
       iconColor: '#EA580C',
       bgColor: '#FFF7ED',
       borderColor: '#FFEDD5',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/terms-conditions');
-      }
+      onPress: () => handleMenuPress('/terms-conditions')
     },
     {
       id: 'feedback',
@@ -162,10 +260,7 @@ export default function ProfileScreen() {
       iconColor: '#DC2626',
       bgColor: '#FEF2F2',
       borderColor: '#FEE2E2',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/feedback');
-      }
+      onPress: () => handleMenuPress('/feedback')
     }
   ];
 
@@ -195,160 +290,220 @@ export default function ProfileScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFD233" translucent={false} />
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      {/* 1. Compact Sticky Top Header (transitions in on scroll) */}
+      <Animated.View
+        style={[
+          styles.compactStickyHeader,
+          { height: COMPACT_HEADER_HEIGHT, paddingTop: insets.top },
+          compactHeaderAnimatedStyle
+        ]}
+        pointerEvents={isCompactVisible ? 'auto' : 'none'}
       >
-        {/* Warm Yellow Header Area matching reference */}
-        <View style={styles.yellowHeaderArea}>
-          <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
-            {/* Top Bar with Title & Settings */}
-            <View style={styles.topRow}>
-              <Text style={styles.headerTitle}>Profile</Text>
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => {
-                  hapticFeedback.light?.();
-                  router.push('/personal-info');
-                }}
-                style={styles.settingsBtn}
-                accessibilityLabel="Settings"
-                accessibilityRole="button"
-              >
-                <Settings size={22} color="#111827" strokeWidth={2} />
-              </TouchableOpacity>
-            </View>
-
-            {/* Profile Identity Row */}
-            <View style={styles.profileRow}>
-              {/* Initials-based circular avatar on white circle */}
-              <View style={styles.avatarCircle}>
-                <Text style={styles.avatarText}>{partnerInitials}</Text>
-              </View>
-
-              {/* Identity Details */}
-              <View style={styles.identityCol}>
-                {/* Online / Offline Status Badge */}
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={handleToggleOnlineStatus}
-                  disabled={isTogglingStatus}
-                  style={[
-                    styles.statusBadge,
-                    isOnline ? styles.statusBadgeOnline : styles.statusBadgeOffline
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: isOnline ? '#16A34A' : '#64748B' }
-                    ]}
-                  />
-                  <Text
-                    style={[
-                      styles.statusText,
-                      { color: isOnline ? '#15803D' : '#475569' }
-                    ]}
-                  >
-                    {isTogglingStatus
-                      ? 'Updating...'
-                      : isOnline
-                      ? 'Online'
-                      : 'Offline'}
-                  </Text>
-                </TouchableOpacity>
-
-                {/* Partner Real Name */}
-                <Text style={styles.partnerNameText} numberOfLines={1}>
-                  {partnerName}
-                </Text>
-
-                {/* Role label */}
-                <Text style={styles.partnerRoleText}>Delivery Partner</Text>
-              </View>
-            </View>
-          </SafeAreaView>
+        <View style={styles.compactAvatarCircle}>
+          <Text style={styles.compactAvatarText}>{partnerInitials}</Text>
         </View>
 
-        {/* Content Section */}
-        <View style={styles.bodySection}>
-          {/* Summary Statistics Card: 3 metrics */}
-          <View style={styles.statsCard}>
-            <View style={styles.statCol}>
-              <Text style={styles.statNumber}>{stats.completedDeliveries}</Text>
-              <Text style={styles.statLabel}>Completed{'\n'}Deliveries</Text>
-            </View>
-
-            <View style={styles.statDivider} />
-
-            <View style={styles.statCol}>
-              <Text style={styles.statNumber}>₹{Number(stats.totalEarned).toLocaleString('en-IN')}</Text>
-              <Text style={styles.statLabel}>Total Earned</Text>
-            </View>
-
-            <View style={styles.statDivider} />
-
-            <View style={styles.statCol}>
-              <Text style={styles.statNumber}>₹{Number(stats.cashToCollect).toLocaleString('en-IN')}</Text>
-              <Text style={styles.statLabel}>Cash to Collect</Text>
-            </View>
+        <View style={styles.compactNameCol}>
+          <Text style={styles.compactNameText} numberOfLines={1}>
+            {partnerName}
+          </Text>
+          <View style={styles.compactStatusRow}>
+            <View
+              style={[
+                styles.statusDot,
+                { backgroundColor: isOnline ? '#16A34A' : '#64748B' }
+              ]}
+            />
+            <Text
+              style={[
+                styles.compactStatusText,
+                { color: isOnline ? '#15803D' : '#64748B' }
+              ]}
+            >
+              {isOnline ? 'Online' : 'Offline'}
+            </Text>
           </View>
+        </View>
 
-          {/* Menu Rows: 6 items in exact reference order */}
-          <View style={styles.menuContainerCard}>
-            {menuItems.map((item, index) => {
-              const IconComp = item.icon;
-              const isLast = index === menuItems.length - 1;
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => {
+            hapticFeedback.light?.();
+            router.push({ pathname: '/personal-info', params: { from: 'profile' } });
+          }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.compactSettingsBtn}
+          accessibilityLabel="Settings"
+          accessibilityRole="button"
+        >
+          <Settings size={20} color="#111827" strokeWidth={2.2} />
+        </TouchableOpacity>
+      </Animated.View>
 
-              return (
-                <React.Fragment key={item.id}>
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={item.onPress}
-                    style={styles.menuItemRow}
-                  >
-                    {/* Consistent Colored Icon Tile */}
-                    <View
-                      style={[
-                        styles.menuIconBox,
-                        {
-                          backgroundColor: item.bgColor,
-                          borderColor: item.borderColor
-                        }
-                      ]}
-                    >
-                      <IconComp size={20} color={item.iconColor} strokeWidth={2} />
-                    </View>
-
-                    {/* Text Details */}
-                    <View style={styles.menuTextCol}>
-                      <Text style={styles.menuItemTitle}>{item.title}</Text>
-                      <Text style={styles.menuItemSub}>{item.subtitle}</Text>
-                    </View>
-
-                    {/* Right Chevron */}
-                    <ChevronRight size={18} color="#94A3B8" strokeWidth={2} />
-                  </TouchableOpacity>
-
-                  {!isLast && <View style={styles.menuRowDivider} />}
-                </React.Fragment>
-              );
-            })}
-          </View>
-
-          {/* Logout Button: Outlined red button matching reference */}
+      {/* 2. Large Collapsible Warm-Yellow Header */}
+      <Animated.View
+        style={[
+          styles.expandedYellowHeader,
+          { height: EXPANDED_HEADER_HEIGHT, paddingTop: insets.top + 6 },
+          expandedHeaderAnimatedStyle
+        ]}
+        pointerEvents={isCompactVisible ? 'none' : 'box-none'}
+      >
+        {/* Top Title & Settings Row */}
+        <Animated.View style={[styles.topRow, topRowAnimatedStyle]}>
+          <Text style={styles.headerTitle}>Profile</Text>
           <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleOpenLogoutConfirmation}
-            style={styles.logoutBtn}
-            accessibilityLabel="Logout"
+            activeOpacity={0.7}
+            onPress={() => {
+              hapticFeedback.light?.();
+              router.push({ pathname: '/personal-info', params: { from: 'profile' } });
+            }}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.settingsBtn}
+            accessibilityLabel="Settings"
             accessibilityRole="button"
           >
-            <LogOut size={18} color="#DC2626" strokeWidth={2.2} style={{ marginRight: 8 }} />
-            <Text style={styles.logoutBtnText}>Logout</Text>
+            <Settings size={22} color="#111827" strokeWidth={2} />
           </TouchableOpacity>
+        </Animated.View>
+
+        {/* Large Profile Identity Row */}
+        <Animated.View style={[styles.profileRow, identityAnimatedStyle]}>
+          {/* Circular Avatar */}
+          <View style={styles.avatarCircle}>
+            <Text style={styles.avatarText}>{partnerInitials}</Text>
+          </View>
+
+          {/* Identity Column */}
+          <View style={styles.identityCol}>
+            {/* Online / Offline Status Badge */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={handleToggleOnlineStatus}
+              disabled={isTogglingStatus}
+              style={[
+                styles.statusBadge,
+                isOnline ? styles.statusBadgeOnline : styles.statusBadgeOffline
+              ]}
+            >
+              <View
+                style={[
+                  styles.statusDot,
+                  { backgroundColor: isOnline ? '#16A34A' : '#64748B' }
+                ]}
+              />
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: isOnline ? '#15803D' : '#475569' }
+                ]}
+              >
+                {isTogglingStatus
+                  ? 'Updating...'
+                  : isOnline
+                  ? 'Online'
+                  : 'Offline'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Partner Real Name */}
+            <Text style={styles.partnerNameText} numberOfLines={1}>
+              {partnerName}
+            </Text>
+
+            {/* Role label */}
+            <Text style={styles.partnerRoleText}>Delivery Partner</Text>
+          </View>
+        </Animated.View>
+      </Animated.View>
+
+      {/* 3. Single Scrollable Content Container */}
+      <Animated.ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingTop: EXPANDED_HEADER_HEIGHT + 12 }
+        ]}
+        scrollEventThrottle={16}
+        onScroll={scrollHandler}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Summary Statistics Card: 3 metrics */}
+        <View style={styles.statsCard}>
+          <View style={styles.statCol}>
+            <Text style={styles.statNumber}>{stats.completedDeliveries}</Text>
+            <Text style={styles.statLabel}>Completed{'\n'}Deliveries</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statCol}>
+            <Text style={styles.statNumber}>₹{Number(stats.totalEarned).toLocaleString('en-IN')}</Text>
+            <Text style={styles.statLabel}>Total Earned</Text>
+          </View>
+
+          <View style={styles.statDivider} />
+
+          <View style={styles.statCol}>
+            <Text style={styles.statNumber}>₹{Number(stats.cashToCollect).toLocaleString('en-IN')}</Text>
+            <Text style={styles.statLabel}>Cash to Collect</Text>
+          </View>
         </View>
-      </ScrollView>
+
+        {/* Menu Rows: 6 items in exact reference order */}
+        <View style={styles.menuContainerCard}>
+          {menuItems.map((item, index) => {
+            const IconComp = item.icon;
+            const isLast = index === menuItems.length - 1;
+
+            return (
+              <React.Fragment key={item.id}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={item.onPress}
+                  style={styles.menuItemRow}
+                >
+                  {/* Consistent Colored Icon Tile */}
+                  <View
+                    style={[
+                      styles.menuIconBox,
+                      {
+                        backgroundColor: item.bgColor,
+                        borderColor: item.borderColor
+                      }
+                    ]}
+                  >
+                    <IconComp size={20} color={item.iconColor} strokeWidth={2} />
+                  </View>
+
+                  {/* Text Details */}
+                  <View style={styles.menuTextCol}>
+                    <Text style={styles.menuItemTitle}>{item.title}</Text>
+                    <Text style={styles.menuItemSub}>{item.subtitle}</Text>
+                  </View>
+
+                  {/* Right Chevron */}
+                  <ChevronRight size={18} color="#94A3B8" strokeWidth={2} />
+                </TouchableOpacity>
+
+                {!isLast && <View style={styles.menuRowDivider} />}
+              </React.Fragment>
+            );
+          })}
+        </View>
+
+        {/* Logout Button: Outlined red button matching reference */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleOpenLogoutConfirmation}
+          style={styles.logoutBtn}
+          accessibilityLabel="Logout"
+          accessibilityRole="button"
+        >
+          <LogOut size={18} color="#DC2626" strokeWidth={2.2} style={{ marginRight: 8 }} />
+          <Text style={styles.logoutBtnText}>Logout</Text>
+        </TouchableOpacity>
+      </Animated.ScrollView>
 
       {/* Confirmation Popup & Logout Modal */}
       <Modal
@@ -413,24 +568,85 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8F9FA'
   },
+  scrollView: {
+    flex: 1
+  },
   scrollContent: {
-    paddingBottom: 40
+    paddingHorizontal: 16,
+    paddingBottom: 110
   },
 
-  // Warm Yellow Header Area matching reference
-  yellowHeaderArea: {
+  // 1. Compact Sticky Top Header
+  compactStickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
     backgroundColor: '#FFD233',
-    paddingHorizontal: 20,
-    paddingBottom: 24
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5A900',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16
   },
-  headerSafeArea: {
-    paddingTop: 8
+  compactAvatarCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
+  },
+  compactAvatarText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 13,
+    color: '#111827'
+  },
+  compactNameCol: {
+    flex: 1,
+    justifyContent: 'center'
+  },
+  compactNameText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 16,
+    color: '#111827'
+  },
+  compactStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 1
+  },
+  compactStatusText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11
+  },
+  compactSettingsBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+
+  // 2. Large Collapsible Warm-Yellow Header
+  expandedYellowHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 5,
+    backgroundColor: '#FFD233',
+    paddingHorizontal: 20
   },
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18
+    marginBottom: 16
   },
   headerTitle: {
     fontFamily: typography.family.heavy,
@@ -510,12 +726,6 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.medium,
     fontSize: 13,
     color: '#475569'
-  },
-
-  // Body content section
-  bodySection: {
-    paddingHorizontal: 16,
-    marginTop: -10
   },
 
   // 3-Column Stats Card

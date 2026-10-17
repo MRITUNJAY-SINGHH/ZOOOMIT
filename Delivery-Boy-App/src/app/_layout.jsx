@@ -95,6 +95,8 @@ function NavigationManager() {
       <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
       <Stack.Screen name="terms-conditions" options={{ headerShown: false }} />
       <Stack.Screen name="feedback" options={{ headerShown: false }} />
+      <Stack.Screen name="help-topic" options={{ headerShown: false }} />
+      <Stack.Screen name="contact-support" options={{ headerShown: false }} />
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
     </Stack>
   );

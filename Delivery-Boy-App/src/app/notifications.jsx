@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
   Modal,
   Dimensions,
-  StatusBar
+  StatusBar,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -50,6 +51,33 @@ const CATEGORIES = [
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isNavigatingBack = useRef(false);
+
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/dashboard');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 400);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
 
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -322,7 +350,7 @@ export default function NotificationsScreen() {
           <View style={styles.headerLeft}>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.back()}
+              onPress={handleBack}
               style={styles.backBtn}
               accessibilityLabel="Back"
               accessibilityRole="button"

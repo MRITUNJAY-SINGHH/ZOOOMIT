@@ -1,47 +1,140 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StatusBar
+  StatusBar,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft, FileText, CheckCircle2 } from 'lucide-react-native';
 import { typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
 
 export default function TermsConditionsScreen() {
   const router = useRouter();
+  const isNavigatingBack = useRef(false);
 
-  // Exactly 5 numbered sections matching reference Screen 7
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 100);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
+
+  // 10 Comprehensive, professional partner agreement sections
   const sections = [
     {
       number: '1',
-      title: 'Using the App',
-      body: 'You agree to use the app only for legitimate delivery purposes and in accordance with these terms.'
+      title: 'Engagement & Independent Partner Status',
+      paragraphs: [
+        'Independent Contractor Relationship: You acknowledge and agree that your registration with ZOOOMIT Technologies is as an independent third-party logistics partner. Nothing in this agreement constitutes an employer-employee relationship, agency, joint venture, or legal partnership.',
+        'Flexible Operational Schedule: As an independent delivery partner, you have full discretion to choose when you log in and make yourself available to receive delivery orders by toggling your duty status between "Online" and "Offline". You are free to engage in other lawful commercial work when off duty.',
+        'Identity & Onboarding Verification: Registration requires submission of authentic, government-recognized identification (Aadhaar/PAN), a valid driving license, and an active mobile number. Submission of falsified, borrowed, or expired documentation will result in immediate and permanent account deactivation.'
+      ]
     },
     {
       number: '2',
-      title: 'Delivery Responsibilities',
-      body: 'You are responsible for completing assigned deliveries carefully, following the provided instructions and maintaining good service standards.'
+      title: 'Delivery Allocation & Acceptance Protocol',
+      paragraphs: [
+        'Algorithmic Dispatch: When your duty status is set to "Online", available orders within your operational zone are dispatched based on GPS proximity, route efficiency, and vehicle type.',
+        '60-Second Acceptance Timer: Each incoming order request rings with high-priority chime and provides a 60-second window to inspect pickup location, drop destination, and expected compensation. If the timer elapses without acceptance, the order is promptly reassigned to the next available partner.',
+        'Fulfillment Obligation: Once an order is accepted in the app, you enter into a binding operational commitment to head directly to the merchant pickup store without unapproved detours or cancellations.'
+      ]
     },
     {
       number: '3',
-      title: 'Order Handling',
-      body: 'You must follow the pickup and delivery process, verify customer details when required and complete deliveries as per the app workflow.'
+      title: 'Store Hub Pickup & Order Checklist Verification',
+      paragraphs: [
+        'Designated Store Arrival: Upon arriving at the assigned merchant grocery hub, you must announce your Order ID to the dispatch or packing counter staff.',
+        'Item & Bag Inspection: You must physically review all grocery items against the digital in-app checklist. Inspect bag seals, verify temperature-sensitive or fragile items, and confirm that liquid containers are intact before leaving the store.',
+        'Confirming Custodial Responsibility: Tap "Confirm Pickup" in the application only after complete physical verification. Upon confirmation, you assume custodial responsibility for the safety and condition of all grocery items until successful doorstep handover.'
+      ]
     },
     {
       number: '4',
-      title: 'Account Access',
-      body: 'You are responsible for keeping your account secure and must not share your login credentials with anyone.'
+      title: 'Safe Transit & Customer Doorstep OTP Handover',
+      paragraphs: [
+        'Direct Transit Route: After completing pickup, you must proceed immediately along the recommended route to the customer address provided in the application. Unauthorized stops, package tampering, or multi-app diversion while carrying customer goods is strictly prohibited.',
+        'Mandatory 4-Digit Customer OTP: To guarantee delivery integrity and prevent false claims, every completed delivery requires the customer to provide a unique 4-digit One-Time Password (OTP) generated on their application.',
+        'Strict No-OTP Delivery Prohibition: You must NEVER leave grocery packages unattended at doorsteps, gates, or hand over items without entering and verifying the customer OTP in your app. Delivering without valid OTP verification violates platform policy and voids delivery compensation.'
+      ]
     },
     {
       number: '5',
-      title: 'Support and Changes',
-      body: 'We may update these terms from time to time. Continued use of the app means you accept the updated terms.'
+      title: 'Store Cash Settlement & Partner Compensation',
+      paragraphs: [
+        'Admin-Configured Delivery Rate: Delivery partners earn a fixed per-delivery compensation rate (e.g., ₹20 or ₹30 per completed order) as configured by the store administrator in system settings.',
+        'Direct Physical Store Cash Collection: ZOOOMIT operates on a physical store cash settlement model. All earned compensation accumulates in your "Cash to Collect" ledger and is collected directly in cash from the merchant store counter, typically at the end of each day or shift.',
+        'No App Bank Transfers or Withdrawals: The app does not process automated bank account transfers, UPI disbursements, or digital wallet payouts. All earnings are settled in physical cash at the merchant store hub against verified completed order logs.',
+        'Discrepancy Reporting: You must verify your completed delivery count with the store cashier during settlement. Any discrepancy must be reported to the store manager on duty on the same calendar day.'
+      ]
+    },
+    {
+      number: '6',
+      title: 'Vehicle Compliance, Licenses & Road Safety',
+      paragraphs: [
+        'Authorized Vehicle Types: You may deliver orders only using the vehicle category registered on your profile (Motorcycle, Scooter, or Bicycle).',
+        'Valid Documentation: Motorized vehicle operators must maintain a valid Permanent Driving License, active Vehicle Registration Certificate (RC), third-party motor insurance, and Pollution Under Control (PUC) certificate at all times.',
+        'Road Safety & Mandatory Helmets: You must wear a certified safety helmet at all times while operating a two-wheeler on active duty. You must obey all speed limits, traffic signals, and traffic laws. ZOOOMIT is not responsible for traffic citations, challans, or accident liabilities incurred during delivery.'
+      ]
+    },
+    {
+      number: '7',
+      title: 'Customer Privacy & Professional Code of Conduct',
+      paragraphs: [
+        'Strict Confidentiality: Customer personal data, including phone numbers, door addresses, and grocery order contents, is confidential. You must never copy, memorize, screenshot, or share customer contact details.',
+        'Masked In-App Communication: Phone calls to customers must be conducted exclusively through the in-app coordination button and restricted solely to order transit coordination. Contacting customers after order completion is strictly forbidden and grounds for legal action.',
+        'Professionalism: Delivery partners must maintain polite and respectful communication with store personnel, apartment security guards, and customers. Abusive language, harassment, discrimination, or physical confrontation results in permanent deactivation.'
+      ]
+    },
+    {
+      number: '8',
+      title: 'Cancellations, Return Policy & Transit Emergencies',
+      paragraphs: [
+        'Unreachable Customer Protocol: If a customer is unresponsive at the drop location, you must make a minimum of 3 calling attempts over a 5-minute wait window and notify Dispatch Support through the app.',
+        'Mandatory Return of Goods: Never discard, consume, or retain undelivered groceries. All unfulfilled deliveries must be returned intact to the originating store hub immediately.',
+        'Breakdown or Emergency: In case of mechanical failure, flat tire, or medical emergency, immediately tap the Support button in the app so dispatch supervisors can reassign the order to an assisting partner.'
+      ]
+    },
+    {
+      number: '9',
+      title: 'Platform Discipline, Penalties & Deactivation',
+      paragraphs: [
+        'Immediate Termination Grounds: ZOOOMIT reserves the right to immediately terminate partner account access for: (a) Attempting to bypass OTP verification; (b) Package tampering, item theft, or pilferage; (c) Sharing app login credentials with unauthorized individuals; (d) Driving under the influence of alcohol or drugs; (e) Uncollected cash settlement manipulation.',
+        'Review & Audit: Terminated or suspended accounts are reviewed by the Partner Compliance Committee. Pending store cash settlements may be withheld during investigation of verified theft or customer loss claims.'
+      ]
+    },
+    {
+      number: '10',
+      title: 'Modifications, Grievances & Governing Law',
+      paragraphs: [
+        'Updates to Terms: ZOOOMIT reserves the right to modify these Terms and Conditions or compensation rates with prior in-app notice. Continued use of the application following updates constitutes acceptance of revised terms.',
+        'Partner Support Contact: For contractual inquiries, account assistance, or dispute escalations, contact: Email: partners@zooomit.in | Phone: +91 1800 200 4000 (Toll-Free, 24/7).',
+        'Jurisdiction: This agreement is governed by the laws of India. Any unresolved dispute shall be subject to arbitration in accordance with the Arbitration and Conciliation Act, under the jurisdiction of the company headquarters.'
+      ]
     }
   ];
 
@@ -54,10 +147,8 @@ export default function TermsConditionsScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => {
-              hapticFeedback.light?.();
-              router.back();
-            }}
+            onPress={handleBack}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.backBtn}
             accessibilityLabel="Back"
             accessibilityRole="button"
@@ -73,7 +164,26 @@ export default function TermsConditionsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Card containing all 5 numbered sections */}
+        {/* Agreement Status Badge Card */}
+        <View style={styles.agreementBadgeCard}>
+          <View style={styles.fileIconCircle}>
+            <FileText size={22} color="#D97706" strokeWidth={2.2} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <View style={styles.badgeRow}>
+              <Text style={styles.badgeTitle}>ZOOOMIT Partner Agreement</Text>
+              <View style={styles.activeTag}>
+                <CheckCircle2 size={12} color="#15803D" strokeWidth={2.5} style={{ marginRight: 4 }} />
+                <Text style={styles.activeTagText}>Active</Text>
+              </View>
+            </View>
+            <Text style={styles.badgeSub}>
+              Version 3.2 • Legally binding operational terms for registered delivery partners.
+            </Text>
+          </View>
+        </View>
+
+        {/* Card containing all 10 detailed numbered sections */}
         <View style={styles.contentCard}>
           {sections.map((sec, index) => {
             const isLast = index === sections.length - 1;
@@ -86,10 +196,14 @@ export default function TermsConditionsScreen() {
                     <Text style={styles.numberText}>{sec.number}</Text>
                   </View>
 
-                  {/* Section Title & Body */}
+                  {/* Section Title & Multiple Detailed Paragraphs */}
                   <View style={styles.sectionTextCol}>
                     <Text style={styles.sectionTitle}>{sec.title}</Text>
-                    <Text style={styles.sectionBody}>{sec.body}</Text>
+                    {sec.paragraphs.map((para, pIdx) => (
+                      <Text key={pIdx} style={styles.sectionParagraph}>
+                        {para}
+                      </Text>
+                    ))}
                   </View>
                 </View>
 
@@ -97,6 +211,14 @@ export default function TermsConditionsScreen() {
               </React.Fragment>
             );
           })}
+        </View>
+
+        {/* Footer Notice */}
+        <View style={styles.footerBox}>
+          <Text style={styles.footerText}>
+            © 2026 ZOOOMIT Technologies Pvt. Ltd. All rights reserved.{'\n'}
+            By logging in and accepting orders, you agree to comply with all operational guidelines and safety protocols.
+          </Text>
         </View>
       </ScrollView>
     </View>
@@ -138,6 +260,59 @@ const styles = StyleSheet.create({
     paddingBottom: 40
   },
 
+  // Agreement Status Badge Card
+  agreementBadgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    padding: 14,
+    marginBottom: 14
+  },
+  fileIconCircle: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 2
+  },
+  badgeTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 14.5,
+    color: '#111827'
+  },
+  activeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12
+  },
+  activeTagText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: '#15803D'
+  },
+  badgeSub: {
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    color: '#64748B',
+    lineHeight: 16
+  },
+
   // Main Card
   contentCard: {
     backgroundColor: '#FFFFFF',
@@ -145,7 +320,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
     paddingHorizontal: 16,
-    paddingVertical: 8
+    paddingVertical: 8,
+    marginBottom: 16
   },
   sectionRow: {
     flexDirection: 'row',
@@ -166,7 +342,7 @@ const styles = StyleSheet.create({
   },
   numberText: {
     fontFamily: typography.family.heavy,
-    fontSize: 15,
+    fontSize: 14,
     color: '#111827'
   },
 
@@ -177,16 +353,31 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.bold,
     fontSize: 15.5,
     color: '#111827',
-    marginBottom: 4
+    marginBottom: 6
   },
-  sectionBody: {
+  sectionParagraph: {
     fontFamily: typography.family.regular,
     fontSize: 13,
     color: '#475569',
-    lineHeight: 19
+    lineHeight: 19.5,
+    marginBottom: 8
   },
   rowDivider: {
     height: 1,
     backgroundColor: '#F1F5F9'
+  },
+
+  // Footer
+  footerBox: {
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16
+  },
+  footerText: {
+    fontFamily: typography.family.regular,
+    fontSize: 11.5,
+    color: '#94A3B8',
+    textAlign: 'center',
+    lineHeight: 17
   }
 });

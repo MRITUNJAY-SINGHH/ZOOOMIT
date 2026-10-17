@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  StatusBar
+  StatusBar,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -69,6 +70,44 @@ function OpenBoxIllustration() {
 
 export default function AboutScreen() {
   const router = useRouter();
+  const isNavigatingBack = useRef(false);
+  const isNavigatingRef = useRef(false);
+
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 100);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
+
+  const handleMenuPress = (pathname) => {
+    if (isNavigatingRef.current) return;
+    isNavigatingRef.current = true;
+    hapticFeedback.light?.();
+    router.push({ pathname, params: { from: 'about' } });
+    setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 500);
+  };
 
   const menuRows = [
     {
@@ -76,30 +115,21 @@ export default function AboutScreen() {
       title: 'Contact Support',
       icon: Headphones,
       iconColor: '#111827',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/help-support');
-      }
+      onPress: () => handleMenuPress('/help-support')
     },
     {
       id: 'privacy',
       title: 'Privacy Policy',
       icon: Shield,
       iconColor: '#DC2626',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/privacy-policy');
-      }
+      onPress: () => handleMenuPress('/privacy-policy')
     },
     {
       id: 'terms',
       title: 'Terms & Conditions',
       icon: FileText,
       iconColor: '#EA580C',
-      onPress: () => {
-        hapticFeedback.light?.();
-        router.push('/terms-conditions');
-      }
+      onPress: () => handleMenuPress('/terms-conditions')
     }
   ];
 
@@ -112,12 +142,10 @@ export default function AboutScreen() {
         <View style={styles.header}>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => {
-              hapticFeedback.light?.();
-              router.back();
-            }}
+            onPress={handleBack}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={styles.backBtn}
-            accessibilityLabel="Back"
+            accessibilityLabel="Back to Profile"
             accessibilityRole="button"
           >
             <ArrowLeft size={22} color="#111827" strokeWidth={2.2} />
@@ -208,7 +236,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 24,
-    paddingBottom: 36
+    paddingBottom: 110
   },
 
   // Brand Center Section

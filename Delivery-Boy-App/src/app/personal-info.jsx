@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,8 @@ import {
   Modal,
   ActivityIndicator,
   StatusBar,
-  Alert
+  Alert,
+  BackHandler
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -29,6 +30,33 @@ import PartnerBottomBar from '../components/PartnerBottomBar';
 export default function PersonalInfoScreen() {
   const router = useRouter();
   const { partner, refreshProfile } = useAuth();
+  const isNavigatingBack = useRef(false);
+
+  // Debounced back navigation to prevent duplicate pop/push and looping
+  const handleBack = () => {
+    if (isNavigatingBack.current) return;
+    isNavigatingBack.current = true;
+    hapticFeedback.light?.();
+
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+
+    setTimeout(() => {
+      isNavigatingBack.current = false;
+    }, 100);
+  };
+
+  useEffect(() => {
+    const onBackPress = () => {
+      handleBack();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+    return () => sub.remove();
+  }, []);
 
   const partnerName = partner?.name || 'Rahul Sharma';
   const partnerEmail = partner?.email || 'rahul.sharma@example.com';
@@ -106,12 +134,10 @@ export default function PersonalInfoScreen() {
           <View style={styles.topRow}>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => {
-                hapticFeedback.light?.();
-                router.back();
-              }}
+              onPress={handleBack}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               style={styles.backBtn}
-              accessibilityLabel="Back"
+              accessibilityLabel="Back to Profile"
               accessibilityRole="button"
             >
               <ArrowLeft size={22} color="#111827" strokeWidth={2.2} />
@@ -350,7 +376,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 18,
-    paddingBottom: 24
+    paddingBottom: 110
   },
 
   // Info Cards matching reference
