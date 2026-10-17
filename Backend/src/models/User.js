@@ -30,7 +30,25 @@ const userSchema = new mongoose.Schema({
     settings: crudPermissions
   },
   resetPasswordToken: String,
-  resetPasswordExpire: Date
+  resetPasswordExpire: Date,
+  // Delivery Partner Specific Fields
+  isOnline: { type: Boolean, default: false },
+  expoPushToken: { type: String, default: '' },
+  currentLocation: {
+    latitude: { type: Number },
+    longitude: { type: Number },
+    updatedAt: { type: Date }
+  },
+  vehicleDetails: {
+    vehicleType: { type: String, default: 'Motorcycle' },
+    vehicleNumber: { type: String, default: '' }
+  },
+  bankDetails: {
+    accountHolderName: { type: String, default: '' },
+    accountNumber: { type: String, default: '' },
+    ifscCode: { type: String, default: '' },
+    upiId: { type: String, default: '' }
+  }
 }, { timestamps: true });
 
 // Hash password before saving

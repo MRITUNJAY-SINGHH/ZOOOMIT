@@ -21,7 +21,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { Text, TextInput, StyleSheet } from 'react-native';
 
-// Make Gilroy the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
+// Make Inter the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
 const withInterDefault = (Component) => {
   if (!Component || typeof Component.render !== 'function' || Component.__interPatched) return;
   const original = Component.render;
@@ -29,9 +29,11 @@ const withInterDefault = (Component) => {
     const element = original.apply(this, args);
     const flat = StyleSheet.flatten(element?.props?.style) || {};
     if (flat.fontFamily) return element;
-    const bold = ['600', '700', '800', '900', 'bold'].includes(String(flat.fontWeight));
+    const isBold = ['600', '700', '800', '900', 'bold'].includes(String(flat.fontWeight));
+    const isMedium = ['500'].includes(String(flat.fontWeight));
+    const font = isBold ? 'Inter_700Bold' : isMedium ? 'Inter_500Medium' : 'Inter_400Regular';
     return React.cloneElement(element, { 
-      style: { fontFamily: bold ? 'GilroyBold' : 'GilroyRegular', ...flat } 
+      style: { fontFamily: font, ...flat } 
     });
   };
   Component.__interPatched = true;

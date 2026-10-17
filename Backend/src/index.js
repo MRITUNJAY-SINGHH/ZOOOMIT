@@ -34,6 +34,7 @@ import documentRoutes from './routes/documentRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import purchaseRoutes from './routes/purchaseRoutes.js';
 import storefrontRoutes from './routes/storefrontRoutes.js';
+import deliveryRoutes from './routes/deliveryRoutes.js';
 
 app.use(express.json());
 const corsOptions = {
@@ -79,6 +80,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/purchase', purchaseRoutes);
 app.use('/api/settings', (await import('./routes/settingsRoutes.js')).default);
 app.use('/api/storefront', storefrontRoutes);
+app.use('/api/delivery', deliveryRoutes);
 
 app.get('/', (req, res) => {
   res.send('ZOOOMIT API is running...');

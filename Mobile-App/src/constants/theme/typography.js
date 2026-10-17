@@ -27,37 +27,52 @@ export const typography = {
     heavy: '800'
   },
   family: {
-    light: 'GilroyLight',
-    regular: 'GilroyRegular',
-    medium: 'GilroyMedium',
-    semibold: 'GilroyBold',
-    bold: 'GilroyBold',
-    heavy: 'GilroyHeavy',
-    extraBold: 'GilroyHeavy',
-    display: 'GilroyHeavy',
-    largeHeading: 'GilroyBold',
-    heading: 'GilroyBold',
-    body: 'GilroyRegular',
-    button: 'GilroyBold',
+    light: 'Inter_300Light',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    semibold: 'Inter_700Bold',
+    bold: 'Inter_700Bold',
+    heavy: 'Inter_800ExtraBold',
+    extraBold: 'Inter_800ExtraBold',
+    black: 'Inter_900Black',
+    display: 'Inter_800ExtraBold',
+    largeHeading: 'Inter_700Bold',
+    heading: 'Inter_700Bold',
+    body: 'Inter_400Regular',
+    button: 'Inter_700Bold',
 
-    // Direct font family access
-    GilroyLight: 'GilroyLight',
-    GilroyRegular: 'GilroyRegular',
-    GilroyMedium: 'GilroyMedium',
-    GilroyBold: 'GilroyBold',
-    GilroyHeavy: 'GilroyHeavy'
+    // Direct Inter font family access
+    Inter_300Light: 'Inter_300Light',
+    Inter_400Regular: 'Inter_400Regular',
+    Inter_500Medium: 'Inter_500Medium',
+    Inter_700Bold: 'Inter_700Bold',
+    Inter_800ExtraBold: 'Inter_800ExtraBold',
+    Inter_900Black: 'Inter_900Black',
+
+    // Compatibility aliases for existing styles
+    GilroyLight: 'Inter_300Light',
+    GilroyRegular: 'Inter_400Regular',
+    GilroyMedium: 'Inter_500Medium',
+    GilroyBold: 'Inter_700Bold',
+    GilroyHeavy: 'Inter_800ExtraBold'
   },
   fonts: {
-    light: 'GilroyLight',
-    regular: 'GilroyRegular',
-    medium: 'GilroyMedium',
-    bold: 'GilroyBold',
-    heavy: 'GilroyHeavy',
-    GilroyLight: 'GilroyLight',
-    GilroyRegular: 'GilroyRegular',
-    GilroyMedium: 'GilroyMedium',
-    GilroyBold: 'GilroyBold',
-    GilroyHeavy: 'GilroyHeavy'
+    light: 'Inter_300Light',
+    regular: 'Inter_400Regular',
+    medium: 'Inter_500Medium',
+    bold: 'Inter_700Bold',
+    heavy: 'Inter_800ExtraBold',
+    Inter_300Light: 'Inter_300Light',
+    Inter_400Regular: 'Inter_400Regular',
+    Inter_500Medium: 'Inter_500Medium',
+    Inter_700Bold: 'Inter_700Bold',
+    Inter_800ExtraBold: 'Inter_800ExtraBold',
+    Inter_900Black: 'Inter_900Black',
+    GilroyLight: 'Inter_300Light',
+    GilroyRegular: 'Inter_400Regular',
+    GilroyMedium: 'Inter_500Medium',
+    GilroyBold: 'Inter_700Bold',
+    GilroyHeavy: 'Inter_800ExtraBold'
   }
 };
 

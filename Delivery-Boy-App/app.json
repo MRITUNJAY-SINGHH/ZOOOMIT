@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "ZOOOMIT Delivery Partner",
+    "slug": "zooomit-delivery-partner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/logo.jpg",
+    "scheme": "zooomitdelivery",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "icon": "./assets/images/logo.jpg",
+      "bundleIdentifier": "com.zooomit.delivery",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "ZOOOMIT Delivery Partner needs access to your location for turn-by-turn navigation to stores and customer delivery addresses.",
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.zooomit.delivery",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/logo.jpg",
+        "backgroundColor": "#FFC928"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.jpg"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FFC928",
+          "image": "./assets/images/logo.jpg",
+          "imageWidth": 88
+        }
+      ],
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/logo.jpg",
+          "color": "#FFC928",
+          "sounds": []
+        }
+      ]
+    ],
+    "experiments": {
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6811742b-8c65-4e30-adc4-77b525a0ff57"
+      }
+    },
+    "owner": "aeterns-team"
+  }
+}

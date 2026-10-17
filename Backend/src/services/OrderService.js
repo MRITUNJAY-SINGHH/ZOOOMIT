@@ -227,7 +227,33 @@ class OrderService {
     await order.save({ session });
 
     await this.updateOrderStatus(orderId, 'Assigned', user, 'Rider Assigned', session);
+
+    // Trigger Push Notification to Delivery Partner
+    try {
+      const { default: User } = await import('../models/User.js');
+      const { sendExpoPushNotification } = await import('./pushNotificationService.js');
+      const rider = await User.findById(riderId);
+      if (rider && rider.expoPushToken) {
+        await sendExpoPushNotification({
+          pushToken: rider.expoPushToken,
+          title: 'New Delivery Assigned! 🛵',
+          body: `Order #${order.orderNumber} is assigned to you. Open app to accept.`,
+          data: { orderId: order._id.toString(), orderNumber: order.orderNumber },
+          channelId: 'orders'
+        });
+      }
+    } catch (notifErr) {
+      console.warn('[OrderService] Could not send rider push notification:', notifErr.message);
+    }
+
     return order;
+  }
+
+  /**
+   * Get activity timeline for an order
+   */
+  async getActivityTimeline(orderId) {
+    return OrderActivity.find({ order: orderId }).sort({ timestamp: 1, _id: 1 });
   }
 }
 
