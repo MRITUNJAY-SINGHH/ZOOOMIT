@@ -3,35 +3,15 @@ import { Platform, DeviceEventEmitter } from 'react-native';
 import Constants from 'expo-constants';
 import { authStorage } from './authStorage';
 
-const getBaseUrl = () => {
-  // 1. Auto-detect Metro host IP (works on emulator and real devices on LAN)
-  const hostUri = Constants.expoConfig?.hostUri ||
-    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
-    Constants.manifest?.debuggerHost;
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:5000/api`;
-    }
-  }
-
-  // 2. Configured env URL
+export const getBaseUrl = () => {
+  // 1. Primary source of truth: environment variable
   if (process.env.EXPO_PUBLIC_API_URL) {
     const configured = process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
     return configured.endsWith('/api') ? configured : `${configured}/api`;
   }
 
-  // 3. Fallback for standalone builds without Metro dev server
-  if (!__DEV__) {
-    return 'https://zooomit-backend.onrender.com/api';
-  }
-
-  // 4. Android emulator loopback in dev
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000/api';
-  }
-
-  return 'http://localhost:5000/api';
+  // 2. Default to hosted Render backend
+  return 'https://zooomit-backend.onrender.com/api';
 };
 
 export const api = axios.create({

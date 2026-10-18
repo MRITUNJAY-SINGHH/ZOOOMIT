@@ -4,30 +4,15 @@ import Constants from 'expo-constants';
 import { authStorage } from './authStorage';
 import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
-const getBaseUrl = () => {
-  // 1. Detect Expo Metro host IP for physical device and simulator testing against local backend
-  const hostUri = Constants.expoConfig?.hostUri ||
-    Constants.manifest2?.extra?.expoGo?.debuggerHost ||
-    Constants.manifest?.debuggerHost;
-  if (hostUri) {
-    const hostIp = hostUri.split(':')[0];
-    if (hostIp && hostIp !== 'localhost' && hostIp !== '127.0.0.1') {
-      return `http://${hostIp}:5000/api/storefront`;
-    }
-  }
-
+export const getBaseUrl = () => {
+  // 1. Primary source of truth: environment variable
   if (process.env.EXPO_PUBLIC_API_URL) {
     const configured = process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
     return configured.endsWith('/api/storefront') ? configured : `${configured}/api/storefront`;
   }
 
-  // 2. Android emulator fallback
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:5000/api/storefront';
-  }
-
-  // 3. Default localhost fallback
-  return 'http://localhost:5000/api/storefront';
+  // 2. Default to hosted Render storefront backend
+  return 'https://zooomit-backend.onrender.com/api/storefront';
 };
 
 export const api = axios.create({

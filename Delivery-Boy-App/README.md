@@ -48,7 +48,7 @@ npm install --legacy-peer-deps
 ### 2. Configure Environment
 Check `.env`:
 ```env
-EXPO_PUBLIC_API_URL=http://localhost:5000/api
+EXPO_PUBLIC_API_URL=https://zooomit-backend.onrender.com/api
 ```
 *(When testing on physical device over Wi-Fi, the app automatically detects the local Metro IP address)*.
 

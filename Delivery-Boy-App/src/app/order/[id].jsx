@@ -88,7 +88,8 @@ function resolveItemImageUrl(item) {
       return trimmed;
     }
     const clean = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return `http://localhost:5000${clean}`;
+    const baseBackend = (process.env.EXPO_PUBLIC_API_URL || 'https://zooomit-backend.onrender.com/api').replace(/\/api\/?$/, '');
+    return `${baseBackend}${clean}`;
   }
 
   const name = String(item.productName || item.name || '').toLowerCase();
