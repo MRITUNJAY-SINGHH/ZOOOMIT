@@ -21,7 +21,12 @@ const getBaseUrl = () => {
     return configured.endsWith('/api') ? configured : `${configured}/api`;
   }
 
-  // 3. Android emulator loopback
+  // 3. Fallback for standalone builds without Metro dev server
+  if (!__DEV__) {
+    return 'https://zooomit-backend.onrender.com/api';
+  }
+
+  // 4. Android emulator loopback in dev
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api';
   }
