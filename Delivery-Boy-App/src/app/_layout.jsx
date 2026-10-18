@@ -60,16 +60,26 @@ function NavigationManager() {
   // Listen for push notifications when opened
   useEffect(() => {
     const subscription = notificationService.addNotificationResponseReceivedListener((response) => {
-      const orderId = response.notification.request.content.data?.orderId;
+      const data = response.notification.request.content.data;
+      const orderId = data?.orderId;
       if (orderId) {
         router.push(`/order/${orderId}`);
+      } else if (data?.ticketId) {
+        router.push('/support-requests');
+      } else if (data?.settlementId) {
+        router.push('/cash-collection');
       }
     });
 
     notificationService.getLastNotificationResponseAsync().then((response) => {
-      const orderId = response?.notification?.request?.content?.data?.orderId;
+      const data = response?.notification?.request?.content?.data;
+      const orderId = data?.orderId;
       if (orderId) {
         router.push(`/order/${orderId}`);
+      } else if (data?.ticketId) {
+        router.push('/support-requests');
+      } else if (data?.settlementId) {
+        router.push('/cash-collection');
       }
     });
 
@@ -88,6 +98,8 @@ function NavigationManager() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="cash-collection" options={{ headerShown: false }} />
+      <Stack.Screen name="support-requests" options={{ headerShown: false }} />
       <Stack.Screen name="personal-info" options={{ headerShown: false }} />
       <Stack.Screen name="notification-settings" options={{ headerShown: false }} />
       <Stack.Screen name="help-support" options={{ headerShown: false }} />

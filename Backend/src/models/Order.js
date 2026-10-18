@@ -75,10 +75,12 @@ const orderSchema = new mongoose.Schema({
 
   // Secure Delivery OTP
   deliveryOtp: {
-    hash: { type: String },
+    code: { type: String, select: false },
+    hash: { type: String, select: false },
     expiresAt: { type: Date },
     attempts: { type: Number, default: 0 },
-    verifiedAt: { type: Date }
+    verifiedAt: { type: Date },
+    lastGeneratedAt: { type: Date }
   },
   
   // Rider Assignment & Store Cash Settlement
@@ -100,6 +102,9 @@ const orderSchema = new mongoose.Schema({
   cancelledAt: { type: Date },
   cancelReason: { type: String },
   
+  // Delivery partners who declined/passed this order offer
+  declinedRiders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
   date: { type: Date, default: Date.now }
 }, { timestamps: true });
 
@@ -107,6 +112,7 @@ orderSchema.index({ status: 1, createdAt: -1 });
 orderSchema.index({ paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ orderType: 1, createdAt: -1 });
+orderSchema.index({ declinedRiders: 1 });
 
 const Order = mongoose.model('Order', orderSchema);
 export default Order;

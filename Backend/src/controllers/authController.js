@@ -17,6 +17,7 @@ export const authUser = async (req, res) => {
         email: user.email,
         role: user.role,
         permissions: user.permissions,
+        isOnline: Boolean(user.isOnline),
         token: generateToken(user._id),
       });
     } else {

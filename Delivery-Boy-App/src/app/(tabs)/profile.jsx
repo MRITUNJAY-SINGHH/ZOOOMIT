@@ -29,11 +29,13 @@ import {
   FileText,
   MessageSquare,
   ChevronRight,
-  LogOut
+  LogOut,
+  Bell
 } from 'lucide-react-native';
 import { typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
 import { deliveryService } from '../../services/deliveryService';
+import { notificationService } from '../../services/notificationService';
 import { hapticFeedback } from '../../services/haptics';
 
 export default function ProfileScreen() {
@@ -223,6 +225,16 @@ export default function ProfileScreen() {
       onPress: () => handleMenuPress('/help-support')
     },
     {
+      id: 'support-requests',
+      title: 'My Support Requests',
+      subtitle: 'View submitted tickets and responses',
+      icon: MessageSquare,
+      iconColor: '#EA580C',
+      bgColor: '#FFF7ED',
+      borderColor: '#FFEDD5',
+      onPress: () => handleMenuPress('/support-requests')
+    },
+    {
       id: 'about',
       title: 'About ZOOOMIT',
       subtitle: 'App version and information',
@@ -261,8 +273,30 @@ export default function ProfileScreen() {
       bgColor: '#FEF2F2',
       borderColor: '#FEE2E2',
       onPress: () => handleMenuPress('/feedback')
+    },
+    {
+      id: 'notification-diagnostic',
+      title: 'Notification Diagnostic',
+      subtitle: 'Test push sound & order alert on this phone',
+      icon: Bell,
+      iconColor: '#2563EB',
+      bgColor: '#EFF6FF',
+      borderColor: '#DBEAFE',
+      onPress: () => handleTestNotification()
     }
   ];
+
+  const handleTestNotification = async () => {
+    try {
+      hapticFeedback.light?.();
+      Alert.alert('Testing Notifications', 'Requesting a test push notification from the server to this device...');
+      await notificationService.registerForPushNotificationsAsync();
+      const res = await deliveryService.testPushNotification();
+      Alert.alert('Notification Dispatched', res?.message || 'Check your notification shade for the order alert!');
+    } catch (err) {
+      Alert.alert('Notification Test', err?.response?.data?.message || err?.message || 'Failed to dispatch test notification.');
+    }
+  };
 
   const handleOpenLogoutConfirmation = () => {
     hapticFeedback.warning?.();

@@ -3,6 +3,7 @@ import {
   getDeliveryProfile,
   toggleOnline,
   updatePushToken,
+  sendTestPushNotification,
   updateLocation,
   getDashboardStats,
   getAvailableOrders,
@@ -18,7 +19,11 @@ import {
   getRiderSettlements,
   confirmStoreCashSettlement,
   updateDeliveryProfile,
-  submitPartnerFeedback
+  submitPartnerFeedback,
+  getPartnerSupportTickets,
+  createPartnerSupportTicket,
+  getPartnerSupportTicketDetails,
+  addSupportTicketReply
 } from '../controllers/deliveryController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 
@@ -32,10 +37,16 @@ router.get('/profile', getDeliveryProfile);
 router.put('/profile', updateDeliveryProfile);
 router.put('/toggle-online', toggleOnline);
 router.put('/push-token', updatePushToken);
+router.delete('/push-token', updatePushToken);
+router.post('/test-push', sendTestPushNotification);
 router.put('/location', updateLocation);
 
 // Partner Feedback & Support
 router.post('/feedback', submitPartnerFeedback);
+router.get('/support', getPartnerSupportTickets);
+router.post('/support', createPartnerSupportTicket);
+router.get('/support/:id', getPartnerSupportTicketDetails);
+router.post('/support/:id/reply', addSupportTicketReply);
 
 // Dashboard, Earnings & Store Cash Settlements
 router.get('/dashboard', getDashboardStats);

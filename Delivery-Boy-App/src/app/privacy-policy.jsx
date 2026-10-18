@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, ShieldCheck, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
 
@@ -163,24 +163,6 @@ export default function PrivacyPolicyScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Intro Badge Card */}
-        <View style={styles.introCard}>
-          <View style={styles.shieldIconCircle}>
-            <ShieldCheck size={22} color="#15803D" strokeWidth={2.2} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.badgeRow}>
-              <Text style={styles.introCardTitle}>Delivery Partner Privacy Standard</Text>
-              <View style={styles.activeTag}>
-                <CheckCircle2 size={12} color="#15803D" strokeWidth={2.5} style={{ marginRight: 4 }} />
-                <Text style={styles.activeTagText}>Active</Text>
-              </View>
-            </View>
-            <Text style={styles.introCardSub}>
-              Version 2.4 • Applicable to all registered two-wheeler and fleet delivery partners.
-            </Text>
-          </View>
-        </View>
 
         {/* Content Card with 10 Detailed Numbered Sections */}
         <View style={styles.contentCard}>
@@ -259,58 +241,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40
   },
 
-  // Intro Card
-  introCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    padding: 14,
-    marginBottom: 14
-  },
-  shieldIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#DCFCE7',
-    borderWidth: 1,
-    borderColor: '#86EFAC',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2
-  },
-  introCardTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: 14.5,
-    color: '#111827'
-  },
-  activeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12
-  },
-  activeTagText: {
-    fontFamily: typography.family.bold,
-    fontSize: 11,
-    color: '#15803D'
-  },
-  introCardSub: {
-    fontFamily: typography.family.regular,
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 16
-  },
 
   // Main Card
   contentCard: {

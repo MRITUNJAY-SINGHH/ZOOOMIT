@@ -340,6 +340,52 @@ export default function NotificationsScreen() {
     );
   };
 
+  const hasToday = groupedNotifications.today.length > 0;
+  const hasYesterday = groupedNotifications.yesterday.length > 0;
+
+  const renderSectionHeader = (title, showActions = false) => (
+    <View style={styles.sectionHeaderRow}>
+      <Text style={styles.sectionHeaderTitle}>{title}</Text>
+      {showActions && (
+        <View style={styles.sectionHeaderActions}>
+          {unreadCount > 0 && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                hapticFeedback.light?.();
+                setActionError('');
+                setShowMarkAllModal(true);
+              }}
+              style={styles.sectionActionBtn}
+              accessibilityLabel="Mark all read"
+              accessibilityRole="button"
+            >
+              <CheckCircle2 size={13} color="#2563EB" strokeWidth={2.4} style={{ marginRight: 4 }} />
+              <Text style={styles.sectionActionTextBlue}>Mark all read</Text>
+            </TouchableOpacity>
+          )}
+
+          {notifications.length > 0 && (
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                hapticFeedback.light?.();
+                setActionError('');
+                setShowClearAllModal(true);
+              }}
+              style={styles.sectionActionBtn}
+              accessibilityLabel="Clear all"
+              accessibilityRole="button"
+            >
+              <Trash2 size={13} color="#64748B" strokeWidth={2.2} style={{ marginRight: 4 }} />
+              <Text style={styles.sectionActionTextMuted}>Clear all</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" translucent={false} />
@@ -358,38 +404,11 @@ export default function NotificationsScreen() {
               <ArrowLeft size={22} color="#111827" strokeWidth={2.2} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Notifications</Text>
-          </View>
-
-          <View style={styles.headerActions}>
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                if (unreadCount === 0) return;
-                hapticFeedback.light?.();
-                setActionError('');
-                setShowMarkAllModal(true);
-              }}
-              style={[styles.actionBtn, unreadCount === 0 && { opacity: 0.45 }]}
-              disabled={unreadCount === 0}
-            >
-              <CheckCircle2 size={18} color="#111827" strokeWidth={2} />
-              <Text style={styles.actionBtnText}>Mark All Read</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              activeOpacity={0.7}
-              onPress={() => {
-                if (notifications.length === 0) return;
-                hapticFeedback.light?.();
-                setActionError('');
-                setShowClearAllModal(true);
-              }}
-              style={[styles.actionBtn, notifications.length === 0 && { opacity: 0.45 }]}
-              disabled={notifications.length === 0}
-            >
-              <Trash2 size={18} color="#111827" strokeWidth={2} />
-              <Text style={styles.actionBtnText}>Clear All</Text>
-            </TouchableOpacity>
+            {unreadCount > 0 && (
+              <View style={styles.headerUnreadBadge}>
+                <Text style={styles.headerUnreadBadgeText}>{unreadCount} new</Text>
+              </View>
+            )}
           </View>
         </View>
 
@@ -461,7 +480,7 @@ export default function NotificationsScreen() {
               {/* Today Section */}
               {groupedNotifications.today.length > 0 && (
                 <View style={styles.sectionBlock}>
-                  <Text style={styles.sectionHeaderTitle}>Today</Text>
+                  {renderSectionHeader('Today', true)}
                   {groupedNotifications.today.map(renderCard)}
                 </View>
               )}
@@ -469,7 +488,7 @@ export default function NotificationsScreen() {
               {/* Yesterday Section */}
               {groupedNotifications.yesterday.length > 0 && (
                 <View style={styles.sectionBlock}>
-                  <Text style={styles.sectionHeaderTitle}>Yesterday</Text>
+                  {renderSectionHeader('Yesterday', !hasToday)}
                   {groupedNotifications.yesterday.map(renderCard)}
                 </View>
               )}
@@ -477,7 +496,7 @@ export default function NotificationsScreen() {
               {/* Earlier Section */}
               {groupedNotifications.earlier.length > 0 && (
                 <View style={styles.sectionBlock}>
-                  <Text style={styles.sectionHeaderTitle}>Earlier</Text>
+                  {renderSectionHeader('Earlier', !hasToday && !hasYesterday)}
                   {groupedNotifications.earlier.map(renderCard)}
                 </View>
               )}
@@ -747,21 +766,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: '#111827'
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12
+  headerUnreadBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    marginLeft: 8
   },
-  actionBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4
-  },
-  actionBtnText: {
-    fontFamily: typography.family.medium,
-    fontSize: 10,
-    color: '#475569',
-    marginTop: 2
+  headerUnreadBadgeText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: '#92400E'
   },
 
   // Category Pills
@@ -827,11 +844,41 @@ const styles = StyleSheet.create({
   sectionBlock: {
     marginBottom: 20
   },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10
+  },
   sectionHeaderTitle: {
     fontFamily: typography.family.bold,
     fontSize: 15,
-    color: '#111827',
-    marginBottom: 10
+    color: '#111827'
+  },
+  sectionHeaderActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  sectionActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 14
+  },
+  sectionActionTextBlue: {
+    fontFamily: typography.family.bold,
+    fontSize: 11.5,
+    color: '#2563EB'
+  },
+  sectionActionTextMuted: {
+    fontFamily: typography.family.medium,
+    fontSize: 11.5,
+    color: '#64748B'
   },
 
   // Notification Card

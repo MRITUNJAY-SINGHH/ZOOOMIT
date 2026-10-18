@@ -2,16 +2,10 @@ import axios from 'axios';
 import { Platform, DeviceEventEmitter } from 'react-native';
 import Constants from 'expo-constants';
 import { authStorage } from './authStorage';
-import { SAMPLE_ORDERS } from './mockOrders';
 import { findMockProduct, MOCK_PRODUCTS } from './mockProducts';
 
 const getBaseUrl = () => {
-  if (process.env.EXPO_PUBLIC_API_URL) {
-    const configured = process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
-    return configured.endsWith('/api/storefront') ? configured : `${configured}/api/storefront`;
-  }
-
-  // 1. Detect Expo Metro host IP for physical device testing on local Wi-Fi
+  // 1. Detect Expo Metro host IP for physical device and simulator testing against local backend
   const hostUri = Constants.expoConfig?.hostUri ||
     Constants.manifest2?.extra?.expoGo?.debuggerHost ||
     Constants.manifest?.debuggerHost;
@@ -22,13 +16,18 @@ const getBaseUrl = () => {
     }
   }
 
+  if (process.env.EXPO_PUBLIC_API_URL) {
+    const configured = process.env.EXPO_PUBLIC_API_URL.trim().replace(/\/+$/, '');
+    return configured.endsWith('/api/storefront') ? configured : `${configured}/api/storefront`;
+  }
+
   // 2. Android emulator fallback
   if (Platform.OS === 'android') {
     return 'http://10.0.2.2:5000/api/storefront';
   }
 
   // 3. Default localhost fallback
-  return 'https://zooomit-backend.onrender.com/api/storefront';
+  return 'http://localhost:5000/api/storefront';
 };
 
 export const api = axios.create({
@@ -236,75 +235,19 @@ export const StorefrontAPI = {
     api.post('/checkout/place-order', data),
 
   getOrders: async (params) => {
-    try {
-      const res = await api.get('/orders', { params });
-      if (Array.isArray(res.data?.data) && res.data.data.length > 0) {
-        return res;
-      }
-      return {
-        data: {
-          data: SAMPLE_ORDERS,
-          total: SAMPLE_ORDERS.length,
-          page: 1,
-          totalPages: 1
-        }
-      };
-    } catch (error) {
-      console.log('[StorefrontAPI] Utilizing sample orders fallback for getOrders.');
-      return {
-        data: {
-          data: SAMPLE_ORDERS,
-          total: SAMPLE_ORDERS.length,
-          page: 1,
-          totalPages: 1
-        }
-      };
-    }
+    return await api.get('/orders', { params });
   },
 
   getOrderDetails: async (id) => {
-    try {
-      const res = await api.get(`/orders/${id}`);
-      if (res.data?.data) {
-        return res;
-      }
-    } catch (error) {
-      console.log(`[StorefrontAPI] Utilizing sample order details fallback for order ID ${id}`);
-    }
-    const found = SAMPLE_ORDERS.find(
-      (o) =>
-        o._id === id ||
-        o.orderNumber === id ||
-        (id && typeof id === 'string' && (o._id.includes(id) || id.includes(o.orderNumber || '')))
-    );
-    return { data: { data: found || SAMPLE_ORDERS[0] } };
+    return await api.get(`/orders/${id}`);
   },
 
   cancelOrder: async (id, reason) => {
-    try {
-      return await api.post(`/orders/${id}/cancel`, { reason });
-    } catch (error) {
-      const target = SAMPLE_ORDERS.find(
-        (o) =>
-          o._id === id ||
-          o.orderNumber === id ||
-          (id && typeof id === 'string' && (o._id.includes(id) || id.includes(o.orderNumber || '')))
-      );
-      if (target) {
-        target.status = 'Cancelled';
-        target.cancelledAt = new Date().toISOString();
-        target.cancelReason = reason || 'Cancelled by customer';
-      }
-      return { data: { success: true, message: 'Order cancelled successfully', data: target } };
-    }
+    return await api.post(`/orders/${id}/cancel`, { reason });
   },
 
   reorder: async (id) => {
-    try {
-      return await api.post(`/orders/${id}/reorder`);
-    } catch (error) {
-      return { data: { success: true, message: 'Order reordered successfully' } };
-    }
+    return await api.post(`/orders/${id}/reorder`);
   },
 
   createSupportTicket: (data) =>

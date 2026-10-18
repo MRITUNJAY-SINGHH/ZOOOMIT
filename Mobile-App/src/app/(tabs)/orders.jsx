@@ -17,7 +17,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
-import { SAMPLE_ORDERS } from '../../services/mockOrders';
 import {
   ArrowLeft,
   Search,
@@ -60,14 +59,14 @@ export default function OrdersScreen() {
       try {
         const res = await StorefrontAPI.getOrders({ limit: 50 });
         const list = res.data?.data;
-        return Array.isArray(list) && list.length > 0 ? list : SAMPLE_ORDERS;
+        return Array.isArray(list) ? list : [];
       } catch {
-        return SAMPLE_ORDERS;
+        return [];
       }
     }
   });
 
-  const orders = (fetchedOrders && fetchedOrders.length > 0) ? fetchedOrders : SAMPLE_ORDERS;
+  const orders = fetchedOrders || [];
 
   const filteredOrders = useMemo(() => {
     return orders.filter((ord) => {
@@ -226,7 +225,7 @@ export default function OrdersScreen() {
       {!token && (
         <View style={styles.guestBanner}>
           <View style={styles.guestBannerTextCol}>
-            <Text style={styles.guestBannerTitle}>Sample Orders Preview</Text>
+            <Text style={styles.guestBannerTitle}>Track Your Orders</Text>
             <Text style={styles.guestBannerSubtitle}>
               Sign in to place live orders and track 10-15m grocery deliveries.
             </Text>

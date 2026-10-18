@@ -26,13 +26,39 @@ export const deliveryService = {
     return res.data;
   },
 
+  // Support Requests
+  async getSupportTickets(status = 'all') {
+    const res = await api.get('/delivery/support', { params: { status } });
+    return res.data;
+  },
+
+  async createSupportTicket(data) {
+    const res = await api.post('/delivery/support', data);
+    return res.data;
+  },
+
+  async getSupportTicketDetails(id) {
+    const res = await api.get(`/delivery/support/${id}`);
+    return res.data;
+  },
+
+  async replySupportTicket(id, text) {
+    const res = await api.post(`/delivery/support/${id}/reply`, { text });
+    return res.data;
+  },
+
   async toggleOnline(isOnline) {
     const res = await api.put('/delivery/toggle-online', { isOnline });
     return res.data;
   },
 
-  async updatePushToken(pushToken) {
-    const res = await api.put('/delivery/push-token', { pushToken });
+  async updatePushToken(pushToken, unregister = false) {
+    const res = await api.put('/delivery/push-token', { pushToken, unregister });
+    return res.data;
+  },
+
+  async testPushNotification() {
+    const res = await api.post('/delivery/test-push');
     return res.data;
   },
 

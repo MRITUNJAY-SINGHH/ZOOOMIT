@@ -1,0 +1,22 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Firebase & Cloud Credentials (Never commit private keys!)
+*-firebase-adminsdk-*.json
+service-account*.json
+*.keystore
+*.jks
+*.p8
+*.p12
+*.key
+*.pem
+
+# Dependencies
+node_modules/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

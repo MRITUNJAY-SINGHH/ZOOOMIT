@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, FileText, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
 
@@ -164,24 +164,6 @@ export default function TermsConditionsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Agreement Status Badge Card */}
-        <View style={styles.agreementBadgeCard}>
-          <View style={styles.fileIconCircle}>
-            <FileText size={22} color="#D97706" strokeWidth={2.2} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.badgeRow}>
-              <Text style={styles.badgeTitle}>ZOOOMIT Partner Agreement</Text>
-              <View style={styles.activeTag}>
-                <CheckCircle2 size={12} color="#15803D" strokeWidth={2.5} style={{ marginRight: 4 }} />
-                <Text style={styles.activeTagText}>Active</Text>
-              </View>
-            </View>
-            <Text style={styles.badgeSub}>
-              Version 3.2 • Legally binding operational terms for registered delivery partners.
-            </Text>
-          </View>
-        </View>
 
         {/* Card containing all 10 detailed numbered sections */}
         <View style={styles.contentCard}>
@@ -260,58 +242,6 @@ const styles = StyleSheet.create({
     paddingBottom: 40
   },
 
-  // Agreement Status Badge Card
-  agreementBadgeCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    padding: 14,
-    marginBottom: 14
-  },
-  fileIconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#FEF3C7',
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12
-  },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2
-  },
-  badgeTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: 14.5,
-    color: '#111827'
-  },
-  activeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12
-  },
-  activeTagText: {
-    fontFamily: typography.family.bold,
-    fontSize: 11,
-    color: '#15803D'
-  },
-  badgeSub: {
-    fontFamily: typography.family.regular,
-    fontSize: 12,
-    color: '#64748B',
-    lineHeight: 16
-  },
 
   // Main Card
   contentCard: {

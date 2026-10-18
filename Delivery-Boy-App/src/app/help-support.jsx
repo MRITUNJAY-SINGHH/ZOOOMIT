@@ -28,6 +28,7 @@ import {
   ChevronUp,
   MessageSquare,
   HelpCircle,
+  FileText,
   X
 } from 'lucide-react-native';
 import { typography } from '../constants/theme';
@@ -305,6 +306,21 @@ export default function HelpSupportScreen() {
           </>
         )}
 
+        {/* My Support Requests Button */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => {
+            hapticFeedback.light?.();
+            router.push('/support-requests');
+          }}
+          style={styles.myRequestsBtn}
+          accessibilityLabel="My Support Requests"
+          accessibilityRole="button"
+        >
+          <FileText size={18} color="#111827" strokeWidth={2.2} style={{ marginRight: 8 }} />
+          <Text style={styles.myRequestsBtnText}>My Support Requests</Text>
+        </TouchableOpacity>
+
         {/* Full-width Yellow Contact Support Button matching reference */}
         <TouchableOpacity
           activeOpacity={0.8}
@@ -468,6 +484,23 @@ const styles = StyleSheet.create({
   rowDivider: {
     height: 1,
     backgroundColor: '#F1F5F9'
+  },
+
+  myRequestsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    height: 52,
+    marginBottom: 12
+  },
+  myRequestsBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 15,
+    color: '#111827'
   },
 
   // Full-width Yellow Contact Support Button

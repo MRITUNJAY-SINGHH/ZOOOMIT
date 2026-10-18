@@ -17,6 +17,8 @@ import InventoryLog from './models/InventoryLog.js';
 import HeldBill from './models/HeldBill.js';
 import Notification from './models/Notification.js';
 import Settings from './models/Settings.js';
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -263,11 +265,70 @@ const seedDatabase = async () => {
       let existingUser = await User.findOne({ email: u.email });
       if (!existingUser) {
         existingUser = new User(u);
+        if (u.role === 'DeliveryBoy') {
+          existingUser.approvalStatus = 'Approved';
+          existingUser.isOnline = true;
+        }
+        await existingUser.save();
+      } else {
+        existingUser.password = u.password;
+        existingUser.status = 'Active';
+        if (u.role === 'DeliveryBoy') {
+          existingUser.approvalStatus = 'Approved';
+          existingUser.isOnline = true;
+        }
         await existingUser.save();
       }
       createdUsers.push(existingUser);
     }
     const adminUser = createdUsers[0];
+
+    // 1b. Customer (Idempotent Test Account for Customer App)
+    let testCustomer = await Customer.findOne({ phone: '9988001001' });
+    if (!testCustomer) {
+      testCustomer = new Customer({
+        name: 'Aarav Sharma',
+        phone: '9988001001',
+        email: 'aarav.sharma@example.com',
+        password: 'password123',
+        customerType: 'APP',
+        status: 'Active',
+        addresses: [
+          {
+            label: 'Home',
+            street: 'Flat 402, Lotus Court, Green Glen Layout',
+            landmark: 'Near Outer Ring Road Hub',
+            city: 'Bengaluru',
+            state: 'Karnataka',
+            zipCode: '560103',
+            country: 'India',
+            formattedAddress: 'Flat 402, Lotus Court, Green Glen Layout, Near Outer Ring Road Hub, Bengaluru, Karnataka 560103',
+            isDefault: true
+          }
+        ]
+      });
+      await testCustomer.save();
+    } else {
+      testCustomer.password = 'password123';
+      testCustomer.status = 'Active';
+      testCustomer.customerType = 'APP';
+      if (!testCustomer.addresses || testCustomer.addresses.length === 0) {
+        testCustomer.addresses = [
+          {
+            label: 'Home',
+            street: 'Flat 402, Lotus Court, Green Glen Layout',
+            landmark: 'Near Outer Ring Road Hub',
+            city: 'Bengaluru',
+            state: 'Karnataka',
+            zipCode: '560103',
+            country: 'India',
+            formattedAddress: 'Flat 402, Lotus Court, Green Glen Layout, Near Outer Ring Road Hub, Bengaluru, Karnataka 560103',
+            isDefault: true
+          }
+        ];
+      }
+      await testCustomer.save();
+    }
 
     // 2. Categories & Subcategories
     const categoryMap = {};
@@ -553,6 +614,416 @@ const seedDatabase = async () => {
             note: 'Initial Seed Inventory Stock'
           });
         }
+      }
+    }
+
+    // =========================================================================
+    // 6. Seed Complete Test Orders for Both Delivery Partners & Dispatch Pool
+    // =========================================================================
+    console.log('📦 Seeding delivery partner test orders (Active Accepted, Delivered, and Upcoming Pool)...');
+
+    const rider1 = await User.findOne({ email: 'rider1@example.com' });
+    const rider2 = await User.findOne({ email: 'rider2@example.com' });
+    if (rider1) {
+      rider1.isOnline = true;
+      rider1.status = 'Active';
+      rider1.approvalStatus = 'Approved';
+      await rider1.save();
+    }
+    if (rider2) {
+      rider2.isOnline = true;
+      rider2.status = 'Active';
+      rider2.approvalStatus = 'Approved';
+      await rider2.save();
+    }
+
+    // Ensure all 5 customers exist
+    const customerDocs = [];
+    for (const cust of customers) {
+      let cDoc = await Customer.findOne({ phone: cust.phone });
+      if (!cDoc) {
+        cDoc = new Customer({
+          name: cust.name,
+          phone: cust.phone,
+          email: cust.email,
+          password: 'password123',
+          customerType: cust.customerType || 'APP',
+          status: 'Active',
+          addresses: [
+            {
+              label: 'Home',
+              street: cust.street,
+              landmark: 'Near Main Road',
+              city: cust.city,
+              state: cust.state,
+              zipCode: cust.zipCode,
+              country: 'India',
+              formattedAddress: `${cust.street}, ${cust.city}, ${cust.state} ${cust.zipCode}`,
+              isDefault: true
+            }
+          ]
+        });
+        await cDoc.save();
+      }
+      customerDocs.push(cDoc);
+    }
+
+    const seededProducts = await Product.find({ isActive: true });
+    const getProd = (sku) => seededProducts.find((p) => p.baseSku === sku) || seededProducts[0];
+
+    const pAtta = getProd('ATTA-001');
+    const pDal = getProd('DAL-001');
+    const pOil = getProd('OIL-001');
+    const pMilk = getProd('MILK-001');
+    const pCola = getProd('THUMS-001');
+    const pBiscuit = getProd('PARLE-001');
+    const pVim = getProd('VIM-001');
+
+    const makeItem = (prod, qty = 1) => {
+      const price = prod?.sellingPrice || 50;
+      const total = price * qty;
+      return {
+        product: prod?._id,
+        productName: prod?.name || 'Grocery Item',
+        productImage: prod?.featuredImage,
+        sku: prod?.baseSku || 'SKU',
+        unit: prod?.sellingUnit || 'PCS',
+        qty,
+        price,
+        taxRate: prod?.taxRate || 0,
+        taxableAmount: total,
+        taxAmount: 0,
+        total
+      };
+    };
+
+    const buildOtp = async (plainCode = '4821') => {
+      const hash = await bcrypt.hash(plainCode, 8);
+      return {
+        code: plainCode,
+        hash,
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000),
+        attempts: 0,
+        lastGeneratedAt: new Date()
+      };
+    };
+
+    const testOrdersSpec = [
+      // -----------------------------------------------------------------------
+      // RIDER 1: Active In-Progress Delivery (Accepted)
+      // -----------------------------------------------------------------------
+      {
+        orderNumber: 'ORD-R1-ACTIVE-01',
+        orderType: 'ONLINE',
+        customer: customerDocs[0]?._id,
+        status: 'Accepted',
+        paymentStatus: 'Pending',
+        paymentMethod: 'COD',
+        assignedRider: rider1?._id,
+        assignedAt: new Date(Date.now() - 20 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pAtta, 1), makeItem(pMilk, 2), makeItem(pBiscuit, 3)],
+        shippingAddress: {
+          contactName: customerDocs[0]?.name || 'Aarav Sharma',
+          contactPhone: customerDocs[0]?.phone || '9988001001',
+          street: 'Flat 402, Lotus Court, Green Glen Layout',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560103',
+          country: 'India',
+          formattedAddress: 'Flat 402, Lotus Court, Green Glen Layout, Bengaluru 560103'
+        },
+        otpCode: '4821'
+      },
+      // -----------------------------------------------------------------------
+      // RIDER 1: Past Delivered Orders (Today) -> Total ₹90 (3 * ₹30)
+      // -----------------------------------------------------------------------
+      {
+        orderNumber: 'ORD-R1-DELIVERED-01',
+        orderType: 'ONLINE',
+        customer: customerDocs[1]?._id,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: rider1?._id,
+        assignedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
+        deliveredAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pOil, 2), makeItem(pDal, 1)],
+        shippingAddress: {
+          contactName: customerDocs[1]?.name || 'Priya Nair',
+          contactPhone: customerDocs[1]?.phone || '9988001002',
+          street: 'Villa 12, Palm Meadows',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560066',
+          country: 'India',
+          formattedAddress: 'Villa 12, Palm Meadows, Bengaluru 560066'
+        }
+      },
+      {
+        orderNumber: 'ORD-R1-DELIVERED-02',
+        orderType: 'ONLINE',
+        customer: customerDocs[2]?._id,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: 'COD',
+        assignedRider: rider1?._id,
+        assignedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
+        deliveredAt: new Date(Date.now() - 4.2 * 60 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pCola, 4), makeItem(pBiscuit, 2)],
+        shippingAddress: {
+          contactName: customerDocs[2]?.name || 'Kabir Mehta',
+          contactPhone: customerDocs[2]?.phone || '9988001003',
+          street: '14/B, Golf Course Road',
+          city: 'Gurugram',
+          state: 'Haryana',
+          zipCode: '122002',
+          country: 'India',
+          formattedAddress: '14/B, Golf Course Road, Gurugram 122002'
+        }
+      },
+      {
+        orderNumber: 'ORD-R1-DELIVERED-03',
+        orderType: 'ONLINE',
+        customer: customerDocs[3]?._id,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: rider1?._id,
+        assignedAt: new Date(Date.now() - 7 * 60 * 60 * 1000),
+        deliveredAt: new Date(Date.now() - 6.5 * 60 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pVim, 3), makeItem(pMilk, 1)],
+        shippingAddress: {
+          contactName: customerDocs[3]?.name || 'Ananya Iyer',
+          contactPhone: customerDocs[3]?.phone || '9988001004',
+          street: '7th Cross, Indiranagar',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560038',
+          country: 'India',
+          formattedAddress: '7th Cross, Indiranagar, Bengaluru 560038'
+        }
+      },
+
+      // -----------------------------------------------------------------------
+      // RIDER 2: Active In-Progress Delivery (Accepted)
+      // -----------------------------------------------------------------------
+      {
+        orderNumber: 'ORD-R2-ACTIVE-01',
+        orderType: 'ONLINE',
+        customer: customerDocs[1]?._id,
+        status: 'Accepted',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: rider2?._id,
+        assignedAt: new Date(Date.now() - 15 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pDal, 2), makeItem(pOil, 1), makeItem(pCola, 2)],
+        shippingAddress: {
+          contactName: customerDocs[1]?.name || 'Priya Nair',
+          contactPhone: customerDocs[1]?.phone || '9988001002',
+          street: 'Villa 12, Palm Meadows',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560066',
+          country: 'India',
+          formattedAddress: 'Villa 12, Palm Meadows, Bengaluru 560066'
+        },
+        otpCode: '7194'
+      },
+      // -----------------------------------------------------------------------
+      // RIDER 2: Past Delivered Orders (Today) -> Total ₹60 (2 * ₹30)
+      // -----------------------------------------------------------------------
+      {
+        orderNumber: 'ORD-R2-DELIVERED-01',
+        orderType: 'ONLINE',
+        customer: customerDocs[3]?._id,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: 'COD',
+        assignedRider: rider2?._id,
+        assignedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+        deliveredAt: new Date(Date.now() - 3.4 * 60 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pAtta, 1), makeItem(pVim, 2)],
+        shippingAddress: {
+          contactName: customerDocs[3]?.name || 'Ananya Iyer',
+          contactPhone: customerDocs[3]?.phone || '9988001004',
+          street: '7th Cross, Indiranagar',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560038',
+          country: 'India',
+          formattedAddress: '7th Cross, Indiranagar, Bengaluru 560038'
+        }
+      },
+      {
+        orderNumber: 'ORD-R2-DELIVERED-02',
+        orderType: 'ONLINE',
+        customer: customerDocs[0]?._id,
+        status: 'Delivered',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: rider2?._id,
+        assignedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
+        deliveredAt: new Date(Date.now() - 5.5 * 60 * 60 * 1000),
+        riderEarnings: 30,
+        items: [makeItem(pMilk, 3), makeItem(pBiscuit, 4)],
+        shippingAddress: {
+          contactName: customerDocs[0]?.name || 'Aarav Sharma',
+          contactPhone: customerDocs[0]?.phone || '9988001001',
+          street: 'Flat 402, Lotus Court, Green Glen Layout',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560103',
+          country: 'India',
+          formattedAddress: 'Flat 402, Lotus Court, Green Glen Layout, Bengaluru 560103'
+        }
+      },
+
+      // -----------------------------------------------------------------------
+      // DISPATCH POOL: Upcoming / Available Orders (Waiting to be accepted)
+      // Visible to BOTH Rider 1 and Rider 2 when Online!
+      // -----------------------------------------------------------------------
+      {
+        orderNumber: 'ORD-POOL-UPCOMING-01',
+        orderType: 'ONLINE',
+        customer: customerDocs[2]?._id,
+        status: 'Confirmed',
+        paymentStatus: 'Pending',
+        paymentMethod: 'COD',
+        assignedRider: null,
+        items: [makeItem(pAtta, 1), makeItem(pOil, 1), makeItem(pBiscuit, 2)],
+        shippingAddress: {
+          contactName: customerDocs[2]?.name || 'Kabir Mehta',
+          contactPhone: customerDocs[2]?.phone || '9988001003',
+          street: '14/B, Golf Course Road',
+          city: 'Gurugram',
+          state: 'Haryana',
+          zipCode: '122002',
+          country: 'India',
+          formattedAddress: '14/B, Golf Course Road, Gurugram 122002'
+        },
+        otpCode: '3582'
+      },
+      {
+        orderNumber: 'ORD-POOL-UPCOMING-02',
+        orderType: 'ONLINE',
+        customer: customerDocs[3]?._id,
+        status: 'Confirmed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: null,
+        items: [makeItem(pMilk, 2), makeItem(pDal, 1), makeItem(pCola, 2)],
+        shippingAddress: {
+          contactName: customerDocs[3]?.name || 'Ananya Iyer',
+          contactPhone: customerDocs[3]?.phone || '9988001004',
+          street: '7th Cross, Indiranagar',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560038',
+          country: 'India',
+          formattedAddress: '7th Cross, Indiranagar, Bengaluru 560038'
+        },
+        otpCode: '6249'
+      },
+      {
+        orderNumber: 'ORD-POOL-UPCOMING-03',
+        orderType: 'ONLINE',
+        customer: customerDocs[4]?._id || customerDocs[0]?._id,
+        status: 'Confirmed',
+        paymentStatus: 'Pending',
+        paymentMethod: 'COD',
+        assignedRider: null,
+        items: [makeItem(pVim, 2), makeItem(pBiscuit, 3), makeItem(pCola, 1)],
+        shippingAddress: {
+          contactName: customerDocs[4]?.name || 'Rohan Gupta',
+          contactPhone: customerDocs[4]?.phone || '9988001005',
+          street: 'Shop 4, Market Complex',
+          city: 'Delhi',
+          state: 'Delhi',
+          zipCode: '110001',
+          country: 'India',
+          formattedAddress: 'Shop 4, Market Complex, Delhi 110001'
+        },
+        otpCode: '8910'
+      },
+      {
+        orderNumber: 'ORD-POOL-UPCOMING-04',
+        orderType: 'ONLINE',
+        customer: customerDocs[1]?._id,
+        status: 'Confirmed',
+        paymentStatus: 'Paid',
+        paymentMethod: 'Online',
+        assignedRider: null,
+        items: [makeItem(pDal, 2), makeItem(pOil, 2)],
+        shippingAddress: {
+          contactName: customerDocs[1]?.name || 'Priya Nair',
+          contactPhone: customerDocs[1]?.phone || '9988001002',
+          street: 'Villa 12, Palm Meadows',
+          city: 'Bengaluru',
+          state: 'Karnataka',
+          zipCode: '560066',
+          country: 'India',
+          formattedAddress: 'Villa 12, Palm Meadows, Bengaluru 560066'
+        },
+        otpCode: '5037'
+      }
+    ];
+
+    for (const spec of testOrdersSpec) {
+      const subTotal = spec.items.reduce((sum, it) => sum + (it.total || 0), 0);
+      const amount = subTotal;
+      const deliveryOtp = spec.otpCode ? await buildOtp(spec.otpCode) : undefined;
+
+      const orderPayload = {
+        orderNumber: spec.orderNumber,
+        orderType: spec.orderType,
+        customer: spec.customer,
+        status: spec.status,
+        paymentStatus: spec.paymentStatus,
+        paymentMethod: spec.paymentMethod,
+        assignedRider: spec.assignedRider || null,
+        assignedAt: spec.assignedAt || (spec.assignedRider ? new Date() : null),
+        deliveredAt: spec.deliveredAt || null,
+        riderEarnings: spec.riderEarnings || 0,
+        items: spec.items,
+        subTotal,
+        taxableAmount: subTotal,
+        tax: 0,
+        amount,
+        shippingAddress: spec.shippingAddress,
+        declinedRiders: []
+      };
+
+      if (deliveryOtp) {
+        orderPayload.deliveryOtp = deliveryOtp;
+      }
+
+      let existingOrder = await Order.findOne({ orderNumber: spec.orderNumber });
+      if (!existingOrder) {
+        existingOrder = new Order(orderPayload);
+        await existingOrder.save();
+      } else {
+        Object.assign(existingOrder, orderPayload);
+        await existingOrder.save();
+      }
+
+      const existingActivity = await OrderActivity.findOne({
+        order: existingOrder._id,
+        status: spec.status
+      });
+      if (!existingActivity) {
+        await OrderActivity.create({
+          order: existingOrder._id,
+          status: spec.status,
+          user: spec.assignedRider || adminUser._id,
+          system: !spec.assignedRider,
+          note: `Seed order setup: ${spec.status}`
+        });
       }
     }
 

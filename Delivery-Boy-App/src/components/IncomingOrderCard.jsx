@@ -46,11 +46,11 @@ export const IncomingOrderCard = ({
 
       {/* Order info summary */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
           <Text style={styles.orderLabel}>ORDER NUMBER</Text>
-          <Text style={styles.orderNumber}>#{order.orderNumber}</Text>
+          <Text style={styles.orderNumber} numberOfLines={1} ellipsizeMode="tail">#{order.orderNumber}</Text>
         </View>
-        <View style={styles.earningsBox}>
+        <View style={[styles.earningsBox, { flexShrink: 0 }]}>
           <Text style={styles.earningsLabel}>EARNINGS</Text>
           <Text style={styles.earningsValue}>₹{earnings}</Text>
         </View>

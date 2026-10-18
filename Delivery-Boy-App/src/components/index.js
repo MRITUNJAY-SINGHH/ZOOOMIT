@@ -7,6 +7,7 @@ export * from './DashboardStatCard';
 export * from './IncomingOrderCard';
 export * from './OrderCard';
 export * from './OrderStatusTimeline';
+export * from './OrderProgressStepper';
 export * from './OTPInput';
 export * from './LocationSummary';
 export * from './EmptyState';

@@ -35,7 +35,6 @@ import {
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography, getOrderStatus } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
-import { SAMPLE_ORDERS } from '../../services/mockOrders';
 import { useCart } from '../../context/CartContext';
 import { ErrorState } from '../../components/ErrorState';
 import { haptics } from '../../services/haptics';
@@ -63,32 +62,15 @@ export default function OrderDetailsScreen() {
   const [reorderSuccessModal, setReorderSuccessModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Instant fallback to ensure zero flicker and immediate rendering
-  const targetOrder = useMemo(() => {
-    if (!id) return SAMPLE_ORDERS[0];
-    const strId = String(id).toLowerCase();
-    const found = SAMPLE_ORDERS.find(
-      (o) =>
-        o._id.toLowerCase() === strId ||
-        o.orderNumber.toLowerCase() === strId ||
-        o._id.toLowerCase().includes(strId) ||
-        strId.includes(o.orderNumber.toLowerCase())
-    );
-    return found || SAMPLE_ORDERS[0];
-  }, [id]);
-
-  const { data: order = targetOrder, refetch } = useQuery({
+  const { data: order, isLoading, isError, refetch } = useQuery({
     queryKey: ['order-details', id],
     queryFn: async () => {
-      try {
-        const res = await StorefrontAPI.getOrderDetails(id);
-        return res.data?.data || targetOrder;
-      } catch {
-        return targetOrder;
-      }
+      if (!id) return null;
+      const res = await StorefrontAPI.getOrderDetails(id);
+      return res.data?.data || null;
     },
-    initialData: targetOrder,
-    refetchInterval: 15000
+    enabled: Boolean(id),
+    refetchInterval: 10000
   });
 
   const handleReorder = async () => {
@@ -149,6 +131,56 @@ export default function OrderDetailsScreen() {
       params: { orderId: order._id, topic }
     });
   };
+
+  if (isLoading && !order) {
+    return (
+      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+        <View style={styles.headerBar}>
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/orders'))}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+          >
+            <ArrowLeft size={22} color={colors.textPrimary} strokeWidth={2.4} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Order Details</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.centeredState}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.stateMessageText}>Loading order details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!order) {
+    return (
+      <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
+        <View style={styles.headerBar}>
+          <Pressable
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/orders'))}
+            style={styles.backButton}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+          >
+            <ArrowLeft size={22} color={colors.textPrimary} strokeWidth={2.4} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Order Details</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={styles.centeredState}>
+          <AlertCircle size={48} color="#EF4444" strokeWidth={2} />
+          <Text style={styles.stateTitleText}>Order Not Found</Text>
+          <Text style={styles.stateMessageText}>Could not load the requested order details.</Text>
+          <Pressable style={styles.stateActionBtn} onPress={() => refetch()}>
+            <Text style={styles.stateActionBtnText}>Retry</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const isDelivered = order.status === 'Delivered';
   const isCancelled = order.status === 'Cancelled' || order.status === 'Returned';
@@ -283,6 +315,33 @@ export default function OrderDetailsScreen() {
             />
           </View>
         </View>
+
+        {/* Secure Delivery OTP for Customer */}
+        {order.deliveryOtp?.code && !isDelivered && !isCancelled && (
+          <View style={styles.otpCard}>
+            <View style={styles.otpHeaderRow}>
+              <View style={styles.otpBadgeIcon}>
+                <ShieldCheck size={20} color="#D97706" strokeWidth={2.5} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.otpCardTitle}>Delivery Verification Code</Text>
+                <Text style={styles.otpCardSubtitle}>
+                  Share this 4-digit PIN with your delivery partner at your doorstep.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.otpCodeContainer}>
+              {String(order.deliveryOtp.code)
+                .padStart(4, '0')
+                .split('')
+                .map((digit, idx) => (
+                  <View key={idx} style={styles.otpDigitBox}>
+                    <Text style={styles.otpDigitText}>{digit}</Text>
+                  </View>
+                ))}
+            </View>
+          </View>
+        )}
 
         {/* Delivery Partner Section */}
         {!isCancelled && (
@@ -1581,5 +1640,95 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: typography.family.bold,
     color: colors.white
+  },
+  centeredState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.xl,
+    gap: 12
+  },
+  stateTitleText: {
+    fontSize: 18,
+    fontFamily: typography.family.bold,
+    color: colors.textPrimary,
+    marginTop: 8
+  },
+  stateMessageText: {
+    fontSize: 14,
+    fontFamily: typography.family.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20
+  },
+  stateActionBtn: {
+    marginTop: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+    backgroundColor: colors.primary,
+    borderRadius: radius.full
+  },
+  stateActionBtnText: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: colors.black
+  },
+  otpCard: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#FDE68A',
+    padding: 16,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md
+  },
+  otpHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12
+  },
+  otpBadgeIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FEF3C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FCD34D'
+  },
+  otpCardTitle: {
+    fontSize: 14,
+    fontFamily: typography.family.bold,
+    color: '#92400E'
+  },
+  otpCardSubtitle: {
+    fontSize: 12,
+    fontFamily: typography.family.regular,
+    color: '#B45309',
+    marginTop: 2
+  },
+  otpCodeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 4
+  },
+  otpDigitBox: {
+    width: 48,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#F59E0B',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  otpDigitText: {
+    fontSize: 22,
+    fontFamily: typography.family.bold,
+    color: '#92400E'
   }
 });

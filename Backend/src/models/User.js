@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema({
   // Delivery Partner Specific Fields
   isOnline: { type: Boolean, default: false },
   expoPushToken: { type: String, default: '' },
+  expoPushTokens: [{ type: String }],
   currentLocation: {
     latitude: { type: Number },
     longitude: { type: Number },

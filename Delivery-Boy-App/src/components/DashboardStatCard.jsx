@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: radius.lg,
     padding: spacing.md,
-    borderWidth: 1.5,
+    borderWidth: 0.5,
     flex: 1
   },
   defaultCard: {

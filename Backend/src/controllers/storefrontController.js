@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
@@ -25,9 +26,9 @@ const generateCustomerToken = (id) => {
   });
 };
 
-// Generate 4-digit or 6-digit Delivery OTP
+// Generate cryptographically secure 4-digit Delivery OTP (1000 to 9999 inclusive)
 const generateOtp = () => {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return crypto.randomInt(1000, 10000).toString();
 };
 
 // In-memory OTP store for customer phone authentication
@@ -61,8 +62,8 @@ export const sendCustomerOtp = async (req, res) => {
       });
     }
 
-    // Generate 6-digit OTP
-    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate cryptographically secure 6-digit OTP
+    const generatedOtp = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = now + 5 * 60 * 1000; // 5 minutes validity
 
     customerOtpCache.set(cleanPhone, {
@@ -71,9 +72,11 @@ export const sendCustomerOtp = async (req, res) => {
       lastSentAt: now
     });
 
-    console.log(`\n=========================================`);
-    console.log(`[AUTH] Customer OTP for +91 ${cleanPhone}: ${generatedOtp}`);
-    console.log(`=========================================\n`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`\n=========================================`);
+      console.log(`[AUTH] Customer OTP for +91 ${cleanPhone}: ${generatedOtp}`);
+      console.log(`=========================================\n`);
+    }
 
     // In production, trigger real SMS service here (e.g. Fast2SMS / Twilio)
     return res.status(200).json({
@@ -1665,9 +1668,11 @@ export const placeOrder = async (req, res) => {
         contactPhone: customer.phone
       },
       deliveryOtp: {
+        code: rawOtp,
         hash: hashedOtp,
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        attempts: 0
+        attempts: 0,
+        lastGeneratedAt: new Date()
       }
     };
 
@@ -1696,7 +1701,7 @@ export const placeOrder = async (req, res) => {
     cart.appliedCoupon = null;
     await cart.save();
 
-    // Create Push/In-App Notification
+    // Create Push/In-App Notification for Customer
     await Notification.create({
       title: 'Order Confirmed! 🎉',
       message: `Your order #${order.orderNumber} for ₹${order.amount} has been received and confirmed.`,
@@ -1706,6 +1711,16 @@ export const placeOrder = async (req, res) => {
       order: order._id,
       data: { screen: 'OrderDetails', orderId: order._id }
     });
+
+    // Dispatch Push Notification to eligible online delivery partners
+    try {
+      const { notifyEligibleRidersOfNewOrder } = await import('../services/pushNotificationService.js');
+      notifyEligibleRidersOfNewOrder(order).catch((err) => {
+        console.warn('[Storefront] Could not dispatch rider push notification:', err.message);
+      });
+    } catch (pushErr) {
+      console.warn('[Storefront] Error triggering rider notification:', pushErr.message);
+    }
 
     res.status(201).json({
       message: 'Order placed successfully',
@@ -1774,21 +1789,25 @@ export const getOrders = async (req, res) => {
  */
 export const getOrderDetails = async (req, res) => {
   try {
-    const order = await Order.findOne({
-      _id: req.params.id,
-      customer: req.customer._id // Strict customer-level authorization
-    }).lean();
+    const rawId = req.params.id;
+    const isObjectId = mongoose.Types.ObjectId.isValid(rawId);
+    const query = isObjectId
+      ? { _id: rawId, customer: req.customer._id }
+      : { orderNumber: rawId, customer: req.customer._id };
+
+    const order = await Order.findOne(query).select('+deliveryOtp.code').lean();
 
     if (!order) {
       return res.status(404).json({ message: 'Order not found or unauthorized' });
     }
 
-    // Sanitize OTP: Never return raw hash
-    const isEligibleForOtp = ['OutForDelivery', 'Out For Delivery', 'Picked Up'].includes(order.status);
+    // Secure OTP: Return OTP code exclusively to the authorized customer who placed this order
+    const isEligibleForOtp = !order.deliveryOtp?.verifiedAt && !['Delivered', 'Cancelled', 'Returned'].includes(order.status);
     const sanitizedOrder = {
       ...order,
-      deliveryOtp: isEligibleForOtp && !order.deliveryOtp?.verifiedAt ? {
+      deliveryOtp: isEligibleForOtp ? {
         active: true,
+        code: order.deliveryOtp?.code || null,
         expiresAt: order.deliveryOtp?.expiresAt
       } : { active: false }
     };
@@ -1947,8 +1966,18 @@ export const verifyDeliveryOtp = async (req, res) => {
     if (!isMatch) {
       order.deliveryOtp.attempts = (order.deliveryOtp.attempts || 0) + 1;
       await order.save();
+      const remaining = 5 - order.deliveryOtp.attempts;
+      if (remaining <= 0) {
+        return res.status(403).json({
+          message: 'Maximum OTP verification attempts exceeded. Please contact supervisor.',
+          remainingAttempts: 0,
+          code: 'MAX_ATTEMPTS_EXCEEDED'
+        });
+      }
       return res.status(400).json({
-        message: `Incorrect OTP. ${5 - order.deliveryOtp.attempts} attempts remaining.`
+        message: `Incorrect OTP. ${remaining} attempts remaining.`,
+        remainingAttempts: remaining,
+        code: 'INVALID_OTP'
       });
     }
 

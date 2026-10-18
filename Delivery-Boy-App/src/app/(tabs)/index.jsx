@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -47,17 +47,91 @@ import {
   Check,
   RotateCcw,
   AlertCircle,
+  AlertTriangle,
   ShoppingBag,
   Megaphone,
-  Star
+  Star,
+  Wallet
 } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
 import { useAuth } from '../../context/AuthContext';
 import { deliveryService } from '../../services/deliveryService';
 import { hapticFeedback } from '../../services/haptics';
-import { ConfirmationModal } from '../../components/ConfirmationModal';
+import { IncomingOrderModal } from '../../components/IncomingOrderModal';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
+const DECLINE_OFFER_REASONS = [
+  'Distance is too far',
+  'Low payout / delivery fee',
+  'Vehicle problem / Low fuel',
+  'Ending shift / Emergency',
+  'Delay at store / Heavy crate',
+  'Other reason'
+];
+
+
+function formatTimeAgo(dateStr) {
+  if (!dateStr) return 'Just now';
+  try {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  } catch {
+    return 'Just now';
+  }
+}
+
+function getNotificationVisuals(item) {
+  const type = String(item.type || item.title || '').toLowerCase();
+  const sub = String(item.subtitle || item.message || '').toLowerCase();
+
+  if (item.iconType === 'order_available' || type.includes('order available') || type.includes('new order')) {
+    return {
+      bg: '#FEF3C7',
+      icon: <ShoppingBag size={20} color="#D97706" strokeWidth={2.2} />,
+      hasUnreadDot: !item.isRead
+    };
+  }
+  if (item.iconType === 'order_accepted' || type.includes('accepted') || type.includes('delivered')) {
+    return {
+      bg: '#DCFCE7',
+      icon: <CheckCircle2 size={20} color="#16A34A" strokeWidth={2.4} />,
+      hasUnreadDot: false
+    };
+  }
+  if (item.iconType === 'payment_received' || type.includes('payment') || type.includes('earning') || sub.includes('₹')) {
+    return {
+      bg: '#E0F2FE',
+      icon: <Wallet size={20} color="#0284C7" strokeWidth={2.2} />,
+      hasUnreadDot: false
+    };
+  }
+  if (item.iconType === 'incentive' || type.includes('incentive') || type.includes('bonus')) {
+    return {
+      bg: '#FFEDD5',
+      icon: <Megaphone size={20} color="#EA580C" strokeWidth={2.2} />,
+      hasUnreadDot: false
+    };
+  }
+  if (item.iconType === 'order_cancelled' || type.includes('cancel') || type.includes('declined')) {
+    return {
+      bg: '#FEE2E2',
+      icon: <Bell size={20} color="#EF4444" strokeWidth={2.2} />,
+      hasUnreadDot: false
+    };
+  }
+  return {
+    bg: '#FEF3C7',
+    icon: <Bell size={20} color="#D97706" strokeWidth={2.2} />,
+    hasUnreadDot: !item.isRead
+  };
+}
 
 // ============================================================================
 // BESPOKE SVG ILLUSTRATIONS (Matches Phone 3 Offline / Empty States)
@@ -193,7 +267,7 @@ function ParcelBoxIllustration() {
 export default function DashboardScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { partner, isOnline, toggleOnline } = useAuth();
+  const { partner, isOnline, toggleOnline, syncOnlineStatus } = useAuth();
 
   // Scroll & Sticky Animation Values
   const scrollY = useSharedValue(0);
@@ -225,15 +299,26 @@ export default function DashboardScreen() {
   });
 
   const [availableOffers, setAvailableOffers] = useState([]);
-  const [selectedOfferToReject, setSelectedOfferToReject] = useState(null);
+  const [showIncomingOfferModal, setShowIncomingOfferModal] = useState(false);
+  const [showDeclineModal, setShowDeclineModal] = useState(false);
+  const [selectedDeclineReason, setSelectedDeclineReason] = useState('Distance is too far');
   const [acceptingId, setAcceptingId] = useState(null);
   const [rejecting, setRejecting] = useState(false);
   const [offerCountdown, setOfferCountdown] = useState(28);
+  const declinedOrderIdsRef = useRef(new Set());
+  const prevOfferIdRef = useRef(null);
 
-  // Quick Notifications Modal
+  // Quick Notifications Modal & Visual Data Mapping
   const [notificationsList, setNotificationsList] = useState([]);
-  const [unreadNotifCount, setUnreadNotifCount] = useState(3);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
   const [showQuickNotifs, setShowQuickNotifs] = useState(false);
+
+  const displayNotifs = useMemo(() => {
+    if (Array.isArray(notificationsList) && notificationsList.length > 0) {
+      return notificationsList.slice(0, 5);
+    }
+    return [];
+  }, [notificationsList]);
 
   // --------------------------------------------------------------------------
   // Data Fetching
@@ -245,6 +330,10 @@ export default function DashboardScreen() {
         deliveryService.getAvailableOrders().catch(() => []),
         deliveryService.getNotifications().catch(() => [])
       ]);
+
+      if (typeof dashData.isOnline === 'boolean') {
+        syncOnlineStatus(dashData.isOnline);
+      }
 
       setStats({
         todayEarnings: dashData.todayEarnings || 0,
@@ -258,9 +347,11 @@ export default function DashboardScreen() {
         recentActivity: dashData.recentActivity || []
       });
 
-      setAvailableOffers(Array.isArray(offers) ? offers : []);
+      const rawOffers = Array.isArray(offers) ? offers : [];
+      const filteredOffers = rawOffers.filter((o) => o && !declinedOrderIdsRef.current.has(o._id));
+      setAvailableOffers(filteredOffers);
 
-      if (Array.isArray(notifs) && notifs.length > 0) {
+      if (Array.isArray(notifs)) {
         setNotificationsList(notifs);
         const unread = notifs.filter((n) => !n.isRead).length;
         setUnreadNotifCount(unread);
@@ -301,6 +392,19 @@ export default function DashboardScreen() {
     }, 1000);
     return () => clearInterval(timer);
   }, [availableOffers.length, isOnline, fetchDashboardData]);
+
+  // Automatically open Incoming Order Alert Modal when a new offer arrives (Feature One)
+  useEffect(() => {
+    if (!availableOffers.length || !isOnline) {
+      setShowIncomingOfferModal(false);
+      return;
+    }
+    const topOffer = availableOffers[0];
+    if (topOffer && topOffer._id !== prevOfferIdRef.current) {
+      prevOfferIdRef.current = topOffer._id;
+      setShowIncomingOfferModal(true);
+    }
+  }, [availableOffers, isOnline]);
 
   // --------------------------------------------------------------------------
   // Online / Offline Switch
@@ -363,21 +467,32 @@ export default function DashboardScreen() {
   };
 
   // --------------------------------------------------------------------------
-  // Decline Order
+  // Decline Order (Atomic 1-tap decline without confirmation popup)
   // --------------------------------------------------------------------------
-  const handleConfirmReject = async ({ reason, details }) => {
-    if (!selectedOfferToReject) return;
+  const handleDirectDecline = async (offerToDecline = currentOffer) => {
+    if (!offerToDecline?._id) return;
+    const orderId = offerToDecline._id;
+
     setRejecting(true);
     hapticFeedback.medium?.();
 
+    // 1. Immediately remember this order as declined by this rider so it never appears again
+    declinedOrderIdsRef.current.add(orderId);
+
+    // 2. Immediately remove from current offers in UI so it disappears instantly
+    setAvailableOffers((prev) => prev.filter((o) => o._id !== orderId));
+    setShowIncomingOfferModal(false);
+    setShowDeclineModal(false);
+
     try {
-      await deliveryService.rejectOrder(selectedOfferToReject._id, `${reason} - ${details}`);
-      setAvailableOffers((prev) => prev.filter((o) => o._id !== selectedOfferToReject._id));
-      setSelectedOfferToReject(null);
+      // 3. Call backend to release offer for other riders
+      await deliveryService.rejectOrder(orderId, 'Declined by partner');
       hapticFeedback.light?.();
-      fetchDashboardData();
-    } catch (err) {
-      Alert.alert('Decline Error', err.response?.data?.message || 'Could not decline offer.');
+
+      // 4. Refresh stats and remaining offers
+      await fetchDashboardData();
+    } catch {
+      // Graceful local handling
     } finally {
       setRejecting(false);
     }
@@ -514,7 +629,10 @@ export default function DashboardScreen() {
                   hapticFeedback.light?.();
                   setShowQuickNotifs(true);
                 }}
-                style={styles.bellButton}
+                style={[
+                  styles.bellButton,
+                  showQuickNotifs && styles.bellButtonActive
+                ]}
                 accessibilityLabel="Notifications"
                 accessibilityRole="button"
               >
@@ -646,65 +764,71 @@ export default function DashboardScreen() {
         {/* ================================================================== */}
         {/* 2. TODAY'S OVERVIEW (4 Stat Cards Grid)                            */}
         {/* ================================================================== */}
-        <View style={styles.overviewRow}>
-          {/* Today's Earnings */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/earnings')}
-            style={styles.statCard}
-          >
-            <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Coins size={16} color="#D97706" strokeWidth={2.4} />
-            </View>
-            <Text style={styles.statCardValue}>₹{stats.todayEarnings}</Text>
-            <Text style={styles.statCardLabel}>Today's Earnings</Text>
-          </TouchableOpacity>
-
-          {/* Completed Today */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/orders')}
-            style={styles.statCard}
-          >
-            <View style={[styles.statIconCircle, { backgroundColor: '#DCFCE7' }]}>
-              <CheckCircle2 size={16} color="#16A34A" strokeWidth={2.4} />
-            </View>
-            <Text style={styles.statCardValue}>{stats.todayCompleted}</Text>
-            <Text style={styles.statCardLabel}>Completed Today</Text>
-          </TouchableOpacity>
-
-          {/* Pending Orders */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/orders')}
-            style={styles.statCard}
-          >
-            <View style={[styles.statIconCircle, { backgroundColor: '#FEE2E2' }]}>
-              <Package size={16} color="#EF4444" strokeWidth={2.4} />
-            </View>
-            <Text
-              style={[
-                styles.statCardValue,
-                stats.todayPending > 0 && { color: '#EF4444' }
-              ]}
+        <View style={styles.overviewGrid}>
+          {/* Row 1: Today's Earnings & Completed Today */}
+          <View style={styles.overviewRow}>
+            {/* Today's Earnings */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/earnings')}
+              style={styles.statCard}
             >
-              {stats.todayPending}
-            </Text>
-            <Text style={styles.statCardLabel}>Pending Orders</Text>
-          </TouchableOpacity>
+              <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
+                <Coins size={18} color="#D97706" strokeWidth={2.4} />
+              </View>
+              <Text style={styles.statCardValue}>₹{stats.todayEarnings}</Text>
+              <Text style={styles.statCardLabel}>Today's Earnings</Text>
+            </TouchableOpacity>
 
-          {/* Total Deliveries */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => router.push('/(tabs)/orders')}
-            style={styles.statCard}
-          >
-            <View style={[styles.statIconCircle, { backgroundColor: '#DBEAFE' }]}>
-              <BarChart2 size={16} color="#2563EB" strokeWidth={2.4} />
-            </View>
-            <Text style={styles.statCardValue}>{stats.totalDeliveries}</Text>
-            <Text style={styles.statCardLabel}>Total Deliveries</Text>
-          </TouchableOpacity>
+            {/* Completed Today */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/orders')}
+              style={styles.statCard}
+            >
+              <View style={[styles.statIconCircle, { backgroundColor: '#DCFCE7' }]}>
+                <CheckCircle2 size={18} color="#16A34A" strokeWidth={2.4} />
+              </View>
+              <Text style={styles.statCardValue}>{stats.todayCompleted}</Text>
+              <Text style={styles.statCardLabel}>Completed Today</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Row 2: Pending Orders & Total Deliveries */}
+          <View style={styles.overviewRow}>
+            {/* Pending Orders */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/orders')}
+              style={styles.statCard}
+            >
+              <View style={[styles.statIconCircle, { backgroundColor: '#FEE2E2' }]}>
+                <Package size={18} color="#EF4444" strokeWidth={2.4} />
+              </View>
+              <Text
+                style={[
+                  styles.statCardValue,
+                  stats.todayPending > 0 && { color: '#EF4444' }
+                ]}
+              >
+                {stats.todayPending}
+              </Text>
+              <Text style={styles.statCardLabel}>Pending Orders</Text>
+            </TouchableOpacity>
+
+            {/* Total Deliveries */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => router.push('/(tabs)/orders')}
+              style={styles.statCard}
+            >
+              <View style={[styles.statIconCircle, { backgroundColor: '#DBEAFE' }]}>
+                <BarChart2 size={18} color="#2563EB" strokeWidth={2.4} />
+              </View>
+              <Text style={styles.statCardValue}>{stats.totalDeliveries}</Text>
+              <Text style={styles.statCardLabel}>Total Deliveries</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* ================================================================== */}
@@ -714,7 +838,7 @@ export default function DashboardScreen() {
           activeOpacity={0.85}
           onPress={() => {
             hapticFeedback.light?.();
-            router.push('/(tabs)/earnings');
+            router.push('/cash-collection');
           }}
           style={styles.cashCollectCard}
         >
@@ -769,8 +893,8 @@ export default function DashboardScreen() {
             </View>
 
             {/* Order ID */}
-            <Text style={styles.activeOrderId}>
-              #{stats.activeOrder.orderNumber || 'ZM102300'}
+            <Text style={styles.activeOrderId} numberOfLines={1} ellipsizeMode="tail">
+              #{stats.activeOrder.orderNumber || (stats.activeOrder._id ? stats.activeOrder._id.slice(-6).toUpperCase() : '')}
             </Text>
 
             {/* Route Timeline */}
@@ -917,7 +1041,11 @@ export default function DashboardScreen() {
                 <View style={styles.offerTagIconBox}>
                   <Coins size={14} color="#B45309" strokeWidth={2.2} />
                 </View>
-                <Text style={styles.offerOrderNumber}>
+                <Text
+                  style={styles.offerOrderNumber}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   #{currentOffer.orderNumber || 'ZM102344'}
                 </Text>
               </View>
@@ -998,12 +1126,19 @@ export default function DashboardScreen() {
             <View style={styles.offerActionsRow}>
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => setSelectedOfferToReject(currentOffer)}
+                onPress={() => handleDirectDecline(currentOffer)}
+                disabled={rejecting}
                 style={styles.declineBtn}
                 accessibilityLabel="Decline Offer"
               >
-                <X size={16} color="#EF4444" strokeWidth={2.4} style={{ marginRight: 4 }} />
-                <Text style={styles.declineBtnText}>Decline</Text>
+                {rejecting ? (
+                  <ActivityIndicator size="small" color="#EF4444" />
+                ) : (
+                  <>
+                    <X size={16} color="#EF4444" strokeWidth={2.4} style={{ marginRight: 4 }} />
+                    <Text style={styles.declineBtnText}>Decline</Text>
+                  </>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -1094,21 +1229,10 @@ export default function DashboardScreen() {
         </View>
       </Animated.ScrollView>
 
-      {/* ==================================================================== */}
-      {/* CONFIRMATION MODAL (DECLINING OFFER)                                 */}
-      {/* ==================================================================== */}
-      <ConfirmationModal
-        visible={Boolean(selectedOfferToReject)}
-        onClose={() => setSelectedOfferToReject(null)}
-        onConfirm={handleConfirmReject}
-        title="Decline Delivery Offer"
-        subtitle="Please specify why you are declining this order so dispatch can reassign it."
-        confirmText="Confirm Decline"
-        loading={rejecting}
-      />
+
 
       {/* ==================================================================== */}
-      {/* QUICK NOTIFICATIONS MODAL                                            */}
+      {/* QUICK NOTIFICATIONS TOOLTIP POPOVER                                  */}
       {/* ==================================================================== */}
       <Modal
         visible={showQuickNotifs}
@@ -1119,89 +1243,130 @@ export default function DashboardScreen() {
         <TouchableOpacity
           activeOpacity={1}
           onPress={() => setShowQuickNotifs(false)}
-          style={styles.modalOverlay}
+          style={styles.popoverOverlay}
         >
+          {/* Tooltip Card directly beneath the existing header bell button */}
           <TouchableOpacity
             activeOpacity={1}
-            style={styles.modalContentCard}
+            style={[
+              styles.popoverCardContainer,
+              { top: insets.top + 82 }
+            ]}
             onPress={(e) => e?.stopPropagation?.()}
           >
-            {/* Header */}
-            <View style={styles.modalHeaderRow}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Bell size={18} color="#111827" strokeWidth={2.4} style={{ marginRight: 6 }} />
-                <Text style={styles.modalTitle}>Notifications</Text>
-              </View>
+            {/* Upward triangular pointer pointing to the bell button */}
+            <View style={styles.popoverArrowWrapper}>
+              <Svg width={18} height={10} viewBox="0 0 18 10">
+                <Polygon points="9,0 18,10 0,10" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth={1.5} />
+                <Path d="M 0 10 L 18 10" stroke="#FFFFFF" strokeWidth={2.5} />
+              </Svg>
+            </View>
+
+            {/* Header: Title + View All Link */}
+            <View style={styles.popoverHeaderRow}>
+              <Text style={styles.popoverTitle}>Quick Notifications</Text>
               <TouchableOpacity
-                onPress={() => setShowQuickNotifs(false)}
-                style={styles.modalCloseBtn}
+                activeOpacity={0.7}
+                onPress={() => {
+                  setShowQuickNotifs(false);
+                  router.push('/notifications');
+                }}
               >
-                <X size={18} color="#64748B" />
+                <Text style={styles.popoverViewAllText}>View All</Text>
               </TouchableOpacity>
             </View>
 
-            {/* List */}
-            <View style={styles.modalListContainer}>
-              {notificationsList.length === 0 ? (
-                <View style={styles.modalEmptyBox}>
-                  <Text style={styles.modalEmptyText}>No new notifications</Text>
+            {/* List of existing notifications */}
+            <View style={styles.popoverList}>
+              {displayNotifs.length === 0 ? (
+                <View style={styles.popoverEmptyBox}>
+                  <Bell size={24} color="#CBD5E1" strokeWidth={1.8} style={{ marginBottom: 6 }} />
+                  <Text style={styles.popoverEmptyText}>No notifications</Text>
                 </View>
               ) : (
-                notificationsList.slice(0, 5).map((item) => (
-                  <TouchableOpacity
-                    key={item._id}
-                    activeOpacity={0.7}
-                    onPress={() => {
-                      setShowQuickNotifs(false);
-                      if (!item.isRead && item._id && !item._id.startsWith('seed_')) {
-                        deliveryService.markNotificationRead(item._id).catch(() => {});
-                        setNotificationsList((prev) =>
-                          prev.map((n) => (n._id === item._id ? { ...n, isRead: true } : n))
-                        );
-                        setUnreadNotifCount((prev) => Math.max(0, prev - 1));
-                      }
-                      const orderId = item.data?.orderId || item.order?._id;
-                      if (orderId && typeof orderId === 'string' && orderId.length > 10) {
-                        router.push(`/order/${orderId}`);
-                      } else {
-                        router.push('/notifications');
-                      }
-                    }}
-                    style={styles.notifRowItem}
-                  >
-                    <View style={styles.notifIconBox}>
-                      <Bell size={16} color="#D97706" />
-                      {!item.isRead && <View style={styles.unreadDot} />}
-                    </View>
-                    <View style={styles.notifTextCol}>
-                      <Text style={styles.notifRowTitle} numberOfLines={1}>
-                        {item.title}
-                      </Text>
-                      <Text style={styles.notifRowSub} numberOfLines={1}>
-                        {item.message?.replace(/\n.*/, '')}
-                      </Text>
-                    </View>
-                    <ChevronRight size={14} color="#CBD5E1" />
-                  </TouchableOpacity>
-                ))
+                displayNotifs.map((item, idx) => {
+                  const visuals = getNotificationVisuals(item);
+                  return (
+                    <TouchableOpacity
+                      key={item._id || `notif_${idx}`}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setShowQuickNotifs(false);
+                        if (!item.isRead && item._id && !item._id.startsWith('seed_')) {
+                          deliveryService.markNotificationRead(item._id).catch(() => {});
+                          setNotificationsList((prev) =>
+                            prev.map((n) => (n._id === item._id ? { ...n, isRead: true } : n))
+                          );
+                          setUnreadNotifCount((prev) => Math.max(0, prev - 1));
+                        }
+                        const orderId = item.data?.orderId || item.order?._id;
+                        if (orderId && typeof orderId === 'string' && orderId.length > 10) {
+                          router.push(`/order/${orderId}`);
+                        } else {
+                          router.push('/notifications');
+                        }
+                      }}
+                      style={styles.popoverItemRow}
+                    >
+                      <View style={[styles.popoverIconBox, { backgroundColor: visuals.bg }]}>
+                        {visuals.icon}
+                        {visuals.hasUnreadDot && <View style={styles.popoverUnreadDot} />}
+                      </View>
+
+                      <View style={styles.popoverTextCol}>
+                        <Text style={styles.popoverItemTitle} numberOfLines={1}>
+                          {item.title}
+                        </Text>
+                        <Text style={styles.popoverItemSub} numberOfLines={1}>
+                          {item.subtitle || item.message?.replace(/\n.*/, '')}
+                        </Text>
+                        <Text style={styles.popoverTimeText}>
+                          {item.time || (item.createdAt ? formatTimeAgo(item.createdAt) : 'Just now')}
+                        </Text>
+                      </View>
+
+                      <ChevronRight size={16} color="#94A3B8" strokeWidth={2} />
+                    </TouchableOpacity>
+                  );
+                })
               )}
             </View>
 
-            {/* View All Button */}
+            {/* Full-width Yellow Bottom Button */}
             <TouchableOpacity
-              activeOpacity={0.8}
+              activeOpacity={0.85}
               onPress={() => {
                 setShowQuickNotifs(false);
                 router.push('/notifications');
               }}
-              style={styles.modalBottomBtn}
+              style={styles.popoverBottomYellowBtn}
             >
-              <Text style={styles.modalBottomBtnText}>View All Notifications</Text>
-              <ChevronRight size={16} color="#111827" strokeWidth={2.4} />
+              <Text style={styles.popoverBottomYellowBtnText}>View All Notifications</Text>
+              <ChevronRight size={18} color="#111827" strokeWidth={2.5} />
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {/* ==================================================================== */}
+      {/* INCOMING ORDER ALERT MODAL (Feature One - Panel 1)                   */}
+      {/* ==================================================================== */}
+      <IncomingOrderModal
+        visible={showIncomingOfferModal && Boolean(currentOffer) && isOnline}
+        order={currentOffer}
+        countdownSeconds={offerCountdown}
+        accepting={acceptingId === currentOffer?._id}
+        onAccept={async (order) => {
+          await handleAcceptOrder(order);
+          setShowIncomingOfferModal(false);
+        }}
+        onDecline={(order) => {
+          handleDirectDecline(order || currentOffer);
+        }}
+        onClose={() => {
+          setShowIncomingOfferModal(false);
+        }}
+      />
     </View>
   );
 }
@@ -1322,32 +1487,36 @@ const styles = StyleSheet.create({
     fontSize: 11.5
   },
   bellButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 42,
+    height: 42,
+    borderRadius: 14,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
     borderColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center'
   },
+  bellButtonActive: {
+    backgroundColor: '#FEF9C3',
+    borderColor: '#FFC928'
+  },
   bellBadge: {
     position: 'absolute',
-    top: -3,
-    right: -3,
-    minWidth: 17,
-    height: 17,
-    borderRadius: 8.5,
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 3,
+    paddingHorizontal: 3.5,
     borderWidth: 1.5,
     borderColor: '#FFFFFF'
   },
   bellBadgeText: {
     fontFamily: typography.family.bold,
-    fontSize: 9,
+    fontSize: 9.5,
     color: '#FFFFFF'
   },
 
@@ -1454,41 +1623,44 @@ const styles = StyleSheet.create({
   },
 
   // --------------------------------------------------------------------------
-  // 2. TODAY'S OVERVIEW (4 Stat Cards)
+  // 2. TODAY'S OVERVIEW (2x2 Stat Cards Grid)
   // --------------------------------------------------------------------------
+  overviewGrid: {
+    marginBottom: 14,
+    gap: 10
+  },
   overviewRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 12
+    gap: 10
   },
   statCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 0.5,
     borderColor: '#E5E7EB',
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 10,
     alignItems: 'center',
     justifyContent: 'center'
   },
   statIconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 6
+    marginBottom: 8
   },
   statCardValue: {
     fontFamily: typography.family.heavy,
-    fontSize: 15.5,
+    fontSize: 18,
     color: '#111827',
-    marginBottom: 2
+    marginBottom: 3
   },
   statCardLabel: {
     fontFamily: typography.family.medium,
-    fontSize: 9.5,
+    fontSize: 12,
     color: '#64748B',
     textAlign: 'center'
   },
@@ -1821,11 +1993,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12
+    marginBottom: 12,
+    gap: 8
   },
   offerIdRow: {
+    flex: 1,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
+    minWidth: 0,
+    marginRight: 8
   },
   offerTagIconBox: {
     width: 24,
@@ -1834,21 +2010,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8
+    marginRight: 8,
+    flexShrink: 0
   },
   offerOrderNumber: {
     fontFamily: typography.family.heavy,
-    fontSize: 17,
-    color: '#111827'
+    fontSize: 16,
+    color: '#111827',
+    flexShrink: 1
   },
   earningsBox: {
     backgroundColor: '#FFFBEB',
     borderWidth: 1.5,
     borderColor: '#FEF08A',
     borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignItems: 'flex-end'
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: 'center',
+    flexShrink: 0
   },
   earningsBoxLead: {
     fontFamily: typography.family.bold,
@@ -1962,111 +2141,296 @@ const styles = StyleSheet.create({
   },
 
   // --------------------------------------------------------------------------
-  // QUICK NOTIFICATIONS MODAL
+  // QUICK NOTIFICATIONS TOOLTIP POPOVER STYLES
   // --------------------------------------------------------------------------
-  modalOverlay: {
+  popoverOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(17, 24, 39, 0.45)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20
+    backgroundColor: 'rgba(0, 0, 0, 0.4)'
   },
-  modalContentCard: {
-    width: '100%',
-    maxWidth: 360,
+  popoverCardContainer: {
+    position: 'absolute',
+    right: 14,
+    width: Math.min(SCREEN_WIDTH - 28, 356),
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    overflow: 'hidden'
+    borderColor: '#E5E7EB',
+    paddingTop: 4
   },
-  modalHeaderRow: {
+  popoverArrowWrapper: {
+    position: 'absolute',
+    top: -9,
+    right: 14,
+    width: 18,
+    height: 10,
+    zIndex: 10
+  },
+  popoverHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 18,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9'
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8
   },
-  modalTitle: {
+  popoverTitle: {
     fontFamily: typography.family.heavy,
     fontSize: 16,
-    color: '#111827'
+    color: '#111827',
+    fontWeight: '700'
   },
-  modalCloseBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: '#F1F5F9',
+  popoverViewAllText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#2563EB',
+    fontWeight: '600'
+  },
+  popoverList: {
+    paddingHorizontal: 12,
+    paddingBottom: 8
+  },
+  popoverItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 9,
+    paddingHorizontal: 4
+  },
+  popoverIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  popoverUnreadDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF'
+  },
+  popoverTextCol: {
+    flex: 1,
+    justifyContent: 'center',
+    marginRight: 6
+  },
+  popoverItemTitle: {
+    fontFamily: typography.family.heavy,
+    fontSize: 13.5,
+    color: '#111827',
+    fontWeight: '700',
+    marginBottom: 2
+  },
+  popoverItemSub: {
+    fontFamily: typography.family.medium,
+    fontSize: 12,
+    color: '#64748B',
+    marginBottom: 2
+  },
+  popoverTimeText: {
+    fontFamily: typography.family.regular,
+    fontSize: 11,
+    color: '#94A3B8'
+  },
+  popoverEmptyBox: {
+    paddingVertical: 26,
     alignItems: 'center',
     justifyContent: 'center'
   },
-  modalListContainer: {
-    paddingHorizontal: 14,
-    paddingVertical: 8
-  },
-  modalEmptyBox: {
-    paddingVertical: 20,
-    alignItems: 'center'
-  },
-  modalEmptyText: {
+  popoverEmptyText: {
     fontFamily: typography.family.medium,
     fontSize: 13,
     color: '#94A3B8'
   },
-  notifRowItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F8FAFC'
-  },
-  notifIconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 10
-  },
-  unreadDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444'
-  },
-  notifTextCol: {
-    flex: 1,
-    marginRight: 8
-  },
-  notifRowTitle: {
-    fontFamily: typography.family.bold,
-    fontSize: 12.5,
-    color: '#111827'
-  },
-  notifRowSub: {
-    fontFamily: typography.family.regular,
-    fontSize: 11,
-    color: '#64748B'
-  },
-  modalBottomBtn: {
+  popoverBottomYellowBtn: {
+    backgroundColor: '#FFC928',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 13,
-    backgroundColor: '#F8FAFC',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9'
+    marginHorizontal: 14,
+    marginBottom: 14,
+    borderRadius: 14,
+    gap: 6
   },
-  modalBottomBtnText: {
-    fontFamily: typography.family.bold,
-    fontSize: 13,
+  popoverBottomYellowBtnText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 14,
     color: '#111827',
-    marginRight: 4
+    fontWeight: '700'
+  },
+
+  // ========================================================================
+  // Decline Delivery Offer Modal Styles
+  // ========================================================================
+  declineModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(17, 24, 39, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20
+  },
+  declineModalCard: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    padding: 20,
+    alignItems: 'center',
+    position: 'relative'
+  },
+  declineModalCloseBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  declineWarningCircle: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12
+  },
+  declineModalTitle: {
+    fontFamily: typography.family.heavy,
+    fontSize: 18,
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 6
+  },
+  declineModalSub: {
+    fontFamily: typography.family.regular,
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 14
+  },
+  declineOrderSummaryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 14
+  },
+  declineOrderTag: {
+    backgroundColor: '#FEF08A',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginRight: 8
+  },
+  declineOrderTagText: {
+    fontFamily: typography.family.bold,
+    fontSize: 12,
+    color: '#854D0E'
+  },
+  declineOrderMetaText: {
+    fontFamily: typography.family.bold,
+    fontSize: 12.5,
+    color: '#334155'
+  },
+  declineReasonHeader: {
+    fontFamily: typography.family.bold,
+    fontSize: 12,
+    color: '#475569',
+    alignSelf: 'flex-start',
+    marginBottom: 8
+  },
+  declineReasonsContainer: {
+    width: '100%',
+    marginBottom: 18
+  },
+  declineReasonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    borderRadius: 10
+  },
+  declineReasonRowSelected: {
+    backgroundColor: '#FFFBEB'
+  },
+  declineRadioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: '#94A3B8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10
+  },
+  declineRadioCircleSelected: {
+    borderColor: '#D97706'
+  },
+  declineRadioDot: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: '#D97706'
+  },
+  declineReasonText: {
+    fontFamily: typography.family.medium,
+    fontSize: 13,
+    color: '#334155'
+  },
+  declineReasonTextSelected: {
+    fontFamily: typography.family.bold,
+    color: '#111827'
+  },
+  declineModalActionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%'
+  },
+  keepOfferBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  keepOfferBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#334155'
+  },
+  confirmDeclineBtn: {
+    flex: 1.2,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  confirmDeclineBtnText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#FFFFFF'
   }
 });

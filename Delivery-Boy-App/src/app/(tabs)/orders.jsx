@@ -50,15 +50,16 @@ import {
 import { colors, typography } from '../../constants/theme';
 import { deliveryService } from '../../services/deliveryService';
 import { hapticFeedback } from '../../services/haptics';
+import { LoadingSkeleton, EmptyOrdersState, ErrorState } from '../../components/sharedStates';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIDEBAR_WIDTH = Math.min(SCREEN_WIDTH * 0.84, 340);
 
 // 3 Exact Status Tabs required by specification
 const TABS = [
-  { key: 'in_progress', label: 'In Progress', defaultCount: 3 },
-  { key: 'completed', label: 'Completed', defaultCount: 12 },
-  { key: 'cancelled', label: 'Cancelled', defaultCount: 5 }
+  { key: 'in_progress', label: 'In Progress', defaultCount: 0 },
+  { key: 'completed', label: 'Completed', defaultCount: 0 },
+  { key: 'cancelled', label: 'Cancelled', defaultCount: 0 }
 ];
 
 // Expanded Sidebar Filter Options
@@ -176,9 +177,9 @@ export default function OrdersScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [tabCounts, setTabCounts] = useState({
-    in_progress: 3,
-    completed: 12,
-    cancelled: 5
+    in_progress: 0,
+    completed: 0,
+    cancelled: 0
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -718,39 +719,25 @@ export default function OrdersScreen() {
           }
         >
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FFC928" />
-            </View>
+            <LoadingSkeleton message="Loading your orders..." cardsCount={3} />
           ) : error ? (
-            <View style={styles.errorContainer}>
-              <AlertCircle size={44} color="#EF4444" strokeWidth={1.8} style={{ marginBottom: 12 }} />
-              <Text style={styles.errorTitle}>Unable to Load Orders</Text>
-              <Text style={styles.errorSubtitle}>{error}</Text>
-              <TouchableOpacity
-                activeOpacity={0.8}
-                onPress={() => {
-                  setLoading(true);
-                  fetchOrders(activeTab, searchQuery);
-                }}
-                style={styles.retryBtn}
-              >
-                <RefreshCw size={16} color="#111827" strokeWidth={2.4} style={{ marginRight: 6 }} />
-                <Text style={styles.retryBtnText}>Retry</Text>
-              </TouchableOpacity>
-            </View>
+            <ErrorState
+              title="Unable to Load Orders"
+              message={error}
+              onRetry={() => {
+                setLoading(true);
+                fetchOrders(activeTab, searchQuery);
+              }}
+            />
           ) : filteredOrders.length === 0 ? (
-            /* ========================================================== */
-            /* DESIGN 4: NO ORDERS YET (Simple Clean Empty State)         */
-            /* ========================================================== */
-            <View style={styles.emptyStateContainer}>
-              <OpenBoxIllustration />
-              <Text style={styles.emptyTitle}>No Orders Yet</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery.trim()
+            <EmptyOrdersState
+              title="No Orders Yet"
+              message={
+                searchQuery.trim()
                   ? `No orders matching "${searchQuery}". Try searching a different location or order ID.`
-                  : 'New delivery requests will appear here when they are assigned to you.'}
-              </Text>
-            </View>
+                  : 'New delivery offers will appear here when available. Keep your app online to receive orders.'
+              }
+            />
           ) : (
             /* ========================================================== */
             /* DESIGN 1: ORDERS LIST (Clean Minimal Style)                */

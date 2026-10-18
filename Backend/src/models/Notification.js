@@ -11,7 +11,7 @@ const notificationSchema = new mongoose.Schema({
       'Order Cancelled', 'Refund Update', 'Support Update', 'Promotion',
       'New Order Available', 'Order Accepted', 'Payment Received', 'Incentive', 
       'New Incentive', 'Payout Processed', 'Rating', 'High Rating Received', 'App Update',
-      'Earning Recorded', 'Store Cash Settlement'
+      'Earning Recorded', 'Store Cash Settlement', 'Delivery OTP'
     ],
     required: true
   },
@@ -19,9 +19,10 @@ const notificationSchema = new mongoose.Schema({
   message: { type: String, required: true },
   
   // Recipient
-  recipientType: { type: String, enum: ['User', 'Customer'], default: 'User' },
+  recipientType: { type: String, enum: ['User', 'Customer', 'DeliveryBoy'], default: 'User' },
   targetUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer' },
+  deliveryBoy: { type: mongoose.Schema.Types.ObjectId, ref: 'DeliveryBoy' },
   
   // Optional links to relevant documents
   product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },

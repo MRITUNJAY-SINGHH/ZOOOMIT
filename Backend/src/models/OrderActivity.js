@@ -5,7 +5,7 @@ const orderActivitySchema = new mongoose.Schema({
   
   status: { 
     type: String, 
-    enum: ['Order Created', 'Payment Received', 'Pending', 'Confirmed', 'Assigned', 'Assigned To Rider', 'Accepted', 'Arrived at Store', 'Arrived', 'Picked Up', 'OutForDelivery', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded', 'Rejected'],
+    enum: ['Order Created', 'Payment Received', 'Pending', 'Confirmed', 'Assigned', 'Assigned To Rider', 'Accepted', 'Arrived at Store', 'Arrived', 'Picked Up', 'OutForDelivery', 'Out For Delivery', 'Delivered', 'Cancelled', 'Returned', 'Refunded', 'Rejected', 'OTP Regenerated'],
     required: true 
   },
   

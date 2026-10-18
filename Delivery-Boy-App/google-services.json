@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "642305023894",
+    "project_id": "zooomit-delivery-partner",
+    "storage_bucket": "zooomit-delivery-partner.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:642305023894:android:146608cef12ffacf31c7b7",
+        "android_client_info": {
+          "package_name": "com.zooomit.delivery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2NvJ5TJuMEWFo3k_HTb1ppmoXenRmos4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

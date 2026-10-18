@@ -1071,11 +1071,22 @@ export default function EarningsScreen() {
             </Text>
 
             <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                setShowSettlementModal(false);
+                router.push('/cash-collection');
+              }}
+              style={[styles.modalDoneBtn, { backgroundColor: '#FFC928', marginBottom: 8 }]}
+            >
+              <Text style={styles.modalDoneBtnText}>View Cash Collection Details</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
               activeOpacity={0.8}
               onPress={() => setShowSettlementModal(false)}
-              style={styles.modalDoneBtn}
+              style={[styles.modalDoneBtn, { backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#E2E8F0' }]}
             >
-              <Text style={styles.modalDoneBtnText}>Understood</Text>
+              <Text style={[styles.modalDoneBtnText, { color: '#475569' }]}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
