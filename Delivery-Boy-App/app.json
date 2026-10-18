@@ -20,7 +20,6 @@
     "android": {
       "package": "com.zooomit.delivery",
       "googleServicesFile": "./google-services.json",
-      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#FFC928"
