@@ -594,8 +594,7 @@ export default function OrderDetailsScreen() {
         order: {
           ...prev.order,
           status: 'Delivered',
-          deliveredAt: new Date().toISOString(),
-          riderEarnings: res?.riderEarnings || prev?.order?.riderEarnings || 30
+          deliveredAt: new Date().toISOString()
         }
       }));
       setActiveView('completed');
@@ -810,9 +809,11 @@ export default function OrderDetailsScreen() {
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
-                  <Coins size={16} color="#D97706" style={{ marginBottom: 4 }} />
-                  <Text style={styles.metricValue}>₹{order.riderEarnings || 30}</Text>
-                  <Text style={styles.metricSubLabel}>Delivery Pay</Text>
+                  <ShieldCheck size={16} color="#16A34A" style={{ marginBottom: 4 }} />
+                  <Text style={styles.metricValue}>
+                    {order.paymentMode === 'cash_on_delivery' || order.paymentMethod === 'cod' ? 'COD' : 'Paid'}
+                  </Text>
+                  <Text style={styles.metricSubLabel}>Payment</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>
@@ -1412,11 +1413,11 @@ export default function OrderDetailsScreen() {
                 </Text>
               </View>
 
-              {/* 3-Column Earnings & Stats Card */}
+              {/* 3-Column Delivery Stats Card */}
               <View style={styles.metricCard}>
                 <View style={styles.metricCol}>
-                  <Text style={styles.metricNumberBig}>₹{order.riderEarnings || 30}</Text>
-                  <Text style={styles.metricSubLabel}>Earned Pay</Text>
+                  <Text style={[styles.metricNumberBig, { color: '#16A34A' }]}>Delivered</Text>
+                  <Text style={styles.metricSubLabel}>Status</Text>
                 </View>
                 <View style={styles.metricDivider} />
                 <View style={styles.metricCol}>

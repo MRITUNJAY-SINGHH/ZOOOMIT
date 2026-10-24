@@ -81,7 +81,7 @@ export default function PrivacyPolicyScreen() {
       paragraphs: [
         'End-to-End Encryption: All transmissions between the delivery app and ZOOOMIT cloud dispatch servers are secured with 256-bit TLS/SSL encryption.',
         'Secure Credential Storage: Session authorization tokens and sensitive caches are stored in device hardware keychains (Expo SecureStore) rather than unencrypted storage.',
-        'Role-Based Staff Access: Partner profile information, phone numbers, and compensation history can only be accessed by authorized dispatch personnel with audited authentication.'
+        'Role-Based Staff Access: Partner profile information, phone numbers, and delivery fulfillment history can only be accessed by authorized dispatch personnel with audited authentication.'
       ]
     },
     {
@@ -94,10 +94,10 @@ export default function PrivacyPolicyScreen() {
     },
     {
       number: '6',
-      title: 'Store Cash Settlements & Financial Privacy',
+      title: 'Fulfillment Records & COD Data Privacy',
       paragraphs: [
-        'Ledger Records: Your delivery counts, configured rate per order, physical cash settlements collected at the store hub counter, and remaining balances are permanently logged for financial audits.',
-        'No Sensitive Bank Storage: Because ZOOOMIT operates on the verified physical store cash settlement model, the application does not store bank account numbers, debit cards, or UPI PINs.'
+        'Operational Records: Your completed delivery counts, order timestamps, and route milestones are securely logged for operational dispatch audits.',
+        'No Sensitive Banking Information: Because delivery partner compensation is handled manually and directly by the store merchant, the application does not collect, process, or store partner bank accounts, payment instruments, or UPI PINs.'
       ]
     },
     {
@@ -112,9 +112,8 @@ export default function PrivacyPolicyScreen() {
       number: '8',
       title: 'Data Retention & Record Purging',
       paragraphs: [
-        'Active Partner Records: Profile, delivery history, and settlement records are retained while your delivery partner agreement remains active.',
-        'Statutory Compliance: In compliance with applicable commercial and tax regulations, order records and cash settlement logs are archived for a minimum statutory period of 3 years before automated purging.',
-        'Account Closure: Upon formal disassociation from the fleet, your background telemetry is permanently deleted from operational tracking servers.'
+        'Active Partner Records: Profile and delivery history records are retained while your delivery partner agreement remains active.',
+        'Statutory Compliance: In compliance with applicable commercial and tax regulations, order fulfillment records are archived for a minimum statutory period of 3 years before automated purging.'
       ]
     },
     {

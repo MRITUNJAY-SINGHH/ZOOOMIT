@@ -224,12 +224,10 @@ async function runEndToEndVerification() {
   orderForOtp.deliveredAt = new Date();
   orderForOtp.paymentStatus = 'Paid';
   orderForOtp.deliveryOtp.verifiedAt = new Date();
-  orderForOtp.riderEarnings = 30; // ₹30 delivery compensation
   await orderForOtp.save();
 
   assert(orderForOtp.status === 'Delivered', 'Order status finalized to: Delivered');
   assert(orderForOtp.paymentStatus === 'Paid', 'Order paymentStatus finalized to: Paid');
-  assert(orderForOtp.riderEarnings === 30, 'Rider earnings credited: ₹30');
 
   // STEP 10: Consistency Across All Views
   console.log('\n[STEP 10] Verifying Final Consistency Across All Stakeholders...');

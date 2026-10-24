@@ -66,8 +66,6 @@ function NavigationManager() {
         router.push(`/order/${orderId}`);
       } else if (data?.ticketId) {
         router.push('/support-requests');
-      } else if (data?.settlementId) {
-        router.push('/cash-collection');
       }
     });
 
@@ -78,8 +76,6 @@ function NavigationManager() {
         router.push(`/order/${orderId}`);
       } else if (data?.ticketId) {
         router.push('/support-requests');
-      } else if (data?.settlementId) {
-        router.push('/cash-collection');
       }
     });
 
@@ -98,7 +94,6 @@ function NavigationManager() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
-      <Stack.Screen name="cash-collection" options={{ headerShown: false }} />
       <Stack.Screen name="support-requests" options={{ headerShown: false }} />
       <Stack.Screen name="personal-info" options={{ headerShown: false }} />
       <Stack.Screen name="notification-settings" options={{ headerShown: false }} />

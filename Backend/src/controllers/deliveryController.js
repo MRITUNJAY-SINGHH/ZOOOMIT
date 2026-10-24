@@ -3,39 +3,12 @@ import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import Settings from '../models/Settings.js';
-import RiderSettlement from '../models/RiderSettlement.js';
 import OrderService from '../services/OrderService.js';
 import { sendExpoPushNotification } from '../services/pushNotificationService.js';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import PartnerFeedback from '../models/PartnerFeedback.js';
 import PartnerSupportTicket from '../models/PartnerSupportTicket.js';
-
-/**
- * Authoritative Delivery Partner Compensation Rate Resolver
- * Hierarchy:
- * 1. User.perDeliveryRate (Admin per-rider override, if > 0)
- * 2. Settings.deliveryPartnerRatePerOrder (Admin global rate, e.g., ₹20 or ₹30)
- * 3. Default fallback: 30
- */
-export const getEffectiveDeliveryRate = async (riderId) => {
-  let rate = 30;
-  try {
-    if (riderId) {
-      const rider = await User.findById(riderId).select('perDeliveryRate');
-      if (rider && typeof rider.perDeliveryRate === 'number' && rider.perDeliveryRate > 0) {
-        return rider.perDeliveryRate;
-      }
-    }
-    const settings = await Settings.findOne().select('deliveryPartnerRatePerOrder');
-    if (settings && typeof settings.deliveryPartnerRatePerOrder === 'number' && settings.deliveryPartnerRatePerOrder > 0) {
-      rate = settings.deliveryPartnerRatePerOrder;
-    }
-  } catch (err) {
-    console.error('Error resolving delivery partner earning rate:', err);
-  }
-  return rate;
-};
 
 /**
  * 1. Get Delivery Partner Profile
@@ -245,38 +218,8 @@ export const getDashboardStats = async (req, res) => {
           { assignedRider: null, status: 'Confirmed' }
         ],
         declinedRiders: { $ne: riderId }
-      }),
-      Order.find({
-        assignedRider: riderId,
-        status: 'Delivered',
-        deliveredAt: { $gte: todayStart }
-      }).select('riderEarnings'),
-      Order.find({
-        assignedRider: riderId,
-        status: 'Delivered'
-      }).select('riderEarnings'),
-      RiderSettlement.find({ rider: riderId })
+      })
     ]);
-
-    // Authoritative calculations from locked order earnings or active admin rate
-    const todayEarnings = todayDeliveredOrders.reduce(
-      (sum, o) => sum + (typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate),
-      0
-    );
-    const totalEarnings = allDeliveredOrders.reduce(
-      (sum, o) => sum + (typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate),
-      0
-    );
-
-    // Store Cash Collection calculation
-    const cashCollected = settlements.reduce((sum, s) => sum + (s.amountCollected || 0), 0);
-    const cashToCollect = Math.max(0, totalEarnings - cashCollected);
-    const settlementStatus =
-      cashToCollect === 0 && totalEarnings > 0
-        ? 'Collected'
-        : cashCollected > 0
-        ? 'Partially Collected'
-        : 'Awaiting Collection';
 
     const recentActivity = await Order.find({
       assignedRider: riderId,
@@ -284,18 +227,12 @@ export const getDashboardStats = async (req, res) => {
     })
       .sort('-deliveredAt')
       .limit(5)
-      .select('orderNumber amount shippingAddress deliveredAt items riderEarnings');
+      .select('orderNumber amount shippingAddress deliveredAt items');
 
     res.json({
-      todayEarnings,
       todayCompleted: todayCompletedCount,
       todayPending: todayPendingCount,
       totalDeliveries: totalCompletedCount,
-      totalEarnings,
-      ratePerDelivery: effectiveRate,
-      cashToCollect,
-      cashCollected,
-      settlementStatus,
       newAvailableCount: req.user.isOnline ? newAvailableCount : 0,
       isOnline: Boolean(req.user.isOnline),
       activeOrder,
@@ -320,8 +257,6 @@ export const getAvailableOrders = async (req, res) => {
       return res.json([]);
     }
 
-    const effectiveRate = await getEffectiveDeliveryRate(riderId);
-
     // Fetch orders assigned to this rider that haven't been accepted yet,
     // or unassigned confirmed orders waiting for assignment,
     // EXCLUDING orders this rider has already declined!
@@ -339,10 +274,11 @@ export const getAvailableOrders = async (req, res) => {
     const formatted = orders.map((o) => ({
       _id: o._id,
       orderNumber: o.orderNumber,
+      orderType: o.orderType || 'Grocery Order',
       status: o.status,
+      paymentMode: o.paymentMode || o.paymentMethod || 'Online',
       itemCount: o.items?.reduce((sum, it) => sum + (it.qty || 1), 0) || o.items?.length || 0,
       totalAmount: o.amount,
-      estimatedEarnings: effectiveRate,
       pickupLocation: {
         storeName: 'ZOOOMIT Supermart Hub',
         address: 'Sector 4, Main Express Lane, Tech Park',
@@ -360,6 +296,58 @@ export const getAvailableOrders = async (req, res) => {
       createdAt: o.createdAt,
       expirySeconds: 90
     }));
+
+    if (formatted.length === 0) {
+      const demoOffers = [
+        {
+          _id: 'ord_upcoming_1',
+          orderNumber: 'ZM102388',
+          orderType: 'Grocery Order',
+          status: 'Confirmed',
+          itemCount: 4,
+          totalAmount: 480,
+          paymentMode: 'Online',
+          pickupLocation: {
+            storeName: 'ZOOOMIT Supermart Hub',
+            address: 'Sector 4, Main Express Lane, Tech Park',
+            distanceKm: 1.1
+          },
+          deliveryLocation: {
+            contactName: 'Ananya Verma',
+            contactPhone: '+91 98765 43210',
+            formattedAddress: 'Flat 402, Green Glen Layout, Bellandur',
+            city: 'Bangalore',
+            distanceKm: 2.3
+          },
+          createdAt: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+          expirySeconds: 85
+        },
+        {
+          _id: 'ord_upcoming_2',
+          orderNumber: 'ZM102389',
+          orderType: 'Food Order',
+          status: 'Confirmed',
+          itemCount: 2,
+          totalAmount: 320,
+          paymentMode: 'COD',
+          pickupLocation: {
+            storeName: 'FreshBites Kitchen',
+            address: '100ft Road, Indiranagar',
+            distanceKm: 1.8
+          },
+          deliveryLocation: {
+            contactName: 'Vikram Malhotra',
+            contactPhone: '+91 98111 22334',
+            formattedAddress: 'Plot 12, Defence Colony, Indiranagar',
+            city: 'Bangalore',
+            distanceKm: 3.1
+          },
+          createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+          expirySeconds: 90
+        }
+      ];
+      return res.json(demoOffers);
+    }
 
     res.json(formatted);
   } catch (error) {
@@ -382,6 +370,13 @@ export const acceptOrder = async (req, res) => {
       return res.status(400).json({
         message: 'You must be Online to accept new delivery orders.',
         code: 'RIDER_OFFLINE'
+      });
+    }
+
+    if (orderId && orderId.startsWith('ord_')) {
+      return res.json({
+        message: 'Order accepted successfully!',
+        order: { _id: orderId, status: 'Accepted' }
       });
     }
 
@@ -433,6 +428,10 @@ export const rejectOrder = async (req, res) => {
     const orderId = req.params.id;
     const { reason } = req.body;
     const riderId = req.user._id;
+
+    if (orderId && orderId.startsWith('ord_')) {
+      return res.json({ message: 'Order offer declined' });
+    }
 
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: 'Order not found' });
@@ -599,19 +598,14 @@ export const verifyOtpAndDeliver = async (req, res) => {
       });
     }
 
-    // Success: mark delivered idempotently and lock delivery partner earning
-    if (!order.riderEarnings || order.riderEarnings <= 0) {
-      const rate = await getEffectiveDeliveryRate(req.user._id);
-      order.riderEarnings = rate;
-    }
-
+    // Success: mark delivered idempotently
     order.status = 'Delivered';
     order.deliveredAt = order.deliveredAt || new Date();
     order.paymentStatus = 'Paid';
     order.deliveryOtp.verifiedAt = new Date();
     await order.save();
 
-    await OrderService.logActivity(order._id, 'Delivered', req.user._id, `Order delivered successfully. Delivery partner earned ₹${order.riderEarnings}`);
+    await OrderService.logActivity(order._id, 'Delivered', req.user._id, `Order delivered successfully.`);
 
     // Notify Customer
     if (order.customer) {
@@ -625,15 +619,15 @@ export const verifyOtpAndDeliver = async (req, res) => {
       });
     }
 
-    // Notify Delivery Partner: Authoritative Earning Recorded
+    // Notify Delivery Partner: Delivery Completed
     await Notification.create({
-      title: 'Earning Recorded! 💰',
-      message: `You earned ₹${order.riderEarnings} for delivering order #${order.orderNumber}. Collect your cash at the store hub!`,
-      type: 'Earning Recorded',
+      title: 'Delivery Completed! ✅',
+      message: `Order #${order.orderNumber} delivered successfully. Great job!`,
+      type: 'Order Delivered',
       recipientType: 'DeliveryBoy',
       deliveryBoy: req.user._id,
       order: order._id,
-      data: { orderId: order._id, earning: order.riderEarnings }
+      data: { orderId: order._id, orderNumber: order.orderNumber }
     });
 
     const sanitizedOrder = order.toObject();
@@ -641,8 +635,7 @@ export const verifyOtpAndDeliver = async (req, res) => {
 
     res.json({
       message: 'Delivery successfully verified and marked as Delivered!',
-      order: sanitizedOrder,
-      riderEarnings: order.riderEarnings
+      order: sanitizedOrder
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -760,8 +753,8 @@ export const getRiderOrders = async (req, res) => {
     const completedStatuses = ['Delivered', 'Completed'];
     const cancelledStatuses = ['Cancelled', 'Rejected'];
 
-    // Compute counts for all 3 tabs
-    const [inProgressCount, completedCount, cancelledCount] = await Promise.all([
+    // Compute counts for all tabs including 'all'
+    const [inProgressCount, completedCount, cancelledCount, allCount] = await Promise.all([
       Order.countDocuments({
         $or: [
           { assignedRider: riderId, status: { $in: inProgressStatuses } },
@@ -769,7 +762,13 @@ export const getRiderOrders = async (req, res) => {
         ]
       }),
       Order.countDocuments({ assignedRider: riderId, status: { $in: completedStatuses } }),
-      Order.countDocuments({ assignedRider: riderId, status: { $in: cancelledStatuses } })
+      Order.countDocuments({ assignedRider: riderId, status: { $in: cancelledStatuses } }),
+      Order.countDocuments({
+        $or: [
+          { assignedRider: riderId },
+          { assignedRider: null, status: 'Confirmed' }
+        ]
+      })
     ]);
 
     let query = {};
@@ -823,7 +822,6 @@ export const getRiderOrders = async (req, res) => {
       .limit(Number(limit));
 
     const total = await Order.countDocuments(query);
-    const effectiveRate = await getEffectiveDeliveryRate(riderId);
 
     // If rider has zero orders in the database for demonstration, provide realistic reference orders
     if (orders.length === 0 && (status === 'in_progress' || status === 'all')) {
@@ -837,7 +835,6 @@ export const getRiderOrders = async (req, res) => {
           pickupLocation: 'ZOOOMIT Store, Shankar Vihar',
           deliveryLocation: 'Raj Nagar, Ghaziabad',
           itemCount: 5,
-          earnings: effectiveRate,
           distance: '2.4 km'
         },
         {
@@ -849,7 +846,6 @@ export const getRiderOrders = async (req, res) => {
           pickupLocation: 'FreshMart, Raj Nagar',
           deliveryLocation: 'Shastri Nagar, Ghaziabad',
           itemCount: 4,
-          earnings: effectiveRate,
           distance: '3.1 km'
         },
         {
@@ -861,7 +857,6 @@ export const getRiderOrders = async (req, res) => {
           pickupLocation: 'MedPlus, Indiranagar',
           deliveryLocation: 'HSR Layout, Bangalore',
           itemCount: 3,
-          earnings: effectiveRate,
           distance: '1.8 km'
         }
       ];
@@ -879,7 +874,7 @@ export const getRiderOrders = async (req, res) => {
       });
     }
 
-    // Transform orders to ensure pickupLocation, deliveryLocation, earnings, etc. are populated
+    // Transform orders to ensure pickupLocation, deliveryLocation, etc. are populated
     const formattedOrders = orders.map((o) => {
       const doc = o.toObject ? o.toObject() : o;
       const displayStatus = completedStatuses.includes(doc.status)
@@ -896,7 +891,6 @@ export const getRiderOrders = async (req, res) => {
         pickupLocation: doc.storeName || 'ZOOOMIT Hub',
         deliveryLocation: doc.shippingAddress?.formattedAddress || doc.shippingAddress?.city || 'Customer Delivery Address',
         itemCount: doc.items?.length || 0,
-        earnings: typeof doc.riderEarnings === 'number' && doc.riderEarnings > 0 ? doc.riderEarnings : effectiveRate,
         distance: doc.distance || '1.8 km'
       };
     });
@@ -907,6 +901,7 @@ export const getRiderOrders = async (req, res) => {
       page: Number(page),
       pages: Math.ceil(total / limit),
       counts: {
+        all: allCount,
         in_progress: inProgressCount,
         completed: completedCount,
         cancelled: cancelledCount
@@ -940,7 +935,6 @@ export const getRiderOrderDetails = async (req, res) => {
 
     // Handle demo/mock orders seamlessly when rider explores demo orders
     if (!order && (String(rawId).startsWith('ord_demo_') || String(rawId).startsWith('ZM10230'))) {
-      const effectiveRate = await getEffectiveDeliveryRate(req.user._id);
       return res.json({
         order: {
           _id: rawId,
@@ -950,7 +944,6 @@ export const getRiderOrderDetails = async (req, res) => {
           createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
           updatedAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
           amount: 285.00,
-          riderEarnings: effectiveRate,
           paymentStatus: 'Paid',
           items: [
             {
@@ -1020,6 +1013,9 @@ export const getRiderOrderDetails = async (req, res) => {
 
     const sanitizedOrder = order.toObject();
     delete sanitizedOrder.deliveryOtp;
+    delete sanitizedOrder.riderEarnings;
+    delete sanitizedOrder.riderSettlementStatus;
+    delete sanitizedOrder.riderSettlementId;
 
     res.json({
       order: sanitizedOrder,
@@ -1048,421 +1044,6 @@ export const getRiderOrderDetails = async (req, res) => {
         longitude: 77.2180,
         landmark: order.shippingAddress?.landmark || ''
       }
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-/**
- * 14. Get Earnings Breakdown (Store Cash Settlement & Authoritative Per-Delivery Rate)
- * GET /api/delivery/earnings?period=overview|today|week|month
- */
-export const getRiderEarnings = async (req, res) => {
-  try {
-    const { period = 'overview' } = req.query;
-    const riderId = req.user._id;
-
-    const now = new Date();
-    const effectiveRate = await getEffectiveDeliveryRate(riderId);
-
-    // Today boundary
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-
-    // Yesterday boundary
-    const yesterdayStart = new Date(todayStart);
-    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-    const yesterdayEnd = new Date(todayStart);
-
-    // Week boundaries (Monday to Sunday)
-    const currentDayOfWeek = now.getDay();
-    const distanceToMonday = (currentDayOfWeek + 6) % 7;
-    const weekStart = new Date(todayStart);
-    weekStart.setDate(weekStart.getDate() - distanceToMonday);
-
-    const prevWeekStart = new Date(weekStart);
-    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
-    const prevWeekEnd = new Date(weekStart);
-
-    // Month boundaries (current month & previous month)
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthEnd = new Date(monthStart);
-
-    // 30 days back
-    const thirtyDaysAgo = new Date(todayStart);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
-
-    // Query delivered orders for this rider
-    const allDeliveredOrders = await Order.find({
-      assignedRider: riderId,
-      status: 'Delivered'
-    }).sort('-deliveredAt');
-
-    // Count pending orders currently assigned
-    const pendingOrdersCount = await Order.countDocuments({
-      assignedRider: riderId,
-      status: { $in: ['Assigned', 'Accepted', 'Arrived', 'Picked Up', 'OutForDelivery', 'Out For Delivery'] }
-    });
-
-    // Authoritative total earnings from locked riderEarnings or active rate
-    const totalEligibleEarnings = allDeliveredOrders.reduce(
-      (sum, o) => sum + (typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate),
-      0
-    );
-
-    // Query store cash settlements
-    const settlements = await RiderSettlement.find({ rider: riderId }).sort('-date');
-    const cashCollected = settlements.reduce((sum, s) => sum + (s.amountCollected || 0), 0);
-    const cashToCollect = Math.max(0, totalEligibleEarnings - cashCollected);
-    const settlementStatus =
-      cashToCollect === 0 && totalEligibleEarnings > 0
-        ? 'Collected'
-        : cashCollected > 0
-        ? 'Partially Collected'
-        : 'Awaiting Collection';
-
-    // Helper to calculate earnings for a group of orders
-    const computeEarnings = (ordersList) => {
-      const orderCount = ordersList.length;
-      const orderEarnings = ordersList.reduce(
-        (sum, o) => sum + (typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate),
-        0
-      );
-      const avg = orderCount > 0 ? Math.round(orderEarnings / orderCount) : effectiveRate;
-      return { total: orderEarnings, orderEarnings, incentives: 0, tips: 0, count: orderCount, avg };
-    };
-
-    // Filter order subsets
-    const todayOrders = allDeliveredOrders.filter((o) => new Date(o.deliveredAt) >= todayStart);
-    const yesterdayOrders = allDeliveredOrders.filter(
-      (o) => new Date(o.deliveredAt) >= yesterdayStart && new Date(o.deliveredAt) < yesterdayEnd
-    );
-    const weekOrders = allDeliveredOrders.filter((o) => new Date(o.deliveredAt) >= weekStart);
-    const prevWeekOrders = allDeliveredOrders.filter(
-      (o) => new Date(o.deliveredAt) >= prevWeekStart && new Date(o.deliveredAt) < prevWeekEnd
-    );
-    const monthOrders = allDeliveredOrders.filter((o) => new Date(o.deliveredAt) >= monthStart);
-    const prevMonthOrders = allDeliveredOrders.filter(
-      (o) => new Date(o.deliveredAt) >= prevMonthStart && new Date(o.deliveredAt) < prevMonthEnd
-    );
-
-    const todayCalc = computeEarnings(todayOrders);
-    const yesterdayCalc = computeEarnings(yesterdayOrders);
-    const weekCalc = computeEarnings(weekOrders);
-    const prevWeekCalc = computeEarnings(prevWeekOrders);
-    const monthCalc = computeEarnings(monthOrders);
-    const prevMonthCalc = computeEarnings(prevMonthOrders);
-
-    // Percentage changes
-    const todayChange =
-      yesterdayCalc.total > 0
-        ? Math.round(((todayCalc.total - yesterdayCalc.total) / yesterdayCalc.total) * 100)
-        : todayCalc.total > 0 ? 12 : 0;
-
-    const weekChange =
-      prevWeekCalc.total > 0
-        ? Math.round(((weekCalc.total - prevWeekCalc.total) / prevWeekCalc.total) * 100)
-        : weekCalc.total > 0 ? 18 : 0;
-
-    const monthChange =
-      prevMonthCalc.total > 0
-        ? Math.round(((monthCalc.total - prevMonthCalc.total) / prevMonthCalc.total) * 100)
-        : monthCalc.total > 0 ? 22 : 0;
-
-    // Build weekly 7-day chart (Monday to Sunday)
-    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    const weeklyChart = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(d.getDate() + i);
-      const dayEnd = new Date(d);
-      dayEnd.setDate(dayEnd.getDate() + 1);
-
-      const dayOrders = allDeliveredOrders.filter(
-        (o) => new Date(o.deliveredAt) >= d && new Date(o.deliveredAt) < dayEnd
-      );
-      const dayEarn = computeEarnings(dayOrders);
-
-      weeklyChart.push({
-        dayIndex: i,
-        day: dayNames[i],
-        fullDate: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-        dateIso: d.toISOString().split('T')[0],
-        amount: dayEarn.total,
-        orders: dayEarn.count,
-        isToday: d.toDateString() === now.toDateString()
-      });
-    }
-
-    // Build monthly 30-day overview bar chart
-    const monthlyDaysChart = [];
-    let activeDeliveryDays = 0;
-    for (let i = 0; i < 30; i++) {
-      const d = new Date(thirtyDaysAgo);
-      d.setDate(d.getDate() + i);
-      const dayEnd = new Date(d);
-      dayEnd.setDate(dayEnd.getDate() + 1);
-
-      const dayOrders = allDeliveredOrders.filter(
-        (o) => new Date(o.deliveredAt) >= d && new Date(o.deliveredAt) < dayEnd
-      );
-      const dayEarn = computeEarnings(dayOrders);
-      if (dayEarn.count > 0) activeDeliveryDays++;
-
-      monthlyDaysChart.push({
-        dayNumber: d.getDate(),
-        dateIso: d.toISOString().split('T')[0],
-        amount: dayEarn.total,
-        orders: dayEarn.count,
-        isToday: d.toDateString() === now.toDateString()
-      });
-    }
-
-    // Recent orders formatted with locked rider earnings
-    const formattedRecentOrders = allDeliveredOrders.slice(0, 15).map((o) => ({
-      _id: o._id,
-      orderNumber: o.orderNumber,
-      deliveredAt: o.deliveredAt,
-      amount: typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate,
-      customerAddress: o.shippingAddress?.formattedAddress || o.shippingAddress?.city || 'Local area',
-      status: 'Completed',
-      settlementStatus: o.riderSettlementStatus || 'Unsettled'
-    }));
-
-    // Response structure strictly without bank/withdrawal features
-    const responsePayload = {
-      period,
-      ratePerDelivery: effectiveRate,
-
-      // Store Cash Settlement Data
-      storeCashSettlement: {
-        totalEarned: totalEligibleEarnings,
-        cashCollected,
-        cashToCollect,
-        settlementStatus,
-        ratePerDelivery: effectiveRate,
-        settlements: settlements.map((s) => ({
-          _id: s._id,
-          id: s._id,
-          date: s.date ? new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Today',
-          amountCollected: s.amountCollected,
-          remainingToCollect: s.remainingToCollect,
-          status: s.status,
-          storeName: s.storeName,
-          notes: s.notes
-        }))
-      },
-
-      // Overview / Store Cash Settlement Overview (Design 3 updated)
-      overview: {
-        cashToCollect,
-        cashCollected,
-        totalEarned: totalEligibleEarnings,
-        settlementStatus,
-        ratePerDelivery: effectiveRate,
-        todayEarnings: todayCalc.total,
-        todayDeliveries: todayCalc.count,
-        thisMonthEarnings: monthCalc.total,
-        thisMonthChange: monthChange >= 0 ? `+${monthChange}%` : `${monthChange}%`,
-        quickStats: {
-          completed: monthCalc.count,
-          onlineTime: '8h 20m',
-          activeDays: activeDeliveryDays || (monthCalc.count > 0 ? 1 : 0)
-        },
-        settlementHistory: settlements.map((s) => ({
-          _id: s._id,
-          id: s._id,
-          date: s.date ? new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Today',
-          method: 'Store Cash Collection',
-          amount: s.amountCollected,
-          status: s.status,
-          storeName: s.storeName,
-          notes: s.notes
-        }))
-      },
-
-      // Today (Design 1)
-      today: {
-        totalEarnings: todayCalc.total,
-        comparison: todayChange >= 0 ? `+${todayChange}% vs yesterday` : `${todayChange}% vs yesterday`,
-        completedDeliveries: todayCalc.count,
-        pendingOrders: pendingOrdersCount,
-        ratePerDelivery: effectiveRate,
-        onlineTime: '8h 20m',
-        breakdown: {
-          orderEarnings: todayCalc.orderEarnings,
-          ordersCount: todayCalc.count,
-          avgOrderEarnings: todayCalc.avg,
-          ratePerDelivery: effectiveRate
-        }
-      },
-
-      // This Week (Design 2)
-      week: {
-        totalEarnings: weekCalc.total,
-        comparison: weekChange >= 0 ? `+${weekChange}% vs last week` : `${weekChange}% vs last week`,
-        dateRange: `${weekStart.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${now.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`,
-        chart: weeklyChart,
-        ratePerDelivery: effectiveRate,
-        stats: {
-          completedDeliveries: weekCalc.count,
-          onlineTime: '12h 40m',
-          ratePerDelivery: effectiveRate
-        },
-        dailyList: [
-          { dayLabel: 'Today', orderCount: todayCalc.count, amount: todayCalc.total },
-          { dayLabel: 'Yesterday', orderCount: yesterdayCalc.count, amount: yesterdayCalc.total }
-        ]
-      },
-
-      // This Month (Design 4)
-      month: {
-        totalEarnings: monthCalc.total,
-        comparison: monthChange >= 0 ? `+${monthChange}% vs last month` : `${monthChange}% vs last month`,
-        monthLabel: now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }),
-        ratePerDelivery: effectiveRate,
-        stats: {
-          totalOrders: monthCalc.count,
-          avgEarningPerOrder: monthCalc.avg,
-          activeDays: activeDeliveryDays,
-          onlineTime: '18h 30m'
-        },
-        breakdown: {
-          orderEarnings: monthCalc.orderEarnings,
-          totalDeliveries: monthCalc.count,
-          ratePerDelivery: effectiveRate
-        },
-        daysChart: monthlyDaysChart
-      },
-
-      // Recent delivery earning records
-      orders: formattedRecentOrders
-    };
-
-    const selectedCalc =
-      period === 'today' ? todayCalc : period === 'week' ? weekCalc : monthCalc;
-
-    res.json({
-      ...responsePayload,
-      totalEarnings: selectedCalc.total,
-      baseEarnings: selectedCalc.orderEarnings,
-      totalDeliveries: selectedCalc.count,
-      avgEarningsPerOrder: selectedCalc.avg
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-/**
- * 15. Get Rider Cash Settlements
- * GET /api/delivery/settlements
- */
-export const getRiderSettlements = async (req, res) => {
-  try {
-    const riderId = req.user._id;
-    const settlements = await RiderSettlement.find({ rider: riderId })
-      .populate('confirmedBy', 'name role')
-      .sort('-date');
-    res.json(settlements);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-/**
- * 16. Confirm Store Cash Settlement (Admin or authorized store staff)
- * POST /api/delivery/settlements/confirm
- */
-export const confirmStoreCashSettlement = async (req, res) => {
-  try {
-    const { riderId, amountCollected, notes, storeName } = req.body;
-    const staffId = req.user._id;
-
-    if (!riderId) {
-      return res.status(400).json({ message: 'Rider ID is required' });
-    }
-
-    const payAmount = Number(amountCollected);
-    if (isNaN(payAmount) || payAmount <= 0) {
-      return res.status(400).json({ message: 'A valid collected amount greater than 0 is required' });
-    }
-
-    const effectiveRate = await getEffectiveDeliveryRate(riderId);
-
-    // Get all delivered orders for this rider
-    const allDeliveredOrders = await Order.find({
-      assignedRider: riderId,
-      status: 'Delivered'
-    });
-    const allTotalEarned = allDeliveredOrders.reduce(
-      (sum, o) => sum + (typeof o.riderEarnings === 'number' && o.riderEarnings > 0 ? o.riderEarnings : effectiveRate),
-      0
-    );
-
-    const prevSettlements = await RiderSettlement.find({ rider: riderId });
-    const prevCollected = prevSettlements.reduce((sum, s) => sum + (s.amountCollected || 0), 0);
-    const currentRemaining = Math.max(0, allTotalEarned - prevCollected);
-
-    if (payAmount > currentRemaining) {
-      return res.status(400).json({
-        message: `Amount (₹${payAmount}) exceeds remaining cash to collect (₹${currentRemaining})`
-      });
-    }
-
-    const newRemaining = Math.max(0, currentRemaining - payAmount);
-    const status = newRemaining === 0 ? 'Collected' : 'Partially Collected';
-
-    const unsettledOrders = await Order.find({
-      assignedRider: riderId,
-      status: 'Delivered',
-      riderSettlementStatus: { $ne: 'Settled' }
-    });
-
-    const settlement = await RiderSettlement.create({
-      rider: riderId,
-      orders: unsettledOrders.map((o) => o._id),
-      period: 'Daily',
-      date: new Date(),
-      totalEarned: allTotalEarned,
-      amountCollected: payAmount,
-      remainingToCollect: newRemaining,
-      status,
-      confirmedBy: staffId,
-      confirmedAt: new Date(),
-      storeName: storeName || 'ZOOOMIT Store Hub',
-      notes: notes || 'Store counter daily cash settlement'
-    });
-
-    // If fully collected, mark all unsettled orders as Settled
-    if (newRemaining === 0) {
-      await Order.updateMany(
-        { assignedRider: riderId, status: 'Delivered', riderSettlementStatus: { $ne: 'Settled' } },
-        {
-          $set: {
-            riderSettlementStatus: 'Settled',
-            riderSettledAt: new Date(),
-            riderSettlementId: settlement._id
-          }
-        }
-      );
-    }
-
-    // Send operational notification to rider
-    await Notification.create({
-      title: 'Store Cash Collected 💵',
-      message: `You collected ₹${payAmount} in cash from ${storeName || 'the store hub'}. Remaining balance: ₹${newRemaining}.`,
-      type: 'Store Cash Settlement',
-      recipientType: 'DeliveryBoy',
-      deliveryBoy: riderId,
-      data: { settlementId: settlement._id, amount: payAmount, remaining: newRemaining }
-    });
-
-    res.json({
-      message: 'Store cash settlement confirmed successfully',
-      settlement
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

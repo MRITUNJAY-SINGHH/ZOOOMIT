@@ -73,26 +73,6 @@ export const deliveryService = {
     return res.data;
   },
 
-  async getEarnings(period = 'overview') {
-    const res = await api.get('/delivery/earnings', { params: { period } });
-    return res.data;
-  },
-
-  async getSettlements() {
-    const res = await api.get('/delivery/settlements');
-    return res.data;
-  },
-
-  async confirmStoreCashSettlement(riderId, amountCollected, notes = '', storeName = '') {
-    const res = await api.post('/delivery/settlements/confirm', {
-      riderId,
-      amountCollected,
-      notes,
-      storeName
-    });
-    return res.data;
-  },
-
   // Orders
   async getAvailableOrders() {
     const res = await api.get('/delivery/orders/available');

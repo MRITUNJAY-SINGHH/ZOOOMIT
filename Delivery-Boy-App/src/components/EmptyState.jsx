@@ -6,7 +6,6 @@ import { AppButton } from './AppButton';
 
 const IMAGES = {
   orders: require('../../assets/images/empty-orders.png'),
-  earnings: require('../../assets/images/empty-earnings.png'),
   support: require('../../assets/images/support-illustration.png'),
   success: require('../../assets/images/delivery-success.png'),
   hero: require('../../assets/images/delivery-partner-hero.png')

@@ -277,16 +277,22 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontFamily: typography.family.black,
     fontSize: 34,
-    letterSpacing: 2.2,
+    letterSpacing: 0.8,
     color: '#111827',
-    marginTop: 8
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    includeFontPadding: false
   },
   brandSubtitle: {
     fontFamily: typography.family.medium,
     fontSize: 17,
     color: '#111827',
     marginTop: 2,
-    letterSpacing: 0.3
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    includeFontPadding: false
   },
 
   // Animated Bike Container positioned naturally on the road level

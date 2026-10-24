@@ -38,8 +38,6 @@ export default function ContactSupportScreen() {
   const [category, setCategory] = useState(
     categoryId === 'orders' || categoryId === 'pickup_delivery' || categoryId === 'delivery_otp'
       ? 'delivery_issue'
-      : categoryId === 'earnings_cash'
-      ? 'suggestion'
       : categoryId === 'app_login'
       ? 'app_problem'
       : 'delivery_issue'
@@ -53,7 +51,7 @@ export default function ContactSupportScreen() {
   const issueCategories = [
     { id: 'delivery_issue', label: 'Active Order Issue' },
     { id: 'app_problem', label: 'App Technical Bug' },
-    { id: 'suggestion', label: 'Cash & Earnings' },
+    { id: 'suggestion', label: 'Shift & Scheduling' },
     { id: 'general_feedback', label: 'General Support' }
   ];
 

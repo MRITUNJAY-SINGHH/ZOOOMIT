@@ -55,18 +55,18 @@ import { LoadingSkeleton, EmptyOrdersState, ErrorState } from '../../components/
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIDEBAR_WIDTH = Math.min(SCREEN_WIDTH * 0.84, 340);
 
-// 3 Exact Status Tabs required by specification
+// Status Tabs: All Orders, In Progress, Completed, Cancelled/Rejected
 const TABS = [
+  { key: 'all', label: 'All Orders', defaultCount: 0 },
   { key: 'in_progress', label: 'In Progress', defaultCount: 0 },
   { key: 'completed', label: 'Completed', defaultCount: 0 },
-  { key: 'cancelled', label: 'Cancelled', defaultCount: 0 }
+  { key: 'cancelled', label: 'Cancelled / Rejected', defaultCount: 0 }
 ];
 
 // Expanded Sidebar Filter Options
 const SORT_OPTIONS = [
   { id: 'newest', label: 'Newest First' },
   { id: 'oldest', label: 'Oldest First' },
-  { id: 'highest_earnings', label: 'Highest Earnings (₹)' },
   { id: 'shortest_distance', label: 'Shortest Distance' }
 ];
 
@@ -173,16 +173,19 @@ export default function OrdersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const [activeTab, setActiveTab] = useState('in_progress');
+  const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [tabCounts, setTabCounts] = useState({
+    all: 0,
     in_progress: 0,
     completed: 0,
     cancelled: 0
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isLivePolling, setIsLivePolling] = useState(false);
+  const [lastUpdatedTime, setLastUpdatedTime] = useState(new Date());
   const [error, setError] = useState(null);
 
   // Search Bar Visibility
@@ -287,28 +290,44 @@ export default function OrdersScreen() {
     return count;
   }, [filterType, filterPayment, filterDateRange, filterDistance, filterSortBy]);
 
-  const fetchOrders = useCallback(async (statusKey = activeTab, search = searchQuery) => {
+  const fetchOrders = useCallback(async (statusKey = activeTab, search = searchQuery, silent = false) => {
     try {
-      setError(null);
-      const res = await deliveryService.getOrders(statusKey, 1, 30, search);
+      if (!silent) setError(null);
+      if (silent) setIsLivePolling(true);
+      const res = await deliveryService.getOrders(statusKey, 1, 50, search);
 
       if (res && res.orders) {
         setOrders(res.orders);
         if (res.counts) {
           setTabCounts(res.counts);
         }
+        setLastUpdatedTime(new Date());
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Unable to connect to delivery dispatch.');
+      if (!silent) {
+        setError(err.response?.data?.message || err.message || 'Unable to connect to delivery dispatch.');
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!silent) {
+        setLoading(false);
+        setRefreshing(false);
+      }
+      setIsLivePolling(false);
     }
   }, [activeTab, searchQuery]);
 
   useFocusEffect(
     useCallback(() => {
       fetchOrders(activeTab, searchQuery);
+
+      // Auto-refresh orders every 7 seconds for live dispatch updates
+      const pollTimer = setInterval(() => {
+        fetchOrders(activeTab, searchQuery, true);
+      }, 7000);
+
+      return () => {
+        clearInterval(pollTimer);
+      };
     }, [fetchOrders, activeTab, searchQuery])
   );
 
@@ -401,16 +420,19 @@ export default function OrdersScreen() {
       });
     }
 
-    // 6. Sort By
-    if (filterSortBy === 'highest_earnings') {
-      result.sort((a, b) => (Number(b.earnings) || 0) - (Number(a.earnings) || 0));
-    } else if (filterSortBy === 'shortest_distance') {
+    // 6. Sort By: Newest active order at top, followed by older orders below
+    if (filterSortBy === 'shortest_distance') {
       result.sort((a, b) => (parseFloat(a.distance) || 0) - (parseFloat(b.distance) || 0));
     } else if (filterSortBy === 'oldest') {
-      result.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      result.sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
     } else {
-      // Default: newest
-      result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      // Default: newest first (top is latest active order, subsequent flow below)
+      result.sort((a, b) => {
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
+        if (timeB !== timeA) return timeB - timeA;
+        return String(b.orderNumber || b._id || '').localeCompare(String(a.orderNumber || a._id || ''));
+      });
     }
 
     return result;
@@ -458,25 +480,55 @@ export default function OrdersScreen() {
     );
   };
 
-  // Status badge styling
-  const renderStatusBadge = (status = 'In Progress') => {
-    const s = status.toLowerCase();
-    if (s.includes('completed') || s.includes('delivered')) {
+  // Status badge styling with real backend lifecycle status
+  const renderStatusBadge = (status = 'In Progress', backendStatus = '') => {
+    const raw = (backendStatus || status || '').toLowerCase();
+    if (raw.includes('completed') || raw.includes('delivered')) {
       return (
         <View style={[styles.statusBadge, styles.statusBadgeCompleted]}>
           <Text style={styles.statusBadgeTextCompleted}>Completed</Text>
         </View>
       );
     }
-    if (s.includes('cancelled') || s.includes('rejected')) {
+    if (raw.includes('cancelled') || raw.includes('rejected')) {
       return (
         <View style={[styles.statusBadge, styles.statusBadgeCancelled]}>
           <Text style={styles.statusBadgeTextCancelled}>Cancelled</Text>
         </View>
       );
     }
+    if (raw.includes('out') || raw.includes('delivery')) {
+      return (
+        <View style={[styles.statusBadge, styles.statusBadgeOutForDelivery]}>
+          <View style={[styles.liveDotSmall, { backgroundColor: '#16A34A' }]} />
+          <Text style={styles.statusBadgeTextOutForDelivery}>Out for Delivery</Text>
+        </View>
+      );
+    }
+    if (raw.includes('picked')) {
+      return (
+        <View style={[styles.statusBadge, styles.statusBadgePickedUp]}>
+          <Text style={styles.statusBadgeTextPickedUp}>Picked Up</Text>
+        </View>
+      );
+    }
+    if (raw.includes('arrived')) {
+      return (
+        <View style={[styles.statusBadge, styles.statusBadgeArrived]}>
+          <Text style={styles.statusBadgeTextArrived}>Arrived at Store</Text>
+        </View>
+      );
+    }
+    if (raw.includes('accepted')) {
+      return (
+        <View style={[styles.statusBadge, styles.statusBadgeAccepted]}>
+          <Text style={styles.statusBadgeTextAccepted}>Accepted</Text>
+        </View>
+      );
+    }
     return (
       <View style={[styles.statusBadge, styles.statusBadgeInProgress]}>
+        <View style={[styles.liveDotSmall, { backgroundColor: '#D97706' }]} />
         <Text style={styles.statusBadgeTextInProgress}>In Progress</Text>
       </View>
     );
@@ -580,10 +632,14 @@ export default function OrdersScreen() {
         )}
 
         {/* ============================================================== */}
-        {/* 3 STATUS TABS (Design 1)                                       */}
+        {/* STATUS TABS: All, In Progress, Completed, Cancelled/Rejected   */}
         {/* ============================================================== */}
         <View style={styles.tabsSection}>
-          <View style={styles.tabsRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabsScrollContent}
+          >
             {TABS.map((tab) => {
               const isSelected = activeTab === tab.key;
               const count = tabCounts[tab.key] ?? tab.defaultCount;
@@ -632,7 +688,7 @@ export default function OrdersScreen() {
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
         {/* Active Filter Chips Bar */}
@@ -719,7 +775,7 @@ export default function OrdersScreen() {
           }
         >
           {loading ? (
-            <LoadingSkeleton message="Loading your orders..." cardsCount={3} />
+            <LoadingSkeleton message="Loading active deliveries..." cardsCount={3} />
           ) : error ? (
             <ErrorState
               title="Unable to Load Orders"
@@ -731,26 +787,28 @@ export default function OrdersScreen() {
             />
           ) : filteredOrders.length === 0 ? (
             <EmptyOrdersState
-              title="No Orders Yet"
+              title="No Active Orders"
               message={
                 searchQuery.trim()
                   ? `No orders matching "${searchQuery}". Try searching a different location or order ID.`
-                  : 'New delivery offers will appear here when available. Keep your app online to receive orders.'
+                  : 'All assigned and available active delivery orders will appear here automatically with live auto-refresh.'
               }
             />
           ) : (
             /* ========================================================== */
-            /* DESIGN 1: ORDERS LIST (Clean Minimal Style)                */
+            /* ORDERS LIST: Newest / Latest at Top, Older Below           */
             /* ========================================================== */
-            filteredOrders.map((order) => {
+            filteredOrders.map((order, index) => {
               const orderIdStr = order.orderNumber
                 ? `#${order.orderNumber}`
                 : `#ZM${order._id ? order._id.slice(-6).toUpperCase() : '102300'}`;
 
+              const isLatestActive = activeTab === 'in_progress' && index === 0;
+
               return (
                 <TouchableOpacity
-                  key={order._id}
-                  activeOpacity={0.85}
+                  key={order._id || `order-${index}`}
+                  activeOpacity={0.88}
                   onPress={() => {
                     hapticFeedback.light?.();
                     if (order._id && !order._id.startsWith('ord_demo_')) {
@@ -759,8 +817,29 @@ export default function OrdersScreen() {
                       router.push('/(tabs)/orders');
                     }
                   }}
-                  style={styles.orderCard}
+                  style={[
+                    styles.orderCard,
+                    isLatestActive && styles.orderCardLatest
+                  ]}
                 >
+                  {/* Latest Active Order Banner or Queue Indicator */}
+                  {isLatestActive && (
+                    <View style={styles.latestOrderBanner}>
+                      <View style={styles.latestOrderPill}>
+                        <Text style={styles.latestOrderPillText}>⚡ LATEST ACTIVE ORDER</Text>
+                      </View>
+                      <Text style={styles.latestOrderHint}>Assigned newest</Text>
+                    </View>
+                  )}
+
+                  {activeTab === 'in_progress' && index > 0 && (
+                    <View style={styles.queueOrderRow}>
+                      <View style={styles.queueOrderBadge}>
+                        <Text style={styles.queueOrderBadgeText}>Active Delivery #{index + 1}</Text>
+                      </View>
+                    </View>
+                  )}
+
                   {/* Top Row: Icon + Number & Type (Left) + Status Badge & Time (Right) */}
                   <View style={styles.cardTopRow}>
                     {renderOrderIcon(order.orderType)}
@@ -775,7 +854,7 @@ export default function OrdersScreen() {
                     </View>
 
                     <View style={styles.cardHeaderRight}>
-                      {renderStatusBadge(order.status)}
+                      {renderStatusBadge(order.status, order.backendStatus)}
                       <Text style={styles.timeAgoText}>
                         {getRelativeTime(order.createdAt)}
                       </Text>
@@ -805,7 +884,7 @@ export default function OrdersScreen() {
                     <ChevronRight size={18} color="#94A3B8" strokeWidth={2.2} style={styles.chevron} />
                   </View>
 
-                  {/* Bottom Row: Items + Earnings + Distance */}
+                  {/* Bottom Row: Items + Payment Mode + Distance */}
                   <View style={styles.cardFooterRow}>
                     <View style={styles.metricItem}>
                       <ShoppingBag size={15} color="#475569" strokeWidth={2} style={{ marginRight: 5 }} />
@@ -815,12 +894,11 @@ export default function OrdersScreen() {
                     </View>
 
                     <View style={styles.metricItem}>
-                      <View style={styles.rupeeCircle}>
-                        <Text style={styles.rupeeSymbol}>₹</Text>
+                      <View style={[styles.paymentModeBadge, (order.paymentMethod || order.paymentMode || '').toLowerCase().includes('cod') ? styles.paymentBadgeCod : styles.paymentBadgeOnline]}>
+                        <Text style={[styles.paymentModeBadgeText, (order.paymentMethod || order.paymentMode || '').toLowerCase().includes('cod') ? styles.paymentTextCod : styles.paymentTextOnline]}>
+                          {(order.paymentMethod || order.paymentMode || '').toLowerCase().includes('cod') ? 'COD' : 'Paid Online'}
+                        </Text>
                       </View>
-                      <Text style={styles.metricTextBold}>
-                        ₹{order.earnings || 120}
-                      </Text>
                     </View>
 
                     <View style={styles.metricItem}>
@@ -830,6 +908,25 @@ export default function OrdersScreen() {
                       </Text>
                     </View>
                   </View>
+
+                  {/* Active Orders Direct Manage Action Button */}
+                  {activeTab === 'in_progress' && (
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        hapticFeedback.light?.();
+                        if (order._id && !order._id.startsWith('ord_demo_')) {
+                          router.push(`/order/${order._id}`);
+                        } else {
+                          router.push('/(tabs)/orders');
+                        }
+                      }}
+                      style={styles.manageCardBtn}
+                    >
+                      <Text style={styles.manageCardBtnText}>Open Order & Manage Status</Text>
+                      <ChevronRight size={15} color="#111827" strokeWidth={2.4} />
+                    </TouchableOpacity>
+                  )}
                 </TouchableOpacity>
               );
             })
@@ -1172,23 +1269,22 @@ const styles = StyleSheet.create({
 
   // Status Tabs
   tabsSection: {
-    paddingHorizontal: 20,
     paddingTop: 8,
-    paddingBottom: 14,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF'
   },
-  tabsRow: {
+  tabsScrollContent: {
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8
   },
   tabPill: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 12,
     borderRadius: 12,
     borderWidth: 1.5,
     gap: 6
@@ -1243,6 +1339,70 @@ const styles = StyleSheet.create({
     color: '#FFFFFF'
   },
 
+  // Live Auto-Refresh Dispatch Bar
+  liveFeedBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#F0FDF4',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#DCFCE7',
+    marginBottom: 8
+  },
+  liveFeedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  livePulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#16A34A',
+    marginRight: 8
+  },
+  livePulseDotActive: {
+    backgroundColor: '#EAB308'
+  },
+  liveFeedTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 11.5,
+    color: '#166534',
+    letterSpacing: 0.5
+  },
+  liveCountBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 7,
+    paddingVertical: 1.5,
+    borderRadius: 8,
+    marginLeft: 8,
+    borderWidth: 1,
+    borderColor: '#86EFAC'
+  },
+  liveCountBadgeText: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#15803D'
+  },
+  liveRefreshAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 9,
+    paddingVertical: 4.5,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    gap: 4
+  },
+  liveRefreshActionText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: '#15803D'
+  },
+
   // Scroll Content
   scrollContent: {
     paddingHorizontal: 20,
@@ -1263,6 +1423,68 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
     padding: 16,
     marginBottom: 14
+  },
+  orderCardLatest: {
+    borderColor: '#FFC928',
+    borderWidth: 2,
+    backgroundColor: '#FFFCF2'
+  },
+  latestOrderBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#FEF08A'
+  },
+  latestOrderPill: {
+    backgroundColor: '#FFC928',
+    paddingHorizontal: 9,
+    paddingVertical: 3.5,
+    borderRadius: 8
+  },
+  latestOrderPillText: {
+    fontFamily: typography.family.black,
+    fontSize: 10,
+    color: '#111827',
+    letterSpacing: 0.4
+  },
+  latestOrderHint: {
+    fontFamily: typography.family.medium,
+    fontSize: 11,
+    color: '#854D0E'
+  },
+  queueOrderRow: {
+    marginBottom: 10
+  },
+  queueOrderBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 8,
+    paddingVertical: 2.5,
+    borderRadius: 6
+  },
+  queueOrderBadgeText: {
+    fontFamily: typography.family.bold,
+    fontSize: 10,
+    color: '#475569'
+  },
+  manageCardBtn: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#FFC928',
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6
+  },
+  manageCardBtnText: {
+    fontFamily: typography.family.heavy,
+    fontSize: 12.5,
+    color: '#111827'
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -1312,11 +1534,31 @@ const styles = StyleSheet.create({
   statusBadge: {
     borderRadius: 8,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    alignSelf: 'flex-end'
+    paddingVertical: 3.5,
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  liveDotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5
   },
   statusBadgeInProgress: {
     backgroundColor: '#FEF08A'
+  },
+  statusBadgeOutForDelivery: {
+    backgroundColor: '#DCFCE7'
+  },
+  statusBadgePickedUp: {
+    backgroundColor: '#EDE9FE'
+  },
+  statusBadgeArrived: {
+    backgroundColor: '#FEF3C7'
+  },
+  statusBadgeAccepted: {
+    backgroundColor: '#DBEAFE'
   },
   statusBadgeCompleted: {
     backgroundColor: '#DCFCE7'
@@ -1328,6 +1570,26 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.bold,
     fontSize: 10.5,
     color: '#854D0E'
+  },
+  statusBadgeTextOutForDelivery: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#15803D'
+  },
+  statusBadgeTextPickedUp: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#6D28D9'
+  },
+  statusBadgeTextArrived: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#B45309'
+  },
+  statusBadgeTextAccepted: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#1D4ED8'
   },
   statusBadgeTextCompleted: {
     fontFamily: typography.family.bold,
@@ -1403,21 +1665,26 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#111827'
   },
-  rupeeCircle: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1.2,
-    borderColor: '#475569',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 4
+  paymentModeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
   },
-  rupeeSymbol: {
+  paymentBadgeCod: {
+    backgroundColor: '#FEF3C7'
+  },
+  paymentBadgeOnline: {
+    backgroundColor: '#DCFCE7'
+  },
+  paymentModeBadgeText: {
     fontFamily: typography.family.bold,
-    fontSize: 10,
-    color: '#475569',
-    lineHeight: 12
+    fontSize: 11
+  },
+  paymentTextCod: {
+    color: '#B45309'
+  },
+  paymentTextOnline: {
+    color: '#15803D'
   },
 
   // Empty State (Design 4)

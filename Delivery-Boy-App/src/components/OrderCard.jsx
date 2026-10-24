@@ -55,8 +55,6 @@ export const OrderCard = ({ order, onPress, style }) => {
             <Package size={13} color={colors.textSecondary} style={{ marginRight: 4 }} />
             <Text style={styles.footerText}>{itemCount} Item{itemCount > 1 ? 's' : ''}</Text>
           </View>
-          <Text style={styles.dotSeparator}>•</Text>
-          <Text style={styles.earningsText}>Pay: ₹45</Text>
         </View>
 
         <View style={styles.viewDetailsRow}>
@@ -157,11 +155,6 @@ const styles = StyleSheet.create({
   dotSeparator: {
     marginHorizontal: spacing.xs,
     color: colors.textMuted
-  },
-  earningsText: {
-    fontFamily: typography.family.bold,
-    fontSize: typography.size.xs,
-    color: '#854D0E'
   },
   viewDetailsRow: {
     flexDirection: 'row',

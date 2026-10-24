@@ -721,7 +721,6 @@ const seedDatabase = async () => {
         paymentMethod: 'COD',
         assignedRider: rider1?._id,
         assignedAt: new Date(Date.now() - 20 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pAtta, 1), makeItem(pMilk, 2), makeItem(pBiscuit, 3)],
         shippingAddress: {
           contactName: customerDocs[0]?.name || 'Aarav Sharma',
@@ -748,7 +747,6 @@ const seedDatabase = async () => {
         assignedRider: rider1?._id,
         assignedAt: new Date(Date.now() - 3 * 60 * 60 * 1000),
         deliveredAt: new Date(Date.now() - 2.5 * 60 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pOil, 2), makeItem(pDal, 1)],
         shippingAddress: {
           contactName: customerDocs[1]?.name || 'Priya Nair',
@@ -771,7 +769,6 @@ const seedDatabase = async () => {
         assignedRider: rider1?._id,
         assignedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
         deliveredAt: new Date(Date.now() - 4.2 * 60 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pCola, 4), makeItem(pBiscuit, 2)],
         shippingAddress: {
           contactName: customerDocs[2]?.name || 'Kabir Mehta',
@@ -794,7 +791,6 @@ const seedDatabase = async () => {
         assignedRider: rider1?._id,
         assignedAt: new Date(Date.now() - 7 * 60 * 60 * 1000),
         deliveredAt: new Date(Date.now() - 6.5 * 60 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pVim, 3), makeItem(pMilk, 1)],
         shippingAddress: {
           contactName: customerDocs[3]?.name || 'Ananya Iyer',
@@ -820,7 +816,6 @@ const seedDatabase = async () => {
         paymentMethod: 'Online',
         assignedRider: rider2?._id,
         assignedAt: new Date(Date.now() - 15 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pDal, 2), makeItem(pOil, 1), makeItem(pCola, 2)],
         shippingAddress: {
           contactName: customerDocs[1]?.name || 'Priya Nair',
@@ -847,7 +842,6 @@ const seedDatabase = async () => {
         assignedRider: rider2?._id,
         assignedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
         deliveredAt: new Date(Date.now() - 3.4 * 60 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pAtta, 1), makeItem(pVim, 2)],
         shippingAddress: {
           contactName: customerDocs[3]?.name || 'Ananya Iyer',
@@ -870,7 +864,6 @@ const seedDatabase = async () => {
         assignedRider: rider2?._id,
         assignedAt: new Date(Date.now() - 6 * 60 * 60 * 1000),
         deliveredAt: new Date(Date.now() - 5.5 * 60 * 60 * 1000),
-        riderEarnings: 30,
         items: [makeItem(pMilk, 3), makeItem(pBiscuit, 4)],
         shippingAddress: {
           contactName: customerDocs[0]?.name || 'Aarav Sharma',
@@ -989,7 +982,6 @@ const seedDatabase = async () => {
         assignedRider: spec.assignedRider || null,
         assignedAt: spec.assignedAt || (spec.assignedRider ? new Date() : null),
         deliveredAt: spec.deliveredAt || null,
-        riderEarnings: spec.riderEarnings || 0,
         items: spec.items,
         subTotal,
         taxableAmount: subTotal,

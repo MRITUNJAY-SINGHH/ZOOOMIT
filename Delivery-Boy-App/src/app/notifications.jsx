@@ -21,8 +21,6 @@ import {
   Trash2,
   Bell,
   Package,
-  Wallet,
-  Megaphone,
   AlertCircle,
   Star,
   MapPin,
@@ -31,8 +29,7 @@ import {
   ChevronRight,
   Clock,
   X,
-  Sparkles,
-  Coins
+  Sparkles
 } from 'lucide-react-native';
 import { colors, typography } from '../constants/theme';
 import { deliveryService } from '../services/deliveryService';
@@ -44,8 +41,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CATEGORIES = [
   { id: 'all', label: 'All' },
   { id: 'orders', label: 'Orders' },
-  { id: 'earnings', label: 'Earnings' },
-  { id: 'incentives', label: 'Incentives' }
+  { id: 'system', label: 'System' }
 ];
 
 export default function NotificationsScreen() {
@@ -122,16 +118,14 @@ export default function NotificationsScreen() {
 
   // Counts by category
   const categoryCounts = useMemo(() => {
-    const counts = { all: notifications.length, orders: 0, earnings: 0, incentives: 0 };
+    const counts = { all: notifications.length, orders: 0, system: 0 };
     notifications.forEach((n) => {
       const type = n.type || '';
       const cat = n.data?.category?.toLowerCase() || '';
       if (cat === 'orders' || type.includes('Order') || type.includes('Rating')) {
         counts.orders++;
-      } else if (cat === 'earnings' || cat === 'payments' || cat === 'settlements' || type.includes('Earning') || type.includes('Settlement') || type.includes('Payment')) {
-        counts.earnings++;
-      } else if (cat === 'incentives' || type.includes('Incentive')) {
-        counts.incentives++;
+      } else {
+        counts.system++;
       }
     });
     return counts;
@@ -146,11 +140,8 @@ export default function NotificationsScreen() {
       if (activeCategory === 'orders') {
         return cat === 'orders' || type.includes('Order') || type.includes('Rating');
       }
-      if (activeCategory === 'earnings') {
-        return cat === 'earnings' || cat === 'payments' || cat === 'settlements' || type.includes('Earning') || type.includes('Settlement') || type.includes('Payment');
-      }
-      if (activeCategory === 'incentives') {
-        return cat === 'incentives' || type.includes('Incentive');
+      if (activeCategory === 'system') {
+        return !(cat === 'orders' || type.includes('Order') || type.includes('Rating'));
       }
       return true;
     });
@@ -269,21 +260,6 @@ export default function NotificationsScreen() {
         return (
           <View style={[styles.iconContainer, { backgroundColor: '#DCFCE7' }]}>
             <CheckCircle2 size={20} color="#16A34A" strokeWidth={2.2} />
-          </View>
-        );
-      case 'Payment Received':
-      case 'Earning Recorded':
-      case 'Store Cash Settlement':
-        return (
-          <View style={[styles.iconContainer, { backgroundColor: '#DCFCE7' }]}>
-            <Coins size={20} color="#16A34A" strokeWidth={2.2} />
-          </View>
-        );
-      case 'New Incentive':
-      case 'Incentive':
-        return (
-          <View style={[styles.iconContainer, { backgroundColor: '#FFEDD5' }]}>
-            <Megaphone size={20} color="#EA580C" strokeWidth={2.2} />
           </View>
         );
       case 'Order Cancelled':
@@ -574,7 +550,7 @@ export default function NotificationsScreen() {
                       <ShoppingBag size={18} color="#D97706" />
                     </View>
                     <Text style={styles.attrText}>
-                      {selectedNotification.data?.itemsSummary || '8 items • ~₹60'}
+                      {selectedNotification.data?.itemsSummary || '8 items'}
                     </Text>
                   </View>
 

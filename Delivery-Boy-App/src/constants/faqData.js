@@ -33,17 +33,6 @@ export const FAQ_CATEGORIES = [
     description: 'Understanding OTP generation, handling expired codes, resending SMS, and secure doorstep verification.'
   },
   {
-    id: 'earnings_cash',
-    title: 'Earnings and cash collection',
-    shortTitle: 'Earnings & Cash Collection',
-    subtitle: 'Delivery earnings and store collection',
-    iconName: 'Coins',
-    iconColor: '#15803D',
-    bgColor: '#F0FDF4',
-    borderColor: '#BBF7D0',
-    description: 'How your per-delivery earnings are calculated by admin rates and collected in cash at the store hub counter.'
-  },
-  {
     id: 'app_login',
     title: 'App or login issue',
     shortTitle: 'App or Login Issues',
@@ -104,7 +93,7 @@ export const FAQ_ITEMS = [
     id: 'ord-7',
     categoryId: 'orders',
     question: 'How can I check completed or cancelled orders?',
-    answer: 'In the "Orders" tab, switch between the "Completed" and "Cancelled" filter tabs. You can view past order numbers, delivery drop timestamps, and credited partner earnings for each order.',
+    answer: 'In the "Orders" tab, switch between the "Completed" and "Cancelled" filter tabs. You can view past order numbers, delivery drop timestamps, and delivery details for each order.',
     keywords: ['completed', 'cancelled', 'history', 'past orders', 'records']
   },
 
@@ -192,8 +181,8 @@ export const FAQ_ITEMS = [
     id: 'otp-5',
     categoryId: 'delivery_otp',
     question: 'Why can\'t I complete delivery without OTP verification?',
-    answer: 'OTP verification is a strict backend requirement that protects you and the customer against false delivery disputes, missing parcels, and fraud. The backend strictly requires the verified 4-digit OTP to mark the order "Delivered" and credit your partner earnings. Never bypass OTP verification.',
-    keywords: ['why otp', 'mandatory', 'bypass', 'protection', 'credit earnings']
+    answer: 'OTP verification is a strict backend requirement that protects you and the customer against false delivery disputes, missing parcels, and fraud. The backend strictly requires the verified 4-digit OTP to mark the order "Delivered" and complete the delivery workflow. Never bypass OTP verification.',
+    keywords: ['why otp', 'mandatory', 'bypass', 'protection', 'verification']
   },
   {
     id: 'otp-6',
@@ -201,64 +190,6 @@ export const FAQ_ITEMS = [
     question: 'What happens after too many incorrect attempts?',
     answer: 'If an incorrect OTP is entered 3 consecutive times, verification is temporarily paused for 60 seconds. In rare emergencies where the customer cannot receive SMS, only an authorized Store Hub Supervisor can verify the delivery via dispatch portal.',
     keywords: ['attempts', 'locked', 'too many', 'supervisor override', 'emergency']
-  },
-
-  // --- Category: Earnings and cash collection ---
-  {
-    id: 'ear-1',
-    categoryId: 'earnings_cash',
-    question: 'How are my delivery earnings calculated?',
-    answer: 'Earnings are calculated transparently on a per-delivery basis. Each successfully verified and completed delivery credits your account with the fixed rate configured for your fleet by the administration (e.g. ₹20 or ₹30 per order).',
-    keywords: ['how calculated', 'rate per delivery', 'formula', 'earnings', 'compensation']
-  },
-  {
-    id: 'ear-2',
-    categoryId: 'earnings_cash',
-    question: 'Who sets the amount earned per delivery?',
-    answer: 'The per-delivery compensation rate is configured centrally by the ZOOOMIT dispatch administration. Any fleet-wide rate updates or special peak incentives are configured directly by the admin in the system.',
-    keywords: ['who sets', 'admin rate', 'store rate', 'configuration', 'management']
-  },
-  {
-    id: 'ear-3',
-    categoryId: 'earnings_cash',
-    question: 'When does an order count toward my earnings?',
-    answer: 'An order counts toward your earnings immediately when the status becomes "Delivered" through doorstep OTP verification. Cancelled or rejected orders do not qualify for delivery compensation.',
-    keywords: ['when count', 'credited', 'qualify', 'delivered', 'otp success']
-  },
-  {
-    id: 'ear-4',
-    categoryId: 'earnings_cash',
-    question: 'Where can I see today\'s earnings?',
-    answer: 'Open the "Earnings" tab in the bottom bar and tap "Today". You will see your total earnings for today, number of deliveries completed, and your active per-delivery rate.',
-    keywords: ['today earnings', 'earnings tab', 'daily total', 'current earnings']
-  },
-  {
-    id: 'ear-5',
-    categoryId: 'earnings_cash',
-    question: 'How do I see weekly and monthly earnings?',
-    answer: 'In the "Earnings" tab, tap the "This Week" or "This Month" filter buttons at the top to review historical delivery counts, daily breakdown insights, and total earnings for those periods.',
-    keywords: ['weekly', 'monthly', 'history', 'filter', 'breakdown']
-  },
-  {
-    id: 'ear-6',
-    categoryId: 'earnings_cash',
-    question: 'How do I collect my earnings from the store?',
-    answer: 'ZOOOMIT follows an authorized store cash settlement model. At the end of your shift or work day, proceed to the store hub counter. The staff will check your "Cash to Collect" balance in the system and hand over the cash amount directly to you.',
-    keywords: ['collect cash', 'store counter', 'daily settlement', 'cash to collect', 'handover']
-  },
-  {
-    id: 'ear-7',
-    categoryId: 'earnings_cash',
-    question: 'What if the cash collected does not match the amount shown?',
-    answer: 'Store staff records the exact physical cash amount handed over. If you receive a partial payout, your remaining balance stays safely recorded under "Cash to Collect" until fully settled at your next shift.',
-    keywords: ['mismatch', 'partial payment', 'balance', 'remaining', 'discrepancy']
-  },
-  {
-    id: 'ear-8',
-    categoryId: 'earnings_cash',
-    question: 'Why is an earning not visible yet?',
-    answer: 'Earnings update within seconds of successful OTP verification. If mobile internet connection was temporarily lost during delivery, pull down to refresh the screen once network is restored.',
-    keywords: ['not visible', 'missing earning', 'refresh', 'sync', 'delay']
   },
 
   // --- Category: App or login issues ---

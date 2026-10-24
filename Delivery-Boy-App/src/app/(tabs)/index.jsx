@@ -63,7 +63,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const DECLINE_OFFER_REASONS = [
   'Distance is too far',
-  'Low payout / delivery fee',
+  'Unfavorable route / location',
   'Vehicle problem / Low fuel',
   'Ending shift / Emergency',
   'Delay at store / Heavy crate',
@@ -287,13 +287,10 @@ export default function DashboardScreen() {
   const [togglingOnline, setTogglingOnline] = useState(false);
 
   const [stats, setStats] = useState({
-    todayEarnings: 0,
     todayCompleted: 0,
     todayPending: 0,
     totalDeliveries: 0,
-    ratePerDelivery: 30,
-    cashToCollect: 0,
-    settlementStatus: 'Awaiting Collection',
+    activeDeliveries: 0,
     activeOrder: null,
     recentActivity: []
   });
@@ -336,13 +333,10 @@ export default function DashboardScreen() {
       }
 
       setStats({
-        todayEarnings: dashData.todayEarnings || 0,
         todayCompleted: dashData.todayCompleted || 0,
         todayPending: dashData.todayPending || 0,
         totalDeliveries: dashData.totalDeliveries || 0,
-        ratePerDelivery: dashData.ratePerDelivery || 30,
-        cashToCollect: dashData.cashToCollect || 0,
-        settlementStatus: dashData.settlementStatus || 'Awaiting Collection',
+        activeDeliveries: dashData.activeOrder ? 1 : 0,
         activeOrder: dashData.activeOrder || null,
         recentActivity: dashData.recentActivity || []
       });
@@ -377,34 +371,33 @@ export default function DashboardScreen() {
   };
 
   // Countdown timer for active offer
+  const activeOfferId = availableOffers[0]?._id;
   useEffect(() => {
-    if (!availableOffers.length || !isOnline) return;
+    if (!activeOfferId || !isOnline) {
+      setOfferCountdown(28);
+      return;
+    }
     setOfferCountdown(28);
     const timer = setInterval(() => {
-      setOfferCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          fetchDashboardData();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setOfferCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-  }, [availableOffers.length, isOnline, fetchDashboardData]);
+  }, [activeOfferId, isOnline]);
 
-  // Automatically open Incoming Order Alert Modal when a new offer arrives (Feature One)
+  // Automatically open Incoming Order Alert Modal when a new offer arrives
   useEffect(() => {
     if (!availableOffers.length || !isOnline) {
       setShowIncomingOfferModal(false);
       return;
     }
     const topOffer = availableOffers[0];
-    if (topOffer && topOffer._id !== prevOfferIdRef.current) {
+    if (topOffer && topOffer._id && topOffer._id !== prevOfferIdRef.current) {
       prevOfferIdRef.current = topOffer._id;
-      setShowIncomingOfferModal(true);
+      if (!declinedOrderIdsRef.current.has(topOffer._id)) {
+        setShowIncomingOfferModal(true);
+      }
     }
-  }, [availableOffers, isOnline]);
+  }, [activeOfferId, isOnline]);
 
   // --------------------------------------------------------------------------
   // Online / Offline Switch
@@ -655,8 +648,8 @@ export default function DashboardScreen() {
           style={[styles.compactStatsBar, compactStatsAnimatedStyle]}
         >
           <View style={styles.compactStatItem}>
-            <Text style={styles.compactStatValue}>₹{stats.todayEarnings}</Text>
-            <Text style={styles.compactStatLabel}>Earnings</Text>
+            <Text style={styles.compactStatValue}>{stats.activeDeliveries || (stats.activeOrder ? 1 : 0)}</Text>
+            <Text style={styles.compactStatLabel}>Active</Text>
           </View>
 
           <View style={styles.compactStatDivider} />
@@ -765,19 +758,19 @@ export default function DashboardScreen() {
         {/* 2. TODAY'S OVERVIEW (4 Stat Cards Grid)                            */}
         {/* ================================================================== */}
         <View style={styles.overviewGrid}>
-          {/* Row 1: Today's Earnings & Completed Today */}
+          {/* Row 1: Active Orders & Completed Today */}
           <View style={styles.overviewRow}>
-            {/* Today's Earnings */}
+            {/* Active Orders */}
             <TouchableOpacity
               activeOpacity={0.8}
-              onPress={() => router.push('/(tabs)/earnings')}
+              onPress={() => router.push('/(tabs)/orders')}
               style={styles.statCard}
             >
               <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
-                <Coins size={18} color="#D97706" strokeWidth={2.4} />
+                <Clock size={18} color="#D97706" strokeWidth={2.4} />
               </View>
-              <Text style={styles.statCardValue}>₹{stats.todayEarnings}</Text>
-              <Text style={styles.statCardLabel}>Today's Earnings</Text>
+              <Text style={styles.statCardValue}>{stats.activeDeliveries || (stats.activeOrder ? 1 : 0)}</Text>
+              <Text style={styles.statCardLabel}>Active Orders</Text>
             </TouchableOpacity>
 
             {/* Completed Today */}
@@ -832,33 +825,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* ================================================================== */}
-        {/* 3. CASH TO COLLECT FROM STORE                                      */}
-        {/* ================================================================== */}
-        <TouchableOpacity
-          activeOpacity={0.85}
-          onPress={() => {
-            hapticFeedback.light?.();
-            router.push('/cash-collection');
-          }}
-          style={styles.cashCollectCard}
-        >
-          <View style={styles.cashCollectIconBox}>
-            <Store size={22} color="#D97706" strokeWidth={2.2} />
-          </View>
-          <View style={styles.cashCollectMiddle}>
-            <Text style={styles.cashCollectHeading}>Cash to Collect from Store</Text>
-            <Text style={styles.cashCollectAmount}>₹{stats.cashToCollect}</Text>
-            <Text style={styles.cashCollectSub}>
-              {stats.cashToCollect === 0 && stats.todayCompleted > 0
-                ? 'All earnings collected'
-                : 'Awaiting collection'}
-            </Text>
-          </View>
-          <ChevronRight size={20} color="#94A3B8" strokeWidth={2.2} />
-        </TouchableOpacity>
-
-        {/* ================================================================== */}
-        {/* 4. ACTIVE DELIVERY                                                 */}
+        {/* 3. ACTIVE DELIVERY                                                 */}
         {/* ================================================================== */}
         <View style={styles.sectionHeaderRow}>
           <Text style={styles.sectionTitle}>Active Delivery</Text>
@@ -1035,11 +1002,11 @@ export default function DashboardScreen() {
         {isOnline && currentOffer ? (
           /* New Offer Available Card */
           <View style={styles.newOfferCard}>
-            {/* Top Order ID & Earnings Badge */}
+            {/* Top Order ID & Payment Badge */}
             <View style={styles.offerCardTopRow}>
               <View style={styles.offerIdRow}>
                 <View style={styles.offerTagIconBox}>
-                  <Coins size={14} color="#B45309" strokeWidth={2.2} />
+                  <ShoppingBag size={14} color="#B45309" strokeWidth={2.2} />
                 </View>
                 <Text
                   style={styles.offerOrderNumber}
@@ -1050,10 +1017,9 @@ export default function DashboardScreen() {
                 </Text>
               </View>
 
-              <View style={styles.earningsBox}>
-                <Text style={styles.earningsBoxLead}>EARNINGS</Text>
-                <Text style={styles.earningsBoxValue}>
-                  ₹{currentOffer.estimatedEarnings || stats.ratePerDelivery || 30}
+              <View style={styles.offerPaymentPill}>
+                <Text style={styles.offerPaymentPillText}>
+                  {currentOffer.paymentMode === 'cod' ? 'Cash on Delivery' : 'Paid Online'}
                 </Text>
               </View>
             </View>
@@ -1216,11 +1182,11 @@ export default function DashboardScreen() {
                   </Text>
                 </View>
 
-                {/* Right Amount & Chevron */}
+                {/* Right Status & Chevron */}
                 <View style={styles.activityRightRow}>
-                  <Text style={styles.activityAmountText}>
-                    +₹{item.riderEarnings || stats.ratePerDelivery || 30}
-                  </Text>
+                  <View style={styles.deliveredPill}>
+                    <Text style={styles.deliveredPillText}>Delivered</Text>
+                  </View>
                   <ChevronRight size={16} color="#94A3B8" strokeWidth={2} style={{ marginLeft: 4 }} />
                 </View>
               </TouchableOpacity>
@@ -1342,7 +1308,7 @@ export default function DashboardScreen() {
               style={styles.popoverBottomYellowBtn}
             >
               <Text style={styles.popoverBottomYellowBtnText}>View All Notifications</Text>
-              <ChevronRight size={18} color="#111827" strokeWidth={2.5} />
+              <ChevronRight size={18} color="#111827" strokeWidth={2} />
             </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -1351,22 +1317,24 @@ export default function DashboardScreen() {
       {/* ==================================================================== */}
       {/* INCOMING ORDER ALERT MODAL (Feature One - Panel 1)                   */}
       {/* ==================================================================== */}
-      <IncomingOrderModal
-        visible={showIncomingOfferModal && Boolean(currentOffer) && isOnline}
-        order={currentOffer}
-        countdownSeconds={offerCountdown}
-        accepting={acceptingId === currentOffer?._id}
-        onAccept={async (order) => {
-          await handleAcceptOrder(order);
-          setShowIncomingOfferModal(false);
-        }}
-        onDecline={(order) => {
-          handleDirectDecline(order || currentOffer);
-        }}
-        onClose={() => {
-          setShowIncomingOfferModal(false);
-        }}
-      />
+      {Boolean(showIncomingOfferModal && currentOffer && isOnline) && (
+        <IncomingOrderModal
+          visible={Boolean(showIncomingOfferModal && currentOffer && isOnline)}
+          order={currentOffer}
+          countdownSeconds={offerCountdown}
+          accepting={acceptingId === currentOffer?._id}
+          onAccept={async (order) => {
+            await handleAcceptOrder(order);
+            setShowIncomingOfferModal(false);
+          }}
+          onDecline={(order) => {
+            handleDirectDecline(order || currentOffer);
+          }}
+          onClose={() => {
+            setShowIncomingOfferModal(false);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -1665,50 +1633,7 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
 
-  // --------------------------------------------------------------------------
-  // 3. CASH TO COLLECT FROM STORE
-  // --------------------------------------------------------------------------
-  cashCollectCard: {
-    backgroundColor: '#FFFDF5',
-    borderWidth: 1.5,
-    borderColor: '#FEF08A',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 18
-  },
-  cashCollectIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: '#FFEDD5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12
-  },
-  cashCollectMiddle: {
-    flex: 1
-  },
-  cashCollectHeading: {
-    fontFamily: typography.family.bold,
-    fontSize: 13,
-    color: '#111827',
-    marginBottom: 2
-  },
-  cashCollectAmount: {
-    fontFamily: typography.family.heavy,
-    fontSize: 22,
-    color: '#111827',
-    letterSpacing: -0.3
-  },
-  cashCollectSub: {
-    fontFamily: typography.family.medium,
-    fontSize: 11,
-    color: '#78716C',
-    marginTop: 1
-  },
+
 
   // --------------------------------------------------------------------------
   // SECTION HEADERS
@@ -2019,26 +1944,31 @@ const styles = StyleSheet.create({
     color: '#111827',
     flexShrink: 1
   },
-  earningsBox: {
-    backgroundColor: '#FFFBEB',
+  offerPaymentPill: {
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: '#FEF08A',
+    borderColor: '#BFDBFE',
     borderRadius: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 9,
     paddingVertical: 4,
     alignItems: 'center',
     flexShrink: 0
   },
-  earningsBoxLead: {
+  offerPaymentPillText: {
     fontFamily: typography.family.bold,
-    fontSize: 8.5,
-    color: '#92400E',
-    letterSpacing: 0.5
+    fontSize: 11,
+    color: '#1D4ED8'
   },
-  earningsBoxValue: {
-    fontFamily: typography.family.heavy,
-    fontSize: 15,
-    color: '#111827'
+  deliveredPill: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6
+  },
+  deliveredPillText: {
+    fontFamily: typography.family.bold,
+    fontSize: 11,
+    color: '#16A34A'
   },
   offerActionsRow: {
     flexDirection: 'row',

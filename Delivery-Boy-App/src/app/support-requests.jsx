@@ -40,7 +40,7 @@ const CATEGORIES = [
   'Pickup or store issue',
   'Delivery OTP problem',
   'Customer or address issue',
-  'Earnings or cash-collection issue',
+  'Shift or scheduling inquiry',
   'App or login issue',
   'Other'
 ];
@@ -281,7 +281,7 @@ export default function SupportRequestsScreen() {
                 <Text style={styles.emptyTicketsSub}>
                   {activeTab !== 'all'
                     ? `You don't have any ${activeTab.replace('_', ' ')} requests.`
-                    : 'Need help with an order or your delivery earnings? Tap "New Support Request" above.'}
+                    : 'Need help with an order or active delivery? Tap "New Support Request" above.'}
                 </Text>
               </View>
             ) : (

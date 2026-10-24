@@ -167,7 +167,7 @@ export default function AboutScreen() {
           <Text style={styles.versionText}>App Version 1.0.0</Text>
 
           <Text style={styles.descriptionParagraph}>
-            ZOOOMIT Delivery Partner app helps you complete delivery assignments, manage your earnings, and stay connected with our team. Our goal is to make deliveries simple, fast and reliable.
+            ZOOOMIT Delivery Partner app helps you complete delivery assignments, track deliveries, and stay connected with our team. Our goal is to make deliveries simple, fast and reliable.
           </Text>
         </View>
 

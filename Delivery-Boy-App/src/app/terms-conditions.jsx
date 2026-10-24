@@ -60,7 +60,7 @@ export default function TermsConditionsScreen() {
       title: 'Delivery Allocation & Acceptance Protocol',
       paragraphs: [
         'Algorithmic Dispatch: When your duty status is set to "Online", available orders within your operational zone are dispatched based on GPS proximity, route efficiency, and vehicle type.',
-        '60-Second Acceptance Timer: Each incoming order request rings with high-priority chime and provides a 60-second window to inspect pickup location, drop destination, and expected compensation. If the timer elapses without acceptance, the order is promptly reassigned to the next available partner.',
+        '60-Second Acceptance Timer: Each incoming order request rings with high-priority chime and provides a 60-second window to inspect pickup location, drop destination, and order details. If the timer elapses without acceptance, the order is promptly reassigned to the next available partner.',
         'Fulfillment Obligation: Once an order is accepted in the app, you enter into a binding operational commitment to head directly to the merchant pickup store without unapproved detours or cancellations.'
       ]
     },
@@ -79,17 +79,17 @@ export default function TermsConditionsScreen() {
       paragraphs: [
         'Direct Transit Route: After completing pickup, you must proceed immediately along the recommended route to the customer address provided in the application. Unauthorized stops, package tampering, or multi-app diversion while carrying customer goods is strictly prohibited.',
         'Mandatory 4-Digit Customer OTP: To guarantee delivery integrity and prevent false claims, every completed delivery requires the customer to provide a unique 4-digit One-Time Password (OTP) generated on their application.',
-        'Strict No-OTP Delivery Prohibition: You must NEVER leave grocery packages unattended at doorsteps, gates, or hand over items without entering and verifying the customer OTP in your app. Delivering without valid OTP verification violates platform policy and voids delivery compensation.'
+        'Strict No-OTP Delivery Prohibition: You must NEVER leave grocery packages unattended at doorsteps, gates, or hand over items without entering and verifying the customer OTP in your app. Delivering without valid OTP verification violates platform policy and constitutes a serious platform violation.'
       ]
     },
     {
       number: '5',
-      title: 'Store Cash Settlement & Partner Compensation',
+      title: 'Partner Engagement & Manual Compensation',
       paragraphs: [
-        'Admin-Configured Delivery Rate: Delivery partners earn a fixed per-delivery compensation rate (e.g., ₹20 or ₹30 per completed order) as configured by the store administrator in system settings.',
-        'Direct Physical Store Cash Collection: ZOOOMIT operates on a physical store cash settlement model. All earned compensation accumulates in your "Cash to Collect" ledger and is collected directly in cash from the merchant store counter, typically at the end of each day or shift.',
-        'No App Bank Transfers or Withdrawals: The app does not process automated bank account transfers, UPI disbursements, or digital wallet payouts. All earnings are settled in physical cash at the merchant store hub against verified completed order logs.',
-        'Discrepancy Reporting: You must verify your completed delivery count with the store cashier during settlement. Any discrepancy must be reported to the store manager on duty on the same calendar day.'
+        'Direct Owner Settlement: Delivery partners are engaged directly by the business merchant. All compensation, payments, allowances, and incentives are agreed upon and settled manually outside of the ZOOOMIT mobile application.',
+        'No In-App Payouts or Balances: The ZOOOMIT application serves solely as an order dispatch, navigation, and fulfillment tracking tool. The app does not calculate, promise, track, or disburse partner earnings or balances.',
+        'Shift and Duty Tracking: Completed delivery counts and operational history recorded in the app may be used by the store owner for shift reconciliation during external manual settlements.',
+        'COD Customer Collection: For Cash-on-Delivery (COD) orders, partners must collect the exact invoice amount from the customer and remit the full amount to the store hub counter without deduction.'
       ]
     },
     {
@@ -123,15 +123,15 @@ export default function TermsConditionsScreen() {
       number: '9',
       title: 'Platform Discipline, Penalties & Deactivation',
       paragraphs: [
-        'Immediate Termination Grounds: ZOOOMIT reserves the right to immediately terminate partner account access for: (a) Attempting to bypass OTP verification; (b) Package tampering, item theft, or pilferage; (c) Sharing app login credentials with unauthorized individuals; (d) Driving under the influence of alcohol or drugs; (e) Uncollected cash settlement manipulation.',
-        'Review & Audit: Terminated or suspended accounts are reviewed by the Partner Compliance Committee. Pending store cash settlements may be withheld during investigation of verified theft or customer loss claims.'
+        'Immediate Termination Grounds: ZOOOMIT reserves the right to immediately terminate partner account access for: (a) Attempting to bypass OTP verification; (b) Package tampering, item theft, or pilferage; (c) Sharing app login credentials with unauthorized individuals; (d) Driving under the influence of alcohol or drugs; (e) Failure to remit collected COD order amounts.',
+        'Review & Audit: Terminated or suspended accounts are reviewed by the Partner Compliance Committee. Disciplinary actions and compensation adjustments are handled directly by the store management.'
       ]
     },
     {
       number: '10',
       title: 'Modifications, Grievances & Governing Law',
       paragraphs: [
-        'Updates to Terms: ZOOOMIT reserves the right to modify these Terms and Conditions or compensation rates with prior in-app notice. Continued use of the application following updates constitutes acceptance of revised terms.',
+        'Updates to Terms: ZOOOMIT reserves the right to modify these Terms and Conditions with prior in-app notice. Continued use of the application following updates constitutes acceptance of revised terms.',
         'Partner Support Contact: For contractual inquiries, account assistance, or dispute escalations, contact: Email: partners@zooomit.in | Phone: +91 1800 200 4000 (Toll-Free, 24/7).',
         'Jurisdiction: This agreement is governed by the laws of India. Any unresolved dispute shall be subject to arbitration in accordance with the Arbitration and Conciliation Act, under the jurisdiction of the company headquarters.'
       ]

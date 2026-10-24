@@ -209,8 +209,12 @@ export default function LoginScreen() {
               {/* App Logo */}
               <View style={styles.logoBlock}>
                 <LogoLockIcon />
-                <Text style={styles.logoBrand}>ZOOOMIT</Text>
-                <Text style={styles.logoTagline}>Delivery Partner</Text>
+                <Text style={styles.logoBrand} numberOfLines={1} ellipsizeMode="clip">
+                  ZOOOMIT
+                </Text>
+                <Text style={styles.logoTagline} numberOfLines={1} ellipsizeMode="clip">
+                  Delivery Partner
+                </Text>
               </View>
 
               {/* Delivery Boy & City Hero Image */}
@@ -310,28 +314,31 @@ export default function LoginScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* Sign In Button */}
-              <TouchableOpacity
-                activeOpacity={0.85}
-                onPress={handleSignIn}
-                disabled={loading}
-                style={[styles.signInButton, loading && styles.signInButtonDisabled]}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="#111827" />
-                ) : (
-                  <Text style={styles.signInButtonText}>Sign In</Text>
-                )}
-              </TouchableOpacity>
+              {/* Actions Block (Centered) */}
+              <View style={styles.actionsContainer}>
+                {/* Sign In Button */}
+                <TouchableOpacity
+                  activeOpacity={0.85}
+                  onPress={handleSignIn}
+                  disabled={loading}
+                  style={[styles.signInButton, loading && styles.signInButtonDisabled]}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#111827" />
+                  ) : (
+                    <Text style={styles.signInButtonText}>Sign In</Text>
+                  )}
+                </TouchableOpacity>
 
-              {/* Forgot Password Link */}
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={handleForgotPassword}
-                style={styles.forgotPasswordContainer}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-              </TouchableOpacity>
+                {/* Forgot Password Link */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={handleForgotPassword}
+                  style={styles.forgotPasswordContainer}
+                >
+                  <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -359,32 +366,42 @@ const styles = StyleSheet.create({
 
   // Top Yellow Section
   topHeroSection: {
+    width: '100%',
     backgroundColor: '#FFC928',
     alignItems: 'center',
-    paddingTop: 10
+    paddingTop: 12
   },
   logoBlock: {
+    width: '100%',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
     marginBottom: 6
   },
   logoBrand: {
     fontFamily: typography.family.black,
     fontSize: 32,
-    letterSpacing: 2,
+    letterSpacing: 0.8,
     color: '#111827',
-    marginTop: 6
+    marginTop: 6,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    includeFontPadding: false
   },
   logoTagline: {
     fontFamily: typography.family.medium,
     fontSize: 16,
     color: '#111827',
-    marginTop: 1,
-    letterSpacing: 0.2
+    marginTop: 2,
+    letterSpacing: 0.2,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    includeFontPadding: false
   },
 
   // Hero Image
   heroImageWrapper: {
-    width: SCREEN_WIDTH,
+    width: '100%',
     height: 250,
     overflow: 'hidden'
   },
@@ -398,19 +415,23 @@ const styles = StyleSheet.create({
 
   // Bottom White Card
   bottomSheetCard: {
+    flex: 1,
+    width: '100%',
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 36,
     borderTopRightRadius: 36,
     marginTop: -18,
     paddingHorizontal: spacing.xl,
     paddingTop: 26,
-    paddingBottom: 32
+    paddingBottom: 32,
+    alignItems: 'center'
   },
   sheetTitle: {
     fontFamily: typography.family.bold,
     fontSize: 22,
     color: '#111827',
     textAlign: 'center',
+    alignSelf: 'center',
     letterSpacing: -0.3
   },
   sheetSubtitle: {
@@ -418,6 +439,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6B7280',
     textAlign: 'center',
+    alignSelf: 'center',
     marginTop: 6,
     marginBottom: 24,
     lineHeight: 20
@@ -425,13 +447,16 @@ const styles = StyleSheet.create({
 
   // Error Banner
   errorBanner: {
+    width: '100%',
     backgroundColor: '#FEF2F2',
     borderWidth: 1,
     borderColor: '#FCA5A5',
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   errorBannerText: {
     fontFamily: typography.family.medium,
@@ -442,6 +467,7 @@ const styles = StyleSheet.create({
 
   // Inputs
   inputFieldBox: {
+    width: '100%',
     height: 54,
     backgroundColor: '#FFFFFF',
     borderWidth: 1.5,
@@ -472,15 +498,24 @@ const styles = StyleSheet.create({
     padding: 6
   },
 
+  // Actions Block
+  actionsContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8
+  },
+
   // Sign In Button
   signInButton: {
+    width: '100%',
     height: 52,
     backgroundColor: '#FFC928',
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 16
+    alignSelf: 'center',
+    marginBottom: 14
   },
   signInButtonDisabled: {
     opacity: 0.65
@@ -488,18 +523,27 @@ const styles = StyleSheet.create({
   signInButtonText: {
     fontFamily: typography.family.bold,
     fontSize: 16,
-    color: '#111827'
+    color: '#111827',
+    textAlign: 'center',
+    alignSelf: 'center',
+    includeFontPadding: false
   },
 
   // Forgot Password
   forgotPasswordContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12
+    paddingVertical: 10,
+    paddingHorizontal: 16
   },
   forgotPasswordText: {
     fontFamily: typography.family.semibold,
     fontSize: 14,
-    color: '#2563EB'
+    color: '#2563EB',
+    textAlign: 'center',
+    alignSelf: 'center',
+    includeFontPadding: false
   }
 });

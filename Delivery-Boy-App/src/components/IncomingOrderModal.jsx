@@ -20,7 +20,7 @@ import {
   Sparkles,
   ChevronRight,
   Star,
-  Coins
+  ShoppingBag
 } from 'lucide-react-native';
 import { typography } from '../constants/theme';
 import { hapticFeedback } from '../services/haptics';
@@ -36,22 +36,16 @@ export const IncomingOrderModal = ({
   accepting = false,
   countdownSeconds = 28
 }) => {
-  const [timeLeft, setTimeLeft] = useState(countdownSeconds);
+  const [timeLeft, setTimeLeft] = useState(countdownSeconds || 28);
   const timerRef = useRef(null);
 
+  // Initialize countdown when modal opens
   useEffect(() => {
-    if (visible) {
-      setTimeLeft(countdownSeconds);
+    if (visible && order) {
+      setTimeLeft(countdownSeconds || 28);
       if (timerRef.current) clearInterval(timerRef.current);
       timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            onClose?.();
-            return 0;
-          }
-          return prev - 1;
-        });
+        setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -59,12 +53,18 @@ export const IncomingOrderModal = ({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [visible, countdownSeconds]);
+  }, [visible, Boolean(order)]);
+
+  // Auto-close safely when countdown reaches 0
+  useEffect(() => {
+    if (timeLeft === 0 && visible) {
+      onClose?.();
+    }
+  }, [timeLeft, visible]);
 
   if (!visible || !order) return null;
 
   const orderNumber = order.orderNumber || 'ZM102344';
-  const earnings = order.estimatedEarnings || order.earnings || 30;
   const storeName = order.pickupLocation?.storeName || 'ZOOOMIT Supermart Hub';
   const storeAddress =
     order.pickupLocation?.address || 'Sector 4, Main Express Lane, Tech Park';
@@ -88,7 +88,7 @@ export const IncomingOrderModal = ({
 
   return (
     <Modal
-      visible={visible}
+      visible={Boolean(visible && order)}
       transparent
       animationType="slide"
       statusBarTranslucent
@@ -151,13 +151,13 @@ export const IncomingOrderModal = ({
             </View>
             <Text style={styles.subtitleText}>A new order is available for you</Text>
 
-            {/* Chips & Earnings Row */}
+            {/* Chips & Payment Row */}
             <View style={styles.topChipsRow}>
               {/* Order ID & Timer Left Group */}
               <View style={styles.topChipsLeft}>
                 <View style={styles.orderIdChip}>
                   <View style={styles.coinIconBox}>
-                    <Coins size={12} color="#854D0E" strokeWidth={2.4} />
+                    <ShoppingBag size={12} color="#854D0E" strokeWidth={2.4} />
                   </View>
                   <Text style={styles.orderIdText} numberOfLines={1} ellipsizeMode="tail">
                     #{orderNumber}
@@ -171,10 +171,11 @@ export const IncomingOrderModal = ({
                 </View>
               </View>
 
-              {/* Earnings Box */}
-              <View style={styles.earningsBox}>
-                <Text style={styles.earningsLabel}>EARNINGS</Text>
-                <Text style={styles.earningsValue}>₹{earnings}</Text>
+              {/* Payment Mode Pill */}
+              <View style={styles.paymentPill}>
+                <Text style={styles.paymentPillText}>
+                  {(order.paymentMode || order.paymentMethod || '').toLowerCase().includes('cod') ? 'COD' : 'Paid Online'}
+                </Text>
               </View>
             </View>
 
@@ -501,27 +502,21 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     color: '#DC2626'
   },
-  earningsBox: {
-    backgroundColor: '#FFFBEB',
+  paymentPill: {
+    backgroundColor: '#EFF6FF',
     borderWidth: 1.5,
-    borderColor: '#FEF08A',
+    borderColor: '#BFDBFE',
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0
   },
-  earningsLabel: {
+  paymentPillText: {
     fontFamily: typography.family.bold,
-    fontSize: 9.5,
-    color: '#92400E',
-    letterSpacing: 0.5
-  },
-  earningsValue: {
-    fontFamily: typography.family.heavy,
-    fontSize: 16,
-    color: '#111827',
-    fontWeight: '800'
+    fontSize: 12,
+    color: '#1D4ED8'
   },
 
   // Route Card
@@ -706,3 +701,5 @@ const styles = StyleSheet.create({
     color: '#FFFFFF'
   }
 });
+
+export default IncomingOrderModal;

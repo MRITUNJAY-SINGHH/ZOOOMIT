@@ -64,10 +64,10 @@ export const notificationService = {
         lockscreenVisibility: Notifications.AndroidNotificationVisibility?.PUBLIC ?? 1
       });
 
-      // Secondary Channel for General Partner Updates & Settlements
+      // Secondary Channel for General Partner Updates
       await Notifications.setNotificationChannelAsync('general', {
         name: 'General Updates',
-        description: 'Account, earnings, and partner updates',
+        description: 'Account, shift, and operational partner updates',
         importance: Notifications.AndroidImportance?.DEFAULT ?? 3,
         vibrationPattern: [0, 200, 200],
         lightColor: '#FFC928',

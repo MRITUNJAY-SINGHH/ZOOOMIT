@@ -27,7 +27,6 @@ export const IncomingOrderCard = ({
   const pickupAddress = order.pickupLocation?.address || 'Sector 4, Main Express Hub';
   const deliveryArea = order.deliveryLocation?.formattedAddress || order.deliveryLocation?.city || 'Customer Address';
   const itemsCount = order.itemCount || 1;
-  const earnings = order.estimatedEarnings || 45;
   const distance = order.deliveryLocation?.distanceKm || 2.4;
 
   return (
@@ -50,9 +49,10 @@ export const IncomingOrderCard = ({
           <Text style={styles.orderLabel}>ORDER NUMBER</Text>
           <Text style={styles.orderNumber} numberOfLines={1} ellipsizeMode="tail">#{order.orderNumber}</Text>
         </View>
-        <View style={[styles.earningsBox, { flexShrink: 0 }]}>
-          <Text style={styles.earningsLabel}>EARNINGS</Text>
-          <Text style={styles.earningsValue}>₹{earnings}</Text>
+        <View style={[styles.paymentPill, { flexShrink: 0 }]}>
+          <Text style={styles.paymentPillText}>
+            {(order.paymentMode || order.paymentMethod || '').toLowerCase().includes('cod') ? 'COD' : 'Paid Online'}
+          </Text>
         </View>
       </View>
 
@@ -193,25 +193,20 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: 2
   },
-  earningsBox: {
-    alignItems: 'flex-end',
-    backgroundColor: colors.primarySoft,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 4,
+  paymentPill: {
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1.5,
+    borderColor: '#BFDBFE',
     borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.primary
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  earningsLabel: {
+  paymentPillText: {
     fontFamily: typography.family.bold,
-    fontSize: 10,
-    color: '#854D0E',
-    letterSpacing: 0.5
-  },
-  earningsValue: {
-    fontFamily: typography.family.heavy,
-    fontSize: typography.size.lg,
-    color: colors.secondary
+    fontSize: 12,
+    color: '#1D4ED8'
   },
   routeContainer: {
     marginVertical: spacing.md

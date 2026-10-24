@@ -15,9 +15,6 @@ import {
   cancelOrderWithReason,
   getRiderOrders,
   getRiderOrderDetails,
-  getRiderEarnings,
-  getRiderSettlements,
-  confirmStoreCashSettlement,
   updateDeliveryProfile,
   submitPartnerFeedback,
   getPartnerSupportTickets,
@@ -48,11 +45,8 @@ router.post('/support', createPartnerSupportTicket);
 router.get('/support/:id', getPartnerSupportTicketDetails);
 router.post('/support/:id/reply', addSupportTicketReply);
 
-// Dashboard, Earnings & Store Cash Settlements
+// Dashboard
 router.get('/dashboard', getDashboardStats);
-router.get('/earnings', getRiderEarnings);
-router.get('/settlements', getRiderSettlements);
-router.post('/settlements/confirm', confirmStoreCashSettlement);
 
 // Orders Management
 router.get('/orders/available', getAvailableOrders);

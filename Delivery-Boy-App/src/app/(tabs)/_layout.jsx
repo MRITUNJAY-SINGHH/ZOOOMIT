@@ -28,9 +28,8 @@ export default function TabsLayout() {
       tabBar={renderTabBar}
       screenOptions={{
         headerShown: false,
-        animation: 'none',
-        lazy: false,
-        freezeOnBlur: true
+        animation: 'fade',
+        lazy: true
       }}
     >
       <Tabs.Screen
@@ -40,15 +39,15 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="orders"
+        name="active"
         options={{
-          title: 'Orders'
+          title: 'Active'
         }}
       />
       <Tabs.Screen
-        name="earnings"
+        name="orders"
         options={{
-          title: 'Earnings'
+          title: 'Orders'
         }}
       />
       <Tabs.Screen
