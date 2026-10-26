@@ -49,6 +49,7 @@
                     <!-- Header Navigation -->
                     <div class="menu-block-wrapper">
                         <div class="menu-overlay"></div>
+
                         <nav class="menu-block" id="append-menu-header">
                             <div class="mobile-menu-head">
                                 <div class="go-back">
@@ -57,50 +58,57 @@
                                 <div class="current-menu-title"></div>
                                 <div class="mobile-menu-close">&times;</div>
                             </div>
+
                             <ul class="site-menu-main">
                                 <li class="nav-item">
                                     <a href="index.html" class="nav-link-item">Home</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-features" class="nav-link-item">Features</a>
+                                    <a href="index.html#section-features" class="nav-link-item">
+                                        Features
+                                    </a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-features" class="nav-link-item">Classes</a>
+                                    <a href="index.html#section-about" class="nav-link-item">
+                                        About Us
+                                    </a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-testimonial" class="nav-link-item">Testimonials</a>
+                                    <a href="faq.html" class="nav-link-item">FAQs</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="about.html" class="nav-link-item">About</a>
+                                    <a href="contact.html" class="nav-link-item">Contact Us</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="faq.html" class="nav-link-item">FAQ</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="contact.html" class="nav-link-item">Contact</a>
-                                </li>
-                                
                             </ul>
                         </nav>
                     </div>
                     <!-- Header Navigation -->
 
                     <!-- Header User Event -->
+                    <!-- Header CTA Button -->
                     <div class="flex items-center gap-6">
-                        <a href="contact.html" class="btn-text hidden hover:text-ColorYellow sm:inline-block">Contact Us</a>
-                        <a href="contact.html" class="group relative z-10 hidden sm:inline-block">
-                            <div class="btn is-rounded is-yellow">Get Started</div>
+                        <a href="index.html#section-app-download" class="group relative z-10 hidden sm:inline-block">
+                            <div class="btn is-rounded is-yellow">
+                                Get the App
+                            </div>
+
                             <div class="is-rounded absolute inset-0 -z-10 translate-x-[5px] translate-y-[5px] bg-ColorYellow transition-all duration-300 ease-linear group-hover:translate-x-0 group-hover:translate-y-0"></div>
                         </a>
-                        <!-- Responsive Offcanvas Menu Button -->
+
+                        <!-- Mobile Menu Button -->
                         <div class="block lg:hidden">
-                            <button id="openBtn" class="hamburger-menu mobile-menu-trigger">
+                            <button id="openBtn" class="hamburger-menu mobile-menu-trigger" aria-label="Open navigation menu" aria-expanded="false">
                                 <span></span>
                                 <span></span>
                                 <span></span>
                             </button>
                         </div>
                     </div>
+                    <!-- Header CTA Button End -->
                     <!-- Header User Event -->
                 </div>
             </div>
@@ -370,108 +378,124 @@
             <!--...::: FAQ Section End :::... -->
         </main>
 
-                <!--...::: Footer Section Start :::... -->
+                        <!--...::: Footer Section Start :::... -->
         <footer class="section-footer">
-            <div class="bg-ColorBlack">
+            <div class="bg-white">
                 <!-- Footer Area Center -->
-                <div class="text-white">
+                <div class="text-ColorBlack">
                     <!-- Footer Center Spacing -->
                     <div class="py-[60px] lg:py-20 xl:py-[90px]">
                         <!-- Section Container -->
                         <div class="container-default">
                             <!-- Footer Widget List -->
-                            <div class="grid gap-x-12 gap-y-10 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:gap-x-16">
+                            <div class="grid gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-[1.3fr_0.85fr_1fr_1.25fr] xl:gap-x-12 items-start">
                                 
                                 <!-- Column 1: ZOOOMIT Brand -->
                                 <div class="flex flex-col gap-y-6 sm:col-span-2 md:col-span-2 lg:col-span-1">
                                     <!-- Footer Logo -->
                                     <a href="index.html" class="inline-block" aria-label="ZOOOMIT Home">
-                                        <img src="assets/img/logo-zooomit-light.svg" alt="ZOOOMIT" width="156" height="35" class="h-8 md:h-9 w-auto" />
+                                        <img src="assets/img/logo-zooomit.svg" alt="ZOOOMIT" width="168" height="38" class="h-9 md:h-10 w-auto" />
                                     </a>
                                     <!-- Footer Brand Description -->
-                                    <p class="text-sm leading-relaxed text-white/80 lg:max-w-[320px]">
+                                    <p class="text-base font-medium leading-relaxed text-ColorBlack/80 lg:max-w-[340px]">
                                         Your everyday groceries and daily essentials, delivered with convenience. Shop your favourites and enjoy a simpler way to shop with ZOOOMIT.
                                     </p>
                                     <!-- Footer Contact Email -->
                                     <div>
-                                        <a href="mailto:aetern.india@gmail.com" class="inline-flex items-center gap-2 text-sm font-semibold text-white underline-offset-4 transition-all duration-300 hover:text-ColorYellow hover:underline">
-                                            <i class="fa-regular fa-envelope text-ColorYellow"></i>
+                                        <a href="mailto:aetern.india@gmail.com" class="inline-flex items-center gap-2 text-base font-semibold text-ColorBlack underline-offset-4 transition-all duration-300 hover:text-ColorYellow hover:underline">
+                                            <i class="fa-regular fa-envelope text-ColorYellow text-base"></i>
                                             <span>aetern.india@gmail.com</span>
+                                        </a>
+                                    </div>
+                                    <!-- Social Media Links -->
+                                    <div class="flex items-center gap-3 pt-1">
+                                        <a href="#" aria-label="Facebook" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-facebook-f text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="Instagram" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-instagram text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="Twitter / X" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-x-twitter text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="LinkedIn" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-linkedin-in text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="YouTube" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-youtube text-sm"></i>
                                         </a>
                                     </div>
                                 </div>
                                 <!-- Column 1 End -->
 
                                 <!-- Column 2: Explore -->
-                                <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
+                                <div class="flex flex-col gap-y-5 lg:pl-2">
+                                    <div class="text-xl font-bold text-ColorBlack">
                                         Explore
                                     </div>
-                                    <ul class="flex flex-col gap-y-3 text-sm">
+                                    <ul class="flex flex-col gap-y-3.5 text-base font-medium">
                                         <li>
-                                            <a href="index.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Home</a>
+                                            <a href="index.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Home</a>
                                         </li>
                                         <li>
-                                            <a href="index.html#section-features" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Features</a>
+                                            <a href="index.html#section-features" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Features</a>
                                         </li>
                                         <li>
-                                            <a href="about.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">About Us</a>
+                                            <a href="about.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">About Us</a>
                                         </li>
                                         <li>
-                                            <a href="faq.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">FAQs</a>
+                                            <a href="faq.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">FAQs</a>
                                         </li>
                                         <li>
-                                            <a href="contact.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Contact Us</a>
+                                            <a href="contact.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Contact Us</a>
                                         </li>
                                     </ul>
                                 </div>
                                 <!-- Column 2 End -->
 
-                                <!-- Column 3: Get the App -->
+                                <!-- Column 3: Legal & Policies -->
                                 <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
-                                        Get the App
+                                    <div class="text-xl font-bold text-ColorBlack">
+                                        Legal & Policies
                                     </div>
-                                    <p class="text-sm leading-relaxed text-white/80">
-                                        Shop groceries and daily essentials conveniently from your phone with ZOOOMIT.
-                                    </p>
-                                    <div class="flex flex-col gap-y-3">
-                                        <!-- Clean Coming Soon Pill -->
-                                        <div class="inline-flex items-center gap-2 rounded-full border border-ColorYellow/40 bg-ColorYellow/15 px-3.5 py-1.5 text-xs font-semibold text-white">
-                                            <span class="h-2 w-2 rounded-full bg-ColorYellow"></span>
-                                            <span>Mobile Apps Coming Soon</span>
-                                        </div>
-                                        <!-- Link to app preview section -->
-                                        <a href="index.html#section-newsletter" class="group inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 underline-offset-4 transition-colors duration-300 hover:text-white hover:underline">
-                                            <span>Preview App on iOS & Android</span>
-                                            <i class="fa-solid fa-arrow-right text-[10px] transition-transform duration-300 group-hover:translate-x-1"></i>
-                                        </a>
-                                    </div>
+                                    <ul class="flex flex-col gap-y-3.5 text-base font-medium">
+                                        <li>
+                                            <a href="privacy-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Privacy Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="terms-and-conditions.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Terms & Conditions</a>
+                                        </li>
+                                        <li>
+                                            <a href="shipping-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Shipping Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="return-refund-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Return & Refund Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="delete-account.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Delete Account</a>
+                                        </li>
+                                    </ul>
                                 </div>
                                 <!-- Column 3 End -->
 
-                                <!-- Column 4: Legal & Policies -->
-                                <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
-                                        Legal & Policies
+                                <!-- Column 4: Get the App (Card with Background) -->
+                                <div class="flex flex-col gap-y-4 rounded-2xl border border-ColorBlack/10 bg-ColorOffWhite p-6 lg:p-7 shadow-sm">
+                                    <div class="text-xl font-bold text-ColorBlack">
+                                        Get the App
                                     </div>
-                                    <ul class="flex flex-col gap-y-3 text-sm">
-                                        <li>
-                                            <a href="privacy-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Privacy Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="terms-and-conditions.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Terms & Conditions</a>
-                                        </li>
-                                        <li>
-                                            <a href="shipping-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Shipping Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="return-refund-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Return & Refund Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="delete-account.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Delete Account</a>
-                                        </li>
-                                    </ul>
+                                    <p class="text-sm font-medium leading-relaxed text-ColorBlack/75">
+                                        Shop groceries and daily essentials conveniently from your phone with ZOOOMIT.
+                                    </p>
+                                    <div class="flex flex-col gap-3 pt-1">
+                                        <!-- Google Play Store Button -->
+                                        <a href="#" class="inline-block transition-transform duration-300 hover:scale-[1.02]" aria-label="Download on Google Play">
+                                            <img src="assets/img/icons/icon-google-play-store.svg" alt="Get it on Google Play" width="165" height="50" class="h-11 w-auto rounded-lg shadow-sm" />
+                                        </a>
+                                        <!-- Apple App Store Button -->
+                                        <a href="#" class="inline-block transition-transform duration-300 hover:scale-[1.02]" aria-label="Download on the App Store">
+                                            <img src="assets/img/icons/icon-apple-app-store.svg" alt="Download on the App Store" width="165" height="50" class="h-11 w-auto rounded-lg shadow-sm" />
+                                        </a>
+                                    </div>
                                 </div>
                                 <!-- Column 4 End -->
 
@@ -485,15 +509,15 @@
                 <!-- Footer Area Center -->
                 
                 <!-- Subtle Divider -->
-                <div class="horizontal-line bg-white/10"></div>
+                <div class="h-px w-full bg-ColorBlack/15"></div>
                 
                 <!-- Footer Bottom -->
                 <div>
-                    <!-- Footer Bottom Spacing -->
-                    <div class="py-[20px]">
+                    <!-- Footer Bottom Spacing with Generous Padding -->
+                    <div class="py-8 pb-14 sm:py-9 sm:pb-16">
                         <!-- Section Container -->
                         <div class="container-default">
-                            <div class="text-center text-sm text-white/70">
+                            <div class="text-center text-base sm:text-lg font-medium text-ColorBlack">
                                 &copy; <span id="current-year"></span> ZOOOMIT. All rights reserved.
                             </div>
                         </div>

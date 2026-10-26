@@ -1,27 +1,30 @@
 {
-    "name": "zooomit",
-    "version": "1.0.0",
-    "description": "ZOOOMIT - Health & Fitness Tracker Platform",
-    "main": "tailwind.config.js",
-    "scripts": {
-        "dev": "npm start",
-        "start:server": "live-server --port=3000 --open=./index.html",
-        "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --watch",
-        "start": "concurrently \"npm:start:server\" \"npm run dev:css\"",
-        "minify": "tailwindcss -o ./assets/css/style.min.css --minify"
-    },
-    "keywords": [
-        "zooomit",
-        "fitness",
-        "saas"
-    ],
-    "author": "MRITUNJAY SINGH",
-    "license": "ISC",
-    "devDependencies": {
-        "concurrently": "^8.2.2",
-        "live-server": "^1.2.2",
-        "prettier": "^3.1.1",
-        "prettier-plugin-tailwindcss": "^0.5.9",
-        "tailwindcss": "^3.4.0"
-    }
+  "name": "zooomit",
+  "version": "1.0.0",
+  "description": "ZOOOMIT - Groceries and Daily Essentials Delivery",
+  "scripts": {
+    "dev": "npm start",
+    "start": "concurrently \"npm run start:server\" \"npm run dev:css\"",
+    "start:server": "live-server --port=3000 --open=./index.html",
+    "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --watch",
+    "build:header": "node build-header.js",
+    "watch:header": "node build-header.js --watch",
+    "build": "node build-header.js && tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --minify",
+    "minify": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.min.css --minify"
+  },
+  "keywords": [
+    "zooomit",
+    "groceries",
+    "grocery-delivery",
+    "daily-essentials"
+  ],
+  "author": "MRITUNJAY SINGH",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "live-server": "^1.2.2",
+    "prettier": "^3.1.1",
+    "prettier-plugin-tailwindcss": "^0.5.9",
+    "tailwindcss": "^3.4.0"
+  }
 }

@@ -338,3 +338,79 @@
 .testimonial-slider-area-1 .swiper-pagination-bullet-active {
   @apply h-[10px] w-[10px] bg-ColorDark;
 }
+
+/* Policy & Legal Pages Professional Styling */
+.policy-page-bg {
+  background-color: #FAF9F5;
+}
+
+.policy-card {
+  background-color: #ffffff !important;
+  border-radius: 1rem !important;
+  border: 1px solid rgba(10, 16, 47, 0.12) !important;
+  box-shadow: none !important;
+}
+
+.policy-content-body h1,
+.policy-content-body h2,
+.policy-content-body h3,
+.policy-content-body h4 {
+  letter-spacing: normal !important;
+}
+
+.policy-content-body h2 {
+  font-size: 1.65rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  color: #0A102F !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.95rem !important;
+}
+
+.policy-content-body h3 {
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  color: #0A102F !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.65rem !important;
+}
+
+.policy-content-body p {
+  font-size: 1.0625rem !important;
+  font-weight: 400 !important;
+  line-height: 1.8 !important;
+  color: rgba(10, 16, 47, 0.85) !important;
+  margin-bottom: 0.95rem !important;
+}
+
+.policy-content-body ul {
+  list-style-type: disc !important;
+  padding-left: 1.65rem !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 1.35rem !important;
+}
+
+.policy-content-body ul li {
+  font-size: 1.0625rem !important;
+  line-height: 1.8 !important;
+  color: rgba(10, 16, 47, 0.85) !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.policy-content-body ul li strong {
+  font-weight: 700 !important;
+  color: #0A102F !important;
+}
+
+.policy-section-divider {
+  padding-top: 2.25rem;
+  margin-top: 2.25rem;
+  border-top: 1px solid rgba(10, 16, 47, 0.1);
+}
+
+.policy-section-divider:first-child {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: none;
+}

@@ -1,0 +1,3 @@
+# Netlify Custom 404 Routing
+# Serves /404.html with HTTP status 404 for any non-existent path
+/*    /404.html   404

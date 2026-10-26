@@ -1,42 +1,37 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="author" content="MRITUNJAY SINGH" />
-    <title>ZOOOMIT - 404 Page Not Found</title>
-    <meta name="description" content="AIMass Tailwind based SASS Template" />
+    <base href="/" />
+    <title>404 - Page Not Found | ZOOOMIT Everyday Groceries</title>
+    <meta name="description" content="The page you're looking for may have been moved, removed, or is temporarily unavailable. Return to ZOOOMIT to shop daily groceries and essentials." />
 
-    <!-- Favicon  -->
-    <link rel="icon" type="image/png" href="assets/img/favicon.png" />
-    <link rel="shortcut icon" href="assets/img/favicon.ico" />
-    <link rel="apple-touch-icon" href="assets/img/favicon-192.png" />
+    <!-- Favicon Icons -->
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/img/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/img/favicon-192.png" />
+    <link rel="apple-touch-icon" href="assets/img/favicon.png" />
 
-    <!-- Icon Font -->
-    <link rel="stylesheet" href="assets/fonts/iconfonts/font-awesome/stylesheet.css" />
     <!-- Site font -->
-    <link rel="stylesheet" href="assets/fonts/webfonts/inter/stylesheet.css" />
-    <link rel="stylesheet" href="assets/fonts/webfonts/plus-jakarta-sans/stylesheet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- Vendor CSS -->
     <link rel="stylesheet" href="assets/css/vendors/swiper-bundle.min.css" />
     <link rel="stylesheet" href="assets/css/vendors/jos.css" />
     <link rel="stylesheet" href="assets/css/vendors/menu.css" />
 
+    <!-- FontAwesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="assets/css/custom.css" />
-
-    <!-- Development css -->
-    <link href="assets/css/style.css" rel="stylesheet" />
-
-    <!-- Production css -->
-    <!-- <link rel="stylesheet" href="assets/css/style.min.css"> -->
+    <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 
 <body>
-    <div class="page-wrapper relative z-[1] bg-white">
-                <!--...::: Header Start :::... -->
+    <div class="page-wrapper relative z-[1] bg-[#FAF9F5]">
+        <!--...::: Header Start :::... -->
         <header class="site-header site-header--absolute is--white py-3" id="sticky-menu">
             <div class="container-default">
                 <div class="flex items-center justify-between gap-x-8">
@@ -49,6 +44,7 @@
                     <!-- Header Navigation -->
                     <div class="menu-block-wrapper">
                         <div class="menu-overlay"></div>
+
                         <nav class="menu-block" id="append-menu-header">
                             <div class="mobile-menu-head">
                                 <div class="go-back">
@@ -57,50 +53,57 @@
                                 <div class="current-menu-title"></div>
                                 <div class="mobile-menu-close">&times;</div>
                             </div>
+
                             <ul class="site-menu-main">
                                 <li class="nav-item">
                                     <a href="index.html" class="nav-link-item">Home</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-features" class="nav-link-item">Features</a>
+                                    <a href="index.html#section-features" class="nav-link-item">
+                                        Features
+                                    </a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-features" class="nav-link-item">Classes</a>
+                                    <a href="index.html#section-about" class="nav-link-item">
+                                        About Us
+                                    </a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="index.html#section-testimonial" class="nav-link-item">Testimonials</a>
+                                    <a href="faq.html" class="nav-link-item">FAQs</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a href="about.html" class="nav-link-item">About</a>
+                                    <a href="contact.html" class="nav-link-item">Contact Us</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a href="faq.html" class="nav-link-item">FAQ</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="contact.html" class="nav-link-item">Contact</a>
-                                </li>
-                                
                             </ul>
                         </nav>
                     </div>
                     <!-- Header Navigation -->
 
                     <!-- Header User Event -->
+                    <!-- Header CTA Button -->
                     <div class="flex items-center gap-6">
-                        <a href="contact.html" class="btn-text hidden hover:text-ColorYellow sm:inline-block">Contact Us</a>
-                        <a href="contact.html" class="group relative z-10 hidden sm:inline-block">
-                            <div class="btn is-rounded is-yellow">Get Started</div>
+                        <a href="index.html#section-app-download" class="group relative z-10 hidden sm:inline-block">
+                            <div class="btn is-rounded is-yellow">
+                                Get the App
+                            </div>
+
                             <div class="is-rounded absolute inset-0 -z-10 translate-x-[5px] translate-y-[5px] bg-ColorYellow transition-all duration-300 ease-linear group-hover:translate-x-0 group-hover:translate-y-0"></div>
                         </a>
-                        <!-- Responsive Offcanvas Menu Button -->
+
+                        <!-- Mobile Menu Button -->
                         <div class="block lg:hidden">
-                            <button id="openBtn" class="hamburger-menu mobile-menu-trigger">
+                            <button id="openBtn" class="hamburger-menu mobile-menu-trigger" aria-label="Open navigation menu" aria-expanded="false">
                                 <span></span>
                                 <span></span>
                                 <span></span>
                             </button>
                         </div>
                     </div>
+                    <!-- Header CTA Button End -->
                     <!-- Header User Event -->
                 </div>
             </div>
@@ -109,131 +112,243 @@
 
         <main class="main-wrapper relative overflow-hidden">
             <!--...::: 404 Section Start :::... -->
-            <section class="section-404">
-                <!-- Section Space -->
-                <div class="section-space">
-                    <!-- Section Container -->
-                    <div class="container-default">
-                        <div class=""></div>
-                        <div class="mt-10 flex flex-col items-center justify-center text-center lg:mt-[60px] xl:mt-[90px]">
-                            <img src="assets/img/th-1/404-img.svg" alt="404-img" width="532" height="550" class="mb-[30px]" />
-                            <h2 class="mb-[15px]">Page not found</h2>
-                            <p class="mb-10 max-w-[374px] text-ColorBlack/80">
-                                The requested URL you are looking for doesn’t exist on this
-                                server.
-                            </p>
-                            <a href="index.html" class="btn is-blue is-rounded btn-animation is-large group"><span>Back To Homepage</span></a>
-                        </div>
-                    </div>
-                    <!-- Section Container -->
+            <section class="section-404 relative pt-28 pb-16 sm:pt-36 sm:pb-20 lg:pt-40 lg:pb-24">
+                <!-- Background Decorative Elements -->
+                <div class="pointer-events-none absolute left-0 top-0 -z-10 opacity-40">
+                    <img src="assets/img/elements/breadcrumb-shape-1.svg" alt="decorative shape" width="291" height="380" />
                 </div>
-                <!-- Section Space -->
+                <div class="pointer-events-none absolute bottom-0 right-0 -z-10 opacity-40">
+                    <img src="assets/img/elements/breadcrumb-shape-2.svg" alt="decorative shape" width="291" height="380" />
+                </div>
+
+                <div class="container-default">
+                    <!-- Main 404 Elevated Card -->
+                    <div class="mx-auto max-w-3xl rounded-[32px] border border-ColorBlack/10 bg-white p-6 sm:p-10 md:p-14 text-center shadow-[0_20px_60px_-20px_rgba(0,0,0,0.06)] relative overflow-hidden">
+                        
+                        <!-- Top Ambient Glow Inside Card -->
+                        <div class="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 h-56 w-96 rounded-full bg-ColorYellow/15 blur-3xl"></div>
+
+                        <!-- 404 Vector Illustration -->
+                        <div class="relative mx-auto mb-4 flex items-center justify-center">
+                            <img src="assets/img/zooomit-404-illustration.svg" alt="ZOOOMIT Aisle 404 - Page Not Found" width="460" height="320" class="h-auto w-full max-w-[340px] sm:max-w-[400px] select-none" />
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div class="mb-3">
+                            <span class="inline-flex items-center gap-2 rounded-full border border-ColorYellow/50 bg-ColorYellow/20 px-4 py-1.5 text-xs font-extrabold uppercase tracking-widest text-ColorBlack">
+                                <i class="fa-solid fa-basket-shopping text-ColorYellow"></i>
+                                <span>Aisle 404 &bull; Item Not Found</span>
+                            </span>
+                        </div>
+
+                        <!-- Main Heading -->
+                        <h1 class="text-3xl font-black text-ColorBlack sm:text-4xl md:text-5xl tracking-tight leading-tight">
+                            Oops! This Shelf is Empty
+                        </h1>
+
+                        <!-- Reassuring Description -->
+                        <p class="mx-auto mt-4 max-w-xl text-base sm:text-lg font-medium leading-relaxed text-ColorBlack/75">
+                            The grocery item or page you're searching for seems to have rolled away or is no longer available. Don't worry, your fresh everyday essentials are waiting for you!
+                        </p>
+
+                        <!-- Primary Action Buttons -->
+                        <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
+                            <!-- Primary Button: Back to Home -->
+                            <a href="index.html" class="group relative z-10 inline-block w-full sm:w-auto">
+                                <div class="btn is-rounded is-yellow flex items-center justify-center gap-2.5 px-8 py-3.5 text-base font-bold shadow-md">
+                                    <i class="fa-solid fa-house"></i>
+                                    <span>Return to Storefront</span>
+                                </div>
+                                <div class="is-rounded absolute inset-0 -z-10 translate-x-[4px] translate-y-[4px] bg-ColorBlack transition-all duration-300 ease-linear group-hover:translate-x-0 group-hover:translate-y-0"></div>
+                            </a>
+
+                            <!-- Secondary Button: Contact Us -->
+                            <a href="contact.html" class="inline-flex w-full items-center justify-center gap-2.5 rounded-full border-2 border-ColorBlack/15 bg-white px-7 py-3.5 text-base font-bold text-ColorBlack transition-all duration-300 hover:border-ColorBlack hover:bg-[#FAF9F5] shadow-sm sm:w-auto">
+                                <i class="fa-regular fa-comments text-ColorYellow"></i>
+                                <span>Contact Support</span>
+                            </a>
+                        </div>
+
+                        <!-- Quick Assistance Cards -->
+                        <div class="mt-12 pt-8 border-t border-ColorBlack/10">
+                            <p class="mb-5 text-xs sm:text-sm font-bold uppercase tracking-wider text-ColorBlack/60">
+                                Need help finding what you're looking for?
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-left">
+                                <!-- Card 1: Features -->
+                                <a href="index.html#section-features" class="group flex flex-col p-4 rounded-2xl border border-ColorBlack/10 bg-[#FAF9F5] transition-all duration-200 hover:border-ColorYellow hover:bg-white hover:shadow-md">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-ColorYellow/20 text-ColorBlack transition-all group-hover:bg-ColorYellow">
+                                            <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+                                        </div>
+                                        <span class="font-bold text-sm text-ColorBlack">Our Features</span>
+                                    </div>
+                                    <p class="text-xs text-ColorBlack/70 leading-relaxed">
+                                        Explore quick grocery delivery & daily essentials.
+                                    </p>
+                                </a>
+
+                                <!-- Card 2: FAQs -->
+                                <a href="faq.html" class="group flex flex-col p-4 rounded-2xl border border-ColorBlack/10 bg-[#FAF9F5] transition-all duration-200 hover:border-ColorYellow hover:bg-white hover:shadow-md">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-ColorYellow/20 text-ColorBlack transition-all group-hover:bg-ColorYellow">
+                                            <i class="fa-solid fa-circle-question text-sm"></i>
+                                        </div>
+                                        <span class="font-bold text-sm text-ColorBlack">Help & FAQs</span>
+                                    </div>
+                                    <p class="text-xs text-ColorBlack/70 leading-relaxed">
+                                        Answers on order tracking, delivery times, & refunds.
+                                    </p>
+                                </a>
+
+                                <!-- Card 3: Support -->
+                                <a href="contact.html" class="group flex flex-col p-4 rounded-2xl border border-ColorBlack/10 bg-[#FAF9F5] transition-all duration-200 hover:border-ColorYellow hover:bg-white hover:shadow-md">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-ColorYellow/20 text-ColorBlack transition-all group-hover:bg-ColorYellow">
+                                            <i class="fa-solid fa-headset text-sm"></i>
+                                        </div>
+                                        <span class="font-bold text-sm text-ColorBlack">Get Support</span>
+                                    </div>
+                                    <p class="text-xs text-ColorBlack/70 leading-relaxed">
+                                        Reach our friendly customer care team anytime.
+                                    </p>
+                                </a>
+                            </div>
+
+                            <!-- Footer Policy Shortcuts -->
+                            <div class="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs font-semibold text-ColorBlack/60">
+                                <a href="privacy-policy.html" class="hover:text-ColorBlack hover:underline underline-offset-4">Privacy Policy</a>
+                                <span>&bull;</span>
+                                <a href="terms-and-conditions.html" class="hover:text-ColorBlack hover:underline underline-offset-4">Terms & Conditions</a>
+                                <span>&bull;</span>
+                                <a href="shipping-policy.html" class="hover:text-ColorBlack hover:underline underline-offset-4">Shipping Policy</a>
+                                <span>&bull;</span>
+                                <a href="return-refund-policy.html" class="hover:text-ColorBlack hover:underline underline-offset-4">Return & Refund Policy</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </section>
             <!--...::: 404 Section End :::... -->
         </main>
 
-                <!--...::: Footer Section Start :::... -->
+        <!--...::: Footer Section Start :::... -->
         <footer class="section-footer">
-            <div class="bg-ColorBlack">
+            <div class="bg-white">
                 <!-- Footer Area Center -->
-                <div class="text-white">
+                <div class="text-ColorBlack">
                     <!-- Footer Center Spacing -->
                     <div class="py-[60px] lg:py-20 xl:py-[90px]">
                         <!-- Section Container -->
                         <div class="container-default">
                             <!-- Footer Widget List -->
-                            <div class="grid gap-x-12 gap-y-10 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:gap-x-16">
+                            <div class="grid gap-x-8 gap-y-10 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-[1.3fr_0.85fr_1fr_1.25fr] xl:gap-x-12 items-start">
                                 
                                 <!-- Column 1: ZOOOMIT Brand -->
                                 <div class="flex flex-col gap-y-6 sm:col-span-2 md:col-span-2 lg:col-span-1">
                                     <!-- Footer Logo -->
                                     <a href="index.html" class="inline-block" aria-label="ZOOOMIT Home">
-                                        <img src="assets/img/logo-zooomit-light.svg" alt="ZOOOMIT" width="156" height="35" class="h-8 md:h-9 w-auto" />
+                                        <img src="assets/img/logo-zooomit.svg" alt="ZOOOMIT" width="168" height="38" class="h-9 md:h-10 w-auto" />
                                     </a>
                                     <!-- Footer Brand Description -->
-                                    <p class="text-sm leading-relaxed text-white/80 lg:max-w-[320px]">
+                                    <p class="text-base font-medium leading-relaxed text-ColorBlack/80 lg:max-w-[340px]">
                                         Your everyday groceries and daily essentials, delivered with convenience. Shop your favourites and enjoy a simpler way to shop with ZOOOMIT.
                                     </p>
                                     <!-- Footer Contact Email -->
                                     <div>
-                                        <a href="mailto:aetern.india@gmail.com" class="inline-flex items-center gap-2 text-sm font-semibold text-white underline-offset-4 transition-all duration-300 hover:text-ColorYellow hover:underline">
-                                            <i class="fa-regular fa-envelope text-ColorYellow"></i>
+                                        <a href="mailto:aetern.india@gmail.com" class="inline-flex items-center gap-2 text-base font-semibold text-ColorBlack underline-offset-4 transition-all duration-300 hover:text-ColorYellow hover:underline">
+                                            <i class="fa-regular fa-envelope text-ColorYellow text-base"></i>
                                             <span>aetern.india@gmail.com</span>
+                                        </a>
+                                    </div>
+                                    <!-- Social Media Links -->
+                                    <div class="flex items-center gap-3 pt-1">
+                                        <a href="#" aria-label="Facebook" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-facebook-f text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="Instagram" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-instagram text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="Twitter / X" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-x-twitter text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="LinkedIn" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-linkedin-in text-sm"></i>
+                                        </a>
+                                        <a href="#" aria-label="YouTube" class="flex h-10 w-10 items-center justify-center rounded-full border border-ColorBlack/15 text-ColorBlack transition-all duration-300 hover:border-ColorYellow hover:bg-ColorYellow hover:text-ColorBlack hover:shadow-sm">
+                                            <i class="fa-brands fa-youtube text-sm"></i>
                                         </a>
                                     </div>
                                 </div>
                                 <!-- Column 1 End -->
 
                                 <!-- Column 2: Explore -->
-                                <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
+                                <div class="flex flex-col gap-y-5 lg:pl-2">
+                                    <div class="text-xl font-bold text-ColorBlack">
                                         Explore
                                     </div>
-                                    <ul class="flex flex-col gap-y-3 text-sm">
+                                    <ul class="flex flex-col gap-y-3.5 text-base font-medium">
                                         <li>
-                                            <a href="index.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Home</a>
+                                            <a href="index.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Home</a>
                                         </li>
                                         <li>
-                                            <a href="index.html#section-features" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Features</a>
+                                            <a href="index.html#section-features" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Features</a>
                                         </li>
                                         <li>
-                                            <a href="about.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">About Us</a>
+                                            <a href="about.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">About Us</a>
                                         </li>
                                         <li>
-                                            <a href="faq.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">FAQs</a>
+                                            <a href="faq.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">FAQs</a>
                                         </li>
                                         <li>
-                                            <a href="contact.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Contact Us</a>
+                                            <a href="contact.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Contact Us</a>
                                         </li>
                                     </ul>
                                 </div>
                                 <!-- Column 2 End -->
 
-                                <!-- Column 3: Get the App -->
+                                <!-- Column 3: Legal & Policies -->
                                 <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
-                                        Get the App
+                                    <div class="text-xl font-bold text-ColorBlack">
+                                        Legal & Policies
                                     </div>
-                                    <p class="text-sm leading-relaxed text-white/80">
-                                        Shop groceries and daily essentials conveniently from your phone with ZOOOMIT.
-                                    </p>
-                                    <div class="flex flex-col gap-y-3">
-                                        <!-- Clean Coming Soon Pill -->
-                                        <div class="inline-flex items-center gap-2 rounded-full border border-ColorYellow/40 bg-ColorYellow/15 px-3.5 py-1.5 text-xs font-semibold text-white">
-                                            <span class="h-2 w-2 rounded-full bg-ColorYellow"></span>
-                                            <span>Mobile Apps Coming Soon</span>
-                                        </div>
-                                        <!-- Link to app preview section -->
-                                        <a href="index.html#section-newsletter" class="group inline-flex items-center gap-1.5 text-xs font-semibold text-white/70 underline-offset-4 transition-colors duration-300 hover:text-white hover:underline">
-                                            <span>Preview App on iOS & Android</span>
-                                            <i class="fa-solid fa-arrow-right text-[10px] transition-transform duration-300 group-hover:translate-x-1"></i>
-                                        </a>
-                                    </div>
+                                    <ul class="flex flex-col gap-y-3.5 text-base font-medium">
+                                        <li>
+                                            <a href="privacy-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Privacy Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="terms-and-conditions.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Terms & Conditions</a>
+                                        </li>
+                                        <li>
+                                            <a href="shipping-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Shipping Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="return-refund-policy.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Return & Refund Policy</a>
+                                        </li>
+                                        <li>
+                                            <a href="delete-account.html" class="text-ColorBlack/85 underline-offset-4 transition-all duration-200 hover:text-ColorBlack hover:underline">Delete Account</a>
+                                        </li>
+                                    </ul>
                                 </div>
                                 <!-- Column 3 End -->
 
-                                <!-- Column 4: Legal & Policies -->
-                                <div class="flex flex-col gap-y-5">
-                                    <div class="text-lg font-bold text-white">
-                                        Legal & Policies
+                                <!-- Column 4: Get the App -->
+                                <div class="flex flex-col gap-y-5 rounded-3xl bg-ColorYellow/15 p-6 border border-ColorYellow/30">
+                                    <div class="text-xl font-bold text-ColorBlack">
+                                        Get the ZOOOMIT App
                                     </div>
-                                    <ul class="flex flex-col gap-y-3 text-sm">
-                                        <li>
-                                            <a href="privacy-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Privacy Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="terms-and-conditions.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Terms & Conditions</a>
-                                        </li>
-                                        <li>
-                                            <a href="shipping-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Shipping Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="return-refund-policy.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Return & Refund Policy</a>
-                                        </li>
-                                        <li>
-                                            <a href="delete-account.html" class="text-white/80 underline-offset-4 transition-all duration-300 hover:text-white hover:underline">Delete Account</a>
-                                        </li>
-                                    </ul>
+                                    <p class="text-sm font-medium text-ColorBlack/80 leading-relaxed">
+                                        Download our mobile app to order groceries, track live delivery, and unlock daily deals.
+                                    </p>
+                                    <div class="flex flex-col gap-3 pt-1">
+                                        <a href="#" class="inline-block transition-transform duration-200 hover:-translate-y-1">
+                                            <img src="assets/img/icons/icon-apple-app-store.svg" alt="Download on Apple App Store" width="160" height="50" class="h-11 w-auto" />
+                                        </a>
+                                        <a href="#" class="inline-block transition-transform duration-200 hover:-translate-y-1">
+                                            <img src="assets/img/icons/icon-google-play-store.svg" alt="Get it on Google Play" width="160" height="50" class="h-11 w-auto" />
+                                        </a>
+                                    </div>
                                 </div>
                                 <!-- Column 4 End -->
 
@@ -245,17 +360,16 @@
                     <!-- Footer Center Spacing -->
                 </div>
                 <!-- Footer Area Center -->
-                
-                <!-- Subtle Divider -->
-                <div class="horizontal-line bg-white/10"></div>
-                
+
+                <div class="horizontal-line bg-ColorBlack/10"></div>
+
                 <!-- Footer Bottom -->
                 <div>
                     <!-- Footer Bottom Spacing -->
-                    <div class="py-[20px]">
+                    <div class="py-7">
                         <!-- Section Container -->
                         <div class="container-default">
-                            <div class="text-center text-sm text-white/70">
+                            <div class="text-center font-medium text-base text-ColorBlack/80">
                                 &copy; <span id="current-year"></span> ZOOOMIT. All rights reserved.
                             </div>
                         </div>
@@ -270,21 +384,18 @@
     </div>
 
     <!--Vendor js-->
-    <script src="assets/js/vendors/counterup.js" type="module"></script>
-    <script src="assets/js/vendors/swiper-bundle.min.js"></script>
-    <script src="assets/js/vendors/fslightbox.js"></script>
     <script src="assets/js/vendors/jos.min.js"></script>
     <script src="assets/js/vendors/menu.js"></script>
 
     <!-- Main js -->
     <script src="assets/js/main.js"></script>
+
     <script>
         const yearElement = document.getElementById("current-year");
         if (yearElement) {
             yearElement.textContent = new Date().getFullYear();
         }
     </script>
-
 </body>
 
 </html>

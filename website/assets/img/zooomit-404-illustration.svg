@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 380" fill="none" class="w-full h-auto max-w-[440px] mx-auto select-none">
+  <defs>
+    <!-- Ambient Soft Glow -->
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFC947" stop-opacity="0.35"/>
+      <stop offset="70%" stop-color="#FFC947" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FFC947" stop-opacity="0"/>
+    </radialGradient>
+    
+    <!-- Shadow Gradient -->
+    <linearGradient id="groundShadow" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#1B1B1B" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#1B1B1B" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#1B1B1B" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Bag Gradient -->
+    <linearGradient id="bagGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD666"/>
+      <stop offset="100%" stop-color="#FFB81C"/>
+    </linearGradient>
+
+    <!-- Grocery Accent Gradients -->
+    <linearGradient id="appleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF5252"/>
+      <stop offset="100%" stop-color="#D32F2F"/>
+    </linearGradient>
+
+    <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFA726"/>
+      <stop offset="100%" stop-color="#F57C00"/>
+    </linearGradient>
+
+    <linearGradient id="cartMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#374151"/>
+      <stop offset="100%" stop-color="#1F2937"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ambient Glow Background -->
+  <circle cx="260" cy="190" r="170" fill="url(#glow)"/>
+
+  <!-- Floating Sparkles & Confetti Stars -->
+  <g opacity="0.85">
+    <!-- Top-left sparkle -->
+    <path d="M95 110L99 122L111 126L99 130L95 142L91 130L79 126L91 122Z" fill="#FFC947"/>
+    <!-- Top-right sparkle -->
+    <path d="M425 90L428 99L437 102L428 105L425 114L422 105L413 102L422 99Z" fill="#FFC947"/>
+    <!-- Bottom-right small star -->
+    <circle cx="430" cy="220" r="4.5" fill="#FFB81C"/>
+    <!-- Bottom-left small star -->
+    <circle cx="85" cy="240" r="3.5" fill="#FFA726"/>
+    <!-- Floating tiny circles -->
+    <circle cx="140" cy="80" r="5" fill="#22C55E" opacity="0.6"/>
+    <circle cx="380" cy="140" r="6" fill="#3B82F6" opacity="0.5"/>
+  </g>
+
+  <!-- Large Stylized "4" - Left -->
+  <text x="50" y="240" font-family="'Inter', sans-serif" font-size="160" font-weight="900" fill="#1B1B1B" opacity="0.9" letter-spacing="-6">
+    4
+  </text>
+
+  <!-- Large Stylized "4" - Right -->
+  <text x="355" y="240" font-family="'Inter', sans-serif" font-size="160" font-weight="900" fill="#1B1B1B" opacity="0.9" letter-spacing="-6">
+    4
+  </text>
+
+  <!-- Center Floating Platform / Ground Shadow -->
+  <ellipse cx="260" cy="320" rx="140" ry="14" fill="url(#groundShadow)"/>
+
+  <!-- Center Piece: ZOOOMIT Grocery Delivery Cart / Bag (representing the '0') -->
+  <g transform="translate(170, 70)">
+    
+    <!-- Grocery Items Behind Bag Lip -->
+    <!-- Fresh Milk Bottle -->
+    <g transform="translate(48, 42)">
+      <rect x="0" y="24" width="34" height="65" rx="7" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="2"/>
+      <rect x="7" y="10" width="20" height="15" rx="3" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="2"/>
+      <rect x="4" y="4" width="26" height="8" rx="3" fill="#3B82F6"/>
+      <!-- Bottle Label -->
+      <rect x="5" y="45" width="24" height="26" rx="4" fill="#DBEAFE"/>
+      <text x="17" y="62" font-family="'Inter', sans-serif" font-size="9" font-weight="800" fill="#1D4ED8" text-anchor="middle">MILK</text>
+    </g>
+
+    <!-- Crusty Baguette / Bread -->
+    <g transform="translate(100, 20) rotate(18)">
+      <rect x="0" y="0" width="26" height="95" rx="13" fill="#D97706" stroke="#B45309" stroke-width="2"/>
+      <line x1="6" y1="25" x2="20" y2="21" stroke="#FEF3C7" stroke-width="3" stroke-linecap="round"/>
+      <line x1="6" y1="45" x2="20" y2="41" stroke="#FEF3C7" stroke-width="3" stroke-linecap="round"/>
+      <line x1="6" y1="65" x2="20" y2="61" stroke="#FEF3C7" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Fresh Leafy Greens / Celery -->
+    <g transform="translate(18, 50) rotate(-15)">
+      <path d="M12 0C2 15 0 35 6 55C12 35 18 15 12 0Z" fill="#22C55E"/>
+      <path d="M22 10C16 22 16 38 20 55C24 38 28 22 22 10Z" fill="#16A34A"/>
+      <path d="M0 18C0 30 4 44 12 55C6 42 2 30 0 18Z" fill="#4ADE80"/>
+    </g>
+
+    <!-- Fresh Carrot -->
+    <g transform="translate(82, 45) rotate(22)">
+      <!-- Carrot Body -->
+      <path d="M0 20C4 20 18 20 22 20C20 48 14 78 11 90C8 78 2 48 0 20Z" fill="#F97316"/>
+      <line x1="4" y1="35" x2="14" y2="33" stroke="#EA580C" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="7" y1="52" x2="17" y2="50" stroke="#EA580C" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- Carrot Leaves -->
+      <path d="M11 20L6 0M11 20L11 2M11 20L16 2" stroke="#22C55E" stroke-width="3" stroke-linecap="round"/>
+    </g>
+
+    <!-- Glossy Red Apple -->
+    <g transform="translate(30, 95)">
+      <circle cx="20" cy="20" r="20" fill="url(#appleGrad)"/>
+      <!-- Apple Shine -->
+      <ellipse cx="14" cy="14" rx="5" ry="3" fill="#FFFFFF" opacity="0.5" transform="rotate(-30, 14, 14)"/>
+      <!-- Apple Stem & Leaf -->
+      <path d="M20 2C20 -4 23 -8 26 -10" stroke="#78350F" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M21 0C28 -4 32 -1 32 3C28 4 23 2 21 0Z" fill="#22C55E"/>
+    </g>
+
+    <!-- Juicy Orange -->
+    <g transform="translate(115, 102)">
+      <circle cx="18" cy="18" r="18" fill="url(#orangeGrad)"/>
+      <circle cx="18" cy="2" r="2.5" fill="#65A30D"/>
+      <ellipse cx="13" cy="13" rx="4" ry="2.5" fill="#FFFFFF" opacity="0.45" transform="rotate(-30, 13, 13)"/>
+    </g>
+
+    <!-- The ZOOOMIT Shopping Bag / Cart Body -->
+    <g transform="translate(10, 115)">
+      <!-- Bag Body with 3D drop shadow -->
+      <rect x="0" y="0" width="160" height="125" rx="24" fill="url(#bagGrad)" filter="drop-shadow(0px 12px 24px rgba(27, 27, 27, 0.14))"/>
+      
+      <!-- Bag Top Fold / Trim -->
+      <path d="M0 24C0 10.7452 10.7452 0 24 0H136C149.255 0 160 10.7452 160 24V28H0V24Z" fill="#FFE082" opacity="0.6"/>
+
+      <!-- Bag Handles -->
+      <path d="M48 0V-28C48 -40 112 -40 112 -28V0" stroke="#E6A817" stroke-width="7" stroke-linecap="round" fill="none"/>
+      <path d="M48 0V-28C48 -38 112 -38 112 -28V0" stroke="#FFD666" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+      <!-- ZOOOMIT Brand Lightning / Grocery Basket Icon Badge on Bag -->
+      <g transform="translate(52, 38)">
+        <circle cx="28" cy="28" r="28" fill="#1B1B1B"/>
+        <!-- Fast Speed Lightning & Basket -->
+        <path d="M30 14L19 31H28L26 44L37 27H28L30 14Z" fill="#FFC947"/>
+      </g>
+
+      <!-- Front Tag: "ZOOOMIT" -->
+      <rect x="42" y="100" width="76" height="16" rx="8" fill="#1B1B1B" opacity="0.85"/>
+      <text x="80" y="112" font-family="'Inter', sans-serif" font-size="9" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="1.5">
+        ZOOOMIT
+      </text>
+
+      <!-- Cute Shopping Cart Wheels (Attached below bag for dynamic look) -->
+      <g transform="translate(24, 122)">
+        <circle cx="10" cy="10" r="10" fill="#1B1B1B"/>
+        <circle cx="10" cy="10" r="4.5" fill="#FFC947"/>
+      </g>
+      <g transform="translate(116, 122)">
+        <circle cx="10" cy="10" r="10" fill="#1B1B1B"/>
+        <circle cx="10" cy="10" r="4.5" fill="#FFC947"/>
+      </g>
+    </g>
+
+    <!-- Floating Magnifying Glass searching the missing page -->
+    <g transform="translate(138, 70) rotate(-15)">
+      <!-- Handle -->
+      <rect x="22" y="38" width="9" height="30" rx="4.5" fill="#1B1B1B" transform="rotate(45, 22, 38)"/>
+      <!-- Rim -->
+      <circle cx="20" cy="20" r="20" fill="#FFFFFF" stroke="#1B1B1B" stroke-width="6"/>
+      <!-- Glass reflection -->
+      <circle cx="20" cy="20" r="16" fill="#60A5FA" opacity="0.25"/>
+      <!-- Question Mark inside Glass -->
+      <text x="20" y="27" font-family="'Inter', sans-serif" font-size="20" font-weight="900" fill="#1B1B1B" text-anchor="middle">?</text>
+    </g>
+
+  </g>
+</svg>
