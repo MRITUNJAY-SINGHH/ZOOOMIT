@@ -678,16 +678,13 @@
             <!--...::: FAQ Section End :::... -->
         </main>
 
-                                                <!--...::: Footer Section Start :::... -->
+                                                                        <!--...::: Footer Section Start :::... -->
         <footer class="section-footer relative overflow-hidden bg-[#FFFDF7] pt-14 sm:pt-16 lg:pt-20">
-            <!-- Decorative Flowing Golden Yellow Bottom Wave (Spans 100% width) -->
-            <img src="assets/img/elements/footer-wave-shape.svg" alt="" class="pointer-events-none absolute bottom-0 left-0 z-0 w-full h-[200px] sm:h-[250px] lg:h-[300px] object-cover object-bottom opacity-95" />
+            <!-- Decorative Flowing Golden Yellow Bottom Wave (Spans 100% width, stays at bottom) -->
+            <img src="assets/img/elements/footer-wave-shape.svg" alt="" class="pointer-events-none absolute bottom-0 left-0 z-0 w-full h-[120px] sm:h-[150px] lg:h-[180px] object-cover object-bottom opacity-95" />
 
-            <!-- Decorative Bottom-Left Fresh Produce Artwork (Resting on copyright bar) -->
-            <img src="assets/img/zooomit/footer-produce-left.png" alt="Fresh Farm Produce" width="330" height="85" class="pointer-events-none absolute bottom-[56px] sm:bottom-[62px] left-3 sm:left-6 lg:left-[40px] z-10 h-auto max-w-[170px] sm:max-w-[220px] lg:max-w-[280px] object-contain hidden md:block opacity-95 transition-opacity duration-300" />
-
-            <!-- Main Footer Content Area (100% Width with 40px left-right padding) -->
-            <div class="relative z-10 w-full px-5 sm:px-8 lg:px-[40px] pb-12 sm:pb-16 lg:pb-20">
+            <!-- Main Footer Content Area (100% Width with 60px left-right padding, generous space above wave) -->
+            <div class="relative z-10 w-full px-6 sm:px-10 lg:px-[60px] pb-24 sm:pb-28 lg:pb-32">
                 <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 xl:gap-12 items-start">
                     
                     <!-- Column 1: ZOOOMIT Brand -->
@@ -726,7 +723,7 @@
                                 <a href="index.html#section-features" class="transition-all duration-200 hover:text-ColorBlack hover:translate-x-1 inline-block">Features</a>
                             </li>
                             <li>
-                                <a href="about.html" class="transition-all duration-200 hover:text-ColorBlack hover:translate-x-1 inline-block">About Us</a>
+                                <a href="index.html#section-about" class="transition-all duration-200 hover:text-ColorBlack hover:translate-x-1 inline-block">About Us</a>
                             </li>
                             <li>
                                 <a href="faq.html" class="transition-all duration-200 hover:text-ColorBlack hover:translate-x-1 inline-block">FAQs</a>
@@ -767,35 +764,21 @@
                     </div>
                     <!-- Column 3 End -->
 
-                    <!-- Column 4: Get the ZOOOMIT App (With app mockup image & Play Store button) -->
-                    <div class="relative overflow-hidden rounded-[24px] border border-[#F6E8C3] bg-[#FFF9EA] p-5 sm:p-6 shadow-[0_10px_30px_rgba(255,201,0,0.12)] flex flex-col justify-between gap-y-4">
-                        <div class="flex flex-col gap-y-3">
-                            <h4 class="text-xl sm:text-2xl font-extrabold text-ColorBlack tracking-tight">
-                                Get the ZOOOMIT App
-                            </h4>
-                            <p class="text-xs sm:text-sm font-medium leading-relaxed text-[#4A5568]">
-                                Shop groceries and daily essentials anytime, anywhere from your phone.
-                            </p>
-
-                            <!-- Play Store Button with Coming Soon Pill -->
-                            <div class="flex flex-wrap items-center gap-2.5 pt-1">
-                                <div class="inline-flex items-center gap-2.5 rounded-xl bg-ColorBlack px-3.5 py-2 text-white shadow-sm transition-transform duration-200 hover:scale-[1.02]">
-                                    <i class="fa-brands fa-google-play text-xl text-ColorYellow"></i>
-                                    <div class="text-left">
-                                        <div class="text-[9px] uppercase font-bold tracking-wider text-white/70">Get it on</div>
-                                        <div class="text-xs font-bold leading-none text-white">Google Play</div>
-                                    </div>
-                                </div>
-                                <span class="inline-flex items-center gap-1.5 rounded-full border border-ColorYellow/60 bg-ColorYellow/20 px-2.5 py-1 text-[11px] font-bold text-ColorBlack">
-                                    <span class="h-1.5 w-1.5 rounded-full bg-ColorYellow"></span>
-                                    Coming Soon
-                                </span>
-                            </div>
+                    <!-- Column 4: Get the ZOOOMIT App (Clean column with Play Store download link) -->
+                    <div class="flex flex-col gap-y-4">
+                        <div>
+                            <h4 class="text-lg font-bold text-ColorBlack tracking-normal">Get the ZOOOMIT App</h4>
+                            <div class="mt-1.5 h-1 w-7 rounded-full bg-ColorYellow"></div>
                         </div>
+                        <p class="text-sm sm:text-base font-normal leading-relaxed text-[#4A5568]">
+                            Shop groceries and daily essentials anytime, anywhere from your phone.
+                        </p>
 
-                        <!-- App Showcase Mockup Image -->
-                        <div class="flex justify-center items-end pt-2">
-                            <img src="assets/img/zooomit/footer-app-showcase.png" alt="ZOOOMIT Grocery App Mockup" width="360" height="280" class="h-auto max-h-[175px] sm:max-h-[195px] w-auto object-contain drop-shadow-md transition-transform duration-300 hover:scale-[1.03]" />
+                        <!-- Play Store Download Link -->
+                        <div class="pt-1">
+                            <a href="https://play.google.com/store/apps" target="_blank" rel="noopener noreferrer" class="inline-block transition-transform duration-200 hover:scale-105" aria-label="Get it on Google Play">
+                                <img src="assets/img/icons/icon-google-play-store.svg" alt="Get it on Google Play" width="165" height="50" class="h-10 sm:h-11 w-auto" />
+                            </a>
                         </div>
                     </div>
                     <!-- Column 4 End -->
@@ -803,8 +786,8 @@
                 </div>
             </div>
 
-            <!-- Full-Width 100% Simple Clean Copyright Bar (40px Left-Right Padding) -->
-            <div class="relative z-20 w-full bg-[#0A102F] py-4 sm:py-5 px-5 sm:px-8 lg:px-[40px] text-center text-xs sm:text-sm font-medium text-white/80">
+            <!-- Full-Width 100% Simple Clean Copyright Bar (60px Left-Right Padding) -->
+            <div class="relative z-20 w-full bg-[#0A102F] py-4 sm:py-5 px-6 sm:px-10 lg:px-[60px] text-center text-xs sm:text-sm font-medium text-white/80">
                 &copy; <span id="current-year">2026</span> ZOOOMIT. All rights reserved.
             </div>
         </footer>
