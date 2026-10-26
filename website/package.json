@@ -5,7 +5,7 @@
     "main": "tailwind.config.js",
     "scripts": {
         "dev": "npm start",
-        "start:server": "live-server --port=3000 --open=./index-3.html",
+        "start:server": "live-server --port=3000 --open=./index.html",
         "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --watch",
         "start": "concurrently \"npm:start:server\" \"npm run dev:css\"",
         "minify": "tailwindcss -o ./assets/css/style.min.css --minify"
