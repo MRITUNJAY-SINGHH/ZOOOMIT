@@ -1,0 +1,13 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="30" cy="30" r="30" fill="#03CD69"/>
+  <!-- Smartphone Frame -->
+  <rect x="18" y="14" width="24" height="32" rx="4" stroke="white" stroke-width="2"/>
+  <path d="M27 42H33" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Map Grid Lines -->
+  <path d="M22 28H38M30 18V38" stroke="white" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.6"/>
+  <!-- Location Map Pin -->
+  <path d="M30 20C27.2 20 25 22.2 25 25C25 28.5 30 34 30 34C30 34 35 28.5 35 25C35 22.2 32.8 20 30 20Z" fill="white"/>
+  <circle cx="30" cy="25" r="2" fill="#03CD69"/>
+  <!-- Radio Waves -->
+  <path d="M38 18C40.5 20.5 40.5 24.5 38 27" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

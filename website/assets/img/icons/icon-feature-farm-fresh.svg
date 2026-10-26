@@ -1,0 +1,10 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="30" cy="30" r="30" fill="#03CD69"/>
+  <!-- Apple -->
+  <path d="M29 22C27 18.5 24 19 24 19C24 19 24.5 22 27.5 23" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M29 23C27.5 21.5 24 21 21 23.5C18 26 17 31 18.5 35.5C20 40 24 43 28 41C29.5 40.2 30.5 40.2 32 41C36 43 40 40 41.5 35.5C43 31 42 26 39 23.5C36 21 32.5 21.5 31 23C30.3 23.7 29.7 23.7 29 23Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Fresh Leaf highlight -->
+  <path d="M30 22C31.5 17.5 36 17 36 17C36 17 36 21.5 31.5 22.5" fill="white"/>
+  <!-- Star freshness sparkle -->
+  <path d="M39 16L40 18.5L42.5 19.5L40 20.5L39 23L38 20.5L35.5 19.5L38 18.5L39 16Z" fill="white"/>
+</svg>

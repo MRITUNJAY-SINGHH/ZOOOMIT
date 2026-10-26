@@ -1,0 +1,13 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="30" cy="30" r="30" fill="#03CD69"/>
+  <!-- Store Awning Canopy -->
+  <path d="M17 22L19 16H41L43 22" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M17 22C17 24 19 25 21.2 25C23.4 25 25.2 24 25.6 22C26 24 27.8 25 30 25C32.2 25 34 24 34.4 22C34.8 24 36.6 25 38.8 25C41 25 43 24 43 22" stroke="white" stroke-width="1.8"/>
+  <!-- Store Front & Door -->
+  <rect x="19" y="25" width="22" height="17" stroke="white" stroke-width="2" rx="1"/>
+  <rect x="26" y="31" width="8" height="11" stroke="white" stroke-width="1.8"/>
+  <path d="M32 37H33" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <!-- Shopping Items in Window -->
+  <rect x="21" y="28" width="3" height="4" fill="white"/>
+  <rect x="36" y="28" width="3" height="4" fill="white"/>
+</svg>
