@@ -1,3 +1,4 @@
+
 {
   "name": "zooomit",
   "version": "1.0.0",
@@ -7,9 +8,7 @@
     "start": "concurrently \"npm run start:server\" \"npm run dev:css\"",
     "start:server": "live-server --port=3000 --open=./index.html",
     "dev:css": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --watch",
-    "build:header": "node build-header.js",
-    "watch:header": "node build-header.js --watch",
-    "build": "node build-header.js && tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --minify",
+    "build": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.css --minify",
     "minify": "tailwindcss -i ./src/tailwind.css -o ./assets/css/style.min.css --minify"
   },
   "keywords": [
