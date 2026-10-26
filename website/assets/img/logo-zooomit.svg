@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 28" width="130" height="28" fill="none">
+    <!-- Brand Icon: Yellow rounded badge with lightning bolt -->
+    <rect width="28" height="28" rx="7" fill="#FFC900"/>
+    <path d="M16 4.5L9 15.5H14.5L12.5 23.5L20 12.5H14.5L16 4.5Z" fill="#FFFFFF"/>
+    <!-- Wordmark -->
+    <text x="36" y="20.5" font-family="'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif" font-size="18" font-weight="800" fill="#0A102F" letter-spacing="-0.5px">ZOOOMIT</text>
+</svg>
