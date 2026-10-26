@@ -1,0 +1,6 @@
+<svg width="50" height="20" viewBox="0 0 50 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <text x="0" y="15" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="900" font-size="14" fill="#0A2F72" letter-spacing="-0.5">RuPay</text>
+  <!-- RuPay Angle Arrows -->
+  <path d="M42 4L45 10L42 16H45L48 10L45 4H42Z" fill="#F47920"/>
+  <path d="M45.5 4L48.5 10L45.5 16H47.5L50.5 10L47.5 4H45.5Z" fill="#00A551"/>
+</svg>

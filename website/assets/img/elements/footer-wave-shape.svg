@@ -1,0 +1,33 @@
+<svg width="1920" height="320" viewBox="0 0 1920 320" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+  <defs>
+    <!-- Soft Cream / Golden Ambient Layer Gradient -->
+    <linearGradient id="glowLayer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFF2B8" stop-opacity="0.85"/>
+      <stop offset="45%" stop-color="#FFE68A" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#FFF5C4" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Warm Amber Middle Wave Gradient -->
+    <linearGradient id="midLayer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFE373" stop-opacity="0.95"/>
+      <stop offset="50%" stop-color="#FFD447" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#FFE57E" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <!-- Rich Primary ZOOOMIT Golden Wave Gradient -->
+    <linearGradient id="mainGoldWave" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD333"/>
+      <stop offset="30%" stop-color="#FFC900"/>
+      <stop offset="100%" stop-color="#F5B200"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Layer 1: Ambient upper cream glow wave -->
+  <path d="M0 110C260 170 540 70 920 120C1320 175 1620 60 1920 110V320H0V110Z" fill="url(#glowLayer)"/>
+
+  <!-- Layer 2: Warm amber middle wave -->
+  <path d="M0 145C280 205 560 100 940 150C1350 200 1650 90 1920 140V320H0V145Z" fill="url(#midLayer)"/>
+
+  <!-- Layer 3: Main flowing golden yellow wave matching reference -->
+  <path d="M0 175C300 230 580 135 960 180C1380 225 1680 120 1920 170V320H0V175Z" fill="url(#mainGoldWave)"/>
+</svg>
