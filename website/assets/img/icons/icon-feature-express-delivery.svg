@@ -1,18 +1,18 @@
 <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="30" cy="30" r="30" fill="#03CD69"/>
+  <circle cx="30" cy="30" r="30" fill="#FFC900"/>
   <!-- Speed motion lines -->
-  <path d="M12 25H18M10 30H16M13 35H19" stroke="white" stroke-width="2" stroke-linecap="round"/>
+  <path d="M12 25H18M10 30H16M13 35H19" stroke="#0A102F" stroke-width="2" stroke-linecap="round"/>
   <!-- Delivery Scooter -->
-  <path d="M21 34H26L31 23H39L41 28M39 28H46" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M21 34H26L31 23H39L41 28M39 28H46" stroke="#0A102F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Front Wheel -->
-  <circle cx="41" cy="38" r="4" stroke="white" stroke-width="2"/>
-  <circle cx="41" cy="38" r="1.5" fill="white"/>
+  <circle cx="41" cy="38" r="4" stroke="#0A102F" stroke-width="2"/>
+  <circle cx="41" cy="38" r="1.5" fill="#0A102F"/>
   <!-- Back Wheel -->
-  <circle cx="24" cy="38" r="4" stroke="white" stroke-width="2"/>
-  <circle cx="24" cy="38" r="1.5" fill="white"/>
+  <circle cx="24" cy="38" r="4" stroke="#0A102F" stroke-width="2"/>
+  <circle cx="24" cy="38" r="1.5" fill="#0A102F"/>
   <!-- Scooter Deck & Handle -->
-  <path d="M28 38H37M41 28L43 23M40 23H46" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M28 38H37M41 28L43 23M40 23H46" stroke="#0A102F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   <!-- Grocery Box on Back -->
-  <rect x="21" y="24" width="8" height="7" rx="1.5" stroke="white" stroke-width="1.8" fill="none"/>
-  <path d="M25 24V26.5" stroke="white" stroke-width="1.5"/>
+  <rect x="21" y="24" width="8" height="7" rx="1.5" stroke="#0A102F" stroke-width="1.8" fill="none"/>
+  <path d="M25 24V26.5" stroke="#0A102F" stroke-width="1.5"/>
 </svg>

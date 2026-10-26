@@ -51,7 +51,8 @@
 }
 
 .site-header {
-  background-color: transparent;
+  background-color: #FAF9F5;
+  padding-top:20px !important
 }
 
 .site-header--absolute {
