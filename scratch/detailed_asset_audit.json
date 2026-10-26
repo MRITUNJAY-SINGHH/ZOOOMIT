@@ -1,0 +1,4082 @@
+{
+  "usedAssets": [
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\custom.css",
+      "relPath": "assets/css/custom.css",
+      "filename": "custom.css",
+      "sizeBytes": 1014,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\style.css",
+      "relPath": "assets/css/style.css",
+      "filename": "style.css",
+      "sizeBytes": 42771,
+      "sizeKB": "41.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\style.min.css",
+      "relPath": "assets/css/style.min.css",
+      "filename": "style.min.css",
+      "sizeBytes": 42771,
+      "sizeKB": "41.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\vendors\\jos.css",
+      "relPath": "assets/css/vendors/jos.css",
+      "filename": "jos.css",
+      "sizeBytes": 7903,
+      "sizeKB": "7.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\vendors\\menu.css",
+      "relPath": "assets/css/vendors/menu.css",
+      "filename": "menu.css",
+      "sizeBytes": 19653,
+      "sizeKB": "19.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\css\\vendors\\swiper-bundle.min.css",
+      "relPath": "assets/css/vendors/swiper-bundle.min.css",
+      "filename": "swiper-bundle.min.css",
+      "sizeBytes": 18448,
+      "sizeKB": "18.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-brands-400.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-brands-400.ttf",
+      "filename": "fa-brands-400.ttf",
+      "sizeBytes": 192100,
+      "sizeKB": "187.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-brands-400.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-brands-400.woff2",
+      "filename": "fa-brands-400.woff2",
+      "sizeBytes": 110932,
+      "sizeKB": "108.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-duotone-900.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-duotone-900.ttf",
+      "filename": "fa-duotone-900.ttf",
+      "sizeBytes": 1267308,
+      "sizeKB": "1237.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-duotone-900.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-duotone-900.woff2",
+      "filename": "fa-duotone-900.woff2",
+      "sizeBytes": 418168,
+      "sizeKB": "408.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-light-300.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-light-300.ttf",
+      "filename": "fa-light-300.ttf",
+      "sizeBytes": 1158388,
+      "sizeKB": "1131.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-light-300.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-light-300.woff2",
+      "filename": "fa-light-300.woff2",
+      "sizeBytes": 429424,
+      "sizeKB": "419.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-regular-400.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-regular-400.ttf",
+      "filename": "fa-regular-400.ttf",
+      "sizeBytes": 1038004,
+      "sizeKB": "1013.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-regular-400.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-regular-400.woff2",
+      "filename": "fa-regular-400.woff2",
+      "sizeBytes": 395444,
+      "sizeKB": "386.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-light-300.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-light-300.ttf",
+      "filename": "fa-sharp-light-300.ttf",
+      "sizeBytes": 896932,
+      "sizeKB": "875.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-light-300.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-light-300.woff2",
+      "filename": "fa-sharp-light-300.woff2",
+      "sizeBytes": 362836,
+      "sizeKB": "354.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-regular-400.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-regular-400.ttf",
+      "filename": "fa-sharp-regular-400.ttf",
+      "sizeBytes": 795080,
+      "sizeKB": "776.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-regular-400.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-regular-400.woff2",
+      "filename": "fa-sharp-regular-400.woff2",
+      "sizeBytes": 327912,
+      "sizeKB": "320.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-solid-900.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-solid-900.ttf",
+      "filename": "fa-sharp-solid-900.ttf",
+      "sizeBytes": 639276,
+      "sizeKB": "624.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-sharp-solid-900.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-sharp-solid-900.woff2",
+      "filename": "fa-sharp-solid-900.woff2",
+      "sizeBytes": 257496,
+      "sizeKB": "251.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-solid-900.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-solid-900.ttf",
+      "filename": "fa-solid-900.ttf",
+      "sizeBytes": 907696,
+      "sizeKB": "886.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-solid-900.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-solid-900.woff2",
+      "filename": "fa-solid-900.woff2",
+      "sizeBytes": 327824,
+      "sizeKB": "320.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-thin-100.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-thin-100.ttf",
+      "filename": "fa-thin-100.ttf",
+      "sizeBytes": 1269336,
+      "sizeKB": "1239.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-thin-100.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-thin-100.woff2",
+      "filename": "fa-thin-100.woff2",
+      "sizeBytes": 465964,
+      "sizeKB": "455.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-v4compatibility.ttf",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-v4compatibility.ttf",
+      "filename": "fa-v4compatibility.ttf",
+      "sizeBytes": 10172,
+      "sizeKB": "9.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\fa-v4compatibility.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/fa-v4compatibility.woff2",
+      "filename": "fa-v4compatibility.woff2",
+      "sizeBytes": 4568,
+      "sizeKB": "4.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\stylesheet.css",
+      "relPath": "assets/fonts/iconfonts/font-awesome/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 512515,
+      "sizeKB": "500.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Bold.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Bold.woff",
+      "filename": "Cabin-Bold.woff",
+      "sizeBytes": 42272,
+      "sizeKB": "41.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Bold.woff2",
+      "filename": "Cabin-Bold.woff2",
+      "sizeBytes": 28728,
+      "sizeKB": "28.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-BoldItalic.woff",
+      "filename": "Cabin-BoldItalic.woff",
+      "sizeBytes": 37972,
+      "sizeKB": "37.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-BoldItalic.woff2",
+      "filename": "Cabin-BoldItalic.woff2",
+      "sizeBytes": 27408,
+      "sizeKB": "26.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Italic.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Italic.woff",
+      "filename": "Cabin-Italic.woff",
+      "sizeBytes": 38020,
+      "sizeKB": "37.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Italic.woff2",
+      "filename": "Cabin-Italic.woff2",
+      "sizeBytes": 27568,
+      "sizeKB": "26.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Medium.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Medium.woff",
+      "filename": "Cabin-Medium.woff",
+      "sizeBytes": 44604,
+      "sizeKB": "43.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Medium.woff2",
+      "filename": "Cabin-Medium.woff2",
+      "sizeBytes": 30640,
+      "sizeKB": "29.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-MediumItalic.woff",
+      "filename": "Cabin-MediumItalic.woff",
+      "sizeBytes": 39736,
+      "sizeKB": "38.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-MediumItalic.woff2",
+      "filename": "Cabin-MediumItalic.woff2",
+      "sizeBytes": 28824,
+      "sizeKB": "28.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Regular.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Regular.woff",
+      "filename": "Cabin-Regular.woff",
+      "sizeBytes": 42816,
+      "sizeKB": "41.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-Regular.woff2",
+      "filename": "Cabin-Regular.woff2",
+      "sizeBytes": 29440,
+      "sizeKB": "28.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-SemiBold.woff",
+      "filename": "Cabin-SemiBold.woff",
+      "sizeBytes": 44720,
+      "sizeKB": "43.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-SemiBold.woff2",
+      "filename": "Cabin-SemiBold.woff2",
+      "sizeBytes": 30436,
+      "sizeKB": "29.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-SemiBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-SemiBoldItalic.woff",
+      "filename": "Cabin-SemiBoldItalic.woff",
+      "sizeBytes": 39580,
+      "sizeKB": "38.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\Cabin-SemiBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/cabin/Cabin-SemiBoldItalic.woff2",
+      "filename": "Cabin-SemiBoldItalic.woff2",
+      "sizeBytes": 28652,
+      "sizeKB": "28.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\cabin\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/cabin/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1669,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Bold.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Bold.woff",
+      "filename": "ClashDisplay-Bold.woff",
+      "sizeBytes": 23480,
+      "sizeKB": "22.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Bold.woff2",
+      "filename": "ClashDisplay-Bold.woff2",
+      "sizeBytes": 16728,
+      "sizeKB": "16.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Extralight.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Extralight.woff",
+      "filename": "ClashDisplay-Extralight.woff",
+      "sizeBytes": 23340,
+      "sizeKB": "22.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Extralight.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Extralight.woff2",
+      "filename": "ClashDisplay-Extralight.woff2",
+      "sizeBytes": 16644,
+      "sizeKB": "16.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Light.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Light.woff",
+      "filename": "ClashDisplay-Light.woff",
+      "sizeBytes": 24300,
+      "sizeKB": "23.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Light.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Light.woff2",
+      "filename": "ClashDisplay-Light.woff2",
+      "sizeBytes": 17508,
+      "sizeKB": "17.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Medium.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Medium.woff",
+      "filename": "ClashDisplay-Medium.woff",
+      "sizeBytes": 23808,
+      "sizeKB": "23.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Medium.woff2",
+      "filename": "ClashDisplay-Medium.woff2",
+      "sizeBytes": 17316,
+      "sizeKB": "16.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Regular.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Regular.woff",
+      "filename": "ClashDisplay-Regular.woff",
+      "sizeBytes": 23868,
+      "sizeKB": "23.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Regular.woff2",
+      "filename": "ClashDisplay-Regular.woff2",
+      "sizeBytes": 17272,
+      "sizeKB": "16.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Semibold.woff",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Semibold.woff",
+      "filename": "ClashDisplay-Semibold.woff",
+      "sizeBytes": 24048,
+      "sizeKB": "23.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\ClashDisplay-Semibold.woff2",
+      "relPath": "assets/fonts/webfonts/clash-display/ClashDisplay-Semibold.woff2",
+      "filename": "ClashDisplay-Semibold.woff2",
+      "sizeBytes": 17208,
+      "sizeKB": "16.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\clash-display\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/clash-display/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1422,
+      "sizeKB": "1.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Black.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Black.woff",
+      "filename": "DMSans-Black.woff",
+      "sizeBytes": 32480,
+      "sizeKB": "31.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Black.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Black.woff2",
+      "filename": "DMSans-Black.woff2",
+      "sizeBytes": 24052,
+      "sizeKB": "23.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-BlackItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-BlackItalic.woff",
+      "filename": "DMSans-BlackItalic.woff",
+      "sizeBytes": 36408,
+      "sizeKB": "35.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-BlackItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-BlackItalic.woff2",
+      "filename": "DMSans-BlackItalic.woff2",
+      "sizeBytes": 26860,
+      "sizeKB": "26.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Bold.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Bold.woff",
+      "filename": "DMSans-Bold.woff",
+      "sizeBytes": 32472,
+      "sizeKB": "31.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Bold.woff2",
+      "filename": "DMSans-Bold.woff2",
+      "sizeBytes": 24216,
+      "sizeKB": "23.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-BoldItalic.woff",
+      "filename": "DMSans-BoldItalic.woff",
+      "sizeBytes": 36408,
+      "sizeKB": "35.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-BoldItalic.woff2",
+      "filename": "DMSans-BoldItalic.woff2",
+      "sizeBytes": 26868,
+      "sizeKB": "26.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBold.woff",
+      "filename": "DMSans-ExtraBold.woff",
+      "sizeBytes": 32432,
+      "sizeKB": "31.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBold.woff2",
+      "filename": "DMSans-ExtraBold.woff2",
+      "sizeBytes": 24164,
+      "sizeKB": "23.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBoldItalic.woff",
+      "filename": "DMSans-ExtraBoldItalic.woff",
+      "sizeBytes": 36596,
+      "sizeKB": "35.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBoldItalic.woff2",
+      "filename": "DMSans-ExtraBoldItalic.woff2",
+      "sizeBytes": 26908,
+      "sizeKB": "26.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLight.woff",
+      "filename": "DMSans-ExtraLight.woff",
+      "sizeBytes": 32852,
+      "sizeKB": "32.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLight.woff2",
+      "filename": "DMSans-ExtraLight.woff2",
+      "sizeBytes": 24432,
+      "sizeKB": "23.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraLightItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLightItalic.woff",
+      "filename": "DMSans-ExtraLightItalic.woff",
+      "sizeBytes": 35288,
+      "sizeKB": "34.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ExtraLightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLightItalic.woff2",
+      "filename": "DMSans-ExtraLightItalic.woff2",
+      "sizeBytes": 26284,
+      "sizeKB": "25.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Italic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Italic.woff",
+      "filename": "DMSans-Italic.woff",
+      "sizeBytes": 35988,
+      "sizeKB": "35.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Italic.woff2",
+      "filename": "DMSans-Italic.woff2",
+      "sizeBytes": 26548,
+      "sizeKB": "25.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Light.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Light.woff",
+      "filename": "DMSans-Light.woff",
+      "sizeBytes": 31072,
+      "sizeKB": "30.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Light.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Light.woff2",
+      "filename": "DMSans-Light.woff2",
+      "sizeBytes": 23240,
+      "sizeKB": "22.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-LightItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-LightItalic.woff",
+      "filename": "DMSans-LightItalic.woff",
+      "sizeBytes": 35168,
+      "sizeKB": "34.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-LightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-LightItalic.woff2",
+      "filename": "DMSans-LightItalic.woff2",
+      "sizeBytes": 26096,
+      "sizeKB": "25.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Medium.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Medium.woff",
+      "filename": "DMSans-Medium.woff",
+      "sizeBytes": 32548,
+      "sizeKB": "31.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Medium.woff2",
+      "filename": "DMSans-Medium.woff2",
+      "sizeBytes": 24068,
+      "sizeKB": "23.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-MediumItalic.woff",
+      "filename": "DMSans-MediumItalic.woff",
+      "sizeBytes": 36420,
+      "sizeKB": "35.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-MediumItalic.woff2",
+      "filename": "DMSans-MediumItalic.woff2",
+      "sizeBytes": 26820,
+      "sizeKB": "26.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Regular.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Regular.woff",
+      "filename": "DMSans-Regular.woff",
+      "sizeBytes": 32344,
+      "sizeKB": "31.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Regular.woff2",
+      "filename": "DMSans-Regular.woff2",
+      "sizeBytes": 23860,
+      "sizeKB": "23.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-SemiBold.woff",
+      "filename": "DMSans-SemiBold.woff",
+      "sizeBytes": 32156,
+      "sizeKB": "31.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-SemiBold.woff2",
+      "filename": "DMSans-SemiBold.woff2",
+      "sizeBytes": 23980,
+      "sizeKB": "23.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-SemiBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-SemiBoldItalic.woff",
+      "filename": "DMSans-SemiBoldItalic.woff",
+      "sizeBytes": 36140,
+      "sizeKB": "35.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-SemiBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-SemiBoldItalic.woff2",
+      "filename": "DMSans-SemiBoldItalic.woff2",
+      "sizeBytes": 26692,
+      "sizeKB": "26.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Thin.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Thin.woff",
+      "filename": "DMSans-Thin.woff",
+      "sizeBytes": 32468,
+      "sizeKB": "31.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-Thin.woff2",
+      "filename": "DMSans-Thin.woff2",
+      "sizeBytes": 24184,
+      "sizeKB": "23.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ThinItalic.woff",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ThinItalic.woff",
+      "filename": "DMSans-ThinItalic.woff",
+      "sizeBytes": 34984,
+      "sizeKB": "34.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\DMSans-ThinItalic.woff2",
+      "relPath": "assets/fonts/webfonts/dm-sans/DMSans-ThinItalic.woff2",
+      "filename": "DMSans-ThinItalic.woff2",
+      "sizeBytes": 25996,
+      "sizeKB": "25.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\dm-sans\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/dm-sans/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 4026,
+      "sizeKB": "3.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Bold.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Bold.woff",
+      "filename": "GeneralSans-Bold.woff",
+      "sizeBytes": 32400,
+      "sizeKB": "31.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Bold.woff2",
+      "filename": "GeneralSans-Bold.woff2",
+      "sizeBytes": 23428,
+      "sizeKB": "22.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-BoldItalic.woff",
+      "filename": "GeneralSans-BoldItalic.woff",
+      "sizeBytes": 33904,
+      "sizeKB": "33.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-BoldItalic.woff2",
+      "filename": "GeneralSans-BoldItalic.woff2",
+      "sizeBytes": 24272,
+      "sizeKB": "23.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Extralight.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Extralight.woff",
+      "filename": "GeneralSans-Extralight.woff",
+      "sizeBytes": 31612,
+      "sizeKB": "30.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Extralight.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Extralight.woff2",
+      "filename": "GeneralSans-Extralight.woff2",
+      "sizeBytes": 22980,
+      "sizeKB": "22.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-ExtralightItalic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-ExtralightItalic.woff",
+      "filename": "GeneralSans-ExtralightItalic.woff",
+      "sizeBytes": 32668,
+      "sizeKB": "31.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-ExtralightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-ExtralightItalic.woff2",
+      "filename": "GeneralSans-ExtralightItalic.woff2",
+      "sizeBytes": 23400,
+      "sizeKB": "22.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Italic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Italic.woff",
+      "filename": "GeneralSans-Italic.woff",
+      "sizeBytes": 36012,
+      "sizeKB": "35.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Italic.woff2",
+      "filename": "GeneralSans-Italic.woff2",
+      "sizeBytes": 26268,
+      "sizeKB": "25.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Light.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Light.woff",
+      "filename": "GeneralSans-Light.woff",
+      "sizeBytes": 34620,
+      "sizeKB": "33.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Light.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Light.woff2",
+      "filename": "GeneralSans-Light.woff2",
+      "sizeBytes": 25368,
+      "sizeKB": "24.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-LightItalic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-LightItalic.woff",
+      "filename": "GeneralSans-LightItalic.woff",
+      "sizeBytes": 36180,
+      "sizeKB": "35.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-LightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-LightItalic.woff2",
+      "filename": "GeneralSans-LightItalic.woff2",
+      "sizeBytes": 26528,
+      "sizeKB": "25.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Medium.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Medium.woff",
+      "filename": "GeneralSans-Medium.woff",
+      "sizeBytes": 34436,
+      "sizeKB": "33.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Medium.woff2",
+      "filename": "GeneralSans-Medium.woff2",
+      "sizeBytes": 25132,
+      "sizeKB": "24.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-MediumItalic.woff",
+      "filename": "GeneralSans-MediumItalic.woff",
+      "sizeBytes": 35776,
+      "sizeKB": "34.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-MediumItalic.woff2",
+      "filename": "GeneralSans-MediumItalic.woff2",
+      "sizeBytes": 26156,
+      "sizeKB": "25.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Regular.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Regular.woff",
+      "filename": "GeneralSans-Regular.woff",
+      "sizeBytes": 34508,
+      "sizeKB": "33.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Regular.woff2",
+      "filename": "GeneralSans-Regular.woff2",
+      "sizeBytes": 25324,
+      "sizeKB": "24.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Semibold.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Semibold.woff",
+      "filename": "GeneralSans-Semibold.woff",
+      "sizeBytes": 34832,
+      "sizeKB": "34.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-Semibold.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-Semibold.woff2",
+      "filename": "GeneralSans-Semibold.woff2",
+      "sizeBytes": 25412,
+      "sizeKB": "24.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-SemiboldItalic.woff",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-SemiboldItalic.woff",
+      "filename": "GeneralSans-SemiboldItalic.woff",
+      "sizeBytes": 36356,
+      "sizeKB": "35.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\GeneralSans-SemiboldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/general-sans/GeneralSans-SemiboldItalic.woff2",
+      "filename": "GeneralSans-SemiboldItalic.woff2",
+      "sizeBytes": 26532,
+      "sizeKB": "25.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\general-sans\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/general-sans/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 2860,
+      "sizeKB": "2.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Black.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Black.woff",
+      "filename": "Inter-Black.woff",
+      "sizeBytes": 154992,
+      "sizeKB": "151.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Black.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Black.woff2",
+      "filename": "Inter-Black.woff2",
+      "sizeBytes": 103444,
+      "sizeKB": "101.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Bold.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Bold.woff",
+      "filename": "Inter-Bold.woff",
+      "sizeBytes": 159360,
+      "sizeKB": "155.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Bold.woff2",
+      "filename": "Inter-Bold.woff2",
+      "sizeBytes": 107068,
+      "sizeKB": "104.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-ExtraBold.woff",
+      "filename": "Inter-ExtraBold.woff",
+      "sizeBytes": 158940,
+      "sizeKB": "155.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-ExtraBold.woff2",
+      "filename": "Inter-ExtraBold.woff2",
+      "sizeBytes": 106780,
+      "sizeKB": "104.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-ExtraLight.woff",
+      "filename": "Inter-ExtraLight.woff",
+      "sizeBytes": 156320,
+      "sizeKB": "152.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-ExtraLight.woff2",
+      "filename": "Inter-ExtraLight.woff2",
+      "sizeBytes": 104932,
+      "sizeKB": "102.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Light.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Light.woff",
+      "filename": "Inter-Light.woff",
+      "sizeBytes": 156060,
+      "sizeKB": "152.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Light.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Light.woff2",
+      "filename": "Inter-Light.woff2",
+      "sizeBytes": 104980,
+      "sizeKB": "102.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Medium.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Medium.woff",
+      "filename": "Inter-Medium.woff",
+      "sizeBytes": 157868,
+      "sizeKB": "154.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Medium.woff2",
+      "filename": "Inter-Medium.woff2",
+      "sizeBytes": 106324,
+      "sizeKB": "103.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Regular.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Regular.woff",
+      "filename": "Inter-Regular.woff",
+      "sizeBytes": 149320,
+      "sizeKB": "145.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Regular.woff2",
+      "filename": "Inter-Regular.woff2",
+      "sizeBytes": 98628,
+      "sizeKB": "96.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-SemiBold.woff",
+      "filename": "Inter-SemiBold.woff",
+      "sizeBytes": 159080,
+      "sizeKB": "155.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-SemiBold.woff2",
+      "filename": "Inter-SemiBold.woff2",
+      "sizeBytes": 107104,
+      "sizeKB": "104.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Thin.woff",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Thin.woff",
+      "filename": "Inter-Thin.woff",
+      "sizeBytes": 150880,
+      "sizeKB": "147.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\Inter-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/inter/Inter-Thin.woff2",
+      "filename": "Inter-Thin.woff2",
+      "sizeBytes": 99128,
+      "sizeKB": "96.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\inter\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/inter/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1930,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Black.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Black.woff",
+      "filename": "Kanit-Black.woff",
+      "sizeBytes": 73808,
+      "sizeKB": "72.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Black.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Black.woff2",
+      "filename": "Kanit-Black.woff2",
+      "sizeBytes": 50652,
+      "sizeKB": "49.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-BlackItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-BlackItalic.woff",
+      "filename": "Kanit-BlackItalic.woff",
+      "sizeBytes": 79676,
+      "sizeKB": "77.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-BlackItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-BlackItalic.woff2",
+      "filename": "Kanit-BlackItalic.woff2",
+      "sizeBytes": 54328,
+      "sizeKB": "53.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Bold.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Bold.woff",
+      "filename": "Kanit-Bold.woff",
+      "sizeBytes": 73508,
+      "sizeKB": "71.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Bold.woff2",
+      "filename": "Kanit-Bold.woff2",
+      "sizeBytes": 50480,
+      "sizeKB": "49.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-BoldItalic.woff",
+      "filename": "Kanit-BoldItalic.woff",
+      "sizeBytes": 79120,
+      "sizeKB": "77.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-BoldItalic.woff2",
+      "filename": "Kanit-BoldItalic.woff2",
+      "sizeBytes": 53888,
+      "sizeKB": "52.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraBold.woff",
+      "filename": "Kanit-ExtraBold.woff",
+      "sizeBytes": 74392,
+      "sizeKB": "72.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraBold.woff2",
+      "filename": "Kanit-ExtraBold.woff2",
+      "sizeBytes": 51500,
+      "sizeKB": "50.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraBoldItalic.woff",
+      "filename": "Kanit-ExtraBoldItalic.woff",
+      "sizeBytes": 80908,
+      "sizeKB": "79.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraBoldItalic.woff2",
+      "filename": "Kanit-ExtraBoldItalic.woff2",
+      "sizeBytes": 55260,
+      "sizeKB": "54.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraLight.woff",
+      "filename": "Kanit-ExtraLight.woff",
+      "sizeBytes": 70076,
+      "sizeKB": "68.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraLight.woff2",
+      "filename": "Kanit-ExtraLight.woff2",
+      "sizeBytes": 48592,
+      "sizeKB": "47.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraLightItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraLightItalic.woff",
+      "filename": "Kanit-ExtraLightItalic.woff",
+      "sizeBytes": 73600,
+      "sizeKB": "71.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ExtraLightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ExtraLightItalic.woff2",
+      "filename": "Kanit-ExtraLightItalic.woff2",
+      "sizeBytes": 50444,
+      "sizeKB": "49.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Italic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Italic.woff",
+      "filename": "Kanit-Italic.woff",
+      "sizeBytes": 76092,
+      "sizeKB": "74.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Italic.woff2",
+      "filename": "Kanit-Italic.woff2",
+      "sizeBytes": 51768,
+      "sizeKB": "50.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Light.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Light.woff",
+      "filename": "Kanit-Light.woff",
+      "sizeBytes": 71864,
+      "sizeKB": "70.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Light.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Light.woff2",
+      "filename": "Kanit-Light.woff2",
+      "sizeBytes": 49256,
+      "sizeKB": "48.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-LightItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-LightItalic.woff",
+      "filename": "Kanit-LightItalic.woff",
+      "sizeBytes": 75752,
+      "sizeKB": "74.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-LightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-LightItalic.woff2",
+      "filename": "Kanit-LightItalic.woff2",
+      "sizeBytes": 51788,
+      "sizeKB": "50.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Medium.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Medium.woff",
+      "filename": "Kanit-Medium.woff",
+      "sizeBytes": 73260,
+      "sizeKB": "71.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Medium.woff2",
+      "filename": "Kanit-Medium.woff2",
+      "sizeBytes": 50200,
+      "sizeKB": "49.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-MediumItalic.woff",
+      "filename": "Kanit-MediumItalic.woff",
+      "sizeBytes": 75980,
+      "sizeKB": "74.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-MediumItalic.woff2",
+      "filename": "Kanit-MediumItalic.woff2",
+      "sizeBytes": 51752,
+      "sizeKB": "50.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Regular.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Regular.woff",
+      "filename": "Kanit-Regular.woff",
+      "sizeBytes": 72792,
+      "sizeKB": "71.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Regular.woff2",
+      "filename": "Kanit-Regular.woff2",
+      "sizeBytes": 49980,
+      "sizeKB": "48.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-SemiBold.woff",
+      "filename": "Kanit-SemiBold.woff",
+      "sizeBytes": 73472,
+      "sizeKB": "71.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-SemiBold.woff2",
+      "filename": "Kanit-SemiBold.woff2",
+      "sizeBytes": 50748,
+      "sizeKB": "49.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-SemiBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-SemiBoldItalic.woff",
+      "filename": "Kanit-SemiBoldItalic.woff",
+      "sizeBytes": 76072,
+      "sizeKB": "74.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-SemiBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-SemiBoldItalic.woff2",
+      "filename": "Kanit-SemiBoldItalic.woff2",
+      "sizeBytes": 51896,
+      "sizeKB": "50.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Thin.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Thin.woff",
+      "filename": "Kanit-Thin.woff",
+      "sizeBytes": 68068,
+      "sizeKB": "66.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-Thin.woff2",
+      "filename": "Kanit-Thin.woff2",
+      "sizeBytes": 47356,
+      "sizeKB": "46.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ThinItalic.woff",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ThinItalic.woff",
+      "filename": "Kanit-ThinItalic.woff",
+      "sizeBytes": 72480,
+      "sizeKB": "70.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\Kanit-ThinItalic.woff2",
+      "relPath": "assets/fonts/webfonts/kanit/Kanit-ThinItalic.woff2",
+      "filename": "Kanit-ThinItalic.woff2",
+      "sizeBytes": 49360,
+      "sizeKB": "48.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\kanit\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/kanit/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 3954,
+      "sizeKB": "3.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Black.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Black.woff",
+      "filename": "Outfit-Black.woff",
+      "sizeBytes": 30576,
+      "sizeKB": "29.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Black.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Black.woff2",
+      "filename": "Outfit-Black.woff2",
+      "sizeBytes": 21836,
+      "sizeKB": "21.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Bold.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Bold.woff",
+      "filename": "Outfit-Bold.woff",
+      "sizeBytes": 31704,
+      "sizeKB": "31.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Bold.woff2",
+      "filename": "Outfit-Bold.woff2",
+      "sizeBytes": 22584,
+      "sizeKB": "22.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-ExtraBold.woff",
+      "filename": "Outfit-ExtraBold.woff",
+      "sizeBytes": 31760,
+      "sizeKB": "31.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-ExtraBold.woff2",
+      "filename": "Outfit-ExtraBold.woff2",
+      "sizeBytes": 22796,
+      "sizeKB": "22.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-ExtraLight.woff",
+      "filename": "Outfit-ExtraLight.woff",
+      "sizeBytes": 31296,
+      "sizeKB": "30.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-ExtraLight.woff2",
+      "filename": "Outfit-ExtraLight.woff2",
+      "sizeBytes": 22264,
+      "sizeKB": "21.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Light.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Light.woff",
+      "filename": "Outfit-Light.woff",
+      "sizeBytes": 31368,
+      "sizeKB": "30.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Light.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Light.woff2",
+      "filename": "Outfit-Light.woff2",
+      "sizeBytes": 22568,
+      "sizeKB": "22.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Medium.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Medium.woff",
+      "filename": "Outfit-Medium.woff",
+      "sizeBytes": 30352,
+      "sizeKB": "29.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Medium.woff2",
+      "filename": "Outfit-Medium.woff2",
+      "sizeBytes": 21596,
+      "sizeKB": "21.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Regular.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Regular.woff",
+      "filename": "Outfit-Regular.woff",
+      "sizeBytes": 31744,
+      "sizeKB": "31.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Regular.woff2",
+      "filename": "Outfit-Regular.woff2",
+      "sizeBytes": 22752,
+      "sizeKB": "22.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-SemiBold.woff",
+      "filename": "Outfit-SemiBold.woff",
+      "sizeBytes": 32048,
+      "sizeKB": "31.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-SemiBold.woff2",
+      "filename": "Outfit-SemiBold.woff2",
+      "sizeBytes": 22988,
+      "sizeKB": "22.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Thin.woff",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Thin.woff",
+      "filename": "Outfit-Thin.woff",
+      "sizeBytes": 30180,
+      "sizeKB": "29.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\Outfit-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/outfit/Outfit-Thin.woff2",
+      "filename": "Outfit-Thin.woff2",
+      "sizeBytes": 21384,
+      "sizeKB": "20.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\outfit\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/outfit/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1957,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Bold.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Bold.woff",
+      "filename": "PlusJakartaSans-Bold.woff",
+      "sizeBytes": 50340,
+      "sizeKB": "49.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Bold.woff2",
+      "filename": "PlusJakartaSans-Bold.woff2",
+      "sizeBytes": 34672,
+      "sizeKB": "33.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-BoldItalic.woff",
+      "filename": "PlusJakartaSans-BoldItalic.woff",
+      "sizeBytes": 53048,
+      "sizeKB": "51.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-BoldItalic.woff2",
+      "filename": "PlusJakartaSans-BoldItalic.woff2",
+      "sizeBytes": 36468,
+      "sizeKB": "35.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraBold.woff",
+      "filename": "PlusJakartaSans-ExtraBold.woff",
+      "sizeBytes": 49528,
+      "sizeKB": "48.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraBold.woff2",
+      "filename": "PlusJakartaSans-ExtraBold.woff2",
+      "sizeBytes": 33996,
+      "sizeKB": "33.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraBoldItalic.woff",
+      "filename": "PlusJakartaSans-ExtraBoldItalic.woff",
+      "sizeBytes": 52004,
+      "sizeKB": "50.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraBoldItalic.woff2",
+      "filename": "PlusJakartaSans-ExtraBoldItalic.woff2",
+      "sizeBytes": 35632,
+      "sizeKB": "34.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraLight.woff",
+      "filename": "PlusJakartaSans-ExtraLight.woff",
+      "sizeBytes": 49356,
+      "sizeKB": "48.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraLight.woff2",
+      "filename": "PlusJakartaSans-ExtraLight.woff2",
+      "sizeBytes": 33564,
+      "sizeKB": "32.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraLightItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraLightItalic.woff",
+      "filename": "PlusJakartaSans-ExtraLightItalic.woff",
+      "sizeBytes": 51832,
+      "sizeKB": "50.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-ExtraLightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-ExtraLightItalic.woff2",
+      "filename": "PlusJakartaSans-ExtraLightItalic.woff2",
+      "sizeBytes": 35240,
+      "sizeKB": "34.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Italic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Italic.woff",
+      "filename": "PlusJakartaSans-Italic.woff",
+      "sizeBytes": 51732,
+      "sizeKB": "50.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Italic.woff2",
+      "filename": "PlusJakartaSans-Italic.woff2",
+      "sizeBytes": 35300,
+      "sizeKB": "34.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Light.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Light.woff",
+      "filename": "PlusJakartaSans-Light.woff",
+      "sizeBytes": 49976,
+      "sizeKB": "48.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Light.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Light.woff2",
+      "filename": "PlusJakartaSans-Light.woff2",
+      "sizeBytes": 34496,
+      "sizeKB": "33.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-LightItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-LightItalic.woff",
+      "filename": "PlusJakartaSans-LightItalic.woff",
+      "sizeBytes": 52908,
+      "sizeKB": "51.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-LightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-LightItalic.woff2",
+      "filename": "PlusJakartaSans-LightItalic.woff2",
+      "sizeBytes": 36392,
+      "sizeKB": "35.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Medium.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Medium.woff",
+      "filename": "PlusJakartaSans-Medium.woff",
+      "sizeBytes": 50364,
+      "sizeKB": "49.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Medium.woff2",
+      "filename": "PlusJakartaSans-Medium.woff2",
+      "sizeBytes": 34760,
+      "sizeKB": "33.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-MediumItalic.woff",
+      "filename": "PlusJakartaSans-MediumItalic.woff",
+      "sizeBytes": 53044,
+      "sizeKB": "51.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-MediumItalic.woff2",
+      "filename": "PlusJakartaSans-MediumItalic.woff2",
+      "sizeBytes": 36428,
+      "sizeKB": "35.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Regular.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Regular.woff",
+      "filename": "PlusJakartaSans-Regular.woff",
+      "sizeBytes": 49116,
+      "sizeKB": "48.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-Regular.woff2",
+      "filename": "PlusJakartaSans-Regular.woff2",
+      "sizeBytes": 33708,
+      "sizeKB": "32.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-SemiBold.woff",
+      "filename": "PlusJakartaSans-SemiBold.woff",
+      "sizeBytes": 50220,
+      "sizeKB": "49.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-SemiBold.woff2",
+      "filename": "PlusJakartaSans-SemiBold.woff2",
+      "sizeBytes": 34644,
+      "sizeKB": "33.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-SemiBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-SemiBoldItalic.woff",
+      "filename": "PlusJakartaSans-SemiBoldItalic.woff",
+      "sizeBytes": 52964,
+      "sizeKB": "51.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\PlusJakartaSans-SemiBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/PlusJakartaSans-SemiBoldItalic.woff2",
+      "filename": "PlusJakartaSans-SemiBoldItalic.woff2",
+      "sizeBytes": 36224,
+      "sizeKB": "35.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\plus-jakarta-sans\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/plus-jakarta-sans/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 3538,
+      "sizeKB": "3.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Black.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Black.woff",
+      "filename": "PublicSans-Black.woff",
+      "sizeBytes": 33492,
+      "sizeKB": "32.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Black.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Black.woff2",
+      "filename": "PublicSans-Black.woff2",
+      "sizeBytes": 25136,
+      "sizeKB": "24.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-BlackItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-BlackItalic.woff",
+      "filename": "PublicSans-BlackItalic.woff",
+      "sizeBytes": 35576,
+      "sizeKB": "34.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-BlackItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-BlackItalic.woff2",
+      "filename": "PublicSans-BlackItalic.woff2",
+      "sizeBytes": 26636,
+      "sizeKB": "26.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Bold.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Bold.woff",
+      "filename": "PublicSans-Bold.woff",
+      "sizeBytes": 35000,
+      "sizeKB": "34.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Bold.woff2",
+      "filename": "PublicSans-Bold.woff2",
+      "sizeBytes": 26020,
+      "sizeKB": "25.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-BoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-BoldItalic.woff",
+      "filename": "PublicSans-BoldItalic.woff",
+      "sizeBytes": 37108,
+      "sizeKB": "36.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-BoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-BoldItalic.woff2",
+      "filename": "PublicSans-BoldItalic.woff2",
+      "sizeBytes": 28064,
+      "sizeKB": "27.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBold.woff",
+      "filename": "PublicSans-ExtraBold.woff",
+      "sizeBytes": 35036,
+      "sizeKB": "34.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBold.woff2",
+      "filename": "PublicSans-ExtraBold.woff2",
+      "sizeBytes": 26092,
+      "sizeKB": "25.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBoldItalic.woff",
+      "filename": "PublicSans-ExtraBoldItalic.woff",
+      "sizeBytes": 37064,
+      "sizeKB": "36.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBoldItalic.woff2",
+      "filename": "PublicSans-ExtraBoldItalic.woff2",
+      "sizeBytes": 27860,
+      "sizeKB": "27.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLight.woff",
+      "filename": "PublicSans-ExtraLight.woff",
+      "sizeBytes": 34900,
+      "sizeKB": "34.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLight.woff2",
+      "filename": "PublicSans-ExtraLight.woff2",
+      "sizeBytes": 26224,
+      "sizeKB": "25.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraLightItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLightItalic.woff",
+      "filename": "PublicSans-ExtraLightItalic.woff",
+      "sizeBytes": 36860,
+      "sizeKB": "36.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ExtraLightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLightItalic.woff2",
+      "filename": "PublicSans-ExtraLightItalic.woff2",
+      "sizeBytes": 27732,
+      "sizeKB": "27.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Italic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Italic.woff",
+      "filename": "PublicSans-Italic.woff",
+      "sizeBytes": 36840,
+      "sizeKB": "36.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Italic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Italic.woff2",
+      "filename": "PublicSans-Italic.woff2",
+      "sizeBytes": 27788,
+      "sizeKB": "27.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Light.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Light.woff",
+      "filename": "PublicSans-Light.woff",
+      "sizeBytes": 34820,
+      "sizeKB": "34.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Light.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Light.woff2",
+      "filename": "PublicSans-Light.woff2",
+      "sizeBytes": 26088,
+      "sizeKB": "25.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-LightItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-LightItalic.woff",
+      "filename": "PublicSans-LightItalic.woff",
+      "sizeBytes": 36796,
+      "sizeKB": "35.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-LightItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-LightItalic.woff2",
+      "filename": "PublicSans-LightItalic.woff2",
+      "sizeBytes": 27540,
+      "sizeKB": "26.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Medium.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Medium.woff",
+      "filename": "PublicSans-Medium.woff",
+      "sizeBytes": 34948,
+      "sizeKB": "34.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Medium.woff2",
+      "filename": "PublicSans-Medium.woff2",
+      "sizeBytes": 26132,
+      "sizeKB": "25.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-MediumItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-MediumItalic.woff",
+      "filename": "PublicSans-MediumItalic.woff",
+      "sizeBytes": 36940,
+      "sizeKB": "36.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-MediumItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-MediumItalic.woff2",
+      "filename": "PublicSans-MediumItalic.woff2",
+      "sizeBytes": 27924,
+      "sizeKB": "27.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Regular.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Regular.woff",
+      "filename": "PublicSans-Regular.woff",
+      "sizeBytes": 34860,
+      "sizeKB": "34.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Regular.woff2",
+      "filename": "PublicSans-Regular.woff2",
+      "sizeBytes": 26060,
+      "sizeKB": "25.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-SemiBold.woff",
+      "filename": "PublicSans-SemiBold.woff",
+      "sizeBytes": 34996,
+      "sizeKB": "34.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-SemiBold.woff2",
+      "filename": "PublicSans-SemiBold.woff2",
+      "sizeBytes": 26056,
+      "sizeKB": "25.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-SemiBoldItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-SemiBoldItalic.woff",
+      "filename": "PublicSans-SemiBoldItalic.woff",
+      "sizeBytes": 36944,
+      "sizeKB": "36.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-SemiBoldItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-SemiBoldItalic.woff2",
+      "filename": "PublicSans-SemiBoldItalic.woff2",
+      "sizeBytes": 28000,
+      "sizeKB": "27.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Thin.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Thin.woff",
+      "filename": "PublicSans-Thin.woff",
+      "sizeBytes": 33460,
+      "sizeKB": "32.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-Thin.woff2",
+      "filename": "PublicSans-Thin.woff2",
+      "sizeBytes": 24948,
+      "sizeKB": "24.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ThinItalic.woff",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ThinItalic.woff",
+      "filename": "PublicSans-ThinItalic.woff",
+      "sizeBytes": 35288,
+      "sizeKB": "34.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\PublicSans-ThinItalic.woff2",
+      "relPath": "assets/fonts/webfonts/public-sans/PublicSans-ThinItalic.woff2",
+      "filename": "PublicSans-ThinItalic.woff2",
+      "sizeBytes": 26196,
+      "sizeKB": "25.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\public-sans\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/public-sans/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 4242,
+      "sizeKB": "4.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Bold.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Bold.woff",
+      "filename": "Sora-Bold.woff",
+      "sizeBytes": 33604,
+      "sizeKB": "32.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Bold.woff2",
+      "filename": "Sora-Bold.woff2",
+      "sizeBytes": 25160,
+      "sizeKB": "24.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-ExtraBold.woff",
+      "filename": "Sora-ExtraBold.woff",
+      "sizeBytes": 32972,
+      "sizeKB": "32.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-ExtraBold.woff2",
+      "filename": "Sora-ExtraBold.woff2",
+      "sizeBytes": 24744,
+      "sizeKB": "24.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-ExtraLight.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-ExtraLight.woff",
+      "filename": "Sora-ExtraLight.woff",
+      "sizeBytes": 33376,
+      "sizeKB": "32.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-ExtraLight.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-ExtraLight.woff2",
+      "filename": "Sora-ExtraLight.woff2",
+      "sizeBytes": 24936,
+      "sizeKB": "24.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Light.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Light.woff",
+      "filename": "Sora-Light.woff",
+      "sizeBytes": 33276,
+      "sizeKB": "32.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Light.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Light.woff2",
+      "filename": "Sora-Light.woff2",
+      "sizeBytes": 24952,
+      "sizeKB": "24.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Medium.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Medium.woff",
+      "filename": "Sora-Medium.woff",
+      "sizeBytes": 33484,
+      "sizeKB": "32.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Medium.woff2",
+      "filename": "Sora-Medium.woff2",
+      "sizeBytes": 25124,
+      "sizeKB": "24.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Regular.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Regular.woff",
+      "filename": "Sora-Regular.woff",
+      "sizeBytes": 32672,
+      "sizeKB": "31.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Regular.woff2",
+      "filename": "Sora-Regular.woff2",
+      "sizeBytes": 24544,
+      "sizeKB": "24.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-SemiBold.woff",
+      "filename": "Sora-SemiBold.woff",
+      "sizeBytes": 33516,
+      "sizeKB": "32.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-SemiBold.woff2",
+      "filename": "Sora-SemiBold.woff2",
+      "sizeBytes": 25092,
+      "sizeKB": "24.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Thin.woff",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Thin.woff",
+      "filename": "Sora-Thin.woff",
+      "sizeBytes": 32532,
+      "sizeKB": "31.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\Sora-Thin.woff2",
+      "relPath": "assets/fonts/webfonts/sora/Sora-Thin.woff2",
+      "filename": "Sora-Thin.woff2",
+      "sizeBytes": 24272,
+      "sizeKB": "23.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\sora\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/sora/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1695,
+      "sizeKB": "1.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\stylesheet.css",
+      "relPath": "assets/fonts/webfonts/syne/stylesheet.css",
+      "filename": "stylesheet.css",
+      "sizeBytes": 1063,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Bold.woff",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Bold.woff",
+      "filename": "Syne-Bold.woff",
+      "sizeBytes": 40204,
+      "sizeKB": "39.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Bold.woff2",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Bold.woff2",
+      "filename": "Syne-Bold.woff2",
+      "sizeBytes": 29320,
+      "sizeKB": "28.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-ExtraBold.woff",
+      "relPath": "assets/fonts/webfonts/syne/Syne-ExtraBold.woff",
+      "filename": "Syne-ExtraBold.woff",
+      "sizeBytes": 39024,
+      "sizeKB": "38.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-ExtraBold.woff2",
+      "relPath": "assets/fonts/webfonts/syne/Syne-ExtraBold.woff2",
+      "filename": "Syne-ExtraBold.woff2",
+      "sizeBytes": 28756,
+      "sizeKB": "28.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Medium.woff",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Medium.woff",
+      "filename": "Syne-Medium.woff",
+      "sizeBytes": 40196,
+      "sizeKB": "39.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Medium.woff2",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Medium.woff2",
+      "filename": "Syne-Medium.woff2",
+      "sizeBytes": 29420,
+      "sizeKB": "28.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Regular.woff",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Regular.woff",
+      "filename": "Syne-Regular.woff",
+      "sizeBytes": 38280,
+      "sizeKB": "37.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-Regular.woff2",
+      "relPath": "assets/fonts/webfonts/syne/Syne-Regular.woff2",
+      "filename": "Syne-Regular.woff2",
+      "sizeBytes": 27972,
+      "sizeKB": "27.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-SemiBold.woff",
+      "relPath": "assets/fonts/webfonts/syne/Syne-SemiBold.woff",
+      "filename": "Syne-SemiBold.woff",
+      "sizeBytes": 40496,
+      "sizeKB": "39.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\webfonts\\syne\\Syne-SemiBold.woff2",
+      "relPath": "assets/fonts/webfonts/syne/Syne-SemiBold.woff2",
+      "filename": "Syne-SemiBold.woff2",
+      "sizeBytes": 29708,
+      "sizeKB": "29.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\breadcrumb-shape-1.svg",
+      "relPath": "assets/img/elements/breadcrumb-shape-1.svg",
+      "filename": "breadcrumb-shape-1.svg",
+      "sizeBytes": 574,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\breadcrumb-shape-2.svg",
+      "relPath": "assets/img/elements/breadcrumb-shape-2.svg",
+      "filename": "breadcrumb-shape-2.svg",
+      "sizeBytes": 606,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\footer-wave-shape.svg",
+      "relPath": "assets/img/elements/footer-wave-shape.svg",
+      "filename": "footer-wave-shape.svg",
+      "sizeBytes": 1624,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-3-bg-shape.svg",
+      "relPath": "assets/img/elements/hero-3-bg-shape.svg",
+      "filename": "hero-3-bg-shape.svg",
+      "sizeBytes": 499,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-3-shapes-1.svg",
+      "relPath": "assets/img/elements/hero-3-shapes-1.svg",
+      "filename": "hero-3-shapes-1.svg",
+      "sizeBytes": 10556,
+      "sizeKB": "10.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-3-shapes-2.svg",
+      "relPath": "assets/img/elements/hero-3-shapes-2.svg",
+      "filename": "hero-3-shapes-2.svg",
+      "sizeBytes": 1925,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-3-content-img-shape-1.svg",
+      "relPath": "assets/img/elements/home-3-content-img-shape-1.svg",
+      "filename": "home-3-content-img-shape-1.svg",
+      "sizeBytes": 2761,
+      "sizeKB": "2.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-3-content-img-shape-2.svg",
+      "relPath": "assets/img/elements/home-3-content-img-shape-2.svg",
+      "filename": "home-3-content-img-shape-2.svg",
+      "sizeBytes": 2761,
+      "sizeKB": "2.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\favicon-192.png",
+      "relPath": "assets/img/favicon-192.png",
+      "filename": "favicon-192.png",
+      "sizeBytes": 30926,
+      "sizeKB": "30.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\favicon-32.png",
+      "relPath": "assets/img/favicon-32.png",
+      "filename": "favicon-32.png",
+      "sizeBytes": 1934,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\favicon.ico",
+      "relPath": "assets/img/favicon.ico",
+      "filename": "favicon.ico",
+      "sizeBytes": 766,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\favicon.png",
+      "relPath": "assets/img/favicon.png",
+      "filename": "favicon.png",
+      "sizeBytes": 185507,
+      "sizeKB": "181.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-chevron-right-solid.svg",
+      "relPath": "assets/img/icons/icon-black-chevron-right-solid.svg",
+      "filename": "icon-black-chevron-right-solid.svg",
+      "sizeBytes": 231,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-chat.svg",
+      "relPath": "assets/img/icons/icon-duotone-chat.svg",
+      "filename": "icon-duotone-chat.svg",
+      "sizeBytes": 4775,
+      "sizeKB": "4.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-message.svg",
+      "relPath": "assets/img/icons/icon-duotone-message.svg",
+      "filename": "icon-duotone-message.svg",
+      "sizeBytes": 5128,
+      "sizeKB": "5.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-phone.svg",
+      "relPath": "assets/img/icons/icon-duotone-phone.svg",
+      "filename": "icon-duotone-phone.svg",
+      "sizeBytes": 4983,
+      "sizeKB": "4.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-cold-chain.svg",
+      "relPath": "assets/img/icons/icon-feature-cold-chain.svg",
+      "filename": "icon-feature-cold-chain.svg",
+      "sizeBytes": 657,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-daily-essentials.svg",
+      "relPath": "assets/img/icons/icon-feature-daily-essentials.svg",
+      "filename": "icon-feature-daily-essentials.svg",
+      "sizeBytes": 922,
+      "sizeKB": "0.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-daily-savings.svg",
+      "relPath": "assets/img/icons/icon-feature-daily-savings.svg",
+      "filename": "icon-feature-daily-savings.svg",
+      "sizeBytes": 907,
+      "sizeKB": "0.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-easy-replacements.svg",
+      "relPath": "assets/img/icons/icon-feature-easy-replacements.svg",
+      "filename": "icon-feature-easy-replacements.svg",
+      "sizeBytes": 882,
+      "sizeKB": "0.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-express-delivery.svg",
+      "relPath": "assets/img/icons/icon-feature-express-delivery.svg",
+      "filename": "icon-feature-express-delivery.svg",
+      "sizeBytes": 1075,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-farm-fresh.svg",
+      "relPath": "assets/img/icons/icon-feature-farm-fresh.svg",
+      "filename": "icon-feature-farm-fresh.svg",
+      "sizeBytes": 845,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-live-tracking.svg",
+      "relPath": "assets/img/icons/icon-feature-live-tracking.svg",
+      "filename": "icon-feature-live-tracking.svg",
+      "sizeBytes": 808,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-no-minimum.svg",
+      "relPath": "assets/img/icons/icon-feature-no-minimum.svg",
+      "filename": "icon-feature-no-minimum.svg",
+      "sizeBytes": 723,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-feature-secure-checkout.svg",
+      "relPath": "assets/img/icons/icon-feature-secure-checkout.svg",
+      "filename": "icon-feature-secure-checkout.svg",
+      "sizeBytes": 554,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-google-play-store.svg",
+      "relPath": "assets/img/icons/icon-google-play-store.svg",
+      "filename": "icon-google-play-store.svg",
+      "sizeBytes": 9249,
+      "sizeKB": "9.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-star.svg",
+      "relPath": "assets/img/icons/icon-green-star.svg",
+      "filename": "icon-green-star.svg",
+      "sizeBytes": 367,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-marquee-grocery.svg",
+      "relPath": "assets/img/icons/icon-marquee-grocery.svg",
+      "filename": "icon-marquee-grocery.svg",
+      "sizeBytes": 367,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-1.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-1.svg",
+      "filename": "icon-yellow-feature-1.svg",
+      "sizeBytes": 1257,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-2.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-2.svg",
+      "filename": "icon-yellow-feature-2.svg",
+      "sizeBytes": 1271,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-3.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-3.svg",
+      "filename": "icon-yellow-feature-3.svg",
+      "sizeBytes": 1668,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-4.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-4.svg",
+      "filename": "icon-yellow-feature-4.svg",
+      "sizeBytes": 2288,
+      "sizeKB": "2.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-5.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-5.svg",
+      "filename": "icon-yellow-feature-5.svg",
+      "sizeBytes": 1395,
+      "sizeKB": "1.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-yellow-feature-6.svg",
+      "relPath": "assets/img/icons/icon-yellow-feature-6.svg",
+      "filename": "icon-yellow-feature-6.svg",
+      "sizeBytes": 3016,
+      "sizeKB": "2.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\logo-zooomit.svg",
+      "relPath": "assets/img/logo-zooomit.svg",
+      "filename": "logo-zooomit.svg",
+      "sizeBytes": 214114,
+      "sizeKB": "209.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\3D-Grocery-Cart-App.png",
+      "relPath": "assets/img/th-3/3D-Grocery-Cart-App.png",
+      "filename": "3D-Grocery-Cart-App.png",
+      "sizeBytes": 1457637,
+      "sizeKB": "1423.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\fresh-grocery-bag.png",
+      "relPath": "assets/img/th-3/fresh-grocery-bag.png",
+      "filename": "fresh-grocery-bag.png",
+      "sizeBytes": 1766906,
+      "sizeKB": "1725.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\hero-avater-1.jpg",
+      "relPath": "assets/img/th-3/hero-avater-1.jpg",
+      "filename": "hero-avater-1.jpg",
+      "sizeBytes": 9015,
+      "sizeKB": "8.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\hero-avater-2.jpg",
+      "relPath": "assets/img/th-3/hero-avater-2.jpg",
+      "filename": "hero-avater-2.jpg",
+      "sizeBytes": 8795,
+      "sizeKB": "8.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\hero-avater-3.jpg",
+      "relPath": "assets/img/th-3/hero-avater-3.jpg",
+      "filename": "hero-avater-3.jpg",
+      "sizeBytes": 7527,
+      "sizeKB": "7.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\home-banner.png",
+      "relPath": "assets/img/th-3/home-banner.png",
+      "filename": "home-banner.png",
+      "sizeBytes": 1707840,
+      "sizeKB": "1667.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\newsletter-image.png",
+      "relPath": "assets/img/th-3/newsletter-image.png",
+      "filename": "newsletter-image.png",
+      "sizeBytes": 1449278,
+      "sizeKB": "1415.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\testimonial-avater-1.png",
+      "relPath": "assets/img/th-3/testimonial-avater-1.png",
+      "filename": "testimonial-avater-1.png",
+      "sizeBytes": 24852,
+      "sizeKB": "24.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit-404-illustration.svg",
+      "relPath": "assets/img/zooomit-404-illustration.svg",
+      "filename": "zooomit-404-illustration.svg",
+      "sizeBytes": 8219,
+      "sizeKB": "8.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\main.js",
+      "relPath": "assets/js/main.js",
+      "filename": "main.js",
+      "sizeBytes": 8443,
+      "sizeKB": "8.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\counterup.js",
+      "relPath": "assets/js/vendors/counterup.js",
+      "filename": "counterup.js",
+      "sizeBytes": 2764,
+      "sizeKB": "2.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\fslightbox.js",
+      "relPath": "assets/js/vendors/fslightbox.js",
+      "filename": "fslightbox.js",
+      "sizeBytes": 30524,
+      "sizeKB": "29.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\jos.min.js",
+      "relPath": "assets/js/vendors/jos.min.js",
+      "filename": "jos.min.js",
+      "sizeBytes": 15939,
+      "sizeKB": "15.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\menu.js",
+      "relPath": "assets/js/vendors/menu.js",
+      "filename": "menu.js",
+      "sizeBytes": 3761,
+      "sizeKB": "3.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\swiper-bundle.min.js",
+      "relPath": "assets/js/vendors/swiper-bundle.min.js",
+      "filename": "swiper-bundle.min.js",
+      "sizeBytes": 148455,
+      "sizeKB": "145.0"
+    }
+  ],
+  "unusedAssets": [
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\fonts\\iconfonts\\font-awesome\\KFOmCnqEu92Fr1Mu4mxK.woff2",
+      "relPath": "assets/fonts/iconfonts/font-awesome/KFOmCnqEu92Fr1Mu4mxK.woff2",
+      "filename": "KFOmCnqEu92Fr1Mu4mxK.woff2",
+      "sizeBytes": 15344,
+      "sizeKB": "15.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\abstract-2line-plus-shape.svg",
+      "relPath": "assets/img/elements/abstract-2line-plus-shape.svg",
+      "filename": "abstract-2line-plus-shape.svg",
+      "sizeBytes": 4288,
+      "sizeKB": "4.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\arc-shape-black.png",
+      "relPath": "assets/img/elements/arc-shape-black.png",
+      "filename": "arc-shape-black.png",
+      "sizeBytes": 3053,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\content-shape-1.svg",
+      "relPath": "assets/img/elements/content-shape-1.svg",
+      "filename": "content-shape-1.svg",
+      "sizeBytes": 3269,
+      "sizeKB": "3.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\content-shape-2.svg",
+      "relPath": "assets/img/elements/content-shape-2.svg",
+      "filename": "content-shape-2.svg",
+      "sizeBytes": 667,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\cta-1-shape-1.svg",
+      "relPath": "assets/img/elements/cta-1-shape-1.svg",
+      "filename": "cta-1-shape-1.svg",
+      "sizeBytes": 1271,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\discount-text.svg",
+      "relPath": "assets/img/elements/discount-text.svg",
+      "filename": "discount-text.svg",
+      "sizeBytes": 18279,
+      "sizeKB": "17.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\faq-1-shape-1.svg",
+      "relPath": "assets/img/elements/faq-1-shape-1.svg",
+      "filename": "faq-1-shape-1.svg",
+      "sizeBytes": 595,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\faq-1-shape-2.svg",
+      "relPath": "assets/img/elements/faq-1-shape-2.svg",
+      "filename": "faq-1-shape-2.svg",
+      "sizeBytes": 596,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\flower-shape-1.svg",
+      "relPath": "assets/img/elements/flower-shape-1.svg",
+      "filename": "flower-shape-1.svg",
+      "sizeBytes": 2390,
+      "sizeKB": "2.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\flower-shape-2.svg",
+      "relPath": "assets/img/elements/flower-shape-2.svg",
+      "filename": "flower-shape-2.svg",
+      "sizeBytes": 2403,
+      "sizeKB": "2.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\gear-shape.svg",
+      "relPath": "assets/img/elements/gear-shape.svg",
+      "filename": "gear-shape.svg",
+      "sizeBytes": 3053,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-1-shape-1.svg",
+      "relPath": "assets/img/elements/hero-1-shape-1.svg",
+      "filename": "hero-1-shape-1.svg",
+      "sizeBytes": 567,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-1-shape-2.svg",
+      "relPath": "assets/img/elements/hero-1-shape-2.svg",
+      "filename": "hero-1-shape-2.svg",
+      "sizeBytes": 626,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-10-bg-shape.svg",
+      "relPath": "assets/img/elements/hero-10-bg-shape.svg",
+      "filename": "hero-10-bg-shape.svg",
+      "sizeBytes": 402,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-12-shape-1.svg",
+      "relPath": "assets/img/elements/hero-12-shape-1.svg",
+      "filename": "hero-12-shape-1.svg",
+      "sizeBytes": 2169,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-12-shape-2.svg",
+      "relPath": "assets/img/elements/hero-12-shape-2.svg",
+      "filename": "hero-12-shape-2.svg",
+      "sizeBytes": 652,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-2-shape-1.svg",
+      "relPath": "assets/img/elements/hero-2-shape-1.svg",
+      "filename": "hero-2-shape-1.svg",
+      "sizeBytes": 766,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-2-shape-2.svg",
+      "relPath": "assets/img/elements/hero-2-shape-2.svg",
+      "filename": "hero-2-shape-2.svg",
+      "sizeBytes": 1925,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-4-bg-shape.svg",
+      "relPath": "assets/img/elements/hero-4-bg-shape.svg",
+      "filename": "hero-4-bg-shape.svg",
+      "sizeBytes": 3069,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-4-start-shape-1.svg",
+      "relPath": "assets/img/elements/hero-4-start-shape-1.svg",
+      "filename": "hero-4-start-shape-1.svg",
+      "sizeBytes": 1712,
+      "sizeKB": "1.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-8-content-shape.svg",
+      "relPath": "assets/img/elements/hero-8-content-shape.svg",
+      "filename": "hero-8-content-shape.svg",
+      "sizeBytes": 1900,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\hero-content-shape.svg",
+      "relPath": "assets/img/elements/hero-content-shape.svg",
+      "filename": "hero-content-shape.svg",
+      "sizeBytes": 33756,
+      "sizeKB": "33.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-12-cta-shape.svg",
+      "relPath": "assets/img/elements/home-12-cta-shape.svg",
+      "filename": "home-12-cta-shape.svg",
+      "sizeBytes": 2167,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-14-footer-shape.svg",
+      "relPath": "assets/img/elements/home-14-footer-shape.svg",
+      "filename": "home-14-footer-shape.svg",
+      "sizeBytes": 583,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-14-hero-shape.svg",
+      "relPath": "assets/img/elements/home-14-hero-shape.svg",
+      "filename": "home-14-hero-shape.svg",
+      "sizeBytes": 585,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-divider-shape-1.svg",
+      "relPath": "assets/img/elements/home-4-divider-shape-1.svg",
+      "filename": "home-4-divider-shape-1.svg",
+      "sizeBytes": 539,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-divider-shape-2.svg",
+      "relPath": "assets/img/elements/home-4-divider-shape-2.svg",
+      "filename": "home-4-divider-shape-2.svg",
+      "sizeBytes": 555,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-divider-shape-3.svg",
+      "relPath": "assets/img/elements/home-4-divider-shape-3.svg",
+      "filename": "home-4-divider-shape-3.svg",
+      "sizeBytes": 538,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-divider-shape-4.svg",
+      "relPath": "assets/img/elements/home-4-divider-shape-4.svg",
+      "filename": "home-4-divider-shape-4.svg",
+      "sizeBytes": 538,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-features-element.svg",
+      "relPath": "assets/img/elements/home-4-features-element.svg",
+      "filename": "home-4-features-element.svg",
+      "sizeBytes": 2837,
+      "sizeKB": "2.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-testimonial-element-1.svg",
+      "relPath": "assets/img/elements/home-4-testimonial-element-1.svg",
+      "filename": "home-4-testimonial-element-1.svg",
+      "sizeBytes": 5995,
+      "sizeKB": "5.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-4-testimonial-element-2.svg",
+      "relPath": "assets/img/elements/home-4-testimonial-element-2.svg",
+      "filename": "home-4-testimonial-element-2.svg",
+      "sizeBytes": 9298,
+      "sizeKB": "9.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-5-content-img-shape-1.svg",
+      "relPath": "assets/img/elements/home-5-content-img-shape-1.svg",
+      "filename": "home-5-content-img-shape-1.svg",
+      "sizeBytes": 1983,
+      "sizeKB": "1.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-5-service-bg-shape.svg",
+      "relPath": "assets/img/elements/home-5-service-bg-shape.svg",
+      "filename": "home-5-service-bg-shape.svg",
+      "sizeBytes": 2101,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-content-spape-2.svg",
+      "relPath": "assets/img/elements/home-8-content-spape-2.svg",
+      "filename": "home-8-content-spape-2.svg",
+      "sizeBytes": 1070,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-2.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-2.svg",
+      "filename": "home-8-dot-shape-2.svg",
+      "sizeBytes": 582,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-3.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-3.svg",
+      "filename": "home-8-dot-shape-3.svg",
+      "sizeBytes": 1070,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-4.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-4.svg",
+      "filename": "home-8-dot-shape-4.svg",
+      "sizeBytes": 987,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-5.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-5.svg",
+      "filename": "home-8-dot-shape-5.svg",
+      "sizeBytes": 468,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-6.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-6.svg",
+      "filename": "home-8-dot-shape-6.svg",
+      "sizeBytes": 1089,
+      "sizeKB": "1.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape-7.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape-7.svg",
+      "filename": "home-8-dot-shape-7.svg",
+      "sizeBytes": 563,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-8-dot-shape.svg",
+      "relPath": "assets/img/elements/home-8-dot-shape.svg",
+      "filename": "home-8-dot-shape.svg",
+      "sizeBytes": 468,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-9-bg-shape-1.svg",
+      "relPath": "assets/img/elements/home-9-bg-shape-1.svg",
+      "filename": "home-9-bg-shape-1.svg",
+      "sizeBytes": 32642,
+      "sizeKB": "31.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-9-bg-shape-2.svg",
+      "relPath": "assets/img/elements/home-9-bg-shape-2.svg",
+      "filename": "home-9-bg-shape-2.svg",
+      "sizeBytes": 33519,
+      "sizeKB": "32.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-9-bg-shape-3.svg",
+      "relPath": "assets/img/elements/home-9-bg-shape-3.svg",
+      "filename": "home-9-bg-shape-3.svg",
+      "sizeBytes": 33282,
+      "sizeKB": "32.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-9-bg-shape-4.svg",
+      "relPath": "assets/img/elements/home-9-bg-shape-4.svg",
+      "filename": "home-9-bg-shape-4.svg",
+      "sizeBytes": 34470,
+      "sizeKB": "33.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\home-9-hero-bg-shape.svg",
+      "relPath": "assets/img/elements/home-9-hero-bg-shape.svg",
+      "filename": "home-9-hero-bg-shape.svg",
+      "sizeBytes": 33756,
+      "sizeKB": "33.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\particle-circle-1.svg",
+      "relPath": "assets/img/elements/particle-circle-1.svg",
+      "filename": "particle-circle-1.svg",
+      "sizeBytes": 224,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\portfolio-1-shape-1.svg",
+      "relPath": "assets/img/elements/portfolio-1-shape-1.svg",
+      "filename": "portfolio-1-shape-1.svg",
+      "sizeBytes": 586,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\section-devider-black.svg",
+      "relPath": "assets/img/elements/section-devider-black.svg",
+      "filename": "section-devider-black.svg",
+      "sizeBytes": 360,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\service-1-shape-1.svg",
+      "relPath": "assets/img/elements/service-1-shape-1.svg",
+      "filename": "service-1-shape-1.svg",
+      "sizeBytes": 605,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\shape-1.svg",
+      "relPath": "assets/img/elements/shape-1.svg",
+      "filename": "shape-1.svg",
+      "sizeBytes": 222,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\shape-2.svg",
+      "relPath": "assets/img/elements/shape-2.svg",
+      "filename": "shape-2.svg",
+      "sizeBytes": 224,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\shape.svg",
+      "relPath": "assets/img/elements/shape.svg",
+      "filename": "shape.svg",
+      "sizeBytes": 226,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\text-circle-1.png",
+      "relPath": "assets/img/elements/text-circle-1.png",
+      "filename": "text-circle-1.png",
+      "sizeBytes": 7279,
+      "sizeKB": "7.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\elements\\text-circle-1.svg",
+      "relPath": "assets/img/elements/text-circle-1.svg",
+      "filename": "text-circle-1.svg",
+      "sizeBytes": 38118,
+      "sizeKB": "37.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\arm-icon.png",
+      "relPath": "assets/img/icons/arm-icon.png",
+      "filename": "arm-icon.png",
+      "sizeBytes": 2457,
+      "sizeKB": "2.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\fire-icon.png",
+      "relPath": "assets/img/icons/fire-icon.png",
+      "filename": "fire-icon.png",
+      "sizeBytes": 2682,
+      "sizeKB": "2.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-1-active.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-1-active.svg",
+      "filename": "home-9-tab-icon-1-active.svg",
+      "sizeBytes": 5427,
+      "sizeKB": "5.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-1.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-1.svg",
+      "filename": "home-9-tab-icon-1.svg",
+      "sizeBytes": 5425,
+      "sizeKB": "5.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-2-active.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-2-active.svg",
+      "filename": "home-9-tab-icon-2-active.svg",
+      "sizeBytes": 4754,
+      "sizeKB": "4.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-2.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-2.svg",
+      "filename": "home-9-tab-icon-2.svg",
+      "sizeBytes": 4746,
+      "sizeKB": "4.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-3-active.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-3-active.svg",
+      "filename": "home-9-tab-icon-3-active.svg",
+      "sizeBytes": 6822,
+      "sizeKB": "6.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-3.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-3.svg",
+      "filename": "home-9-tab-icon-3.svg",
+      "sizeBytes": 6820,
+      "sizeKB": "6.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-4-active.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-4-active.svg",
+      "filename": "home-9-tab-icon-4-active.svg",
+      "sizeBytes": 3275,
+      "sizeKB": "3.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\home-9-tab-icon-4.svg",
+      "relPath": "assets/img/icons/home-9-tab-icon-4.svg",
+      "filename": "home-9-tab-icon-4.svg",
+      "sizeBytes": 3270,
+      "sizeKB": "3.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-6-arm-thin-star-light-blue.svg",
+      "relPath": "assets/img/icons/icon-6-arm-thin-star-light-blue.svg",
+      "filename": "icon-6-arm-thin-star-light-blue.svg",
+      "sizeBytes": 250,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-6-arm-thin-star-purple.svg",
+      "relPath": "assets/img/icons/icon-6-arm-thin-star-purple.svg",
+      "filename": "icon-6-arm-thin-star-purple.svg",
+      "sizeBytes": 250,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-6-arm-thin-star-yellow.svg",
+      "relPath": "assets/img/icons/icon-6-arm-thin-star-yellow.svg",
+      "filename": "icon-6-arm-thin-star-yellow.svg",
+      "sizeBytes": 250,
+      "sizeKB": "0.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-apple-app-store.svg",
+      "relPath": "assets/img/icons/icon-apple-app-store.svg",
+      "filename": "icon-apple-app-store.svg",
+      "sizeBytes": 9148,
+      "sizeKB": "8.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-arrow-right.svg",
+      "relPath": "assets/img/icons/icon-black-arrow-right.svg",
+      "filename": "icon-black-arrow-right.svg",
+      "sizeBytes": 956,
+      "sizeKB": "0.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-down-arrow.svg",
+      "relPath": "assets/img/icons/icon-black-down-arrow.svg",
+      "filename": "icon-black-down-arrow.svg",
+      "sizeBytes": 2408,
+      "sizeKB": "2.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-1.svg",
+      "filename": "icon-black-home-10-feature-1.svg",
+      "sizeBytes": 6090,
+      "sizeKB": "5.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-2.svg",
+      "filename": "icon-black-home-10-feature-2.svg",
+      "sizeBytes": 5270,
+      "sizeKB": "5.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-3.svg",
+      "filename": "icon-black-home-10-feature-3.svg",
+      "sizeBytes": 12143,
+      "sizeKB": "11.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-4.svg",
+      "filename": "icon-black-home-10-feature-4.svg",
+      "sizeBytes": 7974,
+      "sizeKB": "7.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-5.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-5.svg",
+      "filename": "icon-black-home-10-feature-5.svg",
+      "sizeBytes": 13355,
+      "sizeKB": "13.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-10-feature-6.svg",
+      "relPath": "assets/img/icons/icon-black-home-10-feature-6.svg",
+      "filename": "icon-black-home-10-feature-6.svg",
+      "sizeBytes": 8416,
+      "sizeKB": "8.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-11-feature-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-11-feature-1.svg",
+      "filename": "icon-black-home-11-feature-1.svg",
+      "sizeBytes": 4989,
+      "sizeKB": "4.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-11-feature-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-11-feature-2.svg",
+      "filename": "icon-black-home-11-feature-2.svg",
+      "sizeBytes": 5029,
+      "sizeKB": "4.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-11-feature-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-11-feature-3.svg",
+      "filename": "icon-black-home-11-feature-3.svg",
+      "sizeBytes": 4127,
+      "sizeKB": "4.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-11-feature-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-11-feature-4.svg",
+      "filename": "icon-black-home-11-feature-4.svg",
+      "sizeBytes": 6132,
+      "sizeKB": "6.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-12-feature-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-12-feature-1.svg",
+      "filename": "icon-black-home-12-feature-1.svg",
+      "sizeBytes": 6857,
+      "sizeKB": "6.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-12-feature-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-12-feature-2.svg",
+      "filename": "icon-black-home-12-feature-2.svg",
+      "sizeBytes": 4576,
+      "sizeKB": "4.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-12-feature-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-12-feature-3.svg",
+      "filename": "icon-black-home-12-feature-3.svg",
+      "sizeBytes": 2303,
+      "sizeKB": "2.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-12-feature-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-12-feature-4.svg",
+      "filename": "icon-black-home-12-feature-4.svg",
+      "sizeBytes": 2490,
+      "sizeKB": "2.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-13-service-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-13-service-1.svg",
+      "filename": "icon-black-home-13-service-1.svg",
+      "sizeBytes": 4311,
+      "sizeKB": "4.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-13-service-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-13-service-2.svg",
+      "filename": "icon-black-home-13-service-2.svg",
+      "sizeBytes": 2513,
+      "sizeKB": "2.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-13-service-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-13-service-3.svg",
+      "filename": "icon-black-home-13-service-3.svg",
+      "sizeBytes": 3118,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-13-service-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-13-service-4.svg",
+      "filename": "icon-black-home-13-service-4.svg",
+      "sizeBytes": 1657,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-5-pricing-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-5-pricing-1.svg",
+      "filename": "icon-black-home-5-pricing-1.svg",
+      "sizeBytes": 1220,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-5-pricing-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-5-pricing-2.svg",
+      "filename": "icon-black-home-5-pricing-2.svg",
+      "sizeBytes": 2401,
+      "sizeKB": "2.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-5-pricing-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-5-pricing-3.svg",
+      "filename": "icon-black-home-5-pricing-3.svg",
+      "sizeBytes": 5828,
+      "sizeKB": "5.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-1.svg",
+      "filename": "icon-black-home-7-service-1.svg",
+      "sizeBytes": 4903,
+      "sizeKB": "4.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-2.svg",
+      "filename": "icon-black-home-7-service-2.svg",
+      "sizeBytes": 3932,
+      "sizeKB": "3.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-3.svg",
+      "filename": "icon-black-home-7-service-3.svg",
+      "sizeBytes": 4404,
+      "sizeKB": "4.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-4.svg",
+      "filename": "icon-black-home-7-service-4.svg",
+      "sizeBytes": 8321,
+      "sizeKB": "8.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-5.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-5.svg",
+      "filename": "icon-black-home-7-service-5.svg",
+      "sizeBytes": 5164,
+      "sizeKB": "5.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-6.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-6.svg",
+      "filename": "icon-black-home-7-service-6.svg",
+      "sizeBytes": 5090,
+      "sizeKB": "5.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-7.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-7.svg",
+      "filename": "icon-black-home-7-service-7.svg",
+      "sizeBytes": 6410,
+      "sizeKB": "6.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-7-service-8.svg",
+      "relPath": "assets/img/icons/icon-black-home-7-service-8.svg",
+      "filename": "icon-black-home-7-service-8.svg",
+      "sizeBytes": 7176,
+      "sizeKB": "7.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-9-feature-1.svg",
+      "relPath": "assets/img/icons/icon-black-home-9-feature-1.svg",
+      "filename": "icon-black-home-9-feature-1.svg",
+      "sizeBytes": 8333,
+      "sizeKB": "8.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-9-feature-2.svg",
+      "relPath": "assets/img/icons/icon-black-home-9-feature-2.svg",
+      "filename": "icon-black-home-9-feature-2.svg",
+      "sizeBytes": 12171,
+      "sizeKB": "11.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-9-feature-3.svg",
+      "relPath": "assets/img/icons/icon-black-home-9-feature-3.svg",
+      "filename": "icon-black-home-9-feature-3.svg",
+      "sizeBytes": 7811,
+      "sizeKB": "7.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-home-9-feature-4.svg",
+      "relPath": "assets/img/icons/icon-black-home-9-feature-4.svg",
+      "filename": "icon-black-home-9-feature-4.svg",
+      "sizeBytes": 4910,
+      "sizeKB": "4.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-mail-close.svg",
+      "relPath": "assets/img/icons/icon-black-mail-close.svg",
+      "filename": "icon-black-mail-close.svg",
+      "sizeBytes": 1710,
+      "sizeKB": "1.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-mail-open.svg",
+      "relPath": "assets/img/icons/icon-black-mail-open.svg",
+      "filename": "icon-black-mail-open.svg",
+      "sizeBytes": 2290,
+      "sizeKB": "2.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-pen.svg",
+      "relPath": "assets/img/icons/icon-black-pen.svg",
+      "filename": "icon-black-pen.svg",
+      "sizeBytes": 3498,
+      "sizeKB": "3.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-1.svg",
+      "relPath": "assets/img/icons/icon-black-service-1.svg",
+      "filename": "icon-black-service-1.svg",
+      "sizeBytes": 4769,
+      "sizeKB": "4.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-10.svg",
+      "relPath": "assets/img/icons/icon-black-service-10.svg",
+      "filename": "icon-black-service-10.svg",
+      "sizeBytes": 4777,
+      "sizeKB": "4.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-2.svg",
+      "relPath": "assets/img/icons/icon-black-service-2.svg",
+      "filename": "icon-black-service-2.svg",
+      "sizeBytes": 7404,
+      "sizeKB": "7.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-3.svg",
+      "relPath": "assets/img/icons/icon-black-service-3.svg",
+      "filename": "icon-black-service-3.svg",
+      "sizeBytes": 7339,
+      "sizeKB": "7.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-4.svg",
+      "relPath": "assets/img/icons/icon-black-service-4.svg",
+      "filename": "icon-black-service-4.svg",
+      "sizeBytes": 5908,
+      "sizeKB": "5.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-5.svg",
+      "relPath": "assets/img/icons/icon-black-service-5.svg",
+      "filename": "icon-black-service-5.svg",
+      "sizeBytes": 4929,
+      "sizeKB": "4.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-6.svg",
+      "relPath": "assets/img/icons/icon-black-service-6.svg",
+      "filename": "icon-black-service-6.svg",
+      "sizeBytes": 4100,
+      "sizeKB": "4.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-7.svg",
+      "relPath": "assets/img/icons/icon-black-service-7.svg",
+      "filename": "icon-black-service-7.svg",
+      "sizeBytes": 6051,
+      "sizeKB": "5.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-8.svg",
+      "relPath": "assets/img/icons/icon-black-service-8.svg",
+      "filename": "icon-black-service-8.svg",
+      "sizeBytes": 5712,
+      "sizeKB": "5.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-service-9.svg",
+      "relPath": "assets/img/icons/icon-black-service-9.svg",
+      "filename": "icon-black-service-9.svg",
+      "sizeBytes": 7223,
+      "sizeKB": "7.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-black-star.svg",
+      "relPath": "assets/img/icons/icon-black-star.svg",
+      "filename": "icon-black-star.svg",
+      "sizeBytes": 777,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-badge-check.svg",
+      "relPath": "assets/img/icons/icon-blue-badge-check.svg",
+      "filename": "icon-blue-badge-check.svg",
+      "sizeBytes": 1259,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-check-circle.svg",
+      "relPath": "assets/img/icons/icon-blue-check-circle.svg",
+      "filename": "icon-blue-check-circle.svg",
+      "sizeBytes": 602,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-quote-right-reverse.svg",
+      "relPath": "assets/img/icons/icon-blue-quote-right-reverse.svg",
+      "filename": "icon-blue-quote-right-reverse.svg",
+      "sizeBytes": 730,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-1.svg",
+      "relPath": "assets/img/icons/icon-blue-service-1.svg",
+      "filename": "icon-blue-service-1.svg",
+      "sizeBytes": 4769,
+      "sizeKB": "4.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-2.svg",
+      "relPath": "assets/img/icons/icon-blue-service-2.svg",
+      "filename": "icon-blue-service-2.svg",
+      "sizeBytes": 7512,
+      "sizeKB": "7.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-3.svg",
+      "relPath": "assets/img/icons/icon-blue-service-3.svg",
+      "filename": "icon-blue-service-3.svg",
+      "sizeBytes": 7414,
+      "sizeKB": "7.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-4.svg",
+      "relPath": "assets/img/icons/icon-blue-service-4.svg",
+      "filename": "icon-blue-service-4.svg",
+      "sizeBytes": 5989,
+      "sizeKB": "5.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-5.svg",
+      "relPath": "assets/img/icons/icon-blue-service-5.svg",
+      "filename": "icon-blue-service-5.svg",
+      "sizeBytes": 5007,
+      "sizeKB": "4.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-service-6.svg",
+      "relPath": "assets/img/icons/icon-blue-service-6.svg",
+      "filename": "icon-blue-service-6.svg",
+      "sizeBytes": 11960,
+      "sizeKB": "11.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-blue-top-right.svg",
+      "relPath": "assets/img/icons/icon-blue-top-right.svg",
+      "filename": "icon-blue-top-right.svg",
+      "sizeBytes": 373,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-discord.svg",
+      "relPath": "assets/img/icons/icon-color-discord.svg",
+      "filename": "icon-color-discord.svg",
+      "sizeBytes": 2023,
+      "sizeKB": "2.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-dropbox.svg",
+      "relPath": "assets/img/icons/icon-color-dropbox.svg",
+      "filename": "icon-color-dropbox.svg",
+      "sizeBytes": 633,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-figma.svg",
+      "relPath": "assets/img/icons/icon-color-figma.svg",
+      "filename": "icon-color-figma.svg",
+      "sizeBytes": 1147,
+      "sizeKB": "1.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-gmail.svg",
+      "relPath": "assets/img/icons/icon-color-gmail.svg",
+      "filename": "icon-color-gmail.svg",
+      "sizeBytes": 936,
+      "sizeKB": "0.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-mailchimp.svg",
+      "relPath": "assets/img/icons/icon-color-mailchimp.svg",
+      "filename": "icon-color-mailchimp.svg",
+      "sizeBytes": 6563,
+      "sizeKB": "6.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-shopify.svg",
+      "relPath": "assets/img/icons/icon-color-shopify.svg",
+      "filename": "icon-color-shopify.svg",
+      "sizeBytes": 2128,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-skype.svg",
+      "relPath": "assets/img/icons/icon-color-skype.svg",
+      "filename": "icon-color-skype.svg",
+      "sizeBytes": 7699,
+      "sizeKB": "7.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-slack.svg",
+      "relPath": "assets/img/icons/icon-color-slack.svg",
+      "filename": "icon-color-slack.svg",
+      "sizeBytes": 1890,
+      "sizeKB": "1.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-snapchat.svg",
+      "relPath": "assets/img/icons/icon-color-snapchat.svg",
+      "filename": "icon-color-snapchat.svg",
+      "sizeBytes": 6141,
+      "sizeKB": "6.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-spotify.svg",
+      "relPath": "assets/img/icons/icon-color-spotify.svg",
+      "filename": "icon-color-spotify.svg",
+      "sizeBytes": 1097,
+      "sizeKB": "1.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-whatsapp.svg",
+      "relPath": "assets/img/icons/icon-color-whatsapp.svg",
+      "filename": "icon-color-whatsapp.svg",
+      "sizeBytes": 2426,
+      "sizeKB": "2.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-color-zoom.svg",
+      "relPath": "assets/img/icons/icon-color-zoom.svg",
+      "filename": "icon-color-zoom.svg",
+      "sizeBytes": 682,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-asana.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-asana.svg",
+      "filename": "icon-colorful-wide-asana.svg",
+      "sizeBytes": 5544,
+      "sizeKB": "5.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-gitlab.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-gitlab.svg",
+      "filename": "icon-colorful-wide-gitlab.svg",
+      "sizeBytes": 4461,
+      "sizeKB": "4.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-hotjar.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-hotjar.svg",
+      "filename": "icon-colorful-wide-hotjar.svg",
+      "sizeBytes": 5104,
+      "sizeKB": "5.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-hubspot.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-hubspot.svg",
+      "filename": "icon-colorful-wide-hubspot.svg",
+      "sizeBytes": 4605,
+      "sizeKB": "4.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-jira.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-jira.svg",
+      "filename": "icon-colorful-wide-jira.svg",
+      "sizeBytes": 6308,
+      "sizeKB": "6.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-shopify.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-shopify.svg",
+      "filename": "icon-colorful-wide-shopify.svg",
+      "sizeBytes": 5257,
+      "sizeKB": "5.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-slack.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-slack.svg",
+      "filename": "icon-colorful-wide-slack.svg",
+      "sizeBytes": 3661,
+      "sizeKB": "3.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-spotify.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-spotify.svg",
+      "filename": "icon-colorful-wide-spotify.svg",
+      "sizeBytes": 6748,
+      "sizeKB": "6.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-whatsapp.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-whatsapp.svg",
+      "filename": "icon-colorful-wide-whatsapp.svg",
+      "sizeBytes": 11396,
+      "sizeKB": "11.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-zalando.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-zalando.svg",
+      "filename": "icon-colorful-wide-zalando.svg",
+      "sizeBytes": 5368,
+      "sizeKB": "5.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-zendesk.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-zendesk.svg",
+      "filename": "icon-colorful-wide-zendesk.svg",
+      "sizeBytes": 4162,
+      "sizeKB": "4.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-colorful-wide-zoom.svg",
+      "relPath": "assets/img/icons/icon-colorful-wide-zoom.svg",
+      "filename": "icon-colorful-wide-zoom.svg",
+      "sizeBytes": 3676,
+      "sizeKB": "3.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-corn-cursor-click.svg",
+      "relPath": "assets/img/icons/icon-corn-cursor-click.svg",
+      "filename": "icon-corn-cursor-click.svg",
+      "sizeBytes": 436,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-corn-download.svg",
+      "relPath": "assets/img/icons/icon-corn-download.svg",
+      "filename": "icon-corn-download.svg",
+      "sizeBytes": 452,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-corn-pencil-alt.svg",
+      "relPath": "assets/img/icons/icon-corn-pencil-alt.svg",
+      "filename": "icon-corn-pencil-alt.svg",
+      "sizeBytes": 551,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-demin-chat-alt-2.svg",
+      "relPath": "assets/img/icons/icon-demin-chat-alt-2.svg",
+      "filename": "icon-demin-chat-alt-2.svg",
+      "sizeBytes": 478,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-denim-chat-alt-2.svg",
+      "relPath": "assets/img/icons/icon-denim-chat-alt-2.svg",
+      "filename": "icon-denim-chat-alt-2.svg",
+      "sizeBytes": 478,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-denim-desktop-computer.svg",
+      "relPath": "assets/img/icons/icon-denim-desktop-computer.svg",
+      "filename": "icon-denim-desktop-computer.svg",
+      "sizeBytes": 361,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-denim-mail.svg",
+      "relPath": "assets/img/icons/icon-denim-mail.svg",
+      "filename": "icon-denim-mail.svg",
+      "sizeBytes": 390,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-denim-pencil.svg",
+      "relPath": "assets/img/icons/icon-denim-pencil.svg",
+      "filename": "icon-denim-pencil.svg",
+      "sizeBytes": 989,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-denim-shopping-cart.svg",
+      "relPath": "assets/img/icons/icon-denim-shopping-cart.svg",
+      "filename": "icon-denim-shopping-cart.svg",
+      "sizeBytes": 528,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-private-message.svg",
+      "relPath": "assets/img/icons/icon-duotone-private-message.svg",
+      "filename": "icon-duotone-private-message.svg",
+      "sizeBytes": 5929,
+      "sizeKB": "5.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-translate.svg",
+      "relPath": "assets/img/icons/icon-duotone-translate.svg",
+      "filename": "icon-duotone-translate.svg",
+      "sizeBytes": 7029,
+      "sizeKB": "6.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-duotone-user-list.svg",
+      "relPath": "assets/img/icons/icon-duotone-user-list.svg",
+      "filename": "icon-duotone-user-list.svg",
+      "sizeBytes": 7459,
+      "sizeKB": "7.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-black-duotone-faq-1.svg",
+      "relPath": "assets/img/icons/icon-green-black-duotone-faq-1.svg",
+      "filename": "icon-green-black-duotone-faq-1.svg",
+      "sizeBytes": 2101,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-black-duotone-faq-2.svg",
+      "relPath": "assets/img/icons/icon-green-black-duotone-faq-2.svg",
+      "filename": "icon-green-black-duotone-faq-2.svg",
+      "sizeBytes": 4425,
+      "sizeKB": "4.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-black-duotone-faq-3.svg",
+      "relPath": "assets/img/icons/icon-green-black-duotone-faq-3.svg",
+      "filename": "icon-green-black-duotone-faq-3.svg",
+      "sizeBytes": 3670,
+      "sizeKB": "3.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-feature-1.svg",
+      "relPath": "assets/img/icons/icon-green-feature-1.svg",
+      "filename": "icon-green-feature-1.svg",
+      "sizeBytes": 2986,
+      "sizeKB": "2.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-feature-2.svg",
+      "relPath": "assets/img/icons/icon-green-feature-2.svg",
+      "filename": "icon-green-feature-2.svg",
+      "sizeBytes": 2235,
+      "sizeKB": "2.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-green-feature-3.svg",
+      "relPath": "assets/img/icons/icon-green-feature-3.svg",
+      "filename": "icon-green-feature-3.svg",
+      "sizeBytes": 2749,
+      "sizeKB": "2.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honey-suckle-star-of-life.svg",
+      "relPath": "assets/img/icons/icon-honey-suckle-star-of-life.svg",
+      "filename": "icon-honey-suckle-star-of-life.svg",
+      "sizeBytes": 362,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-1.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-1.svg",
+      "filename": "icon-honeysuckle-home-14-service-1.svg",
+      "sizeBytes": 1522,
+      "sizeKB": "1.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-2.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-2.svg",
+      "filename": "icon-honeysuckle-home-14-service-2.svg",
+      "sizeBytes": 2058,
+      "sizeKB": "2.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-3.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-3.svg",
+      "filename": "icon-honeysuckle-home-14-service-3.svg",
+      "sizeBytes": 2871,
+      "sizeKB": "2.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-4.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-4.svg",
+      "filename": "icon-honeysuckle-home-14-service-4.svg",
+      "sizeBytes": 2005,
+      "sizeKB": "2.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-5.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-5.svg",
+      "filename": "icon-honeysuckle-home-14-service-5.svg",
+      "sizeBytes": 2673,
+      "sizeKB": "2.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-6.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-6.svg",
+      "filename": "icon-honeysuckle-home-14-service-6.svg",
+      "sizeBytes": 3023,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-7.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-7.svg",
+      "filename": "icon-honeysuckle-home-14-service-7.svg",
+      "sizeBytes": 1842,
+      "sizeKB": "1.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-8.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-8.svg",
+      "filename": "icon-honeysuckle-home-14-service-8.svg",
+      "sizeBytes": 1287,
+      "sizeKB": "1.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-honeysuckle-home-14-service-9.svg",
+      "relPath": "assets/img/icons/icon-honeysuckle-home-14-service-9.svg",
+      "filename": "icon-honeysuckle-home-14-service-9.svg",
+      "sizeBytes": 1473,
+      "sizeKB": "1.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-orange-block-quote.svg",
+      "relPath": "assets/img/icons/icon-orange-block-quote.svg",
+      "filename": "icon-orange-block-quote.svg",
+      "sizeBytes": 726,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-flash.svg",
+      "relPath": "assets/img/icons/icon-purple-flash.svg",
+      "filename": "icon-purple-flash.svg",
+      "sizeBytes": 1224,
+      "sizeKB": "1.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-1.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-1.svg",
+      "filename": "icon-purple-home-12-content-1.svg",
+      "sizeBytes": 479,
+      "sizeKB": "0.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-2.png",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-2.png",
+      "filename": "icon-purple-home-12-content-2.png",
+      "sizeBytes": 787,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-2.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-2.svg",
+      "filename": "icon-purple-home-12-content-2.svg",
+      "sizeBytes": 866,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-3.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-3.svg",
+      "filename": "icon-purple-home-12-content-3.svg",
+      "sizeBytes": 1357,
+      "sizeKB": "1.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-4.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-4.svg",
+      "filename": "icon-purple-home-12-content-4.svg",
+      "sizeBytes": 798,
+      "sizeKB": "0.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-5.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-5.svg",
+      "filename": "icon-purple-home-12-content-5.svg",
+      "sizeBytes": 655,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-home-12-content-6.svg",
+      "relPath": "assets/img/icons/icon-purple-home-12-content-6.svg",
+      "filename": "icon-purple-home-12-content-6.svg",
+      "sizeBytes": 1075,
+      "sizeKB": "1.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-quote.svg",
+      "relPath": "assets/img/icons/icon-purple-quote.svg",
+      "filename": "icon-purple-quote.svg",
+      "sizeBytes": 2986,
+      "sizeKB": "2.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-purple-video-btn.svg",
+      "relPath": "assets/img/icons/icon-purple-video-btn.svg",
+      "filename": "icon-purple-video-btn.svg",
+      "sizeBytes": 1315,
+      "sizeKB": "1.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-round-apple-app-store.svg",
+      "relPath": "assets/img/icons/icon-round-apple-app-store.svg",
+      "filename": "icon-round-apple-app-store.svg",
+      "sizeBytes": 9172,
+      "sizeKB": "9.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-round-google-play-store.svg",
+      "relPath": "assets/img/icons/icon-round-google-play-store.svg",
+      "filename": "icon-round-google-play-store.svg",
+      "sizeBytes": 9255,
+      "sizeKB": "9.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-rum-swizzle-dial-star.svg",
+      "relPath": "assets/img/icons/icon-rum-swizzle-dial-star.svg",
+      "filename": "icon-rum-swizzle-dial-star.svg",
+      "sizeBytes": 2194,
+      "sizeKB": "2.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-tangerine-feature-1.svg",
+      "relPath": "assets/img/icons/icon-tangerine-feature-1.svg",
+      "filename": "icon-tangerine-feature-1.svg",
+      "sizeBytes": 2677,
+      "sizeKB": "2.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-tangerine-feature-2.svg",
+      "relPath": "assets/img/icons/icon-tangerine-feature-2.svg",
+      "filename": "icon-tangerine-feature-2.svg",
+      "sizeBytes": 3024,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-tangerine-feature-3.svg",
+      "relPath": "assets/img/icons/icon-tangerine-feature-3.svg",
+      "filename": "icon-tangerine-feature-3.svg",
+      "sizeBytes": 2614,
+      "sizeKB": "2.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-tangerine-quote.svg",
+      "relPath": "assets/img/icons/icon-tangerine-quote.svg",
+      "filename": "icon-tangerine-quote.svg",
+      "sizeBytes": 2489,
+      "sizeKB": "2.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-violet-feature-1.svg",
+      "relPath": "assets/img/icons/icon-violet-feature-1.svg",
+      "filename": "icon-violet-feature-1.svg",
+      "sizeBytes": 5782,
+      "sizeKB": "5.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-violet-feature-2.svg",
+      "relPath": "assets/img/icons/icon-violet-feature-2.svg",
+      "filename": "icon-violet-feature-2.svg",
+      "sizeBytes": 5214,
+      "sizeKB": "5.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-violet-feature-3.svg",
+      "relPath": "assets/img/icons/icon-violet-feature-3.svg",
+      "filename": "icon-violet-feature-3.svg",
+      "sizeBytes": 5358,
+      "sizeKB": "5.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-violet-feature-4.svg",
+      "relPath": "assets/img/icons/icon-violet-feature-4.svg",
+      "filename": "icon-violet-feature-4.svg",
+      "sizeBytes": 10192,
+      "sizeKB": "10.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-home-13-service-1.svg",
+      "relPath": "assets/img/icons/icon-white-home-13-service-1.svg",
+      "filename": "icon-white-home-13-service-1.svg",
+      "sizeBytes": 4324,
+      "sizeKB": "4.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-home-13-service-2.svg",
+      "relPath": "assets/img/icons/icon-white-home-13-service-2.svg",
+      "filename": "icon-white-home-13-service-2.svg",
+      "sizeBytes": 2517,
+      "sizeKB": "2.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-home-13-service-3.svg",
+      "relPath": "assets/img/icons/icon-white-home-13-service-3.svg",
+      "filename": "icon-white-home-13-service-3.svg",
+      "sizeBytes": 3126,
+      "sizeKB": "3.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-home-13-service-4.svg",
+      "relPath": "assets/img/icons/icon-white-home-13-service-4.svg",
+      "filename": "icon-white-home-13-service-4.svg",
+      "sizeBytes": 1665,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-process-1.svg",
+      "relPath": "assets/img/icons/icon-white-process-1.svg",
+      "filename": "icon-white-process-1.svg",
+      "sizeBytes": 3072,
+      "sizeKB": "3.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-process-2.svg",
+      "relPath": "assets/img/icons/icon-white-process-2.svg",
+      "filename": "icon-white-process-2.svg",
+      "sizeBytes": 5096,
+      "sizeKB": "5.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-process-3.svg",
+      "relPath": "assets/img/icons/icon-white-process-3.svg",
+      "filename": "icon-white-process-3.svg",
+      "sizeBytes": 6904,
+      "sizeKB": "6.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\icon-white-top-right.svg",
+      "relPath": "assets/img/icons/icon-white-top-right.svg",
+      "filename": "icon-white-top-right.svg",
+      "sizeBytes": 371,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\pay-mastercard.svg",
+      "relPath": "assets/img/icons/pay-mastercard.svg",
+      "filename": "pay-mastercard.svg",
+      "sizeBytes": 334,
+      "sizeKB": "0.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\pay-paytm.svg",
+      "relPath": "assets/img/icons/pay-paytm.svg",
+      "filename": "pay-paytm.svg",
+      "sizeBytes": 315,
+      "sizeKB": "0.3"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\pay-rupay.svg",
+      "relPath": "assets/img/icons/pay-rupay.svg",
+      "filename": "pay-rupay.svg",
+      "sizeBytes": 434,
+      "sizeKB": "0.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\pay-upi.svg",
+      "relPath": "assets/img/icons/pay-upi.svg",
+      "filename": "pay-upi.svg",
+      "sizeBytes": 596,
+      "sizeKB": "0.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\pay-visa.svg",
+      "relPath": "assets/img/icons/pay-visa.svg",
+      "filename": "pay-visa.svg",
+      "sizeBytes": 756,
+      "sizeKB": "0.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\text-circle-1.svg",
+      "relPath": "assets/img/icons/text-circle-1.svg",
+      "filename": "text-circle-1.svg",
+      "sizeBytes": 38118,
+      "sizeKB": "37.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\trustpilot-logo.png",
+      "relPath": "assets/img/icons/trustpilot-logo.png",
+      "filename": "trustpilot-logo.png",
+      "sizeBytes": 1548,
+      "sizeKB": "1.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\icons\\trustpilot-logo.svg",
+      "relPath": "assets/img/icons/trustpilot-logo.svg",
+      "filename": "trustpilot-logo.svg",
+      "sizeBytes": 8426,
+      "sizeKB": "8.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\logo-zooomit-full.png",
+      "relPath": "assets/img/logo-zooomit-full.png",
+      "filename": "logo-zooomit-full.png",
+      "sizeBytes": 226547,
+      "sizeKB": "221.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\logo-zooomit-light.png",
+      "relPath": "assets/img/logo-zooomit-light.png",
+      "filename": "logo-zooomit-light.png",
+      "sizeBytes": 62545,
+      "sizeKB": "61.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\logo-zooomit-light.svg",
+      "relPath": "assets/img/logo-zooomit-light.svg",
+      "filename": "logo-zooomit-light.svg",
+      "sizeBytes": 83558,
+      "sizeKB": "81.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\logo-zooomit.png",
+      "relPath": "assets/img/logo-zooomit.png",
+      "filename": "logo-zooomit.png",
+      "sizeBytes": 160463,
+      "sizeKB": "156.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\content-img-1.png",
+      "relPath": "assets/img/th-3/content-img-1.png",
+      "filename": "content-img-1.png",
+      "sizeBytes": 5297,
+      "sizeKB": "5.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\content-img-2.png",
+      "relPath": "assets/img/th-3/content-img-2.png",
+      "filename": "content-img-2.png",
+      "sizeBytes": 5834,
+      "sizeKB": "5.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\hero-mobille.png",
+      "relPath": "assets/img/th-3/hero-mobille.png",
+      "filename": "hero-mobille.png",
+      "sizeBytes": 10268,
+      "sizeKB": "10.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\image-1.webp",
+      "relPath": "assets/img/th-3/image-1.webp",
+      "filename": "image-1.webp",
+      "sizeBytes": 1283038,
+      "sizeKB": "1253.0"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\image-2.webp",
+      "relPath": "assets/img/th-3/image-2.webp",
+      "filename": "image-2.webp",
+      "sizeBytes": 1188404,
+      "sizeKB": "1160.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\image-3.webp",
+      "relPath": "assets/img/th-3/image-3.webp",
+      "filename": "image-3.webp",
+      "sizeBytes": 1164914,
+      "sizeKB": "1137.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\th-3\\newsletter.png",
+      "relPath": "assets/img/th-3/newsletter.png",
+      "filename": "newsletter.png",
+      "sizeBytes": 5538,
+      "sizeKB": "5.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\app-download-mockup.jpg",
+      "relPath": "assets/img/zooomit/app-download-mockup.jpg",
+      "filename": "app-download-mockup.jpg",
+      "sizeBytes": 628891,
+      "sizeKB": "614.2"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\app-experience.webp",
+      "relPath": "assets/img/zooomit/app-experience.webp",
+      "filename": "app-experience.webp",
+      "sizeBytes": 1164914,
+      "sizeKB": "1137.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\extracted-bag.png",
+      "relPath": "assets/img/zooomit/extracted-bag.png",
+      "filename": "extracted-bag.png",
+      "sizeBytes": 1572954,
+      "sizeKB": "1536.1"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\footer-app-showcase.png",
+      "relPath": "assets/img/zooomit/footer-app-showcase.png",
+      "filename": "footer-app-showcase.png",
+      "sizeBytes": 439991,
+      "sizeKB": "429.7"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\footer-produce-left.png",
+      "relPath": "assets/img/zooomit/footer-produce-left.png",
+      "filename": "footer-produce-left.png",
+      "sizeBytes": 65335,
+      "sizeKB": "63.8"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\footer-produce-right.png",
+      "relPath": "assets/img/zooomit/footer-produce-right.png",
+      "filename": "footer-produce-right.png",
+      "sizeBytes": 258696,
+      "sizeKB": "252.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\hero-app-mockup.webp",
+      "relPath": "assets/img/zooomit/hero-app-mockup.webp",
+      "filename": "hero-app-mockup.webp",
+      "sizeBytes": 1188404,
+      "sizeKB": "1160.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\ref-produce-left.png",
+      "relPath": "assets/img/zooomit/ref-produce-left.png",
+      "filename": "ref-produce-left.png",
+      "sizeBytes": 74126,
+      "sizeKB": "72.4"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit\\shopping-experience.jpg",
+      "relPath": "assets/img/zooomit/shopping-experience.jpg",
+      "filename": "shopping-experience.jpg",
+      "sizeBytes": 621467,
+      "sizeKB": "606.9"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\img\\zooomit-404-cart.jpg",
+      "relPath": "assets/img/zooomit-404-cart.jpg",
+      "filename": "zooomit-404-cart.jpg",
+      "sizeBytes": 542196,
+      "sizeKB": "529.5"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\countdown.js",
+      "relPath": "assets/js/vendors/countdown.js",
+      "filename": "countdown.js",
+      "sizeBytes": 1606,
+      "sizeKB": "1.6"
+    },
+    {
+      "absPath": "C:\\Users\\admin\\Desktop\\Kuiklo\\Zooom\\Website\\assets\\js\\vendors\\lenis.min.js",
+      "relPath": "assets/js/vendors/lenis.min.js",
+      "filename": "lenis.min.js",
+      "sizeBytes": 12197,
+      "sizeKB": "11.9"
+    }
+  ],
+  "categoryBreakdown": {
+    "assets/fonts/iconfonts/font-awesome": 1,
+    "assets/img/elements": 56,
+    "assets/img/icons": 163,
+    "assets/img": 5,
+    "assets/img/th-3": 7,
+    "assets/img/zooomit": 9,
+    "assets/js/vendors": 2
+  }
+}

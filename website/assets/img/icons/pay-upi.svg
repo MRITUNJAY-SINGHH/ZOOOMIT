@@ -1,8 +1,0 @@
-<svg width="46" height="20" viewBox="0 0 46 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M4 4H10C11.5 4 12.5 5 12.5 6.5V11C12.5 13 11 14.5 9 14.5H4V4ZM6.5 6.5V12H9C9.8 12 10.2 11.5 10.2 10.8V6.5H6.5Z" fill="#2E3192" opacity="0"/>
-  <!-- Bold UPI text -->
-  <text x="0" y="15" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="900" font-size="14" fill="#2E3192" letter-spacing="-0.5">UPI</text>
-  <!-- UPI Double Chevrons -->
-  <path d="M30 4L37 10L30 16H34L41 10L34 4H30Z" fill="#097939"/>
-  <path d="M36 4L43 10L36 16H39L46 10L39 4H36Z" fill="#ED7524"/>
-</svg>

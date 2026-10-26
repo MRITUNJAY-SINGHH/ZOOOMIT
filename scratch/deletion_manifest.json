@@ -1,0 +1,1875 @@
+{
+  "timestamp": "2026-10-26T20:14:13.224Z",
+  "totalAudited": 601,
+  "totalDeleted": 455,
+  "deletedBytes": 19058884,
+  "deletedMB": "18.18",
+  "breakdown": {
+    "assets/fonts/webfonts": {
+      "count": 213,
+      "bytes": 7284440
+    },
+    "assets/img/elements": {
+      "count": 56,
+      "bytes": 336937
+    },
+    "assets/img/icons": {
+      "count": 163,
+      "bytes": 670324
+    },
+    "assets/img/logo-zooomit-full.png": {
+      "count": 1,
+      "bytes": 226547
+    },
+    "assets/img/logo-zooomit-light.png": {
+      "count": 1,
+      "bytes": 62545
+    },
+    "assets/img/logo-zooomit-light.svg": {
+      "count": 1,
+      "bytes": 83558
+    },
+    "assets/img/logo-zooomit.png": {
+      "count": 1,
+      "bytes": 160463
+    },
+    "assets/img/th-3": {
+      "count": 7,
+      "bytes": 3663293
+    },
+    "assets/img/zooomit": {
+      "count": 9,
+      "bytes": 6014778
+    },
+    "assets/img/zooomit-404-cart.jpg": {
+      "count": 1,
+      "bytes": 542196
+    },
+    "assets/js/vendors": {
+      "count": 2,
+      "bytes": 13803
+    }
+  },
+  "deletedFiles": [
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Bold.woff",
+      "sizeKB": "41.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Bold.woff2",
+      "sizeKB": "28.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-BoldItalic.woff",
+      "sizeKB": "37.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-BoldItalic.woff2",
+      "sizeKB": "26.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Italic.woff",
+      "sizeKB": "37.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Italic.woff2",
+      "sizeKB": "26.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Medium.woff",
+      "sizeKB": "43.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Medium.woff2",
+      "sizeKB": "29.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-MediumItalic.woff",
+      "sizeKB": "38.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-MediumItalic.woff2",
+      "sizeKB": "28.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Regular.woff",
+      "sizeKB": "41.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-Regular.woff2",
+      "sizeKB": "28.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-SemiBold.woff",
+      "sizeKB": "43.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-SemiBold.woff2",
+      "sizeKB": "29.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-SemiBoldItalic.woff",
+      "sizeKB": "38.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/Cabin-SemiBoldItalic.woff2",
+      "sizeKB": "28.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/cabin/stylesheet.css",
+      "sizeKB": "1.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Bold.woff",
+      "sizeKB": "22.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Bold.woff2",
+      "sizeKB": "16.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Extralight.woff",
+      "sizeKB": "22.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Extralight.woff2",
+      "sizeKB": "16.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Light.woff",
+      "sizeKB": "23.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Light.woff2",
+      "sizeKB": "17.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Medium.woff",
+      "sizeKB": "23.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Medium.woff2",
+      "sizeKB": "16.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Regular.woff",
+      "sizeKB": "23.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Regular.woff2",
+      "sizeKB": "16.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Semibold.woff",
+      "sizeKB": "23.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/ClashDisplay-Semibold.woff2",
+      "sizeKB": "16.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/clash-display/stylesheet.css",
+      "sizeKB": "1.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Black.woff",
+      "sizeKB": "31.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Black.woff2",
+      "sizeKB": "23.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-BlackItalic.woff",
+      "sizeKB": "35.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-BlackItalic.woff2",
+      "sizeKB": "26.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Bold.woff",
+      "sizeKB": "31.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Bold.woff2",
+      "sizeKB": "23.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-BoldItalic.woff",
+      "sizeKB": "35.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-BoldItalic.woff2",
+      "sizeKB": "26.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBold.woff",
+      "sizeKB": "31.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBold.woff2",
+      "sizeKB": "23.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBoldItalic.woff",
+      "sizeKB": "35.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraBoldItalic.woff2",
+      "sizeKB": "26.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLight.woff",
+      "sizeKB": "32.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLight.woff2",
+      "sizeKB": "23.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLightItalic.woff",
+      "sizeKB": "34.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ExtraLightItalic.woff2",
+      "sizeKB": "25.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Italic.woff",
+      "sizeKB": "35.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Italic.woff2",
+      "sizeKB": "25.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Light.woff",
+      "sizeKB": "30.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Light.woff2",
+      "sizeKB": "22.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-LightItalic.woff",
+      "sizeKB": "34.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-LightItalic.woff2",
+      "sizeKB": "25.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Medium.woff",
+      "sizeKB": "31.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Medium.woff2",
+      "sizeKB": "23.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-MediumItalic.woff",
+      "sizeKB": "35.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-MediumItalic.woff2",
+      "sizeKB": "26.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Regular.woff",
+      "sizeKB": "31.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Regular.woff2",
+      "sizeKB": "23.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-SemiBold.woff",
+      "sizeKB": "31.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-SemiBold.woff2",
+      "sizeKB": "23.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-SemiBoldItalic.woff",
+      "sizeKB": "35.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-SemiBoldItalic.woff2",
+      "sizeKB": "26.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Thin.woff",
+      "sizeKB": "31.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-Thin.woff2",
+      "sizeKB": "23.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ThinItalic.woff",
+      "sizeKB": "34.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/DMSans-ThinItalic.woff2",
+      "sizeKB": "25.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/dm-sans/stylesheet.css",
+      "sizeKB": "3.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Bold.woff",
+      "sizeKB": "31.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Bold.woff2",
+      "sizeKB": "22.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-BoldItalic.woff",
+      "sizeKB": "33.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-BoldItalic.woff2",
+      "sizeKB": "23.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Extralight.woff",
+      "sizeKB": "30.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Extralight.woff2",
+      "sizeKB": "22.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-ExtralightItalic.woff",
+      "sizeKB": "31.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-ExtralightItalic.woff2",
+      "sizeKB": "22.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Italic.woff",
+      "sizeKB": "35.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Italic.woff2",
+      "sizeKB": "25.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Light.woff",
+      "sizeKB": "33.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Light.woff2",
+      "sizeKB": "24.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-LightItalic.woff",
+      "sizeKB": "35.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-LightItalic.woff2",
+      "sizeKB": "25.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Medium.woff",
+      "sizeKB": "33.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Medium.woff2",
+      "sizeKB": "24.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-MediumItalic.woff",
+      "sizeKB": "34.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-MediumItalic.woff2",
+      "sizeKB": "25.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Regular.woff",
+      "sizeKB": "33.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Regular.woff2",
+      "sizeKB": "24.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Semibold.woff",
+      "sizeKB": "34.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-Semibold.woff2",
+      "sizeKB": "24.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-SemiboldItalic.woff",
+      "sizeKB": "35.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/GeneralSans-SemiboldItalic.woff2",
+      "sizeKB": "25.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/general-sans/stylesheet.css",
+      "sizeKB": "2.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Black.woff",
+      "sizeKB": "72.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Black.woff2",
+      "sizeKB": "49.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-BlackItalic.woff",
+      "sizeKB": "77.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-BlackItalic.woff2",
+      "sizeKB": "53.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Bold.woff",
+      "sizeKB": "71.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Bold.woff2",
+      "sizeKB": "49.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-BoldItalic.woff",
+      "sizeKB": "77.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-BoldItalic.woff2",
+      "sizeKB": "52.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraBold.woff",
+      "sizeKB": "72.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraBold.woff2",
+      "sizeKB": "50.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraBoldItalic.woff",
+      "sizeKB": "79.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraBoldItalic.woff2",
+      "sizeKB": "54.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraLight.woff",
+      "sizeKB": "68.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraLight.woff2",
+      "sizeKB": "47.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraLightItalic.woff",
+      "sizeKB": "71.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ExtraLightItalic.woff2",
+      "sizeKB": "49.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Italic.woff",
+      "sizeKB": "74.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Italic.woff2",
+      "sizeKB": "50.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Light.woff",
+      "sizeKB": "70.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Light.woff2",
+      "sizeKB": "48.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-LightItalic.woff",
+      "sizeKB": "74.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-LightItalic.woff2",
+      "sizeKB": "50.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Medium.woff",
+      "sizeKB": "71.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Medium.woff2",
+      "sizeKB": "49.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-MediumItalic.woff",
+      "sizeKB": "74.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-MediumItalic.woff2",
+      "sizeKB": "50.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Regular.woff",
+      "sizeKB": "71.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Regular.woff2",
+      "sizeKB": "48.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-SemiBold.woff",
+      "sizeKB": "71.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-SemiBold.woff2",
+      "sizeKB": "49.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-SemiBoldItalic.woff",
+      "sizeKB": "74.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-SemiBoldItalic.woff2",
+      "sizeKB": "50.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Thin.woff",
+      "sizeKB": "66.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-Thin.woff2",
+      "sizeKB": "46.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ThinItalic.woff",
+      "sizeKB": "70.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/Kanit-ThinItalic.woff2",
+      "sizeKB": "48.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/kanit/stylesheet.css",
+      "sizeKB": "3.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Black.woff",
+      "sizeKB": "29.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Black.woff2",
+      "sizeKB": "21.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Bold.woff",
+      "sizeKB": "31.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Bold.woff2",
+      "sizeKB": "22.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-ExtraBold.woff",
+      "sizeKB": "31.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-ExtraBold.woff2",
+      "sizeKB": "22.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-ExtraLight.woff",
+      "sizeKB": "30.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-ExtraLight.woff2",
+      "sizeKB": "21.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Light.woff",
+      "sizeKB": "30.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Light.woff2",
+      "sizeKB": "22.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Medium.woff",
+      "sizeKB": "29.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Medium.woff2",
+      "sizeKB": "21.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Regular.woff",
+      "sizeKB": "31.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Regular.woff2",
+      "sizeKB": "22.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-SemiBold.woff",
+      "sizeKB": "31.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-SemiBold.woff2",
+      "sizeKB": "22.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Thin.woff",
+      "sizeKB": "29.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/Outfit-Thin.woff2",
+      "sizeKB": "20.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/outfit/stylesheet.css",
+      "sizeKB": "1.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Black.woff",
+      "sizeKB": "32.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Black.woff2",
+      "sizeKB": "24.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-BlackItalic.woff",
+      "sizeKB": "34.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-BlackItalic.woff2",
+      "sizeKB": "26.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Bold.woff",
+      "sizeKB": "34.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Bold.woff2",
+      "sizeKB": "25.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-BoldItalic.woff",
+      "sizeKB": "36.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-BoldItalic.woff2",
+      "sizeKB": "27.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBold.woff",
+      "sizeKB": "34.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBold.woff2",
+      "sizeKB": "25.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBoldItalic.woff",
+      "sizeKB": "36.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraBoldItalic.woff2",
+      "sizeKB": "27.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLight.woff",
+      "sizeKB": "34.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLight.woff2",
+      "sizeKB": "25.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLightItalic.woff",
+      "sizeKB": "36.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ExtraLightItalic.woff2",
+      "sizeKB": "27.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Italic.woff",
+      "sizeKB": "36.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Italic.woff2",
+      "sizeKB": "27.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Light.woff",
+      "sizeKB": "34.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Light.woff2",
+      "sizeKB": "25.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-LightItalic.woff",
+      "sizeKB": "35.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-LightItalic.woff2",
+      "sizeKB": "26.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Medium.woff",
+      "sizeKB": "34.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Medium.woff2",
+      "sizeKB": "25.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-MediumItalic.woff",
+      "sizeKB": "36.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-MediumItalic.woff2",
+      "sizeKB": "27.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Regular.woff",
+      "sizeKB": "34.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Regular.woff2",
+      "sizeKB": "25.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-SemiBold.woff",
+      "sizeKB": "34.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-SemiBold.woff2",
+      "sizeKB": "25.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-SemiBoldItalic.woff",
+      "sizeKB": "36.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-SemiBoldItalic.woff2",
+      "sizeKB": "27.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Thin.woff",
+      "sizeKB": "32.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-Thin.woff2",
+      "sizeKB": "24.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ThinItalic.woff",
+      "sizeKB": "34.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/PublicSans-ThinItalic.woff2",
+      "sizeKB": "25.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/public-sans/stylesheet.css",
+      "sizeKB": "4.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Bold.woff",
+      "sizeKB": "32.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Bold.woff2",
+      "sizeKB": "24.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-ExtraBold.woff",
+      "sizeKB": "32.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-ExtraBold.woff2",
+      "sizeKB": "24.2"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-ExtraLight.woff",
+      "sizeKB": "32.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-ExtraLight.woff2",
+      "sizeKB": "24.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Light.woff",
+      "sizeKB": "32.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Light.woff2",
+      "sizeKB": "24.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Medium.woff",
+      "sizeKB": "32.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Medium.woff2",
+      "sizeKB": "24.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Regular.woff",
+      "sizeKB": "31.9"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Regular.woff2",
+      "sizeKB": "24.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-SemiBold.woff",
+      "sizeKB": "32.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-SemiBold.woff2",
+      "sizeKB": "24.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Thin.woff",
+      "sizeKB": "31.8"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/Sora-Thin.woff2",
+      "sizeKB": "23.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/sora/stylesheet.css",
+      "sizeKB": "1.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/stylesheet.css",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Bold.woff",
+      "sizeKB": "39.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Bold.woff2",
+      "sizeKB": "28.6"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-ExtraBold.woff",
+      "sizeKB": "38.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-ExtraBold.woff2",
+      "sizeKB": "28.1"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Medium.woff",
+      "sizeKB": "39.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Medium.woff2",
+      "sizeKB": "28.7"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Regular.woff",
+      "sizeKB": "37.4"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-Regular.woff2",
+      "sizeKB": "27.3"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-SemiBold.woff",
+      "sizeKB": "39.5"
+    },
+    {
+      "path": "assets/fonts/webfonts/syne/Syne-SemiBold.woff2",
+      "sizeKB": "29.0"
+    },
+    {
+      "path": "assets/img/elements/abstract-2line-plus-shape.svg",
+      "sizeKB": "4.2"
+    },
+    {
+      "path": "assets/img/elements/arc-shape-black.png",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/elements/content-shape-1.svg",
+      "sizeKB": "3.2"
+    },
+    {
+      "path": "assets/img/elements/content-shape-2.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/elements/cta-1-shape-1.svg",
+      "sizeKB": "1.2"
+    },
+    {
+      "path": "assets/img/elements/discount-text.svg",
+      "sizeKB": "17.9"
+    },
+    {
+      "path": "assets/img/elements/faq-1-shape-1.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/faq-1-shape-2.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/flower-shape-1.svg",
+      "sizeKB": "2.3"
+    },
+    {
+      "path": "assets/img/elements/flower-shape-2.svg",
+      "sizeKB": "2.3"
+    },
+    {
+      "path": "assets/img/elements/gear-shape.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/elements/hero-1-shape-1.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/hero-1-shape-2.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/hero-10-bg-shape.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/elements/hero-12-shape-1.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/elements/hero-12-shape-2.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/hero-2-shape-1.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/elements/hero-2-shape-2.svg",
+      "sizeKB": "1.9"
+    },
+    {
+      "path": "assets/img/elements/hero-4-bg-shape.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/elements/hero-4-start-shape-1.svg",
+      "sizeKB": "1.7"
+    },
+    {
+      "path": "assets/img/elements/hero-8-content-shape.svg",
+      "sizeKB": "1.9"
+    },
+    {
+      "path": "assets/img/elements/hero-content-shape.svg",
+      "sizeKB": "33.0"
+    },
+    {
+      "path": "assets/img/elements/home-12-cta-shape.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/elements/home-14-footer-shape.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/home-14-hero-shape.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/home-4-divider-shape-1.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-4-divider-shape-2.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-4-divider-shape-3.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-4-divider-shape-4.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-4-features-element.svg",
+      "sizeKB": "2.8"
+    },
+    {
+      "path": "assets/img/elements/home-4-testimonial-element-1.svg",
+      "sizeKB": "5.9"
+    },
+    {
+      "path": "assets/img/elements/home-4-testimonial-element-2.svg",
+      "sizeKB": "9.1"
+    },
+    {
+      "path": "assets/img/elements/home-5-content-img-shape-1.svg",
+      "sizeKB": "1.9"
+    },
+    {
+      "path": "assets/img/elements/home-5-service-bg-shape.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/elements/home-8-content-spape-2.svg",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-2.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-3.svg",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-4.svg",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-5.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-6.svg",
+      "sizeKB": "1.1"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape-7.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-8-dot-shape.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/elements/home-9-bg-shape-1.svg",
+      "sizeKB": "31.9"
+    },
+    {
+      "path": "assets/img/elements/home-9-bg-shape-2.svg",
+      "sizeKB": "32.7"
+    },
+    {
+      "path": "assets/img/elements/home-9-bg-shape-3.svg",
+      "sizeKB": "32.5"
+    },
+    {
+      "path": "assets/img/elements/home-9-bg-shape-4.svg",
+      "sizeKB": "33.7"
+    },
+    {
+      "path": "assets/img/elements/home-9-hero-bg-shape.svg",
+      "sizeKB": "33.0"
+    },
+    {
+      "path": "assets/img/elements/particle-circle-1.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/elements/portfolio-1-shape-1.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/section-devider-black.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/elements/service-1-shape-1.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/elements/shape-1.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/elements/shape-2.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/elements/shape.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/elements/text-circle-1.png",
+      "sizeKB": "7.1"
+    },
+    {
+      "path": "assets/img/elements/text-circle-1.svg",
+      "sizeKB": "37.2"
+    },
+    {
+      "path": "assets/img/icons/arm-icon.png",
+      "sizeKB": "2.4"
+    },
+    {
+      "path": "assets/img/icons/fire-icon.png",
+      "sizeKB": "2.6"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-1-active.svg",
+      "sizeKB": "5.3"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-1.svg",
+      "sizeKB": "5.3"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-2-active.svg",
+      "sizeKB": "4.6"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-2.svg",
+      "sizeKB": "4.6"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-3-active.svg",
+      "sizeKB": "6.7"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-3.svg",
+      "sizeKB": "6.7"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-4-active.svg",
+      "sizeKB": "3.2"
+    },
+    {
+      "path": "assets/img/icons/home-9-tab-icon-4.svg",
+      "sizeKB": "3.2"
+    },
+    {
+      "path": "assets/img/icons/icon-6-arm-thin-star-light-blue.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/icons/icon-6-arm-thin-star-purple.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/icons/icon-6-arm-thin-star-yellow.svg",
+      "sizeKB": "0.2"
+    },
+    {
+      "path": "assets/img/icons/icon-apple-app-store.svg",
+      "sizeKB": "8.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-arrow-right.svg",
+      "sizeKB": "0.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-down-arrow.svg",
+      "sizeKB": "2.4"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-1.svg",
+      "sizeKB": "5.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-2.svg",
+      "sizeKB": "5.1"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-3.svg",
+      "sizeKB": "11.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-4.svg",
+      "sizeKB": "7.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-5.svg",
+      "sizeKB": "13.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-10-feature-6.svg",
+      "sizeKB": "8.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-11-feature-1.svg",
+      "sizeKB": "4.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-11-feature-2.svg",
+      "sizeKB": "4.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-11-feature-3.svg",
+      "sizeKB": "4.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-11-feature-4.svg",
+      "sizeKB": "6.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-12-feature-1.svg",
+      "sizeKB": "6.7"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-12-feature-2.svg",
+      "sizeKB": "4.5"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-12-feature-3.svg",
+      "sizeKB": "2.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-12-feature-4.svg",
+      "sizeKB": "2.4"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-13-service-1.svg",
+      "sizeKB": "4.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-13-service-2.svg",
+      "sizeKB": "2.5"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-13-service-3.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-13-service-4.svg",
+      "sizeKB": "1.6"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-5-pricing-1.svg",
+      "sizeKB": "1.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-5-pricing-2.svg",
+      "sizeKB": "2.3"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-5-pricing-3.svg",
+      "sizeKB": "5.7"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-1.svg",
+      "sizeKB": "4.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-2.svg",
+      "sizeKB": "3.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-3.svg",
+      "sizeKB": "4.3"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-4.svg",
+      "sizeKB": "8.1"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-5.svg",
+      "sizeKB": "5.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-6.svg",
+      "sizeKB": "5.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-7.svg",
+      "sizeKB": "6.3"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-7-service-8.svg",
+      "sizeKB": "7.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-9-feature-1.svg",
+      "sizeKB": "8.1"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-9-feature-2.svg",
+      "sizeKB": "11.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-9-feature-3.svg",
+      "sizeKB": "7.6"
+    },
+    {
+      "path": "assets/img/icons/icon-black-home-9-feature-4.svg",
+      "sizeKB": "4.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-mail-close.svg",
+      "sizeKB": "1.7"
+    },
+    {
+      "path": "assets/img/icons/icon-black-mail-open.svg",
+      "sizeKB": "2.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-pen.svg",
+      "sizeKB": "3.4"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-1.svg",
+      "sizeKB": "4.7"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-10.svg",
+      "sizeKB": "4.7"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-2.svg",
+      "sizeKB": "7.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-3.svg",
+      "sizeKB": "7.2"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-4.svg",
+      "sizeKB": "5.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-5.svg",
+      "sizeKB": "4.8"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-6.svg",
+      "sizeKB": "4.0"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-7.svg",
+      "sizeKB": "5.9"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-8.svg",
+      "sizeKB": "5.6"
+    },
+    {
+      "path": "assets/img/icons/icon-black-service-9.svg",
+      "sizeKB": "7.1"
+    },
+    {
+      "path": "assets/img/icons/icon-black-star.svg",
+      "sizeKB": "0.8"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-badge-check.svg",
+      "sizeKB": "1.2"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-check-circle.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-quote-right-reverse.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-1.svg",
+      "sizeKB": "4.7"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-2.svg",
+      "sizeKB": "7.3"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-3.svg",
+      "sizeKB": "7.2"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-4.svg",
+      "sizeKB": "5.8"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-5.svg",
+      "sizeKB": "4.9"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-service-6.svg",
+      "sizeKB": "11.7"
+    },
+    {
+      "path": "assets/img/icons/icon-blue-top-right.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-color-discord.svg",
+      "sizeKB": "2.0"
+    },
+    {
+      "path": "assets/img/icons/icon-color-dropbox.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/icons/icon-color-figma.svg",
+      "sizeKB": "1.1"
+    },
+    {
+      "path": "assets/img/icons/icon-color-gmail.svg",
+      "sizeKB": "0.9"
+    },
+    {
+      "path": "assets/img/icons/icon-color-mailchimp.svg",
+      "sizeKB": "6.4"
+    },
+    {
+      "path": "assets/img/icons/icon-color-shopify.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/icons/icon-color-skype.svg",
+      "sizeKB": "7.5"
+    },
+    {
+      "path": "assets/img/icons/icon-color-slack.svg",
+      "sizeKB": "1.8"
+    },
+    {
+      "path": "assets/img/icons/icon-color-snapchat.svg",
+      "sizeKB": "6.0"
+    },
+    {
+      "path": "assets/img/icons/icon-color-spotify.svg",
+      "sizeKB": "1.1"
+    },
+    {
+      "path": "assets/img/icons/icon-color-whatsapp.svg",
+      "sizeKB": "2.4"
+    },
+    {
+      "path": "assets/img/icons/icon-color-zoom.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-asana.svg",
+      "sizeKB": "5.4"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-gitlab.svg",
+      "sizeKB": "4.4"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-hotjar.svg",
+      "sizeKB": "5.0"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-hubspot.svg",
+      "sizeKB": "4.5"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-jira.svg",
+      "sizeKB": "6.2"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-shopify.svg",
+      "sizeKB": "5.1"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-slack.svg",
+      "sizeKB": "3.6"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-spotify.svg",
+      "sizeKB": "6.6"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-whatsapp.svg",
+      "sizeKB": "11.1"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-zalando.svg",
+      "sizeKB": "5.2"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-zendesk.svg",
+      "sizeKB": "4.1"
+    },
+    {
+      "path": "assets/img/icons/icon-colorful-wide-zoom.svg",
+      "sizeKB": "3.6"
+    },
+    {
+      "path": "assets/img/icons/icon-corn-cursor-click.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-corn-download.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-corn-pencil-alt.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/icons/icon-demin-chat-alt-2.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/icons/icon-denim-chat-alt-2.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/icons/icon-denim-desktop-computer.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-denim-mail.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-denim-pencil.svg",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/img/icons/icon-denim-shopping-cart.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/icons/icon-duotone-private-message.svg",
+      "sizeKB": "5.8"
+    },
+    {
+      "path": "assets/img/icons/icon-duotone-translate.svg",
+      "sizeKB": "6.9"
+    },
+    {
+      "path": "assets/img/icons/icon-duotone-user-list.svg",
+      "sizeKB": "7.3"
+    },
+    {
+      "path": "assets/img/icons/icon-green-black-duotone-faq-1.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/icons/icon-green-black-duotone-faq-2.svg",
+      "sizeKB": "4.3"
+    },
+    {
+      "path": "assets/img/icons/icon-green-black-duotone-faq-3.svg",
+      "sizeKB": "3.6"
+    },
+    {
+      "path": "assets/img/icons/icon-green-feature-1.svg",
+      "sizeKB": "2.9"
+    },
+    {
+      "path": "assets/img/icons/icon-green-feature-2.svg",
+      "sizeKB": "2.2"
+    },
+    {
+      "path": "assets/img/icons/icon-green-feature-3.svg",
+      "sizeKB": "2.7"
+    },
+    {
+      "path": "assets/img/icons/icon-honey-suckle-star-of-life.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-1.svg",
+      "sizeKB": "1.5"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-2.svg",
+      "sizeKB": "2.0"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-3.svg",
+      "sizeKB": "2.8"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-4.svg",
+      "sizeKB": "2.0"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-5.svg",
+      "sizeKB": "2.6"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-6.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-7.svg",
+      "sizeKB": "1.8"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-8.svg",
+      "sizeKB": "1.3"
+    },
+    {
+      "path": "assets/img/icons/icon-honeysuckle-home-14-service-9.svg",
+      "sizeKB": "1.4"
+    },
+    {
+      "path": "assets/img/icons/icon-orange-block-quote.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-flash.svg",
+      "sizeKB": "1.2"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-1.svg",
+      "sizeKB": "0.5"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-2.png",
+      "sizeKB": "0.8"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-2.svg",
+      "sizeKB": "0.8"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-3.svg",
+      "sizeKB": "1.3"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-4.svg",
+      "sizeKB": "0.8"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-5.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-home-12-content-6.svg",
+      "sizeKB": "1.0"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-quote.svg",
+      "sizeKB": "2.9"
+    },
+    {
+      "path": "assets/img/icons/icon-purple-video-btn.svg",
+      "sizeKB": "1.3"
+    },
+    {
+      "path": "assets/img/icons/icon-round-apple-app-store.svg",
+      "sizeKB": "9.0"
+    },
+    {
+      "path": "assets/img/icons/icon-round-google-play-store.svg",
+      "sizeKB": "9.0"
+    },
+    {
+      "path": "assets/img/icons/icon-rum-swizzle-dial-star.svg",
+      "sizeKB": "2.1"
+    },
+    {
+      "path": "assets/img/icons/icon-tangerine-feature-1.svg",
+      "sizeKB": "2.6"
+    },
+    {
+      "path": "assets/img/icons/icon-tangerine-feature-2.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/icons/icon-tangerine-feature-3.svg",
+      "sizeKB": "2.6"
+    },
+    {
+      "path": "assets/img/icons/icon-tangerine-quote.svg",
+      "sizeKB": "2.4"
+    },
+    {
+      "path": "assets/img/icons/icon-violet-feature-1.svg",
+      "sizeKB": "5.6"
+    },
+    {
+      "path": "assets/img/icons/icon-violet-feature-2.svg",
+      "sizeKB": "5.1"
+    },
+    {
+      "path": "assets/img/icons/icon-violet-feature-3.svg",
+      "sizeKB": "5.2"
+    },
+    {
+      "path": "assets/img/icons/icon-violet-feature-4.svg",
+      "sizeKB": "10.0"
+    },
+    {
+      "path": "assets/img/icons/icon-white-home-13-service-1.svg",
+      "sizeKB": "4.2"
+    },
+    {
+      "path": "assets/img/icons/icon-white-home-13-service-2.svg",
+      "sizeKB": "2.5"
+    },
+    {
+      "path": "assets/img/icons/icon-white-home-13-service-3.svg",
+      "sizeKB": "3.1"
+    },
+    {
+      "path": "assets/img/icons/icon-white-home-13-service-4.svg",
+      "sizeKB": "1.6"
+    },
+    {
+      "path": "assets/img/icons/icon-white-process-1.svg",
+      "sizeKB": "3.0"
+    },
+    {
+      "path": "assets/img/icons/icon-white-process-2.svg",
+      "sizeKB": "5.0"
+    },
+    {
+      "path": "assets/img/icons/icon-white-process-3.svg",
+      "sizeKB": "6.7"
+    },
+    {
+      "path": "assets/img/icons/icon-white-top-right.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/pay-mastercard.svg",
+      "sizeKB": "0.3"
+    },
+    {
+      "path": "assets/img/icons/pay-paytm.svg",
+      "sizeKB": "0.3"
+    },
+    {
+      "path": "assets/img/icons/pay-rupay.svg",
+      "sizeKB": "0.4"
+    },
+    {
+      "path": "assets/img/icons/pay-upi.svg",
+      "sizeKB": "0.6"
+    },
+    {
+      "path": "assets/img/icons/pay-visa.svg",
+      "sizeKB": "0.7"
+    },
+    {
+      "path": "assets/img/icons/text-circle-1.svg",
+      "sizeKB": "37.2"
+    },
+    {
+      "path": "assets/img/icons/trustpilot-logo.png",
+      "sizeKB": "1.5"
+    },
+    {
+      "path": "assets/img/icons/trustpilot-logo.svg",
+      "sizeKB": "8.2"
+    },
+    {
+      "path": "assets/img/logo-zooomit-full.png",
+      "sizeKB": "221.2"
+    },
+    {
+      "path": "assets/img/logo-zooomit-light.png",
+      "sizeKB": "61.1"
+    },
+    {
+      "path": "assets/img/logo-zooomit-light.svg",
+      "sizeKB": "81.6"
+    },
+    {
+      "path": "assets/img/logo-zooomit.png",
+      "sizeKB": "156.7"
+    },
+    {
+      "path": "assets/img/th-3/content-img-1.png",
+      "sizeKB": "5.2"
+    },
+    {
+      "path": "assets/img/th-3/content-img-2.png",
+      "sizeKB": "5.7"
+    },
+    {
+      "path": "assets/img/th-3/hero-mobille.png",
+      "sizeKB": "10.0"
+    },
+    {
+      "path": "assets/img/th-3/image-1.webp",
+      "sizeKB": "1253.0"
+    },
+    {
+      "path": "assets/img/th-3/image-2.webp",
+      "sizeKB": "1160.6"
+    },
+    {
+      "path": "assets/img/th-3/image-3.webp",
+      "sizeKB": "1137.6"
+    },
+    {
+      "path": "assets/img/th-3/newsletter.png",
+      "sizeKB": "5.4"
+    },
+    {
+      "path": "assets/img/zooomit/app-download-mockup.jpg",
+      "sizeKB": "614.2"
+    },
+    {
+      "path": "assets/img/zooomit/app-experience.webp",
+      "sizeKB": "1137.6"
+    },
+    {
+      "path": "assets/img/zooomit/extracted-bag.png",
+      "sizeKB": "1536.1"
+    },
+    {
+      "path": "assets/img/zooomit/footer-app-showcase.png",
+      "sizeKB": "429.7"
+    },
+    {
+      "path": "assets/img/zooomit/footer-produce-left.png",
+      "sizeKB": "63.8"
+    },
+    {
+      "path": "assets/img/zooomit/footer-produce-right.png",
+      "sizeKB": "252.6"
+    },
+    {
+      "path": "assets/img/zooomit/hero-app-mockup.webp",
+      "sizeKB": "1160.6"
+    },
+    {
+      "path": "assets/img/zooomit/ref-produce-left.png",
+      "sizeKB": "72.4"
+    },
+    {
+      "path": "assets/img/zooomit/shopping-experience.jpg",
+      "sizeKB": "606.9"
+    },
+    {
+      "path": "assets/img/zooomit-404-cart.jpg",
+      "sizeKB": "529.5"
+    },
+    {
+      "path": "assets/js/vendors/countdown.js",
+      "sizeKB": "1.6"
+    },
+    {
+      "path": "assets/js/vendors/lenis.min.js",
+      "sizeKB": "11.9"
+    }
+  ]
+}
