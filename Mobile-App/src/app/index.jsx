@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, ImageBackground, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -51,11 +52,12 @@ export default function IndexScreen() {
   }
 
   return (
-    <ImageBackground
-      source={require('../../assets/images/auth/auth_splash_bg.jpg')}
-      style={styles.bgImage}
-      resizeMode="cover"
-    >
+    <View style={styles.rootContainer}>
+      <Image
+        source={require('../../assets/images/auth/auth_splash_bg.jpg')}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+      />
       <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
         <View style={styles.topSection}>
           <Animated.View 
@@ -135,15 +137,14 @@ export default function IndexScreen() {
           </Animated.View>
         </View>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  bgImage: {
+  rootContainer: {
     flex: 1,
-    width: '100%',
-    height: '100%'
+    backgroundColor: '#000'
   },
   safeContainer: {
     flex: 1,

@@ -458,30 +458,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.highlightCard,
-              { backgroundColor: pressed ? '#FFF3D4' : colors.primarySoft }
-            ]}
-            onPress={() => {
-              haptics.impactLight();
-              setShowKuikloPlusModal(true);
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="ZOOOMIT Plus"
-          >
-            <View style={styles.crownCircle}>
-              <Crown size={22} color="#D97706" strokeWidth={2.4} />
-            </View>
-            <View style={styles.highlightTextCol}>
-              <Text style={styles.highlightTitle}>ZOOOMIT Plus</Text>
-              <Text style={styles.highlightSubtitle}>
-                Exclusive offers, free delivery and more
-              </Text>
-            </View>
-            <ChevronRight size={18} color={colors.textSecondary} strokeWidth={2.2} />
-          </Pressable>
-
           <View style={styles.menuGroupCard}>
             <MenuItemRow
               icon={<User size={20} color={colors.black} strokeWidth={2.2} />}
@@ -573,7 +549,10 @@ export default function ProfileScreen() {
           </Pressable>
 
           <Pressable
-            style={styles.deleteAccountRow}
+            style={({ pressed }) => [
+              styles.deleteAccountButton,
+              { backgroundColor: pressed ? '#FEE2E2' : '#FFF5F5' }
+            ]}
             onPress={() => {
               haptics.selection();
               setShowDeleteModal(true);
@@ -581,6 +560,7 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel="Delete Account"
           >
+            <Trash2 size={18} color={colors.error} strokeWidth={2.2} style={{ marginRight: 8 }} />
             <Text style={styles.deleteAccountText}>Delete Account</Text>
           </Pressable>
 
@@ -1441,7 +1421,7 @@ const styles = StyleSheet.create({
     zIndex: 2
   },
   bodyScrollContent: {
-    paddingBottom: 40
+    paddingBottom: 120
   },
   whiteCardContainer: {
     backgroundColor: colors.white,
@@ -1585,15 +1565,23 @@ const styles = StyleSheet.create({
     fontFamily: typography.family.bold,
     color: colors.error
   },
-  deleteAccountRow: {
+  deleteAccountButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.sm
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1.5,
+    borderColor: '#FECACA',
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xs
   },
   deleteAccountText: {
-    fontSize: 12,
-    fontFamily: typography.family.medium,
-    color: colors.textMuted,
-    textDecorationLine: 'underline'
+    fontSize: 15,
+    fontFamily: typography.family.bold,
+    color: colors.error
   },
   footerBrandRow: {
     alignItems: 'center',
@@ -2141,7 +2129,7 @@ const styles = StyleSheet.create({
   guestScrollContent: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.md,
-    paddingBottom: 40
+    paddingBottom: 120
   },
   guestHeaderIllustration: {
     width: '100%',

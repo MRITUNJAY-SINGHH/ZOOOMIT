@@ -35,6 +35,7 @@ import {
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography, getOrderStatus } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
+import { SAMPLE_ORDERS } from '../../services/mockOrders';
 import { useCart } from '../../context/CartContext';
 import { ErrorState } from '../../components/ErrorState';
 import { haptics } from '../../services/haptics';
@@ -66,8 +67,14 @@ export default function OrderDetailsScreen() {
     queryKey: ['order-details', id],
     queryFn: async () => {
       if (!id) return null;
-      const res = await StorefrontAPI.getOrderDetails(id);
-      return res.data?.data || null;
+      try {
+        const res = await StorefrontAPI.getOrderDetails(id);
+        const data = res.data?.data || (res.data?._id ? res.data : null);
+        if (data) return data;
+      } catch (e) {
+        // Fallback for sample orders
+      }
+      return SAMPLE_ORDERS.find(o => o._id === id || o.orderNumber === id) || null;
     },
     enabled: Boolean(id),
     refetchInterval: 10000

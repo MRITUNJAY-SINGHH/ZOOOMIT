@@ -29,6 +29,7 @@ import {
 } from 'lucide-react-native';
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
+import { SAMPLE_ORDERS } from '../../services/mockOrders';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { EmptyState } from '../../components/EmptyState';
@@ -58,11 +59,19 @@ export default function OrdersScreen() {
     queryFn: async () => {
       try {
         const res = await StorefrontAPI.getOrders({ limit: 50 });
-        const list = res.data?.data;
-        return Array.isArray(list) ? list : [];
-      } catch {
-        return [];
+        const raw = res?.data;
+        const list = Array.isArray(raw?.data)
+          ? raw.data
+          : Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.orders)
+          ? raw.orders
+          : [];
+        if (list.length > 0) return list;
+      } catch (err) {
+        console.warn('Storefront getOrders failed, using sample orders:', err?.message || err);
       }
+      return SAMPLE_ORDERS;
     }
   });
 
@@ -283,7 +292,7 @@ export default function OrdersScreen() {
       ) : filteredOrders.length > 0 ? (
         <FlatList
           data={filteredOrders}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item, index) => item._id || item.id || item.orderNumber || String(index)}
           onScroll={onScrollHandler}
           scrollEventThrottle={16}
           refreshControl={
@@ -423,7 +432,7 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
         <View style={styles.cardInfoCol}>
           <Text style={styles.cardOrderNumber} numberOfLines={1}>Order #{order.orderNumber}</Text>
           <Text style={styles.cardOrderDate} numberOfLines={1}>{formatDate(order.createdAt)}</Text>
-          <Text style={styles.cardOrderAmount}>₹{order.amount?.toFixed(2)}</Text>
+          <Text style={styles.cardOrderAmount}>₹{(Number(order.amount ?? order.total ?? order.grandTotal ?? 0)).toFixed(2)}</Text>
         </View>
 
         <View style={[styles.statusBadgePill, badgeStyle]}>

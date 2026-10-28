@@ -8,7 +8,7 @@ import {
   Platform,
   Animated
 } from 'react-native';
-import { Tabs, router } from 'expo-router';
+import { Tabs, router, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -33,7 +33,10 @@ const PILL_PADDING_H = 3;
 const PILL_HEIGHT = BAR_CONTENT_HEIGHT - (PILL_PADDING_V * 2);
 const PILL_RADIUS = 18;
 
-function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
+function FloatingCapsuleTabBar(props) {
+  const { state, descriptors, navigation: navProp, emitter, navigateToTab } = props;
+  const hookNav = useNavigation();
+  const navigation = navProp || hookNav;
   const insets = useSafeAreaInsets();
   const { cart } = useCart();
   const { subscribe } = useTabBarVisibility();
@@ -49,7 +52,7 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
     return cart.items.reduce((sum, item) => sum + (Number(item.qty ?? item.quantity ?? 0) > 0 ? 1 : 0), 0);
   }, [cart]);
 
-  const visibleRoutes = state.routes.filter(route => route.name !== 'search' && descriptors[route.key].options.href !== null);
+  const visibleRoutes = state.routes.filter(route => route.name !== 'search' && descriptors[route.key]?.options?.href !== null);
   const focusedIndex = visibleRoutes.findIndex(route => route.key === state.routes[state.index]?.key);
   const activeIndex = Math.max(focusedIndex, 0);
   const tabCount = visibleRoutes.length;
@@ -227,20 +230,49 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
           />
 
           {visibleRoutes.map((route, index) => {
-            const { options } = descriptors[route.key];
+            const descriptor = descriptors[route.key] || {};
+            const options = descriptor.options || {};
             const label = options.title !== undefined ? options.title : route.name;
             const isFocused = state.routes[state.index]?.key === route.key;
 
             const onPress = () => {
-              const event = navigation.emit({
-                type: 'tabPress',
-                target: route.key,
-                canPreventDefault: true,
-              });
+              const event = emitter?.emit
+                ? emitter.emit({
+                    type: 'tabPress',
+                    target: route.key,
+                    canPreventDefault: true,
+                  })
+                : navigation?.emit
+                ? navigation.emit({
+                    type: 'tabPress',
+                    target: route.key,
+                    canPreventDefault: true,
+                  })
+                : { defaultPrevented: false };
 
-              if (!isFocused && !event.defaultPrevented) {
+              if (!isFocused && !event?.defaultPrevented) {
                 haptics.selection();
-                navigation.navigate(route.name);
+                if (typeof navigateToTab === 'function') {
+                  navigateToTab(route.key);
+                } else if (navigation?.navigate) {
+                  navigation.navigate(route.name);
+                } else {
+                  router.navigate(route.name === 'index' ? '/(tabs)' : `/(tabs)/${route.name}`);
+                }
+              }
+            };
+
+            const onLongPress = () => {
+              if (emitter?.emit) {
+                emitter.emit({
+                  type: 'tabLongPress',
+                  target: route.key,
+                });
+              } else if (navigation?.emit) {
+                navigation.emit({
+                  type: 'tabLongPress',
+                  target: route.key,
+                });
               }
             };
 
@@ -252,6 +284,7 @@ function FloatingCapsuleTabBar({ state, descriptors, navigation }) {
                 accessibilityLabel={options.tabBarAccessibilityLabel}
                 testID={options.tabBarTestID}
                 onPress={onPress}
+                onLongPress={onLongPress}
                 style={styles.tabItem}
                 activeOpacity={0.7}
               >
@@ -316,7 +349,13 @@ export default function TabLayout() {
             title: 'Profile'
           }}
         />
-        <Tabs.Screen name="search" options={{ href: null }} />
+        <Tabs.Screen
+          name="search"
+          options={{
+            title: 'Search',
+            tabBarStyle: { display: 'none' }
+          }}
+        />
       </Tabs>
     </TabBarVisibilityProvider>
   );
