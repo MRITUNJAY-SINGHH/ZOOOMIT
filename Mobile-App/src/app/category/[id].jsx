@@ -33,6 +33,7 @@ export default function CategoryDetailsScreen() {
   const [inStockOnly, setInStockOnly] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [priceDropOnly, setPriceDropOnly] = useState(false);
+  const [selectedPriceRange, setSelectedPriceRange] = useState(null);
   const [quickProduct, setQuickProduct] = useState(null);
   const [quickMode, setQuickMode] = useState('details');
   const [quickVariantId, setQuickVariantId] = useState(null);
@@ -168,6 +169,22 @@ export default function CategoryDetailsScreen() {
     }
 
     if (priceDropOnly) list = list.filter(p => Number(p.mrp) > Number(p.sellingPrice) || p.variants?.some(v => Number(v.mrp) > Number(v.sellingPrice)));
+
+    if (selectedPriceRange === 'under_50') {
+      list = list.filter(p => Number(p.sellingPrice || 0) < 50);
+    } else if (selectedPriceRange === '50_100') {
+      list = list.filter(p => {
+        const pr = Number(p.sellingPrice || 0);
+        return pr >= 50 && pr <= 100;
+      });
+    } else if (selectedPriceRange === '100_200') {
+      list = list.filter(p => {
+        const pr = Number(p.sellingPrice || 0);
+        return pr >= 100 && pr <= 200;
+      });
+    } else if (selectedPriceRange === 'above_200') {
+      list = list.filter(p => Number(p.sellingPrice || 0) > 200);
+    }
     if (selectedBrand) {
       list = list.filter(p => p.brand === selectedBrand);
     }
@@ -209,6 +226,7 @@ export default function CategoryDetailsScreen() {
     setInStockOnly(false);
     setSelectedBrand(null);
     setSelectedType('ALL');
+    setSelectedPriceRange(null);
   };
 
   const pageTitle = sidebarCategories.find(c => c._id === effectiveSubcategoryId)?.name || activeCategory?.name || 'Category';
@@ -268,6 +286,9 @@ export default function CategoryDetailsScreen() {
         availableBrands={availableBrands}
         selectedType={selectedType}
         onTypeChange={setSelectedType}
+        selectedPriceRange={selectedPriceRange}
+        onPriceRangeChange={setSelectedPriceRange}
+        totalProductsCount={filteredProducts.length}
         onResetFilters={handleResetFilters}
       />
 
@@ -278,7 +299,8 @@ export default function CategoryDetailsScreen() {
             isRefreshing={isRefetching}
             onRefresh={refetch}
             onProductPress={(prod) => {
-              setQuickMode('details'); setQuickVariantId(null); setQuickProduct(prod);
+              haptics.selection();
+              router.push('/product/' + prod._id);
             }}
             onVariantPress={(prod, variantId) => { setQuickMode('variants'); setQuickVariantId(variantId); setQuickProduct(prod); }}
             onRetry={handleResetFilters}

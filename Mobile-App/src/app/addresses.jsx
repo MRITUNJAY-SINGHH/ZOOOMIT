@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
   BackHandler,
   TextInput,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Keyboard
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -86,6 +87,29 @@ export default function AddressesScreen() {
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [locating, setLocating] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
+  const scrollToField = (y) => {
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y, animated: true });
+    }, 80);
+  };
 
   const { data: addresses, isLoading, refetch } = useQuery({
     queryKey: ['addresses'],
@@ -265,9 +289,14 @@ export default function AddressesScreen() {
           </SafeAreaView>
           <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
             <ScrollView
+              ref={scrollRef}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
-              contentContainerStyle={{ padding: 16, paddingBottom: 24 }}
+              automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+              contentContainerStyle={{
+                padding: 16,
+                paddingBottom: keyboardHeight > 0 ? keyboardHeight + 80 : Math.max(insets.bottom, 24) + 60
+              }}
             >
               <TouchableOpacity style={styles.locateBtn} onPress={handleUseCurrentLocation} disabled={locating} activeOpacity={0.85}>
                 {locating ? (
@@ -299,13 +328,51 @@ export default function AddressesScreen() {
                 })}
               </View>
 
-              <Field label="Flat / House / Street *" placeholder="e.g. Flat 402, Green Valley Apartments" value={form.street} onChangeText={(v) => setField('street', v)} />
-              <Field label="Landmark (optional)" placeholder="e.g. Near City Mall" value={form.landmark} onChangeText={(v) => setField('landmark', v)} />
+              <Field
+                label="Flat / House / Street *"
+                placeholder="e.g. Flat 402, Green Valley Apartments"
+                value={form.street}
+                onChangeText={(v) => setField('street', v)}
+                onFocus={() => scrollToField(70)}
+                returnKeyType="next"
+              />
+              <Field
+                label="Landmark (optional)"
+                placeholder="e.g. Near City Mall"
+                value={form.landmark}
+                onChangeText={(v) => setField('landmark', v)}
+                onFocus={() => scrollToField(140)}
+                returnKeyType="next"
+              />
               <View style={styles.twoCol}>
-                <Field label="City *" placeholder="City" style={{ flex: 1 }} value={form.city} onChangeText={(v) => setField('city', v)} />
-                <Field label="Pincode *" placeholder="6 digits" style={{ flex: 1 }} value={form.zipCode} keyboardType="number-pad" maxLength={6} onChangeText={(v) => setField('zipCode', v)} />
+                <Field
+                  label="City *"
+                  placeholder="City"
+                  style={{ flex: 1 }}
+                  value={form.city}
+                  onChangeText={(v) => setField('city', v)}
+                  onFocus={() => scrollToField(210)}
+                  returnKeyType="next"
+                />
+                <Field
+                  label="Pincode *"
+                  placeholder="6 digits"
+                  style={{ flex: 1 }}
+                  value={form.zipCode}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  onChangeText={(v) => setField('zipCode', v)}
+                  onFocus={() => scrollToField(210)}
+                  returnKeyType="done"
+                />
               </View>
-              <Field label="State" placeholder="State" value={form.state} onChangeText={(v) => setField('state', v)} />
+              <Field
+                label="State"
+                placeholder="State"
+                value={form.state}
+                onChangeText={(v) => setField('state', v)}
+                onFocus={() => scrollToField(280)}
+              />
 
               <TouchableOpacity style={styles.checkRow} onPress={() => setField('isDefault', !form.isDefault)} activeOpacity={0.8}>
                 <View style={[styles.checkbox, form.isDefault && styles.checkboxActive]}>
@@ -313,16 +380,20 @@ export default function AddressesScreen() {
                 </View>
                 <Text style={styles.checkLabel}>Make this my default address</Text>
               </TouchableOpacity>
-            </ScrollView>
-            <View style={[styles.footer, { position: 'relative', paddingBottom: Math.max(insets.bottom, 12) }]}>
-              <TouchableOpacity style={[styles.addBtn, saving && { opacity: 0.8 }]} onPress={handleSave} disabled={saving} activeOpacity={0.85}>
+
+              <TouchableOpacity
+                style={[styles.addBtn, { marginTop: 18, marginBottom: 8 }, saving && { opacity: 0.8 }]}
+                onPress={handleSave}
+                disabled={saving}
+                activeOpacity={0.85}
+              >
                 {saving ? (
                   <ActivityIndicator size="small" color={colors.secondary} />
                 ) : (
                   <Text style={styles.addBtnText}>{editingId ? 'Update address' : 'Save address'}</Text>
                 )}
               </TouchableOpacity>
-            </View>
+            </ScrollView>
           </KeyboardAvoidingView>
         </View>
     );

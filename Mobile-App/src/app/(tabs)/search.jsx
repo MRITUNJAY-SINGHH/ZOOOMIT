@@ -113,8 +113,16 @@ function SearchProduct({ product }) {
     } catch (error) { Alert.alert('Cart not updated', error.message || 'Try again.'); } finally { requestRef.current = false; setBusy(false); }
   };
   return <View style={styles.product}>
-    <View ref={imageRef} collapsable={false} style={styles.productImage} onLayout={e => setImageWidth(e.nativeEvent.layout.width)}>
-      {images.length ? <ScrollView ref={gallery} horizontal pagingEnabled directionalLockEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }} onMomentumScrollEnd={e => setActiveImage(Math.max(0, Math.min(images.length - 1, Math.round(e.nativeEvent.contentOffset.x / Math.max(1, imageWidth)))))}>{images.map((uri, i) => <Pressable key={uri} onPress={open} style={{ width: imageWidth || 1, height: '100%' }} accessibilityLabel={`${product.name}, image ${i + 1}`}>{Math.abs(i - activeImage) <= 1 && <Image source={{ uri }} contentFit="contain" transition={160} style={styles.full} />}</Pressable>)}</ScrollView> : <Pressable onPress={open} style={styles.center}><Package size={34} color="#9AA0A7" /></Pressable>}
+    <View ref={imageRef} collapsable={false} style={styles.productImage}>
+      {images.length ? (
+        <Pressable onPress={open} style={styles.full}>
+          <Image source={{ uri: images[0] }} contentFit="contain" transition={150} style={styles.full} />
+        </Pressable>
+      ) : (
+        <Pressable onPress={open} style={styles.center}>
+          <Package size={34} color="#9AA0A7" />
+        </Pressable>
+      )}
       <Pressable onPress={async () => { try { await toggleSave(product); } catch (e) { Alert.alert('Wishlist not updated', e.message || 'Try again.'); } }} style={styles.bookmark} accessibilityLabel={`Save ${product.name}`}><Bookmark size={17} color={INK} fill={isSaved(product._id) ? YELLOW : 'none'} /></Pressable>
       <View style={styles.imageFooter} pointerEvents="none">{typeof product.isVeg === 'boolean' && <View style={[styles.veg, { borderColor: product.isVeg ? '#009B69' : '#AE302E' }]}><View style={[styles.vegDot, { backgroundColor: product.isVeg ? '#009B69' : '#AE302E' }]} /></View>}{images.length > 1 && <View style={styles.dots}>{images.map((uri, i) => <View key={uri} style={[styles.dot, i === activeImage && styles.dotActive]} />)}</View>}</View>
       <View style={styles.addPosition}>{qty > 0 ? <View style={styles.stepper}><Pressable disabled={busy || Boolean(pending)} onPress={() => change(-1)} style={({ pressed }) => [styles.step, pressed && { opacity: 0.65 }]} accessibilityLabel={`Decrease ${product.name}`}>{pending < 0 ? <ActivityIndicator size="small" color={INK} /> : <Minus size={15} color={INK} />}</Pressable><Text style={styles.quantity}>{qty}</Text><Pressable disabled={busy || Boolean(pending) || soldOut || qty >= max} onPress={() => change(1)} style={({ pressed }) => [styles.step, pressed && { opacity: 0.65 }]} accessibilityLabel={`Increase ${product.name}`}>{pending > 0 ? <ActivityIndicator size="small" color={INK} /> : <Plus size={15} color={INK} />}</Pressable></View> : soldOut ? <Text style={styles.soldOut}>Sold out</Text> : <Pressable disabled={busy || Boolean(pending)} onPress={() => change(1)} style={({ pressed }) => [styles.add, pressed && { opacity: 0.75, transform: [{ scale: 0.94 }] }]} accessibilityLabel={`Add ${product.name}`}>{busy || pending ? <ActivityIndicator size="small" color={INK} /> : <Plus size={25} color={INK} />}</Pressable>}</View>
@@ -139,7 +147,7 @@ export default function SearchScreen() {
   const [category, setCategory] = useState(''), [sort, setSort] = useState('default'), [brand, setBrand] = useState(''), [min, setMin] = useState(''), [max, setMax] = useState(''), [stock, setStock] = useState(false), [rating, setRating] = useState(0), [offers, setOffers] = useState(false), [priceDrop, setPriceDrop] = useState(false), [modal, setModal] = useState(null);
   const { data: catalog = [], isLoading, isError, refetch, isFetching } = useQuery({ queryKey: ['search-catalog-dynamic-v1'], queryFn: loadCatalog, staleTime: 60000 });
   useEffect(() => { let alive = true; (async () => { try { const raw = Platform.OS === 'web' ? globalThis.localStorage?.getItem(RECENT_KEY) : await SecureStore.getItemAsync(RECENT_KEY); const saved = raw ? JSON.parse(raw) : []; if (alive && Array.isArray(saved)) setRecent(saved.filter(x => typeof x === 'string')); } catch {} })(); return () => { alive = false; }; }, []);
-  const { data: storeCategories = [] } = useQuery({ queryKey: ['search-home-categories'], queryFn: async () => { const r = await StorefrontAPI.getCategories({ includeSubcategories: 'true' }); const d = r.data?.data ?? r.data; if (!Array.isArray(d)) throw new Error('Invalid store categories'); return d; }, staleTime: 60000 });
+  const { data: storeCategories = [], isLoading: isCategoriesLoading } = useQuery({ queryKey: ['categories-with-subcategories'], queryFn: async () => { const r = await StorefrontAPI.getCategories({ includeSubcategories: 'true' }); const d = r.data?.data ?? r.data; if (!Array.isArray(d)) throw new Error('Invalid store categories'); return d; }, staleTime: 5 * 60 * 1000 });
   const homeCategories = useMemo(() => pickSearchCategories(storeCategories, 16), [storeCategories]);
   const clearRecent = async () => { setRecent([]); try { if (Platform.OS === 'web') globalThis.localStorage?.removeItem(RECENT_KEY); else await SecureStore.deleteItemAsync(RECENT_KEY); } catch {} };
   const suggestions = useMemo(() => {
@@ -181,7 +189,36 @@ export default function SearchScreen() {
       ListEmptyComponent={isLoading ? <View style={styles.empty}><ActivityIndicator color={INK} /><Text style={styles.emptyText}>Loading products...</Text></View> : isError ? <View style={styles.empty}><Text style={styles.emptyText}>Could not load the catalog</Text><Pressable onPress={() => refetch()} style={styles.primary}><Text>Try again</Text></Pressable></View> : <View style={styles.empty}><Search size={32} color="#8A8E96" /><Text style={styles.emptyTitle}>{matching.length ? 'No products match these filters' : `No results for "${submitted}"`}</Text>{matching.length > 0 && <Pressable style={styles.primary} onPress={() => { clearFilters(); setCategory(''); }}><Text>Clear filters</Text></Pressable>}</View>}
     /> : <ScrollView style={styles.scroll} contentContainerStyle={styles.suggestionList} keyboardShouldPersistTaps="handled">
       {isError && <Pressable onPress={() => refetch()} style={styles.retry}><Text style={styles.emptyText}>Could not load suggestions. Tap to retry.</Text></Pressable>}
-      {query.trim() ? <>{isLoading && <ActivityIndicator color={INK} style={{ margin: 20 }} />}{suggestions.map((s, i) => <Pressable key={`${s.name}:${i}`} style={styles.suggestion} onPress={() => submit(s.name)}>{thumbnail(s.image)}<Text numberOfLines={2} style={styles.suggestionName}>{s.name}</Text><Search size={21} color="#999DA0" /></Pressable>)}<Pressable style={styles.suggestion} onPress={() => submit(query)}><View style={styles.showAllIcon}><Search size={25} color={INK} /></View><Text style={styles.showAll}>Show all results for <Text style={{ fontFamily: typography.family.bold }}>'{query.trim()}'</Text></Text></Pressable></> : <>{recent.length > 0 && <View style={styles.recentHead}><Text style={styles.recentTitle}>Recent searches</Text><Pressable onPress={clearRecent} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel="Clear recent searches"><Text style={styles.clearText}>Clear all</Text></Pressable></View>}{recent.map(term => <Pressable key={term} style={styles.suggestion} onPress={() => submit(term)}><View style={styles.showAllIcon}><Clock size={20} color={INK} /></View><Text style={styles.suggestionName}>{term}</Text><Search size={20} color="#999DA0" /></Pressable>)}{homeCategories.length > 0 && <><Text style={styles.sectionTitle}>Shop by category</Text><View style={styles.catGrid}>{homeCategories.map((c, i) => <MotionView key={catId(c)} style={styles.catTile} reducedMotion={reducedMotion} delay={Math.floor(i / 4) * 35}><CategoryTile category={c} onPress={() => router.push({ pathname: '/category/[id]', params: { id: catId(c) } })} /></MotionView>)}</View></>}</>}
+      {query.trim() ? <>{isLoading && <ActivityIndicator color={INK} style={{ margin: 20 }} />}{suggestions.map((s, i) => <Pressable key={`${s.name}:${i}`} style={styles.suggestion} onPress={() => submit(s.name)}>{thumbnail(s.image)}<Text numberOfLines={2} style={styles.suggestionName}>{s.name}</Text><Search size={21} color="#999DA0" /></Pressable>)}<Pressable style={styles.suggestion} onPress={() => submit(query)}><View style={styles.showAllIcon}><Search size={25} color={INK} /></View><Text style={styles.showAll}>Show all results for <Text style={{ fontFamily: typography.family.bold }}>'{query.trim()}'</Text></Text></Pressable></> : <>{recent.length > 0 && <View style={styles.recentHead}><Text style={styles.recentTitle}>Recent searches</Text><Pressable onPress={clearRecent} style={styles.clearBtn} accessibilityRole="button" accessibilityLabel="Clear recent searches"><Text style={styles.clearText}>Clear all</Text></Pressable></View>}{recent.map(term => <Pressable key={term} style={styles.suggestion} onPress={() => submit(term)}><View style={styles.showAllIcon}><Clock size={20} color={INK} /></View><Text style={styles.suggestionName}>{term}</Text><Search size={20} color="#999DA0" /></Pressable>)}<View style={styles.categorySection}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>Shop by category</Text>
+          {isCategoriesLoading && (
+            <View style={styles.loaderWrap}>
+              <ActivityIndicator size="small" color="#111827" />
+              <Text style={styles.loaderText}>Loading...</Text>
+            </View>
+          )}
+        </View>
+
+        {isCategoriesLoading && homeCategories.length === 0 ? (
+          <View style={styles.catGrid}>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <View key={`cat-skel-${i}`} style={styles.catTile}>
+                <View style={styles.catSkeletonArt} />
+                <View style={styles.catSkeletonName} />
+              </View>
+            ))}
+          </View>
+        ) : homeCategories.length > 0 ? (
+          <View style={styles.catGrid}>
+            {homeCategories.map((c, i) => (
+              <MotionView key={catId(c)} style={styles.catTile} reducedMotion={reducedMotion} delay={Math.floor(i / 4) * 35}>
+                <CategoryTile category={c} onPress={() => router.push({ pathname: '/category/[id]', params: { id: catId(c) } })} />
+              </MotionView>
+            ))}
+          </View>
+        ) : null}
+      </View></>}
     </ScrollView>}
     <FloatingCart visible={resultsVisible} bottom={24} />
     <Modal transparent visible={modal !== null} animationType="slide" onRequestClose={() => setModal(null)}><View style={styles.modalOverlay}><Pressable style={styles.backdrop} onPress={() => setModal(null)} accessibilityLabel="Close filters" /><View style={styles.sheet}><View style={styles.sheetTitle}><Text style={styles.emptyTitle}>{modal === 'sort' ? 'Sort by' : 'Filters'}</Text><Pressable onPress={() => setModal(null)} accessibilityLabel="Close"><X size={23} color={INK} /></Pressable></View><ScrollView keyboardShouldPersistTaps="handled">
@@ -192,6 +229,12 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   recentHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, marginBottom: 4 }, recentTitle: { fontFamily: typography.family.bold, fontSize: 15, color: INK }, clearBtn: { backgroundColor: YELLOW, borderRadius: 14, paddingHorizontal: 12, paddingVertical: 5 }, clearText: { fontFamily: typography.family.bold, fontSize: 12, color: INK },
   catGrid: { flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 }, catTile: { width: '25%', paddingHorizontal: 4, marginBottom: 16, alignItems: 'center' }, catArt: { width: '100%', aspectRatio: 0.9, borderRadius: 12, backgroundColor: '#FFF7D6', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, catName: { fontFamily: typography.family.bold, fontSize: 13, lineHeight: 17, color: INK, textAlign: 'center', paddingTop: 8, width: '100%' },
+  categorySection: { marginTop: 8 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginVertical: 12 },
+  loaderWrap: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  loaderText: { fontFamily: typography.family.medium, fontSize: 12, color: '#6B7280' },
+  catSkeletonArt: { width: '100%', aspectRatio: 0.9, borderRadius: 12, backgroundColor: '#F3F4F6' },
+  catSkeletonName: { height: 10, width: '70%', borderRadius: 5, backgroundColor: '#E5E7EB', marginTop: 8, alignSelf: 'center' },
   screen: { flex: 1, backgroundColor: '#fff' }, full: { width: '100%', height: '100%' }, center: { flex: 1, alignItems: 'center', justifyContent: 'center' }, scroll: { flex: 1 },
   searchHeader: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 12, backgroundColor: '#fff' }, headerYellow: { backgroundColor: '#FFF7D6' }, searchBox: { backgroundColor: '#F2F1F5', borderRadius: 14, height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, gap: 12 }, input: { flex: 1, fontFamily: typography.family.medium, fontSize: 18, color: INK, paddingVertical: 8 },
   suggestionList: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 90 }, suggestion: { flexDirection: 'row', alignItems: 'center', gap: 13, minHeight: 59, paddingVertical: 8 }, suggestionName: { flex: 1, fontFamily: typography.family.medium, fontSize: 17, color: INK }, showAllIcon: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#FFF4C6', alignItems: 'center', justifyContent: 'center' }, showAll: { flex: 1, fontFamily: typography.family.medium, fontSize: 16, color: INK },

@@ -18,36 +18,48 @@ import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Search,
+  ArrowRight,
   ShoppingBasket,
   ChevronDown,
   ChevronRight,
   ChevronUp,
   User,
   MapPin,
-  Mic
+  Mic,
+  Heart,
+  LayoutGrid,
+  Headphones
 } from 'lucide-react-native';
 import { colors, typography } from '../../constants/theme';
 import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import { ProductCard } from '../../components/product/ProductCard';
+import { QuickAddressSheet } from '../../components/address/QuickAddressSheet';
+import { HeaderMandalaBg } from '../../components/home/HeaderMandalaBg';
+import { haptics } from '../../services/haptics';
 
 const TOP_INSET_FALLBACK = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 28) : 44;
-const HEADER_YELLOW = '#FEDC4A';
+const HEADER_YELLOW = '#FFF4C7';
 
 const LOCAL_CATEGORY_IMAGES = {
-  'fruits & vegetables': require('../../../assets/images/categories/fruits_veggies.jpg'),
-  'fruits and vegetables': require('../../../assets/images/categories/fruits_veggies.jpg'),
-  'fruits': require('../../../assets/images/categories/fruits_veggies.jpg'),
-  'vegetables': require('../../../assets/images/categories/fruits_veggies.jpg'),
+  'fruits & vegetables': require('../../../assets/images/categories/fresh_tomato.jpg'),
+  'fruits and vegetables': require('../../../assets/images/categories/fresh_tomato.jpg'),
+  'fruits': require('../../../assets/images/categories/fresh_tomato.jpg'),
+  'vegetables': require('../../../assets/images/categories/fresh_tomato.jpg'),
+  'fresh': require('../../../assets/images/categories/fresh_tomato.jpg'),
+  'diwali': require('../../../assets/images/diwali/diwali_diyas.jpg'),
+  'gifts': require('../../../assets/images/diwali/diwali_gifting.jpg'),
   'dairy & eggs': require('../../../assets/images/categories/dairy_milk.jpg'),
   'dairy and eggs': require('../../../assets/images/categories/dairy_milk.jpg'),
   'dairy': require('../../../assets/images/categories/dairy_milk.jpg'),
   'milk': require('../../../assets/images/categories/dairy_milk.jpg'),
   'atta, rice & flours': require('../../../assets/images/categories/atta_rice_dal.jpg'),
   'atta, rice & dal': require('../../../assets/images/categories/atta_rice_dal.jpg'),
+  'organic': require('../../../assets/images/categories/atta_rice_dal.jpg'),
   'atta': require('../../../assets/images/categories/atta_rice_dal.jpg'),
   'rice': require('../../../assets/images/categories/atta_rice_dal.jpg'),
   'flours': require('../../../assets/images/categories/atta_rice_dal.jpg'),
@@ -61,40 +73,147 @@ const LOCAL_CATEGORY_IMAGES = {
   'spices': require('../../../assets/images/categories/masala_spices.jpg'),
 };
 
-const DEFAULT_SHORTCUTS = [
-  { id: 'fruits-veg', name: 'Fruits &\nVegetables', match: 'fruit|vegetable', imageSource: require('../../../assets/images/categories/fruits_veggies.jpg') },
-  { id: 'dairy-eggs', name: 'Dairy &\nEggs', match: 'dairy|milk|egg|curd|paneer', imageSource: require('../../../assets/images/categories/dairy_milk.jpg') },
-  { id: 'atta-rice', name: 'Atta, Rice\n& Flours', match: 'atta|rice|flour|dal|pulse', imageSource: require('../../../assets/images/categories/atta_rice_dal.jpg') },
-  { id: 'snacks-bev', name: 'Snacks &\nBeverages', match: 'snack|beverage|drink|chips', imageSource: require('../../../assets/images/categories/snacks_beverages.jpg') },
-  { id: 'household', name: 'Household\nEssentials', match: 'clean|wash|household|care', imageSource: require('../../../assets/images/categories/personal_care.jpg') },
-  { id: 'spices', name: 'Masala &\nSpices', match: 'spice|masala|salt|sugar', imageSource: require('../../../assets/images/categories/masala_spices.jpg') },
+const REFERENCE_SHORTCUTS = [
+  {
+    id: 'all',
+    name: 'All',
+    iconType: 'grid',
+    isAll: true,
+  },
+  {
+    id: 'fresh',
+    name: 'Fresh',
+    imageSource: require('../../../assets/images/categories/fresh_tomato.jpg'),
+    match: 'fruit|veg|fresh|produce',
+  },
+  {
+    id: 'diwali',
+    name: 'Diwali',
+    imageSource: require('../../../assets/images/diwali/diwali_diyas.jpg'),
+    isDiwali: true,
+    match: 'diwali|festive|pooja|puja|gift|sweet',
+  },
+  {
+    id: 'electronics',
+    name: 'Electronics',
+    iconType: 'headphones',
+    match: 'electronic|appliance|gadget|phone|mobile',
+  },
+  {
+    id: 'organic',
+    name: 'Organic',
+    imageSource: require('../../../assets/images/categories/atta_rice_dal.jpg'),
+    match: 'organic|grain|atta|rice|dal|staple|flour',
+  },
+  {
+    id: 'gifts',
+    name: 'Gifts',
+    imageSource: require('../../../assets/images/diwali/diwali_gifting.jpg'),
+    match: 'gift|hamper|box',
+  },
 ];
 
-const PROMO_BANNERS = [
+const DIWALI_CATEGORY_CARDS = [
   {
-    id: 'banner-1',
-    image: require('../../../assets/images/banner/banner_full_1.png'),
+    key: 'gifting',
+    name: 'Gifting',
+    image: require('../../../assets/images/diwali/diwali_gifting.jpg'),
+    match: 'gift|hamper|box',
+    query: 'Diwali Gifting',
   },
   {
-    id: 'banner-2',
-    image: require('../../../assets/images/banner/banner_full_2.png'),
+    key: 'pooja',
+    name: 'Pooja\nessentials',
+    image: require('../../../assets/images/diwali/diwali_pooja.jpg'),
+    match: 'pooja|puja|incense|agarbatti|hawan',
+    query: 'Pooja Essentials',
   },
   {
-    id: 'banner-3',
-    image: require('../../../assets/images/banner/banner_full_3.png'),
+    key: 'diyas',
+    name: 'Diyas &\ndecorations',
+    image: require('../../../assets/images/diwali/diwali_diyas.jpg'),
+    match: 'diya|decor|light|rangoli|candle',
+    query: 'Diyas and Decorations',
   },
   {
-    id: 'banner-4',
-    image: require('../../../assets/images/banner/banner_full_4.png'),
+    key: 'sweets',
+    name: 'Sweets &\nDry fruits',
+    image: require('../../../assets/images/diwali/diwali_sweets.jpg'),
+    match: 'sweet|mithai|dry.*fruit|kaju|badam|pista',
+    query: 'Sweets and Dry Fruits',
+  },
+  {
+    key: 'festive_ready',
+    name: 'Festive ready',
+    image: require('../../../assets/images/diwali/diwali_festive_ready.jpg'),
+    match: 'festive|cloth|wear|fashion|ethnic|kurta',
+    query: 'Festive Ready',
+  },
+  {
+    key: 'home_essentials',
+    name: 'Home\nessentials',
+    image: require('../../../assets/images/diwali/diwali_home_essentials.jpg'),
+    match: 'home|electronic|appliance|clean|purifier',
+    query: 'Home Essentials',
+  },
+];
+
+const SHOP_BY_CATEGORY_ITEMS = [
+  {
+    key: 'fruits-veg',
+    name: 'Fruits &\nVegetables',
+    match: 'fruit|vegetable',
+    imageSource: require('../../../assets/images/categories/fresh_tomato.jpg'),
+  },
+  {
+    key: 'dairy-eggs',
+    name: 'Dairy &\nEggs',
+    match: 'dairy|milk|egg|curd|paneer|butter|cheese',
+    imageSource: require('../../../assets/images/categories/dairy_milk.jpg'),
+  },
+  {
+    key: 'atta-rice',
+    name: 'Atta, Rice\n& Grains',
+    match: 'atta|rice|grain|flour|staple|daal|pulse',
+    imageSource: require('../../../assets/images/categories/atta_rice_dal.jpg'),
+  },
+  {
+    key: 'oils-ghee',
+    name: 'Oils &\nGhee',
+    match: 'oil|ghee|mustard|sunflower|edible oil',
+    imageSource: { uri: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400&auto=format&fit=crop&q=80' },
+  },
+  {
+    key: 'spices',
+    name: 'Masala &\nSpices',
+    match: 'spice|masala|salt|sugar|chilli|turmeric',
+    imageSource: require('../../../assets/images/categories/masala_spices.jpg'),
+  },
+  {
+    key: 'snacks-bev',
+    name: 'Snacks &\nBeverages',
+    match: 'snack|beverage|drink|chips|biscuit|tea|coffee|juice',
+    imageSource: require('../../../assets/images/categories/snacks_beverages.jpg'),
+  },
+  {
+    key: 'personal-care',
+    name: 'Personal\nCare',
+    match: 'personal|care|soap|shampoo|skin|hair|cream',
+    imageSource: require('../../../assets/images/categories/personal_care.jpg'),
+  },
+  {
+    key: 'household',
+    name: 'Household\nEssentials',
+    match: 'household|clean|wash|detergent|surface',
+    imageSource: { uri: 'https://images.unsplash.com/photo-1585421514284-efb74c2b69ba?w=400&auto=format&fit=crop&q=80' },
   },
 ];
 
 const SEARCH_WORDS = [
-  'Search for groceries, milk, bread...',
-  'Search fresh fruits & veggies...',
-  'Search atta, rice & dal...',
-  'Search dairy, paneer & eggs...',
-  'Search snacks & beverages...',
+  'Search for groceries, fruits, milk...',
+  'Search for sweets, dry fruits, gifts...',
+  'Search for pooja essentials, diyas...',
+  'Search for fresh veggies, paneer, atta...',
 ];
 
 const RotatingSearch = ({ words }) => {
@@ -182,13 +301,19 @@ export default function HomeScreen() {
   const { customer } = useAuth();
   const { onScrollHandler } = useTabBarVisibility();
   const scrollRef = useRef(null);
-  const bannerScrollRef = useRef(null);
   const sectionOffsets = useRef({});
 
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
-  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [addressSheetVisible, setAddressSheetVisible] = useState(false);
+  const [addressOpening, setAddressOpening] = useState(false);
+
+  const handleOpenAddress = () => {
+    haptics.selection();
+    setAddressOpening(true);
+    setAddressSheetVisible(true);
+  };
 
   const topPad = Math.max(insets.top, TOP_INSET_FALLBACK);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -266,53 +391,89 @@ export default function HomeScreen() {
       'Home'
     : 'Select delivery address';
 
-  // Build shortcut list
+  // Build shortcut list: Reference categories enriched with real backend parents
   const shortcutList = useMemo(() => {
+    const list = REFERENCE_SHORTCUTS.map((refItem) => ({ ...refItem }));
+
     if (parents.length > 0) {
-      return parents.map((cat) => {
-        const lower = (cat.name || '').toLowerCase().trim();
-        let imageSource = LOCAL_CATEGORY_IMAGES[lower];
-        if (!imageSource) {
-          const matchKey = Object.keys(LOCAL_CATEGORY_IMAGES).find((k) => lower.includes(k));
-          if (matchKey) imageSource = LOCAL_CATEGORY_IMAGES[matchKey];
+      parents.forEach((p) => {
+        const pName = (p.name || '').toLowerCase().trim();
+        const matched = list.find((item) => item.match && new RegExp(item.match, 'i').test(pName));
+        if (matched) {
+          if (!matched.raw) {
+            matched.raw = p;
+            matched.backendId = idOf(p);
+          }
+        } else {
+          let imageSource = (p.image || p.featuredImage) ? { uri: p.image || p.featuredImage } : null;
+          if (!imageSource) {
+            const matchKey = Object.keys(LOCAL_CATEGORY_IMAGES).find((k) => pName.includes(k));
+            imageSource = matchKey ? LOCAL_CATEGORY_IMAGES[matchKey] : require('../../../assets/images/categories/atta_rice_dal.jpg');
+          }
+          list.push({
+            id: idOf(p),
+            name: p.name,
+            raw: p,
+            backendId: idOf(p),
+            imageSource,
+          });
         }
-        if (!imageSource && (cat.image || cat.featuredImage)) {
-          imageSource = { uri: cat.image || cat.featuredImage };
-        }
-        if (!imageSource) {
-          imageSource = require('../../../assets/images/categories/fruits_veggies.jpg');
-        }
-        return {
-          id: idOf(cat),
-          name: cat.name,
-          raw: cat,
-          imageSource,
-        };
       });
     }
-    return DEFAULT_SHORTCUTS;
+    return list;
   }, [parents]);
 
   // Handle active category selection
   const handleSelectShortcut = (item) => {
+    haptics.selection();
     if (item.id === 'all') {
       setActiveCategory('all');
+      return;
+    }
+    if (item.id === 'diwali' || item.isDiwali) {
+      setActiveCategory('diwali');
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
       return;
     }
     setActiveCategory(item.id);
     if (item.raw) {
       jumpToParent(item.raw);
+    } else if (item.backendId) {
+      const p = parents.find((x) => idOf(x) === item.backendId);
+      if (p) jumpToParent(p);
     } else if (item.match) {
       scrollRef.current?.scrollTo({ y: sectionOffsets.current.__products || 0, animated: true });
+    }
+  };
+
+  const handleDiwaliCardPress = (card) => {
+    haptics.selection();
+    const matchedCat = categories.find((c) => new RegExp(card.match, 'i').test(c.name || '')) ||
+                       parents.find((p) => new RegExp(card.match, 'i').test(p.name || ''));
+    const catId = matchedCat?._id || matchedCat?.id;
+    if (catId) {
+      router.push(`/category/${catId}`);
+    } else {
+      router.push({
+        pathname: '/(tabs)/search',
+        params: { q: card.query }
+      });
     }
   };
 
   // Products filtering
   const visibleProducts = useMemo(() => {
     if (activeCategory === 'all') return products;
+    if (activeCategory === 'diwali') {
+      const diwaliMatches = products.filter((p) =>
+        /diwali|festive|pooja|sweet|dry.*fruit|diya|candle|gift/i.test(categoryText(p))
+      );
+      return diwaliMatches.length ? diwaliMatches : products;
+    }
     const shortcut = shortcutList.find((s) => s.id === activeCategory);
     if (shortcut?.match) {
-      return products.filter((p) => new RegExp(shortcut.match, 'i').test(categoryText(p)));
+      const matched = products.filter((p) => new RegExp(shortcut.match, 'i').test(categoryText(p)));
+      if (matched.length) return matched;
     }
     return products.filter(
       (p) => idOf(p.category) === activeCategory || idOf(p.subcategory) === activeCategory
@@ -357,9 +518,11 @@ export default function HomeScreen() {
     outputRange: [1, 0],
     extrapolate: 'clamp',
   });
-
-  const bannerCardWidth = Math.min(width - 32, 400);
-  const bannerCardHeight = Math.round(bannerCardWidth * (645 / 720));
+  const addrMarginBottom = scrollY.interpolate({
+    inputRange: [0, 48],
+    outputRange: [6, 0],
+    extrapolate: 'clamp',
+  });
 
   return (
     <View style={styles.root}>
@@ -367,6 +530,8 @@ export default function HomeScreen() {
 
       {/* Pinned / Collapsing Sticky Top Header */}
       <View style={[styles.stickyHeader, { paddingTop: topPad }]}>
+        <HeaderMandalaBg />
+
         {/* Deliver To Row */}
         <Animated.View
           style={[
@@ -374,13 +539,17 @@ export default function HomeScreen() {
             {
               height: addrHeight,
               opacity: addrOpacity,
+              marginBottom: addrMarginBottom,
               overflow: 'hidden',
             },
           ]}
         >
           <Pressable
-            style={styles.addressButton}
-            onPress={() => router.push('/addresses')}
+            style={({ pressed }) => [
+              styles.addressButton,
+              (pressed || addressOpening) && styles.addressButtonPressed
+            ]}
+            onPress={handleOpenAddress}
             accessibilityRole="button"
             accessibilityLabel="Change delivery location"
           >
@@ -393,7 +562,11 @@ export default function HomeScreen() {
                 <Text style={styles.addressValue} numberOfLines={1}>
                   {addressLabel}
                 </Text>
-                <ChevronDown size={14} color="#111827" strokeWidth={2.6} style={styles.chevron} />
+                {addressOpening ? (
+                  <ActivityIndicator size="small" color="#111827" style={styles.addressSpinner} />
+                ) : (
+                  <ChevronDown size={14} color="#111827" strokeWidth={2.6} style={styles.chevron} />
+                )}
               </View>
             </View>
           </Pressable>
@@ -412,11 +585,14 @@ export default function HomeScreen() {
           </Pressable>
         </Animated.View>
 
-        {/* Search Bar Row */}
+        {/* Search Bar + Wishlist Row */}
         <View style={styles.searchRow}>
           <Pressable
             style={styles.searchBar}
-            onPress={() => router.push('/(tabs)/search')}
+            onPress={() => {
+              haptics.selection();
+              router.push('/(tabs)/search');
+            }}
             accessibilityRole="button"
             accessibilityLabel="Search products"
           >
@@ -426,6 +602,74 @@ export default function HomeScreen() {
             </View>
             <Mic size={18} color="#111827" strokeWidth={2} style={styles.micIcon} />
           </Pressable>
+
+          <Pressable
+            style={styles.wishlistBtn}
+            onPress={() => {
+              haptics.selection();
+              router.push('/wishlist');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="View Wishlist"
+          >
+            <Heart size={20} color="#111827" strokeWidth={2} />
+          </Pressable>
+        </View>
+
+        {/* Horizontal Category Navigation (Sticky with Search Bar) */}
+        <View style={styles.categoryNavRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoryNavContent}
+          >
+            {shortcutList.map((cat) => {
+              const isSelected = activeCategory === cat.id;
+              return (
+                <Pressable
+                  key={cat.id}
+                  style={styles.categoryNavItem}
+                  onPress={() => handleSelectShortcut(cat)}
+                  accessibilityRole="button"
+                  accessibilityLabel={cat.name}
+                >
+                  <View
+                    style={[
+                      styles.categoryNavPill,
+                      isSelected && styles.categoryNavPillActive,
+                    ]}
+                  >
+                    {cat.iconType === 'grid' ? (
+                      <LayoutGrid size={24} color="#D97706" strokeWidth={2.2} />
+                    ) : cat.iconType === 'headphones' ? (
+                      <Headphones size={24} color="#7C3AED" strokeWidth={2.2} />
+                    ) : (
+                      <Image
+                        source={cat.imageSource}
+                        style={styles.categoryNavIconImg}
+                        contentFit="contain"
+                      />
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      styles.categoryNavLabel,
+                      isSelected && styles.categoryNavLabelActive,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {cat.name.replace('\n', ' ')}
+                  </Text>
+                  <View
+                    style={[
+                      styles.categoryNavUnderline,
+                      isSelected && styles.categoryNavUnderlineActive,
+                    ]}
+                  />
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
       </View>
 
@@ -438,148 +682,91 @@ export default function HomeScreen() {
         })}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollBody, { paddingTop: topPad + 104 }]}
+        contentContainerStyle={[styles.scrollBody, { paddingTop: topPad + 188 }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor="#111827"
             colors={['#FFC928', '#111827']}
-            progressViewOffset={topPad + 104}
+            progressViewOffset={topPad + 188}
           />
         }
       >
         {/* Elastic pull-down yellow backdrop */}
         <View pointerEvents="none" style={styles.yellowBackdrop} />
 
-        {/* Unified Yellow Hero Section (Categories + Full Banner in ONE continuous section) */}
-        <View style={styles.yellowHeroSection}>
-          {/* Horizontal Category Shortcuts */}
-          <View style={styles.categoryShortcutsSection}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.categoryScrollContent}
-            >
-              {/* "All" Category Shortcut */}
+        {/* Unified Diwali Section (Banner + 6 Category Cards in ONE Seamless Festive Card) */}
+        <View style={styles.diwaliUnifiedCard}>
+          {/* Top Promotional Banner */}
+          <Pressable
+            style={styles.diwaliBannerSection}
+            onPress={() => {
+              haptics.selection();
+              const diwaliCat = categories.find((c) => /diwali|festive/i.test(c.name || ''));
+              if (diwaliCat?._id) {
+                router.push(`/category/${diwaliCat._id}`);
+              } else {
+                router.push({ pathname: '/(tabs)/search', params: { q: 'Diwali' } });
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Celebrate Diwali - Everything you need for a brighter celebration"
+          >
+            <Image
+              source={require('../../../assets/images/diwali/diwali_banner.jpg')}
+              style={styles.diwaliBannerBgImage}
+              contentFit="cover"
+            />
+
+            {/* Subtle Gradient to preserve left/right lanterns & fireworks while maintaining text legibility */}
+            <LinearGradient
+              colors={['rgba(35, 4, 62, 0.12)', 'rgba(35, 4, 62, 0.38)', 'rgba(53, 6, 92, 0.88)']}
+              style={StyleSheet.absoluteFillObject}
+            />
+
+            <View style={styles.diwaliBannerContent}>
+              <Text style={styles.diwaliPreheading}>CELEBRATE</Text>
+              <Text style={styles.diwaliMainHeading}>Diwali</Text>
+              <Text style={styles.diwaliSubtitle}>
+                Everything you need{'\n'}for a brighter celebration
+              </Text>
+
+              <View style={styles.shopNowBtn}>
+                <Text style={styles.shopNowText}>Shop Now</Text>
+                <ArrowRight size={15} color="#111827" strokeWidth={2.4} />
+              </View>
+
+              <View style={styles.diwaliDotsRow}>
+                <View style={[styles.diwaliDot, styles.diwaliDotActive]} />
+                <View style={styles.diwaliDot} />
+                <View style={styles.diwaliDot} />
+              </View>
+            </View>
+          </Pressable>
+
+          {/* 6 Category Cards inside the same unified purple card */}
+          <View style={styles.diwaliCardsGridInside}>
+            {DIWALI_CATEGORY_CARDS.map((card) => (
               <Pressable
-                style={styles.categoryItem}
-                onPress={() => handleSelectShortcut({ id: 'all' })}
+                key={card.key}
+                style={styles.diwaliCard}
+                onPress={() => handleDiwaliCardPress(card)}
                 accessibilityRole="button"
-                accessibilityLabel="All products"
+                accessibilityLabel={`Shop ${card.name.replace('\n', ' ')}`}
               >
-                <View
-                  style={[
-                    styles.categoryTile,
-                    activeCategory === 'all' && styles.categoryTileActive,
-                  ]}
-                >
-                  <ShoppingBasket size={24} color="#D97706" strokeWidth={2} />
-                </View>
-                <Text
-                  style={[
-                    styles.categoryLabel,
-                    activeCategory === 'all' && styles.categoryLabelActive,
-                  ]}
-                  numberOfLines={2}
-                >
-                  All
+                <Text style={styles.diwaliCardTitle} numberOfLines={2}>
+                  {card.name}
                 </Text>
-                <View
-                  style={[
-                    styles.activeIndicator,
-                    activeCategory === 'all' && styles.activeIndicatorVisible,
-                  ]}
-                />
-              </Pressable>
-
-              {/* Dynamic Category Shortcuts */}
-              {shortcutList.map((cat) => {
-                const isSelected = activeCategory === cat.id;
-                return (
-                  <Pressable
-                    key={cat.id}
-                    style={styles.categoryItem}
-                    onPress={() => handleSelectShortcut(cat)}
-                    accessibilityRole="button"
-                    accessibilityLabel={cat.name}
-                  >
-                    <View style={[styles.categoryTile, isSelected && styles.categoryTileActive]}>
-                      <Image
-                        source={cat.imageSource}
-                        style={styles.categoryTileImage}
-                        contentFit="cover"
-                      />
-                    </View>
-                    <Text
-                      style={[styles.categoryLabel, isSelected && styles.categoryLabelActive]}
-                      numberOfLines={2}
-                    >
-                      {formatCategoryLabel(cat.name)}
-                    </Text>
-                    <View
-                      style={[
-                        styles.activeIndicator,
-                        isSelected && styles.activeIndicatorVisible,
-                      ]}
-                    />
-                  </Pressable>
-                );
-              })}
-            </ScrollView>
-          </View>
-
-          {/* Full Marketing Banner Carousel (No text write, full banner image, dots inside) */}
-          <View style={styles.bannerCarouselSection}>
-            <ScrollView
-              ref={bannerScrollRef}
-              horizontal
-              pagingEnabled
-              decelerationRate="fast"
-              snapToInterval={bannerCardWidth + 12}
-              snapToAlignment="start"
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.bannerScrollContent}
-              onMomentumScrollEnd={(e) => {
-                const offsetX = e.nativeEvent.contentOffset.x;
-                const idx = Math.round(offsetX / (bannerCardWidth + 12));
-                if (idx >= 0 && idx < PROMO_BANNERS.length) {
-                  setActiveBannerIndex(idx);
-                }
-              }}
-            >
-              {PROMO_BANNERS.map((banner) => (
-                <Pressable
-                  key={banner.id}
-                  style={[
-                    styles.bannerCard,
-                    { width: bannerCardWidth, height: bannerCardHeight },
-                  ]}
-                  onPress={() => router.push('/(tabs)/search')}
-                  accessibilityRole="button"
-                  accessibilityLabel={banner.id}
-                >
+                <View style={styles.diwaliCardImgWrap}>
                   <Image
-                    source={banner.image}
-                    style={styles.bannerFullImage}
-                    contentFit="cover"
+                    source={card.image}
+                    style={styles.diwaliCardImg}
+                    contentFit="contain"
                   />
-
-                  {/* Pagination Dots INSIDE the Banner at Bottom-Left */}
-                  <View style={styles.bannerInnerDots}>
-                    {PROMO_BANNERS.map((_, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.innerDot,
-                          activeBannerIndex === i && styles.innerDotActive,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
+                </View>
+              </Pressable>
+            ))}
           </View>
         </View>
 
@@ -597,40 +784,70 @@ export default function HomeScreen() {
         {/* Parent Categories Grid & Sections */}
         {parents.length > 0 && (
           <>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.parentSlider}
-            >
-              {parents.map((parent) => (
+            {/* Shop by Category Grid (Exact Reference UI: 4 Columns x 2 Rows) */}
+            <View style={styles.shopByCategorySection}>
+              <View style={styles.shopByCategoryHeader}>
+                <Text style={styles.shopByCategoryTitle}>Shop by Category</Text>
                 <Pressable
-                  key={idOf(parent)}
-                  onPress={() => jumpToParent(parent)}
-                  style={styles.parentTile}
+                  onPress={() => {
+                    haptics.selection();
+                    router.push('/(tabs)/category');
+                  }}
+                  style={styles.viewAllBtn}
+                  hitSlop={8}
                   accessibilityRole="button"
-                  accessibilityLabel={`Browse ${parent.name}`}
-                  accessibilityState={{ selected: activeCategory === idOf(parent) }}
+                  accessibilityLabel="View all categories"
                 >
-                  <View
-                    style={[
-                      styles.parentArt,
-                      activeCategory === idOf(parent) && styles.parentArtActive,
-                    ]}
-                  >
-                    <CategoryArt category={parent} products={products} />
-                  </View>
-                  <Text
-                    style={[
-                      styles.categoryName,
-                      activeCategory === idOf(parent) && styles.parentLabelActive,
-                    ]}
-                    numberOfLines={2}
-                  >
-                    {parent.name}
-                  </Text>
+                  <Text style={styles.viewAllText}>View All</Text>
+                  <ArrowRight size={14} color="#D97706" strokeWidth={2.4} />
                 </Pressable>
-              ))}
-            </ScrollView>
+              </View>
+
+              <View style={styles.shopByCategoryGrid}>
+                {SHOP_BY_CATEGORY_ITEMS.map((item) => {
+                  const realCat =
+                    categories.find((c) => new RegExp(item.match, 'i').test(c.name || '')) ||
+                    parents.find((p) => new RegExp(item.match, 'i').test(p.name || ''));
+
+                  const catId = realCat?._id || realCat?.id;
+                  const imageSource = realCat?.image
+                    ? { uri: realCat.image }
+                    : realCat?.featuredImage
+                    ? { uri: realCat.featuredImage }
+                    : item.imageSource;
+
+                  return (
+                    <Pressable
+                      key={item.key}
+                      style={styles.shopCategoryItem}
+                      onPress={() => {
+                        haptics.selection();
+                        if (catId) {
+                          router.push(`/category/${catId}`);
+                        } else if (parents[0]?._id) {
+                          router.push(`/category/${parents[0]._id}`);
+                        } else {
+                          router.push('/(tabs)/search');
+                        }
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Shop ${item.name.replace('\n', ' ')}`}
+                    >
+                      <View style={styles.shopCategoryCard}>
+                        <Image
+                          source={imageSource}
+                          style={styles.shopCategoryCardImg}
+                          contentFit="contain"
+                        />
+                      </View>
+                      <Text style={styles.shopCategoryLabel} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
 
             {parents.map((parent) => {
               const children = childrenOf(parent);
@@ -762,6 +979,15 @@ export default function HomeScreen() {
           <Text style={styles.backTopText}>Back to top</Text>
         </Pressable>
       </Animated.View>
+
+      {/* Quick Delivery Address Bottom Sheet */}
+      <QuickAddressSheet
+        visible={addressSheetVisible}
+        onClose={() => {
+          setAddressSheetVisible(false);
+          setAddressOpening(false);
+        }}
+      />
     </View>
   );
 }
@@ -789,16 +1015,24 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 50,
-    backgroundColor: HEADER_YELLOW,
-    paddingBottom: 8,
+    zIndex: 100,
+    backgroundColor: '#FFF4C7',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(229, 169, 0, 0.15)',
+    overflow: 'hidden',
   },
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    marginBottom: 6,
+  },
+  addressButtonPressed: {
+    opacity: 0.82,
+  },
+  addressSpinner: {
+    marginLeft: 4,
+    transform: [{ scale: 0.72 }],
   },
   addressButton: {
     flex: 1,
@@ -817,7 +1051,7 @@ const styles = StyleSheet.create({
   },
   deliverToLabel: {
     fontSize: 11,
-    color: '#374151',
+    color: '#4B5563',
     fontFamily: typography.family.medium,
     lineHeight: 14,
   },
@@ -844,7 +1078,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.06)',
+    borderColor: '#E5E7EB',
   },
   avatarInitial: {
     fontSize: 15,
@@ -853,20 +1087,25 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 
-  /* Search Bar */
+  /* Search Bar & Wishlist Row */
   searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     paddingHorizontal: 16,
-    paddingTop: 2,
+    marginTop: 4,
+    marginBottom: 8,
   },
   searchBar: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 24,
+    borderRadius: 16,
     height: 48,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.04)',
+    borderColor: 'rgba(229, 231, 235, 0.8)',
   },
   searchIcon: {
     marginRight: 8,
@@ -883,112 +1122,292 @@ const styles = StyleSheet.create({
   micIcon: {
     marginLeft: 8,
   },
-
-  /* Unified Yellow Hero Section */
-  yellowHeroSection: {
-    backgroundColor: HEADER_YELLOW,
-    paddingTop: 4,
-    paddingBottom: 22,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+  wishlistBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: 'rgba(229, 231, 235, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  /* Category Shortcuts */
-  categoryShortcutsSection: {
-    paddingBottom: 14,
+  /* Horizontal Category Navigation */
+  categoryNavRow: {
+    height: 82,
+    paddingBottom: 4,
   },
-  categoryScrollContent: {
+  categoryNavContent: {
     paddingHorizontal: 16,
-    gap: 14,
-    alignItems: 'flex-start',
+    gap: 12,
+    alignItems: 'center',
   },
-  categoryItem: {
+  categoryNavItem: {
     alignItems: 'center',
     width: 58,
   },
-  categoryTile: {
+  categoryNavPill: {
     width: 52,
     height: 52,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
   },
-  categoryTileActive: {
-    backgroundColor: '#FFFFFF',
+  categoryNavPillActive: {
+    backgroundColor: '#FFEBA3',
   },
-  categoryTileImage: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+  categoryNavIconImg: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
   },
-  categoryLabel: {
-    fontSize: 10.5,
-    lineHeight: 13,
-    color: '#111827',
+  categoryNavLabel: {
     fontFamily: typography.family.medium,
+    fontSize: 11,
+    color: '#374151',
+    marginTop: 3,
     textAlign: 'center',
-    marginTop: 6,
-    minHeight: 26,
   },
-  categoryLabelActive: {
+  categoryNavLabelActive: {
     fontFamily: typography.family.bold,
+    color: '#111827',
     fontWeight: '700',
   },
-  activeIndicator: {
-    width: 22,
+  categoryNavUnderline: {
+    width: 24,
     height: 3,
-    borderRadius: 2,
+    borderRadius: 1.5,
     backgroundColor: 'transparent',
-    marginTop: 4,
+    marginTop: 3,
   },
-  activeIndicatorVisible: {
-    backgroundColor: '#111827',
+  categoryNavUnderlineActive: {
+    backgroundColor: '#E5A900',
   },
 
-  /* Full Marketing Banner Carousel */
-  bannerCarouselSection: {
-    marginTop: 2,
-  },
-  bannerScrollContent: {
-    paddingHorizontal: 16,
-    gap: 12,
-  },
-  bannerCard: {
-    borderRadius: 22,
+  /* Unified Diwali Section Card (Banner + 6 Category Cards in ONE Card) */
+  diwaliUnifiedCard: {
+    marginHorizontal: 12,
+    marginTop: 8,
+    marginBottom: 16,
+    borderRadius: 24,
+    backgroundColor: '#35065C', // Seamless rich festive purple matching reference
     overflow: 'hidden',
-    backgroundColor: '#FFF5D6',
-    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    shadowColor: '#1A0033',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
   },
-  bannerFullImage: {
+  diwaliBannerSection: {
     width: '100%',
-    height: '100%',
-    borderRadius: 22,
+    height: 248,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  bannerInnerDots: {
-    position: 'absolute',
-    bottom: 14,
-    left: 18,
+  diwaliBannerBgImage: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  diwaliBannerContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    zIndex: 2,
+    marginTop: 6,
+  },
+  diwaliPreheading: {
+    fontFamily: typography.family.bold,
+    fontSize: 12,
+    letterSpacing: 3,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 2,
+    textTransform: 'uppercase',
+  },
+  diwaliMainHeading: {
+    fontFamily: typography.family.bold,
+    fontSize: 38,
+    lineHeight: 44,
+    color: '#FEF08A',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.45)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  diwaliSubtitle: {
+    fontFamily: typography.family.medium,
+    fontSize: 13,
+    lineHeight: 17,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 14,
+    opacity: 0.95,
+  },
+  shopNowBtn: {
+    backgroundColor: '#FFC928',
+    borderRadius: 22,
+    paddingHorizontal: 22,
+    paddingVertical: 9,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    zIndex: 10,
+    gap: 6,
+    marginBottom: 12,
   },
-  innerDot: {
+  shopNowText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#111827',
+    fontWeight: '700',
+  },
+  diwaliDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  diwaliDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(0,0,0,0.22)',
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
   },
-  innerDotActive: {
+  diwaliDotActive: {
     width: 18,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FFC928',
+    backgroundColor: '#FFFFFF',
+  },
+
+  /* 6 Category Cards inside the Unified Diwali Card */
+  diwaliCardsGridInside: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 14,
+    rowGap: 10,
+    backgroundColor: '#35065C',
+  },
+  diwaliCard: {
+    width: '31.3%',
+    height: 132,
+    borderRadius: 18,
+    backgroundColor: '#250444', // Darker purple tile for high contrast
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingTop: 10,
+    paddingHorizontal: 4,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+  },
+  diwaliCardTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 12,
+    lineHeight: 15,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontWeight: '700',
+    minHeight: 30,
+  },
+  diwaliCardImgWrap: {
+    width: '100%',
+    height: 82,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 4,
+  },
+  diwaliCardImg: {
+    width: '92%',
+    height: '100%',
   },
 
   /* Store Products and Parent Categories */
+  /* Shop by Category 4-Column Grid */
+  shopByCategorySection: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 18,
+    paddingBottom: 8,
+    marginBottom: 8,
+  },
+  shopByCategoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  shopByCategoryTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 18,
+    color: '#111827',
+    fontWeight: '700',
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  viewAllText: {
+    fontFamily: typography.family.bold,
+    fontSize: 13.5,
+    color: '#D97706',
+    fontWeight: '700',
+  },
+  shopByCategoryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 8,
+    rowGap: 14,
+  },
+  shopCategoryItem: {
+    width: '25%',
+    padding: 4,
+    alignItems: 'center',
+  },
+  shopCategoryCircle: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 18,
+    backgroundColor: '#ECF6FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    overflow: 'hidden',
+    padding: 4,
+  },
+  shopCategoryCard: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 18,
+    backgroundColor: '#ECF6FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+    overflow: 'hidden',
+    padding: 4,
+  },
+  shopCategoryCardImg: {
+    width: '100%',
+    height: '100%',
+  },
+  shopCategoryCircleImg: {
+    width: '100%',
+    height: '100%',
+  },
+  shopCategoryLabel: {
+    fontFamily: typography.family.bold,
+    fontSize: 11.5,
+    lineHeight: 15,
+    color: '#111827',
+    textAlign: 'center',
+    minHeight: 30,
+  },
   parentSlider: {
     paddingHorizontal: 14,
     paddingVertical: 18,
@@ -1057,10 +1476,11 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1,
     borderRadius: 18,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#ECF6FE',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    padding: 6,
   },
   categoryName: {
     fontSize: 12,

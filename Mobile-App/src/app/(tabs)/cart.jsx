@@ -53,6 +53,7 @@ import OrderForSomeoneElse from '../../components/cart/OrderForSomeoneElse';
 import { setOrderRecipient } from '../../services/recipientStore';
 import { haptics } from '../../services/haptics';
 import { MOCK_PRODUCTS } from '../../services/mockProducts';
+import { QuickAddressSheet } from '../../components/address/QuickAddressSheet';
 
 const FONTS = {
   heavy: typography?.family?.heavy || 'Gilroy-Heavy',
@@ -257,6 +258,8 @@ export default function CartScreen() {
 
   const [clearModalVisible, setClearModalVisible] = useState(false);
   const [overflowMenuVisible, setOverflowMenuVisible] = useState(false);
+  const [addressSheetVisible, setAddressSheetVisible] = useState(false);
+  const [addressOpening, setAddressOpening] = useState(false);
   const [isClearingCart, setIsClearingCart] = useState(false);
   const { toggleSave, isSaved } = useWishlist();
   const [couponModalVisible, setCouponModalVisible] = useState(false);
@@ -577,14 +580,19 @@ export default function CartScreen() {
             style={styles.headerAddressWrap}
             onPress={() => {
               haptics.selection();
-              router.push('/addresses');
+              setAddressOpening(true);
+              setAddressSheetVisible(true);
             }}
             activeOpacity={0.8}
           >
             <View style={styles.headerHomeRow}>
               <MapPin size={15} color="#0F172A" strokeWidth={2.4} style={{ marginRight: 5 }} />
               <Text style={styles.headerHomeTitle}>HOME</Text>
-              <ChevronDown size={14} color="#0F172A" strokeWidth={2.5} style={{ marginLeft: 3 }} />
+              {addressOpening ? (
+                <ActivityIndicator size="small" color="#0F172A" style={{ marginLeft: 4, transform: [{ scale: 0.72 }] }} />
+              ) : (
+                <ChevronDown size={14} color="#0F172A" strokeWidth={2.5} style={{ marginLeft: 3 }} />
+              )}
             </View>
             <Text style={styles.headerAddressSubtitle} numberOfLines={1} ellipsizeMode="tail">
               {addressText}
@@ -1119,6 +1127,14 @@ export default function CartScreen() {
           </View>
         </View>
       </Modal>
+
+      <QuickAddressSheet
+        visible={addressSheetVisible}
+        onClose={() => {
+          setAddressSheetVisible(false);
+          setAddressOpening(false);
+        }}
+      />
     </View>
   );
 }
