@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -191,6 +191,120 @@ const DIWALI_CATEGORY_CARDS = [
   },
 ];
 
+
+const DiwaliBannerCarousel = React.memo(({ width, slides, onSlidePress }) => {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef(null);
+  const isInteracting = useRef(false);
+  const activeIndexRef = useRef(0);
+  const bannerHeight = Math.round(width * 0.65);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (isInteracting.current) return;
+      const next = (activeIndexRef.current + 1) % slides.length;
+      activeIndexRef.current = next;
+      setActiveSlide(next);
+      carouselRef.current?.scrollTo({ x: next * width, animated: true });
+    }, 4500);
+
+    return () => clearInterval(timer);
+  }, [width, slides.length]);
+
+  const handleMomentumScrollEnd = (e) => {
+    const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+    activeIndexRef.current = idx;
+    setActiveSlide(idx);
+    isInteracting.current = false;
+  };
+
+  const updateSlideFromOffset = (e) => {
+    const x = e.nativeEvent.contentOffset.x;
+    const idx = Math.max(0, Math.min(slides.length - 1, Math.round(x / width)));
+    activeIndexRef.current = idx;
+    setActiveSlide(idx);
+    isInteracting.current = false;
+  };
+
+  return (
+    <View style={[styles.diwaliCarouselBox, { width, height: bannerHeight }]}>
+      <ScrollView
+        ref={carouselRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        nestedScrollEnabled={true}
+        overScrollMode="never"
+        bounces={false}
+        onMomentumScrollEnd={(e) => {
+          if (e.nativeEvent.contentOffset.y < 200) {
+            setShowBackToTop(false);
+          }
+        }}
+        scrollEventThrottle={16}
+        onTouchStart={() => { isInteracting.current = true; }}
+        onTouchEnd={() => { setTimeout(() => { isInteracting.current = false; }, 2500); }}
+        onMomentumScrollEnd={updateSlideFromOffset}
+        onScrollEndDrag={updateSlideFromOffset}
+      >
+        {slides.map((slide) => (
+          <Pressable
+            key={slide.id}
+            style={[styles.diwaliSlide, { width, height: bannerHeight }]}
+            onPress={() => onSlidePress(slide)}
+            accessibilityRole="button"
+            accessibilityLabel={`${slide.preheading} ${slide.heading} - ${slide.subtitle.replace('\n', ' ')}`}
+          >
+            {/* Background Image: Full width & height explicit style */}
+            <Image
+              source={slide.image}
+              style={styles.diwaliSlideBgImage}
+              contentFit="cover"
+            />
+
+            {/* Gentle gradient overlay preserving fireworks & lanterns on left/right while ensuring center text readability */}
+            <LinearGradient
+              colors={['transparent', 'rgba(35, 4, 62, 0.15)', 'rgba(35, 4, 62, 0.35)']}
+              style={StyleSheet.absoluteFillObject}
+            />
+
+            <View style={styles.diwaliSlideContent}>
+              <Text style={styles.diwaliPreheading}>{slide.preheading}</Text>
+              <Text style={styles.diwaliMainHeading}>{slide.heading}</Text>
+              <Text style={styles.diwaliSubtitle}>{slide.subtitle}</Text>
+
+              <View style={styles.shopNowBtn}>
+                <Text style={styles.shopNowText}>{slide.buttonText}</Text>
+                <ArrowRight size={15} color="#111827" strokeWidth={2.4} />
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {/* Pagination Dots Row */}
+      <View style={styles.diwaliDotsRowOverlay} pointerEvents="box-none">
+        {slides.map((_, idx) => (
+          <Pressable
+            key={idx}
+            onPress={() => {
+              haptics.selection();
+              activeIndexRef.current = idx;
+              setActiveSlide(idx);
+              carouselRef.current?.scrollTo({ x: idx * width, animated: true });
+            }}
+            hitSlop={8}
+            style={[
+              styles.diwaliDot,
+              activeSlide === idx && styles.diwaliDotActive
+            ]}
+          />
+        ))}
+      </View>
+    </View>
+  );
+});
+
 const SHOP_BY_CATEGORY_ITEMS = [
   {
     key: 'fruits-veg',
@@ -341,22 +455,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [addressSheetVisible, setAddressSheetVisible] = useState(false);
   const [addressOpening, setAddressOpening] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
-  const carouselRef = useRef(null);
-  const isInteracting = useRef(false);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      if (isInteracting.current) return;
-      setActiveSlide((prev) => {
-        const next = (prev + 1) % DIWALI_BANNER_SLIDES.length;
-        carouselRef.current?.scrollTo({ x: next * width, animated: true });
-        return next;
-      });
-    }, 4500);
-
-    return () => clearInterval(timer);
-  }, [width]);
 
   const handleDiwaliSlidePress = (slide) => {
     haptics.selection();
@@ -378,8 +477,10 @@ export default function HomeScreen() {
 
   const topPad = Math.max(insets.top, TOP_INSET_FALLBACK);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const lastY = useRef(0);
-  const downFrom = useRef(0);
+  const [headerHeight, setHeaderHeight] = useState(190);
+  const upScrollAccumulator = useRef(0);
+  const downScrollAccumulator = useRef(0);
+  const lastScrollY = useRef(0);
 
   const backAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -417,25 +518,39 @@ export default function HomeScreen() {
   const handleScroll = (event) => {
     onScrollHandler(event);
     const y = Math.max(event.nativeEvent.contentOffset.y, 0);
-    const dy = y - lastY.current;
-    lastY.current = y;
-    if (y < 300) {
+    const dy = y - lastScrollY.current;
+    lastScrollY.current = y;
+
+    // When user reaches near the banner or top of page, always hide Back to top
+    if (y < 350) {
       setShowBackToTop(false);
-      downFrom.current = y;
+      downScrollAccumulator.current = 0;
       return;
     }
-    if (dy > 4) {
-      setShowBackToTop(false);
-    } else if (dy < -8) {
+
+    if (dy < -3) {
+      // User is scrolling UP: show Back to top immediately!
       setShowBackToTop(true);
+      downScrollAccumulator.current = 0;
+    } else if (dy > 6) {
+      // User is scrolling DOWN: accumulate down scroll before hiding to prevent flicker
+      downScrollAccumulator.current += dy;
+      if (downScrollAccumulator.current > 70) {
+        setShowBackToTop(false);
+      }
     }
   };
+
+  const scrollToOffset = useCallback((y, animated = true) => {
+    const node = scrollRef.current?.getNode ? scrollRef.current.getNode() : (scrollRef.current?._component || scrollRef.current);
+    node?.scrollTo?.({ y, animated });
+  }, []);
 
   const jumpToParent = (parent) => {
     setActiveCategory(idOf(parent));
     const y = sectionOffsets.current[idOf(parent)];
     if (typeof y === 'number') {
-      scrollRef.current?.scrollTo({ y: Math.max(y - 70, 0), animated: true });
+      scrollToOffset(Math.max(y - 70, 0));
     }
   };
 
@@ -493,7 +608,7 @@ export default function HomeScreen() {
     }
     if (item.id === 'diwali' || item.isDiwali) {
       setActiveCategory('diwali');
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
+      scrollToOffset(0);
       return;
     }
     setActiveCategory(item.id);
@@ -503,7 +618,7 @@ export default function HomeScreen() {
       const p = parents.find((x) => idOf(x) === item.backendId);
       if (p) jumpToParent(p);
     } else if (item.match) {
-      scrollRef.current?.scrollTo({ y: sectionOffsets.current.__products || 0, animated: true });
+      scrollToOffset(sectionOffsets.current.__products || 0);
     }
   };
 
@@ -560,7 +675,11 @@ export default function HomeScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([productsQuery.refetch(), categoriesQuery.refetch()]);
+      const timeout = new Promise((resolve) => setTimeout(resolve, 2500));
+      await Promise.race([
+        Promise.all([productsQuery.refetch(), categoriesQuery.refetch()]),
+        timeout,
+      ]);
     } finally {
       setRefreshing(false);
     }
@@ -568,268 +687,191 @@ export default function HomeScreen() {
 
   const openCategory = (category) => router.push(`/category/${category._id || category.id}`);
 
-  // Collapsing header animations
-  const addrHeight = scrollY.interpolate({
-    inputRange: [0, 48],
-    outputRange: [44, 0],
-    extrapolate: 'clamp',
-  });
-  const addrOpacity = scrollY.interpolate({
-    inputRange: [0, 26],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
-  const addrMarginBottom = scrollY.interpolate({
-    inputRange: [0, 48],
-    outputRange: [6, 0],
+  const headerBorderColor = scrollY.interpolate({
+    inputRange: [0, 50],
+    outputRange: ['rgba(229, 169, 0, 0.08)', 'rgba(229, 169, 0, 0.28)'],
     extrapolate: 'clamp',
   });
 
+  
   return (
     <View style={styles.root}>
       <StatusBar style="dark" />
 
-      {/* Pinned / Collapsing Sticky Top Header */}
-      <View style={[styles.stickyHeader, { paddingTop: topPad }]}>
-        <HeaderMandalaBg />
+      {/* Pinned Top Status Bar Filler (Always light yellow with mandala, pins behind system status bar) */}
+      <View style={[styles.statusBarFiller, { height: topPad }]} pointerEvents="none" />
 
-        {/* Deliver To Row */}
-        <Animated.View
-          style={[
-            styles.addressRow,
-            {
-              height: addrHeight,
-              opacity: addrOpacity,
-              marginBottom: addrMarginBottom,
-              overflow: 'hidden',
-            },
-          ]}
-        >
-          <Pressable
-            style={({ pressed }) => [
-              styles.addressButton,
-              (pressed || addressOpening) && styles.addressButtonPressed
-            ]}
-            onPress={handleOpenAddress}
-            accessibilityRole="button"
-            accessibilityLabel="Change delivery location"
-          >
-            <View style={styles.pinWrapper}>
-              <MapPin size={22} color="#111827" strokeWidth={2.4} />
-            </View>
-            <View style={styles.addressTextCol}>
-              <Text style={styles.deliverToLabel}>Deliver to</Text>
-              <View style={styles.addressValueRow}>
-                <Text style={styles.addressValue} numberOfLines={1}>
-                  {addressLabel}
-                </Text>
-                {addressOpening ? (
-                  <ActivityIndicator size="small" color="#111827" style={styles.addressSpinner} />
-                ) : (
-                  <ChevronDown size={14} color="#111827" strokeWidth={2.6} style={styles.chevron} />
-                )}
-              </View>
-            </View>
-          </Pressable>
-
-          <Pressable
-            style={styles.avatarButton}
-            onPress={() => router.push('/(tabs)/profile')}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-          >
-            {initial ? (
-              <Text style={styles.avatarInitial}>{initial}</Text>
-            ) : (
-              <User size={18} color="#111827" strokeWidth={2.2} />
-            )}
-          </Pressable>
-        </Animated.View>
-
-        {/* Search Bar + Wishlist Row */}
-        <View style={styles.searchRow}>
-          <Pressable
-            style={styles.searchBar}
-            onPress={() => {
-              haptics.selection();
-              router.push('/(tabs)/search');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Search products"
-          >
-            <Search size={18} color="#9CA3AF" strokeWidth={2} style={styles.searchIcon} />
-            <View style={styles.searchPlaceholderWrap} pointerEvents="none">
-              <RotatingSearch words={SEARCH_WORDS} />
-            </View>
-            <Mic size={18} color="#111827" strokeWidth={2} style={styles.micIcon} />
-          </Pressable>
-
-          <Pressable
-            style={styles.wishlistBtn}
-            onPress={() => {
-              haptics.selection();
-              router.push('/wishlist');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="View Wishlist"
-          >
-            <Heart size={20} color="#111827" strokeWidth={2} />
-          </Pressable>
-        </View>
-
-        {/* Horizontal Category Navigation (Sticky with Search Bar) */}
-        <View style={styles.categoryNavRow}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryNavContent}
-          >
-            {shortcutList.map((cat) => {
-              const isSelected = activeCategory === cat.id;
-              return (
-                <Pressable
-                  key={cat.id}
-                  style={styles.categoryNavItem}
-                  onPress={() => handleSelectShortcut(cat)}
-                  accessibilityRole="button"
-                  accessibilityLabel={cat.name}
-                >
-                  <View
-                    style={[
-                      styles.categoryNavPill,
-                      isSelected && styles.categoryNavPillActive,
-                    ]}
-                  >
-                    {cat.iconType === 'grid' ? (
-                      <LayoutGrid size={24} color="#D97706" strokeWidth={2.2} />
-                    ) : cat.iconType === 'headphones' ? (
-                      <Headphones size={24} color="#7C3AED" strokeWidth={2.2} />
-                    ) : (
-                      <Image
-                        source={cat.imageSource}
-                        style={styles.categoryNavIconImg}
-                        contentFit="contain"
-                      />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.categoryNavLabel,
-                      isSelected && styles.categoryNavLabelActive,
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {cat.name.replace('\n', ' ')}
-                  </Text>
-                  <View
-                    style={[
-                      styles.categoryNavUnderline,
-                      isSelected && styles.categoryNavUnderlineActive,
-                    ]}
-                  />
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* Scrollable Content Body */}
+      {/* Native Zero-Lag ScrollView with stickyHeaderIndices={[0]} */}
       <Animated.ScrollView
         ref={scrollRef}
+        stickyHeaderIndices={[0]}
         onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
           useNativeDriver: false,
           listener: handleScroll,
         })}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollBody, { paddingTop: topPad + 188 }]}
+        style={[styles.mainScrollView, { marginTop: topPad }]}
+        contentContainerStyle={styles.scrollBody}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
             tintColor="#111827"
             colors={['#FFC928', '#111827']}
-            progressViewOffset={topPad + 188}
+            progressViewOffset={10}
           />
         }
       >
-        {/* Elastic pull-down yellow backdrop */}
-        <View pointerEvents="none" style={styles.yellowBackdrop} />
+        {/* INDEX 0: Entire Unified Sticky Header (Deliver To + Search Bar + Category Navigation) */}
+        <Animated.View
+            onLayout={(e) => {
+              const h = Math.round(e.nativeEvent.layout.height);
+              if (h > 0) setHeaderHeight(h);
+            }}
+            style={[styles.unifiedHeaderBox, { borderBottomColor: headerBorderColor }]}
+          >
+          <HeaderMandalaBg width={240} height={220} />
+
+          {/* Row 1: Deliver To / Location & Profile Avatar */}
+          <View style={styles.addressRow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.addressButton,
+                (pressed || addressOpening) && styles.addressButtonPressed
+              ]}
+              onPress={handleOpenAddress}
+              accessibilityRole="button"
+              accessibilityLabel="Change delivery location"
+            >
+              <View style={styles.pinWrapper}>
+                <MapPin size={22} color="#111827" strokeWidth={2.4} />
+              </View>
+              <View style={styles.addressTextCol}>
+                <Text style={styles.deliverToLabel}>Deliver to</Text>
+                <View style={styles.addressValueRow}>
+                  <Text style={styles.addressValue} numberOfLines={1}>
+                    {addressLabel}
+                  </Text>
+                  {addressOpening ? (
+                    <ActivityIndicator size="small" color="#111827" style={styles.addressSpinner} />
+                  ) : (
+                    <ChevronDown size={14} color="#111827" strokeWidth={2.6} style={styles.chevron} />
+                  )}
+                </View>
+              </View>
+            </Pressable>
+
+            <Pressable
+              style={styles.avatarButton}
+              onPress={() => router.push('/(tabs)/profile')}
+              accessibilityRole="button"
+              accessibilityLabel="Open profile"
+            >
+              {initial ? (
+                <Text style={styles.avatarInitial}>{initial}</Text>
+              ) : (
+                <User size={18} color="#111827" strokeWidth={2.2} />
+              )}
+            </Pressable>
+          </View>
+
+          {/* Row 2: Search Bar & Wishlist */}
+          <View style={styles.searchRow}>
+            <Pressable
+              style={styles.searchBar}
+              onPress={() => {
+                haptics.selection();
+                router.push('/(tabs)/search');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Search products"
+            >
+              <Search size={18} color="#9CA3AF" strokeWidth={2} style={styles.searchIcon} />
+              <View style={styles.searchPlaceholderWrap} pointerEvents="none">
+                <RotatingSearch words={SEARCH_WORDS} />
+              </View>
+              <Mic size={18} color="#111827" strokeWidth={2} style={styles.micIcon} />
+            </Pressable>
+
+            <Pressable
+              style={styles.wishlistBtn}
+              onPress={() => {
+                haptics.selection();
+                router.push('/wishlist');
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="View Wishlist"
+            >
+              <Heart size={20} color="#111827" strokeWidth={2} />
+            </Pressable>
+          </View>
+
+          {/* Row 3: Category Navigation */}
+          <View style={styles.categoryNavRow}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryNavContent}
+            >
+              {shortcutList.map((cat) => {
+                const isSelected = activeCategory === cat.id;
+                return (
+                  <Pressable
+                    key={cat.id}
+                    style={styles.categoryNavItem}
+                    onPress={() => handleSelectShortcut(cat)}
+                    accessibilityRole="button"
+                    accessibilityLabel={cat.name}
+                  >
+                    <View
+                      style={[
+                        styles.categoryNavPill,
+                        isSelected && styles.categoryNavPillActive,
+                      ]}
+                    >
+                      {cat.iconType === 'grid' ? (
+                        <LayoutGrid size={24} color="#D97706" strokeWidth={2.2} />
+                      ) : cat.iconType === 'headphones' ? (
+                        <Headphones size={24} color="#7C3AED" strokeWidth={2.2} />
+                      ) : (
+                        <Image
+                          source={cat.imageSource}
+                          style={styles.categoryNavIconImg}
+                          contentFit="contain"
+                        />
+                      )}
+                    </View>
+                    <Text
+                      style={[
+                        styles.categoryNavLabel,
+                        isSelected && styles.categoryNavLabelActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {cat.name.replace('\n', ' ')}
+                    </Text>
+                    <View
+                      style={[
+                        styles.categoryNavUnderline,
+                        isSelected && styles.categoryNavUnderlineActive,
+                      ]}
+                    />
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </Animated.View>
 
         {/* Diwali Festive Section: 100% Full-Width Banner Carousel + 6 Category Cards */}
         <View style={styles.diwaliSectionWrapper}>
-          {/* 100% Full-Width Banner Carousel Slider (Edge-to-edge, no radius, no padding) */}
-          <View style={[styles.diwaliCarouselBox, { width }]}>
-            <ScrollView
-              ref={carouselRef}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              scrollEventThrottle={16}
-              onTouchStart={() => { isInteracting.current = true; }}
-              onTouchEnd={() => { setTimeout(() => { isInteracting.current = false; }, 2000); }}
-              onMomentumScrollEnd={(e) => {
-                const idx = Math.round(e.nativeEvent.contentOffset.x / width);
-                setActiveSlide(idx);
-                isInteracting.current = false;
-              }}
-              contentContainerStyle={{ width: width * DIWALI_BANNER_SLIDES.length }}
-            >
-              {DIWALI_BANNER_SLIDES.map((slide) => (
-                <Pressable
-                  key={slide.id}
-                  style={[styles.diwaliSlide, { width }]}
-                  onPress={() => handleDiwaliSlidePress(slide)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${slide.preheading} ${slide.heading} - ${slide.subtitle.replace('\n', ' ')}`}
-                >
-                  {/* Background Image: Full width & height explicit style */}
-                  <Image
-                    source={slide.image}
-                    style={styles.diwaliSlideBgImage}
-                    contentFit="cover"
-                  />
-
-                  {/* Gentle gradient overlay preserving fireworks & lanterns on left/right while ensuring center text readability */}
-                  <LinearGradient
-                    colors={['rgba(35, 4, 62, 0.12)', 'rgba(35, 4, 62, 0.35)', 'rgba(45, 5, 80, 0.88)']}
-                    style={StyleSheet.absoluteFillObject}
-                  />
-
-                  <View style={styles.diwaliSlideContent}>
-                    <Text style={styles.diwaliPreheading}>{slide.preheading}</Text>
-                    <Text style={styles.diwaliMainHeading}>{slide.heading}</Text>
-                    <Text style={styles.diwaliSubtitle}>{slide.subtitle}</Text>
-
-                    <View style={styles.shopNowBtn}>
-                      <Text style={styles.shopNowText}>{slide.buttonText}</Text>
-                      <ArrowRight size={15} color="#111827" strokeWidth={2.4} />
-                    </View>
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-
-            {/* Pagination Dots Row */}
-            <View style={styles.diwaliDotsRowOverlay} pointerEvents="box-none">
-              {DIWALI_BANNER_SLIDES.map((_, idx) => (
-                <Pressable
-                  key={idx}
-                  onPress={() => {
-                    haptics.selection();
-                    setActiveSlide(idx);
-                    carouselRef.current?.scrollTo({ x: idx * width, animated: true });
-                  }}
-                  hitSlop={8}
-                  style={[
-                    styles.diwaliDot,
-                    activeSlide === idx && styles.diwaliDotActive
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
+          {/* 100% Full-Width Smooth Banner Carousel (Height: 280, Jitter-Free) */}
+          <DiwaliBannerCarousel
+            width={width}
+            slides={DIWALI_BANNER_SLIDES}
+            onSlidePress={handleDiwaliSlidePress}
+          />
 
           {/* 6 Category Cards in 3 Columns x 2 Rows directly below the banner */}
           <View style={styles.diwaliCardsGridSection}>
@@ -888,7 +930,7 @@ export default function HomeScreen() {
                   accessibilityLabel="View all categories"
                 >
                   <Text style={styles.viewAllText}>View All</Text>
-                  <ArrowRight size={14} color="#D97706" strokeWidth={2.4} />
+                  <ArrowRight size={13} color="#111827" strokeWidth={2.5} />
                 </Pressable>
               </View>
 
@@ -1039,19 +1081,19 @@ export default function HomeScreen() {
         )}
       </Animated.ScrollView>
 
-      {/* Back To Top Floating Pill */}
+      {/* Back To Top Floating Pill - Pins directly below the sticky search bar */}
       <Animated.View
-        pointerEvents={showBackToTop ? 'box-none' : 'none'}
+        pointerEvents={showBackToTop ? 'auto' : 'none'}
         style={[
           styles.backTopWrap,
           {
-            top: topPad + 112,
+            top: topPad + headerHeight + 8,
             opacity: backAnim,
             transform: [
               {
                 translateY: backAnim.interpolate({
                   inputRange: [0, 1],
-                  outputRange: [-14, 0],
+                  outputRange: [-12, 0],
                 }),
               },
             ],
@@ -1060,11 +1102,15 @@ export default function HomeScreen() {
       >
         <Pressable
           style={styles.backTop}
-          onPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
+          onPress={() => {
+            haptics.selection();
+            setShowBackToTop(false);
+            scrollToOffset(0);
+          }}
           accessibilityRole="button"
           accessibilityLabel="Back to top"
         >
-          <ChevronUp size={16} color="#fff" />
+          <ChevronUp size={15} color="#FFC928" strokeWidth={2.6} />
           <Text style={styles.backTopText}>Back to top</Text>
         </Pressable>
       </Animated.View>
@@ -1088,6 +1134,7 @@ const styles = StyleSheet.create({
   },
   scrollBody: {
     paddingBottom: 120,
+    backgroundColor: '#FFFFFF',
   },
   yellowBackdrop: {
     position: 'absolute',
@@ -1098,23 +1145,39 @@ const styles = StyleSheet.create({
     backgroundColor: HEADER_YELLOW,
   },
 
-  /* Sticky Top Header */
-  stickyHeader: {
+  statusBarFiller: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
+    backgroundColor: '#FFF4C7',
     zIndex: 100,
+    overflow: 'hidden',
+  },
+  mainScrollView: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  unifiedHeaderBox: {
     backgroundColor: '#FFF4C7',
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(229, 169, 0, 0.15)',
+    borderBottomColor: 'rgba(229, 169, 0, 0.18)',
+    zIndex: 50,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
     overflow: 'hidden',
+    paddingTop: 6,
+    paddingBottom: 4,
   },
   addressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
+    marginBottom: 6,
   },
   addressButtonPressed: {
     opacity: 0.82,
@@ -1182,8 +1245,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   searchBar: {
     flex: 1,
@@ -1286,12 +1348,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 24,
   },
   diwaliCarouselBox: {
-    height: 254,
+    height: 282,
     position: 'relative',
     backgroundColor: '#35065C',
   },
   diwaliSlide: {
-    height: 254,
+    height: 282,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1431,6 +1493,11 @@ const styles = StyleSheet.create({
 
   /* Store Products and Parent Categories */
   /* Shop by Category 4-Column Grid */
+  homepageBodyWhite: {
+    backgroundColor: '#FFFFFF',
+    flex: 1,
+    paddingTop: 4,
+  },
   shopByCategorySection: {
     backgroundColor: '#FFFFFF',
     paddingTop: 18,
@@ -1454,11 +1521,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#FFC928',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 14,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
   },
   viewAllText: {
     fontFamily: typography.family.bold,
-    fontSize: 13.5,
-    color: '#D97706',
+    fontSize: 12,
+    color: '#111827',
     fontWeight: '700',
   },
   shopByCategoryGrid: {
@@ -1642,7 +1718,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
-    zIndex: 60,
+    zIndex: 999,
+    elevation: 10,
   },
   backTop: {
     flexDirection: 'row',

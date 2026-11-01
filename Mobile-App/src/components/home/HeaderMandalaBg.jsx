@@ -2,26 +2,27 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Circle, Path, G } from 'react-native-svg';
 
-export const HeaderMandalaBg = React.memo(() => {
+export const HeaderMandalaBg = React.memo(({ width = 240, height = 220 }) => {
   return (
-    <View style={styles.container} pointerEvents="none">
-      <Svg width={200} height={160} viewBox="0 0 200 160">
-        <G transform="translate(160, 10)" stroke="rgba(217, 119, 6, 0.12)" strokeWidth="1" fill="none">
-          <Circle cx="0" cy="0" r="16" />
-          <Circle cx="0" cy="0" r="32" strokeDasharray="3,3" />
-          <Circle cx="0" cy="0" r="50" />
-          <Circle cx="0" cy="0" r="70" strokeDasharray="4,4" />
-          <Circle cx="0" cy="0" r="95" />
-          <Circle cx="0" cy="0" r="125" strokeDasharray="6,4" />
+    <View style={[styles.container, { width, height }]} pointerEvents="none">
+      <Svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <G transform="translate(190, 24)" stroke="rgba(217, 119, 6, 0.12)" strokeWidth="1" fill="none">
+          <Circle cx="0" cy="0" r="18" />
+          <Circle cx="0" cy="0" r="36" strokeDasharray="3,3" />
+          <Circle cx="0" cy="0" r="58" />
+          <Circle cx="0" cy="0" r="82" strokeDasharray="4,4" />
+          <Circle cx="0" cy="0" r="112" />
+          <Circle cx="0" cy="0" r="148" strokeDasharray="6,4" />
+          <Circle cx="0" cy="0" r="190" />
 
           {Array.from({ length: 12 }).map((_, i) => {
             const angle = (i * 30 * Math.PI) / 180;
-            const x1 = Math.cos(angle) * 32;
-            const y1 = Math.sin(angle) * 32;
-            const x2 = Math.cos(angle) * 70;
-            const y2 = Math.sin(angle) * 70;
-            const px = Math.cos(angle + 0.15) * 52;
-            const py = Math.sin(angle + 0.15) * 52;
+            const x1 = Math.cos(angle) * 36;
+            const y1 = Math.sin(angle) * 36;
+            const x2 = Math.cos(angle) * 82;
+            const y2 = Math.sin(angle) * 82;
+            const px = Math.cos(angle + 0.15) * 58;
+            const py = Math.sin(angle + 0.15) * 58;
             return (
               <Path
                 key={`p-${i}`}
@@ -41,8 +42,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     right: 0,
-    width: 200,
-    height: 160,
     overflow: 'hidden',
     zIndex: -1,
   },

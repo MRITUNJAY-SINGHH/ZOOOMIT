@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   Modal,
-  Pressable,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -14,25 +13,25 @@ import {
   Alert
 } from 'react-native';
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X, Plus, Minus, Check, ShoppingBag, Package, ChevronRight, Info, Eye } from 'lucide-react-native';
+import { X, Check, ShoppingCart, Package } from 'lucide-react-native';
 import { BlurView } from 'expo-blur';
 import { colors, typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { haptics } from '../../services/haptics';
-import { getProductImage, productUnitRate } from './ProductCard';
+import { getProductImage } from './ProductCard';
 
 export function ProductQuickSheet({
   product,
-  mode = 'variants',
   initialVariantId,
-  onClose
+  onClose,
+  onVariantAdded
 }) {
   const insets = useSafeAreaInsets();
-  const { cart, addItem, updateItem } = useCart();
+  const { addItem } = useCart();
   const { token } = useAuth();
+  const [busy, setBusy] = useState(false);
 
   // Animation
   const animValue = useRef(new Animated.Value(0)).current;
@@ -42,71 +41,27 @@ export function ProductQuickSheet({
     return (product?.variants || []).filter((v) => v.isActive !== false);
   }, [product]);
 
-  // Extract distinct types/varieties if present
-  const typeOptions = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
-    const types = new Set();
-    variants.forEach((v) => {
-      const typeAttr = (v.attributes || []).find((a) =>
-        /^(type|variety|flavor|flavour)$/i.test(a.key)
-      );
-      if (typeAttr && typeAttr.value) {
-        types.add(typeAttr.value.trim());
-      }
-    });
-    return Array.from(types);
-  }, [variants]);
-
-  const [selectedType, setSelectedType] = useState(() => {
-    return typeOptions[0] || null;
-  });
-
-  // Filter variants by type if selected
-  const visibleVariants = useMemo(() => {
-    if (!variants || variants.length === 0) return [];
-    if (!selectedType) return variants;
-    const filtered = variants.filter((v) => {
-      const typeAttr = (v.attributes || []).find((a) =>
-        /^(type|variety|flavor|flavour)$/i.test(a.key)
-      );
-      return typeAttr && typeAttr.value && typeAttr.value.trim() === selectedType;
-    });
-    return filtered.length > 0 ? filtered : variants;
-  }, [variants, selectedType]);
+  const productId = String(product?._id || product?.id || '');
 
   // Selected variant state
   const [selectedVariantId, setSelectedVariantId] = useState(() => {
-    if (initialVariantId) return initialVariantId;
-    return visibleVariants[0]?._id || variants[0]?._id || null;
+    if (initialVariantId) return String(initialVariantId);
+    return variants[0]?._id || variants[0]?.id || null;
   });
 
-  // Keep selected variant in sync if visible variants change
+  // Keep selected variant in sync
   useEffect(() => {
-    if (visibleVariants.length > 0) {
-      const exists = visibleVariants.some((v) => v._id === selectedVariantId);
+    if (variants.length > 0) {
+      const exists = variants.some((v) => String(v._id || v.id) === String(selectedVariantId));
       if (!exists) {
-        setSelectedVariantId(visibleVariants[0]._id);
+        setSelectedVariantId(variants[0]._id || variants[0].id);
       }
     }
-  }, [visibleVariants]);
+  }, [variants, selectedVariantId]);
 
   const selectedVariant = useMemo(() => {
-    return visibleVariants.find((v) => v._id === selectedVariantId) || visibleVariants[0] || null;
-  }, [visibleVariants, selectedVariantId]);
-
-  const [busy, setBusy] = useState(false);
-
-  // Live item in cart for the current selected variant
-  const variantId = selectedVariant?._id || null;
-  const existingCartItem = useMemo(() => {
-    return cart?.items?.find(
-      (i) =>
-        (i.product?._id || i.product) === product?._id &&
-        (variantId ? (i.variant?._id || i.variant) === variantId : !i.variant)
-    );
-  }, [cart, product?._id, variantId]);
-
-  const currentCartQty = existingCartItem?.qty || 0;
+    return variants.find((v) => String(v._id || v.id) === String(selectedVariantId)) || variants[0] || null;
+  }, [variants, selectedVariantId]);
 
   // Slide-in animation
   useEffect(() => {
@@ -114,12 +69,12 @@ export function ProductQuickSheet({
       setModalRendered(true);
       Animated.timing(animValue, {
         toValue: 1,
-        duration: 250,
+        duration: 240,
         easing: Easing.bezier(0.2, 0.9, 0.3, 1),
         useNativeDriver: true
       }).start();
     }
-  }, [product]);
+  }, [product, animValue]);
 
   const handleClose = () => {
     haptics.selection();
@@ -136,30 +91,24 @@ export function ProductQuickSheet({
 
   if (!modalRendered || !product) return null;
 
-  // Active pricing calculation
-  const activePrice = Number(selectedVariant?.sellingPrice ?? product.sellingPrice ?? 0);
-  const activeMrp = Number(selectedVariant?.mrp ?? product.mrp ?? 0);
-  const activeDiscount =
-    activeMrp > activePrice && activeMrp > 0
-      ? Math.round(((activeMrp - activePrice) / activeMrp) * 100)
+  const primaryImage = getProductImage(product);
+  const minPrice = variants.length
+    ? Math.min(...variants.map((v) => Number(v.sellingPrice ?? product.sellingPrice ?? 0)))
+    : Number(product.sellingPrice || 0);
+  const minMrp = variants.length
+    ? Math.max(...variants.map((v) => Number(v.mrp ?? product.mrp ?? 0)))
+    : Number(product.mrp || 0);
+  const headerDiscount =
+    minMrp > minPrice && minMrp > 0
+      ? Math.round(((minMrp - minPrice) / minMrp) * 100)
       : 0;
 
-  const primaryImage = getProductImage(product);
   const unit = selectedVariant?.conversionUnit || product.sellingUnit || product.baseUnit || 'PCS';
   const min = Number(product.minSaleQty) > 0 ? Number(product.minSaleQty) : 1;
-  const step = Number(product.qtyStep) > 0 ? Number(product.qtyStep) : 1;
-  const max = Number(product.maxSaleQty) > 0 ? Number(product.maxSaleQty) : 100;
-  
 
-  const handleOpenFullDetails = () => {
-    haptics.selection();
-    handleClose();
-    router.push(`/product/${product._id}`);
-  };
-
-  // Add initial item to cart
+  // Add selected variant to cart and dismiss
   const handleAddToCart = async () => {
-    if (busy) return;
+    if (busy || !selectedVariant) return;
     if (!token) {
       Alert.alert('Sign in needed', 'Please sign in before adding items to your cart.');
       return;
@@ -168,37 +117,10 @@ export function ProductQuickSheet({
     haptics.notificationSuccess();
     setBusy(true);
     try {
-      await addItem(product._id, min, variantId, unit);
-    } catch (err) {
-      Alert.alert('Cart update failed', err.message || 'Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // Increment cart quantity
-  const handleIncrement = async () => {
-    if (busy || !existingCartItem) return;
-    if (currentCartQty >= max) return;
-    haptics.selection();
-    setBusy(true);
-    try {
-      await updateItem(existingCartItem._id, currentCartQty + 1);
-    } catch (err) {
-      Alert.alert('Cart update failed', err.message || 'Please try again.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  // Decrement cart quantity; when it reaches 0, it removes item and restores Add to Cart button
-  const handleDecrement = async () => {
-    if (busy || !existingCartItem) return;
-    haptics.selection();
-    setBusy(true);
-    try {
-      const nextQty = currentCartQty - 1;
-      await updateItem(existingCartItem._id, nextQty < min ? 0 : nextQty);
+      const vId = selectedVariant._id || selectedVariant.id || null;
+      await addItem(productId, min, vId, unit);
+      onVariantAdded?.(vId);
+      handleClose();
     } catch (err) {
       Alert.alert('Cart update failed', err.message || 'Please try again.');
     } finally {
@@ -208,7 +130,7 @@ export function ProductQuickSheet({
 
   const translateY = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [500, 0]
+    outputRange: [420, 0]
   });
 
   const backdropOpacity = animValue.interpolate({
@@ -225,25 +147,24 @@ export function ProductQuickSheet({
       onRequestClose={handleClose}
     >
       <View style={styles.overlay}>
-        {/* Animated Dimmed & Blurred Backdrop (Blur + Black Overlay) */}
+        {/* Animated Dimmed & Blurred Backdrop */}
         <Animated.View
           style={[StyleSheet.absoluteFill, { opacity: backdropOpacity }]}
           pointerEvents="none"
         >
-          <BlurView
-            intensity={Platform.OS === 'ios' ? 55 : 35}
-            tint="dark"
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.62)' }]} />
+          {Platform.OS === 'ios' && (
+            <BlurView intensity={45} tint="dark" style={StyleSheet.absoluteFill} />
+          )}
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.55)' }]} />
         </Animated.View>
 
-        {/* Dedicated outside tap area to close smoothly when clicking outside */}
-        <Pressable
+        {/* Dismiss on outside tap */}
+        <TouchableOpacity
           style={styles.outsideTapArea}
           onPress={handleClose}
+          activeOpacity={1}
           accessibilityRole="button"
-          accessibilityLabel="Dismiss variation modal by clicking outside"
+          accessibilityLabel="Close variant sheet"
         />
 
         {/* Bottom Sheet Card */}
@@ -261,31 +182,26 @@ export function ProductQuickSheet({
             <View style={styles.handlePill} />
           </View>
 
-          {/* Close X Button */}
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={handleClose}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Close"
-          >
-            <X size={20} color="#111827" strokeWidth={2.4} />
-          </TouchableOpacity>
+          {/* Header Row: Title & Close X */}
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Select Variant</Text>
+            <TouchableOpacity
+              style={styles.closeBtn}
+              onPress={handleClose}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
+              <X size={18} color="#111827" strokeWidth={2.4} />
+            </TouchableOpacity>
+          </View>
 
           <ScrollView
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
           >
-            {/* 1. Product Summary Header (Clickable to view full details) */}
-            <TouchableOpacity
-              style={styles.productHeaderRow}
-              onPress={() => {
-                haptics.selection();
-                onClose();
-                router.push('/product/' + product._id);
-              }}
-              activeOpacity={0.8}
-            >
+            {/* Product Summary Header */}
+            <View style={styles.productSummaryBox}>
               <View style={styles.thumbnailBox}>
                 {primaryImage ? (
                   <Image
@@ -295,199 +211,134 @@ export function ProductQuickSheet({
                     transition={150}
                   />
                 ) : (
-                  <Package size={30} color="#9CA3AF" />
+                  <Package size={24} color="#9CA3AF" />
                 )}
               </View>
 
-              <View style={styles.productHeaderInfo}>
-                <Text style={styles.productName} numberOfLines={2}>
+              <View style={styles.productSummaryInfo}>
+                <Text style={styles.productSummaryName} numberOfLines={1}>
                   {product.name}
                 </Text>
-                <Text style={styles.productSubtitle} numberOfLines={2}>
-                  {product.shortDescription || product.subtitle || 'Fresh and naturally grown'}
-                </Text>
-              </View>
-            </TouchableOpacity>
-
-            {/* 2. Select a type (if types exist) */}
-            {typeOptions.length > 0 && (
-              <View style={styles.sectionWrap}>
-                <Text style={styles.sectionHeading}>Select a type</Text>
-                <View style={styles.typePillRow}>
-                  {typeOptions.map((type) => {
-                    const isSelected = selectedType === type;
-                    return (
-                      <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.typePill,
-                          isSelected && styles.typePillSelected
-                        ]}
-                        onPress={() => {
-                          haptics.selection();
-                          setSelectedType(type);
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <Text
-                          style={[
-                            styles.typePillText,
-                            isSelected && styles.typePillTextSelected
-                          ]}
-                        >
-                          {type}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
+                <View style={styles.summaryPriceRow}>
+                  <Text style={styles.summaryFromText}>From </Text>
+                  <Text style={styles.summaryPrice}>₹{minPrice}</Text>
+                  {minMrp > minPrice && (
+                    <Text style={styles.summaryMrp}>₹{minMrp}</Text>
+                  )}
+                  {headerDiscount > 0 && (
+                    <View style={styles.summaryDiscountBadge}>
+                      <Text style={styles.summaryDiscountText}>{headerDiscount}% OFF</Text>
+                    </View>
+                  )}
                 </View>
               </View>
-            )}
-
-            {/* 3. Select pack size */}
-            <View style={styles.sectionWrap}>
-              <Text style={styles.sectionHeading}>Select pack size</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.variantsRow}
-              >
-                {(visibleVariants.length > 0 ? visibleVariants : [null]).map((v, idx) => {
-                  const isSelected = v ? selectedVariantId === v._id : true;
-                  const vPrice = Number(v?.sellingPrice ?? product.sellingPrice ?? 0);
-                  const vMrp = Number(v?.mrp ?? product.mrp ?? 0);
-                  const vDiscount =
-                    vMrp > vPrice && vMrp > 0
-                      ? Math.round(((vMrp - vPrice) / vMrp) * 100)
-                      : 0;
-                  const vRate = productUnitRate(product, v, vPrice);
-                  const vLabel = v?.name || `${min} ${unit.toLowerCase()}`;
-
-                  return (
-                    <TouchableOpacity
-                      key={v?._id || idx}
-                      style={[
-                        styles.packCard,
-                        isSelected && styles.packCardSelected
-                      ]}
-                      onPress={() => {
-                        haptics.selection();
-                        if (v) setSelectedVariantId(v._id);
-                      }}
-                      activeOpacity={0.85}
-                    >
-                      {/* Top Row: Pack name + Radio Checkmark */}
-                      <View style={styles.packTopRow}>
-                        <Text style={styles.packNameText} numberOfLines={2}>
-                          {vLabel}
-                        </Text>
-                        <View
-                          style={[
-                            styles.radioCircle,
-                            isSelected && styles.radioCircleSelected
-                          ]}
-                        >
-                          {isSelected && <Check size={12} color="#111827" strokeWidth={3.4} />}
-                        </View>
-                      </View>
-
-                      {/* Price Row */}
-                      <View style={styles.packPriceRow}>
-                        <Text style={styles.packPriceText}>₹{vPrice}</Text>
-                        {vMrp > vPrice && (
-                          <Text style={styles.packMrpText}>₹{vMrp}</Text>
-                        )}
-                      </View>
-
-                      {/* Discount Tag */}
-                      {vDiscount > 0 && (
-                        <Text style={styles.packDiscountText}>{vDiscount}% OFF</Text>
-                      )}
-
-                      {/* Per Unit Rate */}
-                      {vRate ? (
-                        <Text style={styles.packUnitRateText}>{vRate}</Text>
-                      ) : null}
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
             </View>
 
+            {/* Choose Weight / Pack Section */}
+            <Text style={styles.sectionHeading}>Choose Weight</Text>
+            <View style={styles.variantsGrid}>
+              {variants.map((v) => {
+                const isSelected = selectedVariantId === v._id;
+                const vPrice = Number(v.sellingPrice ?? product.sellingPrice ?? 0);
+                const vMrp = Number(v.mrp ?? product.mrp ?? 0);
+                const vDiscount =
+                  vMrp > vPrice && vMrp > 0
+                    ? Math.round(((vMrp - vPrice) / vMrp) * 100)
+                    : 0;
+                const vStockVal = Number(v.stock ?? v.quantity ?? product.stock ?? product.quantity ?? 0);
+                const vOutOfStock =
+                  product.isOutOfStock === true ||
+                  (v.stock !== undefined || v.quantity !== undefined || product.stock !== undefined
+                    ? vStockVal <= 0
+                    : false) ||
+                  (product.isTrackInventory && vStockVal <= 0);
 
+                return (
+                  <TouchableOpacity
+                    key={v._id}
+                    disabled={vOutOfStock}
+                    style={[
+                      styles.variantCard,
+                      isSelected && styles.variantCardSelected,
+                      vOutOfStock && styles.variantCardDisabled
+                    ]}
+                    onPress={() => {
+                      haptics.selection();
+                      setSelectedVariantId(v._id);
+                    }}
+                    activeOpacity={0.85}
+                  >
+                    <View style={styles.variantTopRow}>
+                      <Text
+                        style={[
+                          styles.variantName,
+                          isSelected && styles.variantNameSelected,
+                          vOutOfStock && styles.textDisabled
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {v.name || `${min} ${unit.toLowerCase()}`}
+                      </Text>
+                      {isSelected ? (
+                        <View style={styles.checkBadge}>
+                          <Check size={12} color="#111827" strokeWidth={3} />
+                        </View>
+                      ) : (
+                        <View style={styles.uncheckCircle} />
+                      )}
+                    </View>
+
+                    <View style={styles.variantPriceRow}>
+                      <Text
+                        style={[
+                          styles.variantPrice,
+                          vOutOfStock && styles.textDisabled
+                        ]}
+                      >
+                        ₹{vPrice}
+                      </Text>
+                      {vMrp > vPrice && (
+                        <Text style={styles.variantMrp}>₹{vMrp}</Text>
+                      )}
+                      {vDiscount > 0 && !vOutOfStock && (
+                        <Text style={styles.variantDiscount}>{vDiscount}% OFF</Text>
+                      )}
+                    </View>
+
+                    {vOutOfStock && (
+                      <Text style={styles.outOfStockLabel}>Out of Stock</Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </ScrollView>
 
-          {/* 5. Sticky Bottom Action Bar */}
-          <View style={styles.bottomBar}>
-            {/* View Full Details Button */}
+          {/* Full-width Yellow Add to Cart CTA */}
+          <View style={styles.bottomCtaWrap}>
             <TouchableOpacity
-              style={styles.viewDetailsBtn}
-              onPress={handleOpenFullDetails}
-              activeOpacity={0.8}
+              style={[styles.addCtaBtn, busy && styles.addCtaDisabled]}
+              onPress={handleAddToCart}
+              disabled={busy}
+              activeOpacity={0.88}
               accessibilityRole="button"
-              accessibilityLabel="View full product details"
+              accessibilityLabel="Add to cart"
             >
-              <Eye size={16} color="#111827" strokeWidth={2.4} />
-              <Text style={styles.viewDetailsBtnText}>View Details</Text>
-            </TouchableOpacity>
-
-            {/* Compact Add To Cart or Quantity Stepper */}
-            <View style={styles.actionCol}>
               {busy ? (
-                <View style={styles.smallLoadingBtn}>
-                  <ActivityIndicator size="small" color="#111827" />
-                </View>
-              ) : currentCartQty > 0 ? (
-                /* Quantity Stepper (Minus, Qty, Plus) */
-                <View style={styles.bottomStepper}>
-                  <TouchableOpacity
-                    style={styles.bottomStepBtn}
-                    onPress={handleDecrement}
-                    disabled={busy}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Decrease quantity"
-                  >
-                    <Minus size={16} color="#111827" strokeWidth={2.6} />
-                  </TouchableOpacity>
-
-                  <Text style={styles.bottomStepperQty}>{currentCartQty}</Text>
-
-                  <TouchableOpacity
-                    style={styles.bottomStepBtnAdd}
-                    onPress={handleIncrement}
-                    disabled={busy || currentCartQty >= max}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Increase quantity"
-                  >
-                    <Plus size={16} color="#111827" strokeWidth={2.6} />
-                  </TouchableOpacity>
-                </View>
+                <ActivityIndicator size="small" color="#111827" />
               ) : (
-                /* Small Add to Cart Button */
-                <TouchableOpacity
-                  style={styles.smallAddToCartBtn}
-                  onPress={handleAddToCart}
-                  disabled={busy}
-                  activeOpacity={0.85}
-                  accessibilityRole="button"
-                  accessibilityLabel="Add to cart"
-                >
-                  <Text style={styles.smallAddText}>Add to Cart</Text>
-                  <View style={styles.smallAddDivider} />
-                  <Text style={styles.smallAddPrice}>₹{activePrice}</Text>
-                </TouchableOpacity>
+                <>
+                  <ShoppingCart size={18} color="#111827" strokeWidth={2.4} />
+                  <Text style={styles.addCtaText}>Add to Cart</Text>
+                </>
               )}
-            </View>
+            </TouchableOpacity>
           </View>
         </Animated.View>
       </View>
     </Modal>
   );
 }
-
-const F = typography.family;
 
 const styles = StyleSheet.create({
   overlay: {
@@ -496,298 +347,236 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent'
   },
   outsideTapArea: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1
+    flex: 1
   },
   sheetContainer: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    minHeight: 460,
-    maxHeight: '85%',
-    position: 'relative',
-    zIndex: 2,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 8,
+    paddingHorizontal: 20,
+    maxHeight: '75%',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 },
     elevation: 20
   },
   handleContainer: {
     alignItems: 'center',
-    paddingVertical: 10
+    paddingVertical: 6
   },
   handlePill: {
-    width: 44,
-    height: 4.5,
-    borderRadius: 2.5,
+    width: 38,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#D1D5DB'
   },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    marginBottom: 6
+  },
+  headerTitle: {
+    fontFamily: typography.family.bold,
+    fontSize: 18,
+    color: '#111827'
+  },
   closeBtn: {
-    position: 'absolute',
-    top: 14,
-    right: 18,
     width: 32,
     height: 32,
     borderRadius: 16,
     backgroundColor: '#F3F4F6',
     alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10
+    justifyContent: 'center'
   },
   scrollContent: {
-    paddingHorizontal: 20,
     paddingBottom: 16
   },
-  productHeaderRow: {
+  productSummaryBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    marginBottom: 16
+    backgroundColor: '#FFFBEA',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+    padding: 10,
+    marginBottom: 16,
+    gap: 12
   },
   thumbnailBox: {
-    width: 64,
-    height: 64,
-    borderRadius: 14,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    width: 52,
+    height: 52,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden'
   },
   thumbnailImage: {
-    width: '90%',
-    height: '90%'
+    width: 44,
+    height: 44
   },
-  productHeaderInfo: {
-    flex: 1,
-    paddingRight: 24
+  productSummaryInfo: {
+    flex: 1
   },
-  productName: {
-    fontFamily: F.bold,
-    fontSize: 16,
-    color: '#111827',
-    lineHeight: 21,
-    marginBottom: 3
-  },
-  productSubtitle: {
-    fontFamily: F.regular,
-    fontSize: 12.5,
-    color: '#6B7280',
-    lineHeight: 16
-  },
-  sectionWrap: {
-    marginBottom: 20
-  },
-  sectionHeading: {
-    fontFamily: F.bold,
+  productSummaryName: {
+    fontFamily: typography.family.bold,
     fontSize: 14.5,
     color: '#111827',
-    marginBottom: 10
+    marginBottom: 4
   },
-  typePillRow: {
+  summaryPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 4
+  },
+  summaryFromText: {
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    color: '#6B7280'
+  },
+  summaryPrice: {
+    fontFamily: typography.family.bold,
+    fontSize: 15,
+    color: '#111827'
+  },
+  summaryMrp: {
+    fontFamily: typography.family.regular,
+    fontSize: 12,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+    marginLeft: 2
+  },
+  summaryDiscountBadge: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 6
+  },
+  summaryDiscountText: {
+    fontFamily: typography.family.bold,
+    fontSize: 10.5,
+    color: '#16A34A'
+  },
+  sectionHeading: {
+    fontFamily: typography.family.bold,
+    fontSize: 14.5,
+    color: '#111827',
+    marginBottom: 12
+  },
+  variantsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10
   },
-  typePill: {
-    paddingHorizontal: 16,
-    paddingVertical: 9,
-    borderRadius: 10,
+  variantCard: {
+    width: '48%',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.2,
-    borderColor: '#E5E7EB'
-  },
-  typePillSelected: {
-    borderColor: '#FEDC4A',
-    backgroundColor: '#FEFCE8'
-  },
-  typePillText: {
-    fontFamily: F.medium,
-    fontSize: 13,
-    color: '#4B5563'
-  },
-  typePillTextSelected: {
-    fontFamily: F.bold,
-    color: '#111827'
-  },
-  variantsRow: {
-    gap: 12,
-    paddingVertical: 2
-  },
-  packCard: {
-    minWidth: 150,
-    maxWidth: 200,
-    minHeight: 125,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.2,
+    borderRadius: 12,
+    borderWidth: 1.5,
     borderColor: '#E5E7EB',
     padding: 12,
-    justifyContent: 'space-between'
-  },
-  packCardSelected: {
-    borderColor: '#FEDC4A',
-    backgroundColor: '#FEFCE8'
-  },
-  packTopRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
     justifyContent: 'space-between',
-    marginBottom: 6
+    minHeight: 84
   },
-  packNameText: {
-    fontFamily: F.bold,
+  variantCardSelected: {
+    borderColor: '#FFC928',
+    backgroundColor: '#FFFDF5'
+  },
+  variantCardDisabled: {
+    opacity: 0.5,
+    backgroundColor: '#F9FAFB'
+  },
+  variantTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8
+  },
+  variantName: {
+    fontFamily: typography.family.bold,
     fontSize: 13.5,
-    lineHeight: 18,
-    color: '#111827',
-    flex: 1,
-    marginRight: 6,
-    minHeight: 36
+    color: '#374151',
+    flex: 1
   },
-  radioCircle: {
+  variantNameSelected: {
+    color: '#111827'
+  },
+  checkBadge: {
     width: 20,
     height: 20,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FFC928',
     alignItems: 'center',
     justifyContent: 'center'
   },
-  radioCircleSelected: {
-    backgroundColor: '#FEDC4A',
-    borderColor: '#FEDC4A'
+  uncheckCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB'
   },
-  packPriceRow: {
+  variantPriceRow: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    gap: 5,
-    marginBottom: 3
+    flexWrap: 'wrap',
+    gap: 4
   },
-  packPriceText: {
-    fontFamily: F.bold,
-    fontSize: 15.5,
+  variantPrice: {
+    fontFamily: typography.family.bold,
+    fontSize: 16,
     color: '#111827'
   },
-  packMrpText: {
-    fontFamily: F.regular,
-    fontSize: 11,
+  variantMrp: {
+    fontFamily: typography.family.regular,
+    fontSize: 11.5,
     color: '#9CA3AF',
     textDecorationLine: 'line-through'
   },
-  packDiscountText: {
-    fontFamily: F.bold,
-    fontSize: 11,
-    color: '#16A34A',
-    marginBottom: 3
-  },
-  packUnitRateText: {
-    fontFamily: F.regular,
+  variantDiscount: {
+    fontFamily: typography.family.bold,
     fontSize: 10.5,
-    color: '#6B7280'
+    color: '#16A34A',
+    marginLeft: 2
   },
-  bottomBar: {
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    backgroundColor: '#FFFFFF'
+  outOfStockLabel: {
+    fontFamily: typography.family.medium,
+    fontSize: 10.5,
+    color: '#EF4444',
+    marginTop: 4
   },
-  viewDetailsBtn: {
-    flex: 1,
+  textDisabled: {
+    color: '#9CA3AF'
+  },
+  bottomCtaWrap: {
+    paddingTop: 10
+  },
+  addCtaBtn: {
     height: 48,
-    borderRadius: 14,
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1.2,
-    borderColor: '#E5E7EB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6
-  },
-  viewDetailsBtnText: {
-    fontFamily: F.bold,
-    fontSize: 14,
-    color: '#111827'
-  },
-  actionCol: {
-    flex: 1.25
-  },
-  smallAddToCartBtn: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#FEDC4A',
+    borderRadius: 12,
+    backgroundColor: '#FFC928',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingHorizontal: 12
+    elevation: 2,
+    shadowColor: '#E5A900',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 }
   },
-  smallAddText: {
-    fontFamily: F.bold,
-    fontSize: 14.5,
+  addCtaDisabled: {
+    opacity: 0.7
+  },
+  addCtaText: {
+    fontFamily: typography.family.bold,
+    fontSize: 15.5,
     color: '#111827'
-  },
-  smallAddDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: '#E5A900'
-  },
-  smallAddPrice: {
-    fontFamily: F.bold,
-    fontSize: 14.5,
-    color: '#111827'
-  },
-  smallLoadingBtn: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#FEDC4A',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  bottomStepper: {
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 4
-  },
-  bottomStepBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  bottomStepperQty: {
-    fontFamily: F.bold,
-    fontSize: 16,
-    color: '#111827',
-    minWidth: 28,
-    textAlign: 'center'
-  },
-  bottomStepBtnAdd: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
-    backgroundColor: '#FEDC4A',
-    alignItems: 'center',
-    justifyContent: 'center'
   }
 });

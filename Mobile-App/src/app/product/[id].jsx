@@ -15,6 +15,7 @@ import {
   Animated
 } from 'react-native';
 import { Image } from 'expo-image';
+import { ProductCard } from '../../components/product/ProductCard';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
@@ -894,83 +895,13 @@ export default function ProductDetailsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.relatedScrollContent}
             >
-              {relatedProducts.map((rel) => {
-                const relPrice = Number(rel.sellingPrice || 0);
-                const relMrp = Number(rel.mrp || 0);
-                const relDiscount =
-                  relMrp > relPrice && relPrice > 0
-                    ? Math.round(((relMrp - relPrice) / relMrp) * 100)
-                    : 0;
-
-                const relUnit =
-                  rel.variants?.[0]?.name ||
-                  rel.sellingUnit ||
-                  rel.baseUnit ||
-                  '1 pc';
-
-                return (
-                  <Pressable
-                    key={rel._id}
-                    style={styles.relatedCard}
-                    onPress={() => {
-                      haptics.selection();
-                      router.push(`/product/${rel._id}`);
-                    }}
-                  >
-                    <View style={styles.relImageContainer}>
-                      <Image
-                        source={{ uri: rel.featuredImage || rel.galleryImages?.[0] }}
-                        style={styles.relImage}
-                        contentFit="contain"
-                      />
-                    </View>
-
-                    <Text style={styles.relName} numberOfLines={2}>
-                      {rel.name}
-                    </Text>
-
-                    <Text style={styles.relUnit} numberOfLines={1}>
-                      {relUnit}
-                    </Text>
-
-                    <View style={styles.relPriceRow}>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                          <Text style={styles.relPrice}>₹{relPrice}</Text>
-                          {relMrp > relPrice && (
-                            <Text style={styles.relMrp}>₹{relMrp}</Text>
-                          )}
-                        </View>
-                        {relDiscount > 0 && (
-                          <Text style={styles.relDiscount}>{relDiscount}% OFF</Text>
-                        )}
-                      </View>
-
-                      {/* Small Yellow Add Button on Related Card */}
-                      <TouchableOpacity
-                        style={styles.relAddBtn}
-                        onPress={async (e) => {
-                          e.stopPropagation();
-                          haptics.selection();
-                          if (!token) {
-                            Alert.alert('Sign in required', 'Please sign in to add items.');
-                            return;
-                          }
-                          try {
-                            await addItem(rel._id, 1, rel.variants?.[0]?._id || null, relUnit);
-                            haptics.notificationSuccess();
-                          } catch (err) {
-                            Alert.alert('Error', err.message || 'Could not add to cart');
-                          }
-                        }}
-                        activeOpacity={0.8}
-                      >
-                        <Plus size={16} color="#111827" strokeWidth={3} />
-                      </TouchableOpacity>
-                    </View>
-                  </Pressable>
-                );
-              })}
+              {relatedProducts.map((rel) => (
+                <ProductCard
+                  key={rel._id}
+                  product={rel}
+                  compact={true}
+                />
+              ))}
             </ScrollView>
           </View>
         )}

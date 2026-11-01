@@ -110,18 +110,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff'
   },
   listContent: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
     paddingTop: 8,
     paddingBottom: 100
   },
   columnWrapper: {
     justifyContent: 'space-between',
-    paddingHorizontal: 2,
-    gap: 8
+    paddingHorizontal: 0
   },
   cardWrapper: {
-    flex: 1,
-    maxWidth: '49%'
+    width: '48.5%',
+    maxWidth: '48.5%'
   },
   loadingContainer: {
     padding: 8

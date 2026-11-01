@@ -29,7 +29,7 @@ import { colors, typography } from '../constants/theme';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { haptics } from '../services/haptics';
-import { getProductImage } from '../components/product/ProductCard';
+import { ProductCard, getProductImage } from '../components/product/ProductCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GAP = 12;
@@ -98,137 +98,11 @@ export default function WishlistScreen() {
     }
   };
 
-  const renderProductItem = ({ item }) => {
-    const activeVariant = item.variants?.[0] || null;
-    const price = Number(activeVariant?.sellingPrice ?? item.sellingPrice ?? 0);
-    const mrp = Number(activeVariant?.mrp ?? item.mrp ?? price);
-    const unit = activeVariant?.conversionUnit || item.sellingUnit || item.baseUnit || 'PCS';
-    const discount = mrp > price && mrp > 0 ? Math.round(((mrp - price) / mrp) * 100) : 0;
-    const variantId = activeVariant?._id || null;
-    const currentQty = getItemQuantity(item._id, variantId);
-    const imageUrl = getProductImage(item);
-
-    const findCartItem = () =>
-      cart?.items?.find(
-        (i) => i.product?._id === item._id && (variantId ? i.variant?._id === variantId : !i.variant)
-      );
-
-    const handleAdd = () => {
-      haptics.selection();
-      addItem(item._id, 1, variantId, unit);
-    };
-
-    const handleIncrement = () => {
-      haptics.selection();
-      const cartItem = findCartItem();
-      if (cartItem) updateItem(cartItem._id, currentQty + 1);
-      else addItem(item._id, 1, variantId, unit);
-    };
-
-    const handleDecrement = () => {
-      haptics.selection();
-      const cartItem = findCartItem();
-      if (cartItem) updateItem(cartItem._id, currentQty - 1);
-    };
-
-    return (
-      <Pressable
-        style={styles.card}
-        onPress={() => {
-          haptics.selection();
-          router.push('/product/' + item._id);
-        }}
-        accessibilityRole="button"
-        accessibilityLabel={`View ${item.name}`}
-      >
-        {/* Product Image Area */}
-        <View style={styles.imageBox}>
-          {imageUrl ? (
-            <Image
-              source={{ uri: imageUrl }}
-              style={styles.image}
-              contentFit="contain"
-              transition={150}
-            />
-          ) : (
-            <Package size={34} color="#9CA3AF" />
-          )}
-
-          {discount > 0 && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>{discount}% OFF</Text>
-            </View>
-          )}
-
-          <TouchableOpacity
-            style={styles.heartBtn}
-            onPress={(e) => {
-              e.stopPropagation();
-              haptics.light();
-              toggleSave(item);
-            }}
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel="Remove from wishlist"
-          >
-            <Heart size={16} color="#E11D48" fill="#E11D48" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Product Details */}
-        <View style={styles.cardBody}>
-          <Text style={styles.unitText} numberOfLines={1}>
-            {activeVariant?.name || unit}
-          </Text>
-          <Text style={styles.nameText} numberOfLines={2}>
-            {item.name}
-          </Text>
-
-          {/* Price & Action Row */}
-          <View style={styles.bottomRow}>
-            <View>
-              <Text style={styles.priceText}>₹{price}</Text>
-              {mrp > price && <Text style={styles.mrpText}>₹{mrp}</Text>}
-            </View>
-
-            {currentQty > 0 ? (
-              <View style={styles.stepper}>
-                <TouchableOpacity
-                  onPress={handleDecrement}
-                  style={styles.stepBtn}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel="Decrease quantity"
-                >
-                  <Minus size={14} color="#111827" strokeWidth={2.8} />
-                </TouchableOpacity>
-                <Text style={styles.stepQty}>{currentQty}</Text>
-                <TouchableOpacity
-                  onPress={handleIncrement}
-                  style={styles.stepBtn}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel="Increase quantity"
-                >
-                  <Plus size={14} color="#111827" strokeWidth={2.8} />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity
-                onPress={handleAdd}
-                style={styles.addBtn}
-                activeOpacity={0.85}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${item.name} to cart`}
-              >
-                <Text style={styles.addBtnText}>ADD</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </Pressable>
-    );
-  };
+  const renderProductItem = ({ item }) => (
+    <View style={styles.cardCol}>
+      <ProductCard product={item} />
+    </View>
+  );
 
   const renderEmptyState = () => (
     <View style={styles.emptyWrap}>
@@ -455,6 +329,10 @@ export default function WishlistScreen() {
 }
 
 const styles = StyleSheet.create({
+  cardCol: {
+    width: CARD_WIDTH,
+    marginBottom: GAP,
+  },
   screen: {
     flex: 1,
     backgroundColor: '#FFFFFF'
