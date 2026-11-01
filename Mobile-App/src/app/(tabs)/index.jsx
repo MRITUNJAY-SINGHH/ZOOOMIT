@@ -113,6 +113,39 @@ const REFERENCE_SHORTCUTS = [
   },
 ];
 
+const DIWALI_BANNER_SLIDES = [
+  {
+    id: 'diwali_slide_1',
+    preheading: 'CELEBRATE',
+    heading: 'Diwali',
+    subtitle: 'Everything you need\nfor a brighter celebration',
+    buttonText: 'Shop Now',
+    image: require('../../../assets/images/diwali/diwali_banner.jpg'),
+    match: 'diwali|festive',
+    query: 'Diwali',
+  },
+  {
+    id: 'diwali_slide_2',
+    preheading: 'FESTIVE DELIGHTS',
+    heading: 'Sweets & Treats',
+    subtitle: 'Pure ghee mithai & gift hampers\nat festive prices',
+    buttonText: 'Shop Sweets',
+    image: require('../../../assets/images/diwali/diwali_banner_2.jpg'),
+    match: 'sweet|mithai|dry.*fruit|hamper',
+    query: 'Diwali Sweets',
+  },
+  {
+    id: 'diwali_slide_3',
+    preheading: 'LIGHT UP YOUR HOME',
+    heading: 'Diyas & Decor',
+    subtitle: 'Handcrafted earthen diyas\n& traditional decoration',
+    buttonText: 'Explore Decor',
+    image: require('../../../assets/images/diwali/diwali_banner_3.jpg'),
+    match: 'diya|decor|light|rangoli',
+    query: 'Diyas and Decorations',
+  },
+];
+
 const DIWALI_CATEGORY_CARDS = [
   {
     key: 'gifting',
@@ -308,6 +341,34 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [addressSheetVisible, setAddressSheetVisible] = useState(false);
   const [addressOpening, setAddressOpening] = useState(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const carouselRef = useRef(null);
+  const isInteracting = useRef(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (isInteracting.current) return;
+      setActiveSlide((prev) => {
+        const next = (prev + 1) % DIWALI_BANNER_SLIDES.length;
+        carouselRef.current?.scrollTo({ x: next * width, animated: true });
+        return next;
+      });
+    }, 4500);
+
+    return () => clearInterval(timer);
+  }, [width]);
+
+  const handleDiwaliSlidePress = (slide) => {
+    haptics.selection();
+    const diwaliCat = categories.find((c) => new RegExp(slide.match, 'i').test(c.name || '')) ||
+                      parents.find((p) => new RegExp(slide.match, 'i').test(p.name || ''));
+    const catId = diwaliCat?._id || diwaliCat?.id;
+    if (catId) {
+      router.push(`/category/${catId}`);
+    } else {
+      router.push({ pathname: '/(tabs)/search', params: { q: slide.query } });
+    }
+  };
 
   const handleOpenAddress = () => {
     haptics.selection();
@@ -696,61 +757,89 @@ export default function HomeScreen() {
         {/* Elastic pull-down yellow backdrop */}
         <View pointerEvents="none" style={styles.yellowBackdrop} />
 
-        {/* Unified Diwali Section (Banner + 6 Category Cards in ONE Seamless Festive Card) */}
-        <View style={styles.diwaliUnifiedCard}>
-          {/* Top Promotional Banner */}
-          <Pressable
-            style={styles.diwaliBannerSection}
-            onPress={() => {
-              haptics.selection();
-              const diwaliCat = categories.find((c) => /diwali|festive/i.test(c.name || ''));
-              if (diwaliCat?._id) {
-                router.push(`/category/${diwaliCat._id}`);
-              } else {
-                router.push({ pathname: '/(tabs)/search', params: { q: 'Diwali' } });
-              }
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Celebrate Diwali - Everything you need for a brighter celebration"
-          >
-            <Image
-              source={require('../../../assets/images/diwali/diwali_banner.jpg')}
-              style={styles.diwaliBannerBgImage}
-              contentFit="cover"
-            />
+        {/* Diwali Festive Section: 100% Full-Width Banner Carousel + 6 Category Cards */}
+        <View style={styles.diwaliSectionWrapper}>
+          {/* 100% Full-Width Banner Carousel Slider (Edge-to-edge, no radius, no padding) */}
+          <View style={[styles.diwaliCarouselBox, { width }]}>
+            <ScrollView
+              ref={carouselRef}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              scrollEventThrottle={16}
+              onTouchStart={() => { isInteracting.current = true; }}
+              onTouchEnd={() => { setTimeout(() => { isInteracting.current = false; }, 2000); }}
+              onMomentumScrollEnd={(e) => {
+                const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+                setActiveSlide(idx);
+                isInteracting.current = false;
+              }}
+              contentContainerStyle={{ width: width * DIWALI_BANNER_SLIDES.length }}
+            >
+              {DIWALI_BANNER_SLIDES.map((slide) => (
+                <Pressable
+                  key={slide.id}
+                  style={[styles.diwaliSlide, { width }]}
+                  onPress={() => handleDiwaliSlidePress(slide)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${slide.preheading} ${slide.heading} - ${slide.subtitle.replace('\n', ' ')}`}
+                >
+                  {/* Background Image: Full width & height explicit style */}
+                  <Image
+                    source={slide.image}
+                    style={styles.diwaliSlideBgImage}
+                    contentFit="cover"
+                  />
 
-            {/* Subtle Gradient to preserve left/right lanterns & fireworks while maintaining text legibility */}
-            <LinearGradient
-              colors={['rgba(35, 4, 62, 0.12)', 'rgba(35, 4, 62, 0.38)', 'rgba(53, 6, 92, 0.88)']}
-              style={StyleSheet.absoluteFillObject}
-            />
+                  {/* Gentle gradient overlay preserving fireworks & lanterns on left/right while ensuring center text readability */}
+                  <LinearGradient
+                    colors={['rgba(35, 4, 62, 0.12)', 'rgba(35, 4, 62, 0.35)', 'rgba(45, 5, 80, 0.88)']}
+                    style={StyleSheet.absoluteFillObject}
+                  />
 
-            <View style={styles.diwaliBannerContent}>
-              <Text style={styles.diwaliPreheading}>CELEBRATE</Text>
-              <Text style={styles.diwaliMainHeading}>Diwali</Text>
-              <Text style={styles.diwaliSubtitle}>
-                Everything you need{'\n'}for a brighter celebration
-              </Text>
+                  <View style={styles.diwaliSlideContent}>
+                    <Text style={styles.diwaliPreheading}>{slide.preheading}</Text>
+                    <Text style={styles.diwaliMainHeading}>{slide.heading}</Text>
+                    <Text style={styles.diwaliSubtitle}>{slide.subtitle}</Text>
 
-              <View style={styles.shopNowBtn}>
-                <Text style={styles.shopNowText}>Shop Now</Text>
-                <ArrowRight size={15} color="#111827" strokeWidth={2.4} />
-              </View>
+                    <View style={styles.shopNowBtn}>
+                      <Text style={styles.shopNowText}>{slide.buttonText}</Text>
+                      <ArrowRight size={15} color="#111827" strokeWidth={2.4} />
+                    </View>
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
 
-              <View style={styles.diwaliDotsRow}>
-                <View style={[styles.diwaliDot, styles.diwaliDotActive]} />
-                <View style={styles.diwaliDot} />
-                <View style={styles.diwaliDot} />
-              </View>
+            {/* Pagination Dots Row */}
+            <View style={styles.diwaliDotsRowOverlay} pointerEvents="box-none">
+              {DIWALI_BANNER_SLIDES.map((_, idx) => (
+                <Pressable
+                  key={idx}
+                  onPress={() => {
+                    haptics.selection();
+                    setActiveSlide(idx);
+                    carouselRef.current?.scrollTo({ x: idx * width, animated: true });
+                  }}
+                  hitSlop={8}
+                  style={[
+                    styles.diwaliDot,
+                    activeSlide === idx && styles.diwaliDotActive
+                  ]}
+                />
+              ))}
             </View>
-          </Pressable>
+          </View>
 
-          {/* 6 Category Cards inside the same unified purple card */}
-          <View style={styles.diwaliCardsGridInside}>
+          {/* 6 Category Cards in 3 Columns x 2 Rows directly below the banner */}
+          <View style={styles.diwaliCardsGridSection}>
             {DIWALI_CATEGORY_CARDS.map((card) => (
               <Pressable
                 key={card.key}
-                style={styles.diwaliCard}
+                style={({ pressed }) => [
+                  styles.diwaliCard,
+                  pressed && styles.diwaliCardPressed,
+                ]}
                 onPress={() => handleDiwaliCardPress(card)}
                 accessibilityRole="button"
                 accessibilityLabel={`Shop ${card.name.replace('\n', ' ')}`}
@@ -1187,38 +1276,41 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5A900',
   },
 
-  /* Unified Diwali Section Card (Banner + 6 Category Cards in ONE Card) */
-  diwaliUnifiedCard: {
-    marginHorizontal: 12,
-    marginTop: 8,
-    marginBottom: 16,
-    borderRadius: 24,
-    backgroundColor: '#35065C', // Seamless rich festive purple matching reference
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    shadowColor: '#1A0033',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  diwaliBannerSection: {
+  /* Diwali Festive Section (100% Full Width Banner Carousel + 6 Cards) */
+  diwaliSectionWrapper: {
     width: '100%',
-    height: 248,
+    backgroundColor: '#35065C',
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  diwaliCarouselBox: {
+    height: 254,
+    position: 'relative',
+    backgroundColor: '#35065C',
+  },
+  diwaliSlide: {
+    height: 254,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  diwaliBannerBgImage: {
-    ...StyleSheet.absoluteFillObject,
+  diwaliSlideBgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
-  diwaliBannerContent: {
+  diwaliSlideContent: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
     zIndex: 2,
-    marginTop: 6,
+    marginTop: 4,
   },
   diwaliPreheading: {
     fontFamily: typography.family.bold,
@@ -1247,7 +1339,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: '#FFFFFF',
     textAlign: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
     opacity: 0.95,
   },
   shopNowBtn: {
@@ -1258,7 +1350,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: 12,
+    marginBottom: 10,
   },
   shopNowText: {
     fontFamily: typography.family.bold,
@@ -1266,49 +1358,59 @@ const styles = StyleSheet.create({
     color: '#111827',
     fontWeight: '700',
   },
-  diwaliDotsRow: {
+  diwaliDotsRowOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
+    zIndex: 10,
   },
   diwaliDot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
   },
   diwaliDotActive: {
-    width: 18,
+    width: 20,
     backgroundColor: '#FFFFFF',
   },
 
-  /* 6 Category Cards inside the Unified Diwali Card */
-  diwaliCardsGridInside: {
+  /* 6 Category Cards Section */
+  diwaliCardsGridSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
     paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 14,
+    paddingTop: 12,
+    paddingBottom: 16,
     rowGap: 10,
     backgroundColor: '#35065C',
   },
   diwaliCard: {
     width: '31.3%',
-    height: 132,
+    height: 136,
     borderRadius: 18,
-    backgroundColor: '#250444', // Darker purple tile for high contrast
+    backgroundColor: '#240344',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: 'rgba(255, 255, 255, 0.16)',
     paddingTop: 10,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'space-between',
     overflow: 'hidden',
   },
+  diwaliCardPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.97 }],
+  },
   diwaliCardTitle: {
     fontFamily: typography.family.bold,
-    fontSize: 12,
+    fontSize: 12.5,
     lineHeight: 15,
     color: '#FFFFFF',
     textAlign: 'center',
@@ -1317,13 +1419,13 @@ const styles = StyleSheet.create({
   },
   diwaliCardImgWrap: {
     width: '100%',
-    height: 82,
+    height: 86,
     alignItems: 'center',
     justifyContent: 'flex-end',
     marginBottom: 4,
   },
   diwaliCardImg: {
-    width: '92%',
+    width: '96%',
     height: '100%',
   },
 

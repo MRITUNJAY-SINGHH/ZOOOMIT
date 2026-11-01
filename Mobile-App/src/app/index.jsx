@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
-import { Image } from 'expo-image';
+import { View, Text, StyleSheet, Pressable, Dimensions, ImageBackground } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -52,12 +51,12 @@ export default function IndexScreen() {
   }
 
   return (
-    <View style={styles.rootContainer}>
-      <Image
-        source={require('../../assets/images/auth/auth_splash_bg.jpg')}
-        style={StyleSheet.absoluteFillObject}
-        contentFit="cover"
-      />
+    <ImageBackground
+      source={require('../../assets/images/auth/auth_splash_bg.jpg')}
+      style={styles.bgImage}
+      imageStyle={styles.bgImageInner}
+      resizeMode="cover"
+    >
       <SafeAreaView style={styles.safeContainer} edges={['top', 'bottom']}>
         <View style={styles.topSection}>
           <Animated.View 
@@ -137,14 +136,20 @@ export default function IndexScreen() {
           </Animated.View>
         </View>
       </SafeAreaView>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  rootContainer: {
+  bgImage: {
     flex: 1,
-    backgroundColor: '#000'
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#FFF8E7',
+  },
+  bgImageInner: {
+    width: '100%',
+    height: '100%',
   },
   safeContainer: {
     flex: 1,
