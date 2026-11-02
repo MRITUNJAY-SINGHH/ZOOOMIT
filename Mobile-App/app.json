@@ -2,7 +2,7 @@
   "expo": {
     "name": "ZOOOMIT",
     "slug": "zooomit",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "zooomit",
@@ -15,6 +15,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.zooomit.app",
+      "buildNumber": "2",
       "splash": {
         "image": "./assets/images/splash-icon.png",
         "resizeMode": "contain",
@@ -24,6 +25,7 @@
     "android": {
       "predictiveBackGestureEnabled": false,
       "package": "com.zooomit.app",
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
