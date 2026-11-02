@@ -4,16 +4,31 @@
     "slug": "zooomit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.jpg",
     "scheme": "zooomit",
     "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/logo.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "ios": {
-      "icon": "./assets/images/icon.png",
-      "bundleIdentifier": "com.zooomit.app"
+      "icon": "./assets/images/logo.jpg",
+      "bundleIdentifier": "com.zooomit.app",
+      "splash": {
+        "image": "./assets/images/logo.jpg",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "android": {
       "predictiveBackGestureEnabled": false,
-      "package": "com.zooomit.app"
+      "package": "com.zooomit.app",
+      "splash": {
+        "image": "./assets/images/logo.jpg",
+        "resizeMode": "contain",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "web": {
       "output": "static",
@@ -24,9 +39,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#059669",
+          "backgroundColor": "#FFFFFF",
           "image": "./assets/images/logo.jpg",
-          "imageWidth": 76
+          "imageWidth": 220
         }
       ],
       "expo-secure-store",

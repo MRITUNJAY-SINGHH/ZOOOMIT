@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, ImageBackground } from 'react-native';
+import {View, Text, StyleSheet, Pressable, Dimensions, ImageBackground, Image} from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -47,7 +47,15 @@ export default function IndexScreen() {
   };
 
   if (isLoading || token) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <Image
+          source={require('../../assets/images/logo.jpg')}
+          style={{ width: 220, height: 220 }}
+          resizeMode="contain"
+        />
+      </View>
+    );
   }
 
   return (

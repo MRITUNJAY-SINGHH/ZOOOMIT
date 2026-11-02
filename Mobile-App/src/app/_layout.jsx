@@ -19,7 +19,7 @@ import {
   Inter_800ExtraBold,
   Inter_900Black
 } from '@expo-google-fonts/inter';
-import { Text, TextInput, StyleSheet } from 'react-native';
+import { Text, TextInput, StyleSheet, View, Image } from 'react-native';
 
 // Make Inter the default font for every Text/TextInput. Explicit fontFamily in a style still wins.
 const withInterDefault = (Component) => {
@@ -81,7 +81,15 @@ export default function RootLayout() {
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) {
-    return null;
+    return (
+      <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+        <Image
+          source={require('../../assets/images/logo.jpg')}
+          style={{ width: 220, height: 220 }}
+          resizeMode="contain"
+        />
+      </View>
+    );
   }
 
   return (
