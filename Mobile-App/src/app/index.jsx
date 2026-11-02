@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import {View, Text, StyleSheet, Pressable, Dimensions, ImageBackground, Image} from 'react-native';
+import {View, Text, StyleSheet, Pressable, Dimensions, ImageBackground, Image, ActivityIndicator} from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
@@ -50,10 +50,11 @@ export default function IndexScreen() {
     return (
       <View style={{ flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
         <Image
-          source={require('../../assets/images/logo.jpg')}
+          source={require('../../assets/images/splash-icon.png')}
           style={{ width: 220, height: 220 }}
           resizeMode="contain"
         />
+        <ActivityIndicator size="small" color={colors.primary || "#FFC928"} style={{ marginTop: 20 }} />
       </View>
     );
   }
