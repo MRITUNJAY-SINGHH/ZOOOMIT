@@ -16,11 +16,13 @@ import {
 } from 'react-native';
 import { Image } from 'expo-image';
 import { ProductCard } from '../../components/product/ProductCard';
+import { TypewriterSearch } from '../../components/TypewriterSearch';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
+  ArrowRight,
   X,
   Search,
   Heart,
@@ -70,8 +72,8 @@ const stripHtml = (html) =>
 export default function ProductDetailsScreen() {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const sliderWidth = Math.min(width - 32, 500);
-  const sliderHeight = Math.round(sliderWidth * 0.92);
+  const sliderWidth = width;
+  const sliderHeight = Math.round(sliderWidth * 0.95);
 
   const sliderRef = useRef(null);
   const zoomScrollRef = useRef(null);
@@ -89,6 +91,10 @@ export default function ProductDetailsScreen() {
 
   // Cart & Wishlist hooks
   const { cart, addItem, updateItem, getItemQuantity, isUpdating } = useCart();
+  const totalCartCount = useMemo(() => {
+    if (!cart?.items || !Array.isArray(cart.items)) return 0;
+    return cart.items.reduce((sum, item) => sum + (Number(item.qty || item.quantity) || 1), 0);
+  }, [cart]);
   const { token } = useAuth();
   const { isSaved, toggleSave } = useWishlist();
   const [addingLocal, setAddingLocal] = useState(false);
@@ -358,6 +364,52 @@ export default function ProductDetailsScreen() {
 
   return (
     <View style={styles.screen}>
+      {/* ========================================================== */}
+      {/* 1. STICKY TOP NAV BAR (BACK, SEARCH BAR, CART)             */}
+      {/* ========================================================== */}
+      <View style={[styles.stickyHeader, { paddingTop: insets.top + 6 }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Go back"
+        >
+          <ArrowLeft size={24} color="#111827" strokeWidth={2.4} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.searchBarBox}
+          onPress={() => router.push('/(tabs)/search')}
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Search products"
+        >
+          <Search size={18} color="#64748B" strokeWidth={2} />
+          <TypewriterSearch
+            prefix="Search "
+            keywords={['groceries', 'aata', 'fresh milk', 'farm veggies', 'paneer', 'dry fruits']}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cartBtn}
+          onPress={() => router.push('/(tabs)/cart')}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="View shopping cart"
+        >
+          <ShoppingCart size={24} color="#111827" strokeWidth={2.2} />
+          {totalCartCount > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>
+                {totalCartCount > 99 ? '99+' : totalCartCount}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[
@@ -366,32 +418,12 @@ export default function ProductDetailsScreen() {
         ]}
       >
         {/* ========================================================== */}
-        {/* 1. TOP NAV BAR (BACK, SEARCH, WISHLIST, SHARE)             */}
+        {/* 2. PRODUCT IMAGE GALLERY (SWIPABLE SLIDER - NO BORDER)     */}
         {/* ========================================================== */}
-        <View style={[styles.topNavBar, { paddingTop: insets.top + 8 }]}>
-          <TouchableOpacity
-            style={styles.navCircleBtn}
-            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)'))}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-          >
-            <ArrowLeft size={22} color="#111827" strokeWidth={2.4} />
-          </TouchableOpacity>
-
-          <View style={styles.topRightActions}>
+        <View style={styles.galleryWrapper}>
+          <View style={[styles.sliderBox, { width: sliderWidth, height: sliderHeight }]}>
             <TouchableOpacity
-              style={styles.navCircleBtn}
-              onPress={() => router.push('/(tabs)/search')}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Search products"
-            >
-              <Search size={20} color="#111827" strokeWidth={2.2} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.navCircleBtn}
+              style={styles.galleryWishlistBtn}
               onPress={handleWishlist}
               hitSlop={8}
               accessibilityRole="button"
@@ -404,24 +436,6 @@ export default function ProductDetailsScreen() {
                 strokeWidth={2.2}
               />
             </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.navCircleBtn}
-              onPress={handleShare}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Share product"
-            >
-              <Share2 size={20} color="#111827" strokeWidth={2.2} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* ========================================================== */}
-        {/* 2. PRODUCT IMAGE GALLERY (SWIPABLE SLIDER - NO BORDER)     */}
-        {/* ========================================================== */}
-        <View style={styles.galleryWrapper}>
-          <View style={[styles.sliderBox, { width: sliderWidth, height: sliderHeight }]}>
             <ScrollView
               ref={sliderRef}
               horizontal
@@ -882,10 +896,18 @@ export default function ProductDetailsScreen() {
               <Text style={styles.relatedTitle}>You May Also Like</Text>
               {categoryId && (
                 <TouchableOpacity
-                  onPress={() => router.push(`/category/${categoryId}`)}
+                  onPress={() => {
+                    haptics.selection();
+                    router.push(`/category/${categoryId}`);
+                  }}
+                  style={styles.viewAllBtn}
                   hitSlop={8}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="View all related products"
                 >
                   <Text style={styles.viewAllText}>View All</Text>
+                  <ArrowRight size={13} color="#111827" strokeWidth={2.5} />
                 </TouchableOpacity>
               )}
             </View>
@@ -1167,44 +1189,106 @@ const styles = StyleSheet.create({
     paddingTop: 0
   },
 
-  // 1. Top Nav Bar
-  topNavBar: {
+  // 1. Sticky Top Nav Bar (Back, Search, Cart)
+  stickyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 14,
+    paddingBottom: 10,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
-    zIndex: 10
+    zIndex: 99,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2
   },
-  navCircleBtn: {
+  backBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4
+  },
+  searchBarBox: {
+    flex: 1,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.2,
+    borderColor: '#FFE082',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    gap: 8
+  },
+  searchBarText: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: F.regular,
+    color: '#64748B'
+  },
+  cartBtn: {
+    width: 42,
+    height: 42,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 6,
+    position: 'relative'
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: colors.primary || '#FFC928',
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF'
+  },
+  cartBadgeText: {
+    fontSize: 10.5,
+    fontFamily: F.bold,
+    color: '#111827',
+    textAlign: 'center'
+  },
+  galleryWishlistBtn: {
+    position: 'absolute',
+    top: 12,
+    right: 14,
+    zIndex: 20,
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E5E7EB',
     alignItems: 'center',
-    justifyContent: 'center'
-  },
-  topRightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10
+    justifyContent: 'center',
+    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 3
   },
 
-  // 2. Gallery (Slider without borders)
+  // 2. Gallery (Slider without borders, full width, transparent bg)
   galleryWrapper: {
-    paddingHorizontal: 16,
-    paddingTop: 10,
+    paddingHorizontal: 0,
+    paddingTop: 0,
     paddingBottom: 16,
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: 'transparent'
   },
   sliderBox: {
-    borderRadius: 20,
-    backgroundColor: '#FAFAFA',
+    borderRadius: 0,
+    backgroundColor: 'transparent',
     position: 'relative',
     overflow: 'hidden',
     borderWidth: 0,
@@ -1213,11 +1297,11 @@ const styles = StyleSheet.create({
   sliderSlide: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FAFAFA'
+    backgroundColor: 'transparent'
   },
   heroImage: {
-    width: '92%',
-    height: '92%'
+    width: '100%',
+    height: '100%'
   },
   paginationBadge: {
     position: 'absolute',
@@ -1692,10 +1776,25 @@ const styles = StyleSheet.create({
     fontFamily: F.bold,
     color: '#111827'
   },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#FFC928',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 14,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 }
+  },
   viewAllText: {
-    fontSize: 13,
     fontFamily: F.bold,
-    color: '#D97706'
+    fontSize: 12,
+    color: '#111827',
+    fontWeight: '700'
   },
   relatedScrollContent: {
     paddingHorizontal: 16,

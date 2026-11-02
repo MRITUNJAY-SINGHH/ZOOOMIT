@@ -28,7 +28,6 @@ import {
   ChevronUp,
   User,
   MapPin,
-  Mic,
   Heart,
   LayoutGrid,
   Headphones
@@ -39,6 +38,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import { ProductCard } from '../../components/product/ProductCard';
 import { QuickAddressSheet } from '../../components/address/QuickAddressSheet';
+import { TypewriterSearch } from '../../components/TypewriterSearch';
 import { HeaderMandalaBg } from '../../components/home/HeaderMandalaBg';
 import { haptics } from '../../services/haptics';
 
@@ -236,11 +236,6 @@ const DiwaliBannerCarousel = React.memo(({ width, slides, onSlidePress }) => {
         nestedScrollEnabled={true}
         overScrollMode="never"
         bounces={false}
-        onMomentumScrollEnd={(e) => {
-          if (e.nativeEvent.contentOffset.y < 200) {
-            setShowBackToTop(false);
-          }
-        }}
         scrollEventThrottle={16}
         onTouchStart={() => { isInteracting.current = true; }}
         onTouchEnd={() => { setTimeout(() => { isInteracting.current = false; }, 2500); }}
@@ -356,40 +351,6 @@ const SHOP_BY_CATEGORY_ITEMS = [
   },
 ];
 
-const SEARCH_WORDS = [
-  'Search for groceries, fruits, milk...',
-  'Search for sweets, dry fruits, gifts...',
-  'Search for pooja essentials, diyas...',
-  'Search for fresh veggies, paneer, atta...',
-];
-
-const RotatingSearch = ({ words }) => {
-  const list = words && words.length ? words : SEARCH_WORDS;
-  const [index, setIndex] = useState(0);
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      Animated.sequence([
-        Animated.timing(fadeAnim, { toValue: 0, duration: 250, useNativeDriver: true }),
-        Animated.timing(fadeAnim, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
-      setTimeout(() => {
-        setIndex((prev) => (prev + 1) % list.length);
-      }, 250);
-    }, 3200);
-    return () => clearInterval(timer);
-  }, [list.length, fadeAnim]);
-
-  return (
-    <Animated.Text
-      numberOfLines={1}
-      style={[styles.placeholderText, { opacity: fadeAnim }]}
-    >
-      {list[index]}
-    </Animated.Text>
-  );
-};
 
 const idOf = (item) => (typeof item === 'string' ? item : item?._id || item?.id);
 
@@ -789,9 +750,12 @@ export default function HomeScreen() {
             >
               <Search size={18} color="#9CA3AF" strokeWidth={2} style={styles.searchIcon} />
               <View style={styles.searchPlaceholderWrap} pointerEvents="none">
-                <RotatingSearch words={SEARCH_WORDS} />
+                <TypewriterSearch
+                  prefix="Search "
+                  keywords={['groceries', 'aata', 'fresh milk', 'farm veggies', 'sweets & gifts', 'pure ghee']}
+                  style={styles.placeholderText}
+                />
               </View>
-              <Mic size={18} color="#111827" strokeWidth={2} style={styles.micIcon} />
             </Pressable>
 
             <Pressable
@@ -1255,8 +1219,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(229, 231, 235, 0.8)',
+    borderWidth: 1.2,
+    borderColor: '#FFE082',
   },
   searchIcon: {
     marginRight: 8,
@@ -1269,9 +1233,6 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     fontSize: 13.5,
     fontFamily: typography.family.regular,
-  },
-  micIcon: {
-    marginLeft: 8,
   },
   wishlistBtn: {
     width: 48,

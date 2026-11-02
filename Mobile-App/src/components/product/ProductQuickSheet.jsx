@@ -20,7 +20,8 @@ import { colors, typography } from '../../constants/theme';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { haptics } from '../../services/haptics';
-import { getProductImage } from './ProductCard';
+import { getProductImage, getVariantDisplay } from './ProductCard';
+import { captureCartSource } from '../FloatingCart';
 
 export function ProductQuickSheet({
   product,
@@ -29,6 +30,7 @@ export function ProductQuickSheet({
   onVariantAdded
 }) {
   const insets = useSafeAreaInsets();
+  const thumbnailRef = useRef(null);
   const { addItem } = useCart();
   const { token } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -118,7 +120,8 @@ export function ProductQuickSheet({
     setBusy(true);
     try {
       const vId = selectedVariant._id || selectedVariant.id || null;
-      await addItem(productId, min, vId, unit);
+      const source = captureCartSource(thumbnailRef, { ...product, featuredImage: primaryImage });
+      await addItem(productId, min, vId, unit, source);
       onVariantAdded?.(vId);
       handleClose();
     } catch (err) {
@@ -202,7 +205,7 @@ export function ProductQuickSheet({
           >
             {/* Product Summary Header */}
             <View style={styles.productSummaryBox}>
-              <View style={styles.thumbnailBox}>
+              <View ref={thumbnailRef} collapsable={false} style={styles.thumbnailBox}>
                 {primaryImage ? (
                   <Image
                     source={{ uri: primaryImage }}
@@ -268,25 +271,47 @@ export function ProductQuickSheet({
                     }}
                     activeOpacity={0.85}
                   >
-                    <View style={styles.variantTopRow}>
-                      <Text
-                        style={[
-                          styles.variantName,
-                          isSelected && styles.variantNameSelected,
-                          vOutOfStock && styles.textDisabled
-                        ]}
-                        numberOfLines={1}
-                      >
-                        {v.name || `${min} ${unit.toLowerCase()}`}
-                      </Text>
-                      {isSelected ? (
-                        <View style={styles.checkBadge}>
-                          <Check size={12} color="#111827" strokeWidth={3} />
+                    {(() => {
+                      const { weight, variety } = getVariantDisplay(v, product);
+                      return (
+                        <View style={styles.variantTopRow}>
+                          <View style={styles.variantHeaderCol}>
+                            <Text
+                              style={[
+                                styles.variantWeightText,
+                                isSelected && styles.variantWeightTextSelected,
+                                vOutOfStock && styles.textDisabled
+                              ]}
+                              numberOfLines={1}
+                            >
+                              {weight}
+                            </Text>
+                            {variety ? (
+                              <View style={[styles.varietyBadge, isSelected && styles.varietyBadgeSelected]}>
+                                <Text
+                                  style={[
+                                    styles.varietyBadgeText,
+                                    isSelected && styles.varietyBadgeTextSelected,
+                                    vOutOfStock && styles.textDisabled
+                                  ]}
+                                  numberOfLines={1}
+                                >
+                                  {variety}
+                                </Text>
+                              </View>
+                            ) : null}
+                          </View>
+
+                          {isSelected ? (
+                            <View style={styles.checkBadge}>
+                              <Check size={12} color="#111827" strokeWidth={3} />
+                            </View>
+                          ) : (
+                            <View style={styles.uncheckCircle} />
+                          )}
                         </View>
-                      ) : (
-                        <View style={styles.uncheckCircle} />
-                      )}
-                    </View>
+                      );
+                    })()}
 
                     <View style={styles.variantPriceRow}>
                       <Text
@@ -491,6 +516,39 @@ const styles = StyleSheet.create({
   variantCardDisabled: {
     opacity: 0.5,
     backgroundColor: '#F9FAFB'
+  },
+  variantHeaderCol: {
+    flex: 1,
+    paddingRight: 6
+  },
+  variantWeightText: {
+    fontFamily: typography.family.bold,
+    fontSize: 15,
+    color: '#111827',
+    fontWeight: '700'
+  },
+  variantWeightTextSelected: {
+    color: '#111827'
+  },
+  varietyBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    marginTop: 3
+  },
+  varietyBadgeSelected: {
+    backgroundColor: '#FEF3C7'
+  },
+  varietyBadgeText: {
+    fontFamily: typography.family.medium,
+    fontSize: 10.5,
+    color: '#4B5563',
+    fontWeight: '600'
+  },
+  varietyBadgeTextSelected: {
+    color: '#92400E'
   },
   variantTopRow: {
     flexDirection: 'row',

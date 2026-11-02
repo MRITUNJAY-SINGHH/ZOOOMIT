@@ -108,12 +108,10 @@ const styles = StyleSheet.create({
     color: '#64748B'
   },
   prefixText: {
-    fontFamily: typography?.family?.regular || 'Inter-Regular',
-    color: '#64748B'
+    fontFamily: typography?.family?.regular || 'Inter-Regular'
   },
   wordText: {
-    fontFamily: typography?.family?.regular || 'Inter-Regular',
-    color: '#64748B'
+    fontFamily: typography?.family?.regular || 'Inter-Regular'
   },
   cursorText: {
     fontSize: 14,

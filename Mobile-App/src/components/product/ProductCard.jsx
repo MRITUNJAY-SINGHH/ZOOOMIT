@@ -61,6 +61,89 @@ export function productUnitRate(product, variant, price) {
   return `₹${rate}/100 ${unit === 'KG' || unit === 'GM' ? 'g' : 'ml'}`;
 }
 
+export function getVariantDisplay(variant, product) {
+  if (!variant) return { weight: '', variety: '', fullLabel: '', rawName: '' };
+
+  let weight = '';
+  let variety = '';
+
+  // 1. Check variant attributes array
+  if (Array.isArray(variant.attributes) && variant.attributes.length > 0) {
+    const packAttr = variant.attributes.find((a) =>
+      /pack|weight|size|qty|quantity/i.test(a.key || '')
+    );
+    if (packAttr?.value) {
+      weight = String(packAttr.value).trim();
+    }
+    const typeAttr = variant.attributes.find((a) =>
+      /type|variety|flavour|flavor|variant/i.test(a.key || '')
+    );
+    if (typeAttr?.value) {
+      variety = String(typeAttr.value).trim();
+    }
+  }
+
+  // 2. Extract from variant name if weight not found or name has ' - '
+  const rawName = String(variant.name || '').trim();
+  if (rawName) {
+    if (rawName.includes(' - ')) {
+      const parts = rawName.split(' - ').map((s) => s.trim());
+      if (!weight) {
+        weight = parts[parts.length - 1];
+      }
+      if (!variety && parts.length > 1) {
+        variety = parts.slice(0, parts.length - 1).join(' - ');
+      }
+    } else if (!weight) {
+      const match = rawName.match(/\b\d+(\.\d+)?\s*(g|gm|gms|kg|kgs|ml|l|ltr|ltrs|pc|pcs|pack|pk)\b/i);
+      if (match) {
+        weight = match[0];
+        const rest = rawName.replace(match[0], '').replace(/[()\-]/g, '').trim();
+        if (rest && !variety) variety = rest;
+      } else {
+        weight = rawName;
+      }
+    }
+  }
+
+  // 3. Fallbacks for weight
+  if (!weight) {
+    if (variant.conversionFactor && variant.conversionUnit) {
+      weight = `${variant.conversionFactor} ${variant.conversionUnit}`;
+    } else if (product?.sellingUnit) {
+      weight = product.sellingUnit;
+    } else if (product?.baseUnit) {
+      const minQty = Number(product.minSaleQty) || 1;
+      weight = `${minQty} ${product.baseUnit.toLowerCase()}`;
+    } else {
+      weight = rawName || '1 Pack';
+    }
+  }
+
+  // 4. Simplify variety so it doesn't redundantly repeat product name
+  let cleanVariety = variety;
+  if (cleanVariety && product?.name) {
+    const pClean = product.name.toLowerCase().replace(/[()]/g, ' ');
+    const vWords = cleanVariety.split(/[\s\-]+/);
+    const filtered = vWords.filter((w) => {
+      const lower = w.toLowerCase();
+      if (['hybrid', 'desi', 'local', 'imported', 'organic'].includes(lower)) return true;
+      return !pClean.includes(lower);
+    });
+    if (filtered.length > 0) {
+      cleanVariety = filtered.join(' ');
+    } else if (cleanVariety.toLowerCase().includes('hybrid')) {
+      cleanVariety = 'Hybrid';
+    } else {
+      cleanVariety = '';
+    }
+  }
+
+  const fullLabel = cleanVariety ? `${weight} • ${cleanVariety}` : weight;
+
+  return { weight, variety: cleanVariety, fullLabel, rawName };
+}
+
 export const ProductCard = ({
   product,
   onPress,
@@ -190,11 +273,18 @@ export const ProductCard = ({
   // Available options display for multiple variants before adding
   const availableOptionsText = useMemo(() => {
     if (!hasMultipleVariants) return null;
-    return variants
-      .map((v) => v.name || v.conversionUnit)
-      .filter(Boolean)
-      .join(' | ');
-  }, [hasMultipleVariants, variants]);
+    const weights = variants
+      .map((v) => getVariantDisplay(v, product).weight)
+      .filter(Boolean);
+    const unique = [...new Set(weights)];
+    return unique.join(' | ');
+  }, [hasMultipleVariants, variants, product]);
+
+  const activeCartVariantText = useMemo(() => {
+    if (!activeCartVariant) return '';
+    const { weight, variety } = getVariantDisplay(activeCartVariant, product);
+    return variety ? `${weight} • ${variety}` : weight;
+  }, [activeCartVariant, product]);
 
   const openDetails = () => {
     haptics.light();
@@ -334,7 +424,7 @@ export const ProductCard = ({
             // After selecting variant and adding to cart: yellow pill badge
             <View style={styles.selectedVariantBadge}>
               <Text style={styles.selectedVariantText} numberOfLines={1}>
-                {activeCartVariant.name || activeCartVariant.conversionUnit}
+                {activeCartVariantText || activeCartVariant.name || activeCartVariant.conversionUnit}
               </Text>
             </View>
           ) : hasMultipleVariants && qty === 0 ? (
@@ -345,7 +435,7 @@ export const ProductCard = ({
           ) : (
             // Single product without variations
             <Text style={styles.singlePackText} numberOfLines={1}>
-              {activeVariant?.name || `${min} ${unit.toLowerCase()}`}
+              {getVariantDisplay(activeVariant, product).weight || activeVariant?.name || `${min} ${unit.toLowerCase()}`}
             </Text>
           )}
         </View>

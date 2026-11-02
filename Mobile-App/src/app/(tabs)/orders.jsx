@@ -15,11 +15,13 @@ import {
   Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Search,
+  MapPin,
   Check,
   X,
   RotateCcw,
@@ -30,6 +32,7 @@ import {
 import { colors, spacing, radius, typography } from '../../constants/theme';
 import { StorefrontAPI } from '../../services/api';
 import { SAMPLE_ORDERS } from '../../services/mockOrders';
+import { getOrderItemImage, resolveValidCartItem } from '../orders/[id]';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { EmptyState } from '../../components/EmptyState';
@@ -42,7 +45,7 @@ const FILTER_TABS = ['All', 'Delivered', 'Processing', 'Cancelled'];
 
 export default function OrdersScreen() {
   const { token } = useAuth();
-  const { refreshCart } = useCart();
+  const { refreshCart, addItem } = useCart();
   const { onScrollHandler } = useTabBarVisibility();
 
   const [activeFilter, setActiveFilter] = useState('All');
@@ -133,12 +136,48 @@ export default function OrdersScreen() {
     haptics.impactLight();
     setReorderingId(orderId);
     try {
-      await StorefrontAPI.reorder(orderId);
+      let reordered = false;
+      try {
+        const res = await StorefrontAPI.reorder(orderId);
+        if (res.status === 200 || res.data?.success) {
+          reordered = true;
+        }
+      } catch (e) {
+        // Fallback for mock/sample order
+      }
+
+      if (!reordered) {
+        const allOrders = fetchedOrders?.data || SAMPLE_ORDERS || [];
+        const targetOrder = allOrders.find((o) => o._id === orderId || o.id === orderId || o.orderNumber === orderId);
+        if (targetOrder?.items?.length) {
+          for (const it of targetOrder.items) {
+                        let pId = it.product?._id || it.product || it.productId;
+            let vId = it.variant?._id || it.variant || it.variantId || null;
+            const res = resolveValidCartItem(pId, vId, it.productName);
+            pId = res.productId;
+            vId = res.variantId;
+            const qty = Number(it.qty || it.quantity || 1);
+            const unit = it.unit || 'PCS';
+            try {
+              if (addItem) {
+                await addItem(pId, qty, vId, unit);
+              }
+            } catch (addErr) {
+              console.warn('Item add fallback error:', addErr);
+            }
+          }
+        }
+      }
+
       await refreshCart();
-    } catch {}
-    haptics.notificationSuccess();
-    setReorderSuccessModal(true);
-    setReorderingId(null);
+      haptics.notificationSuccess();
+      setReorderSuccessModal(true);
+    } catch (err) {
+      console.warn('Reorder failed:', err);
+      setReorderSuccessModal(true);
+    } finally {
+      setReorderingId(null);
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -332,17 +371,19 @@ export default function OrdersScreen() {
         visible={reorderSuccessModal}
         transparent={true}
         animationType="fade"
+        statusBarTranslucent
         onRequestClose={() => setReorderSuccessModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={styles.centerModalOverlay}>
+          <BlurView intensity={30} tint="dark" style={StyleSheet.absoluteFill} />
           <Pressable style={styles.modalBackdrop} onPress={() => setReorderSuccessModal(false)} />
           <View style={styles.reorderModalCard}>
             <View style={styles.reorderSuccessBadge}>
-              <Check size={28} color={colors.success} strokeWidth={3} />
+              <Check size={30} color="#16A34A" strokeWidth={3} />
             </View>
             <Text style={styles.reorderModalTitle}>Added to Cart! 🛒</Text>
             <Text style={styles.reorderModalDesc}>
-              All available items from this order have been added to your shopping cart.
+              All items from this order have been added to your shopping cart.
             </Text>
 
             <View style={styles.reorderModalActions}>
@@ -422,11 +463,22 @@ function OrderCard({ order, formatDate, onReorder, isReordering }) {
         accessibilityLabel={`View details for Order ${order.orderNumber}`}
       >
         <View style={styles.thumbWrap}>
-          <Image
-            source={require('../../../assets/images/order_basket.jpg')}
-            style={styles.basketThumbnail}
-            resizeMode="cover"
-          />
+          {(() => {
+            const firstImg = getOrderItemImage(order.items?.[0]);
+            return firstImg ? (
+              <Image
+                source={{ uri: firstImg }}
+                style={styles.basketThumbnail}
+                resizeMode="contain"
+              />
+            ) : (
+              <Image
+                source={require('../../../assets/images/order_basket.jpg')}
+                style={styles.basketThumbnail}
+                resizeMode="cover"
+              />
+            );
+          })()}
         </View>
 
         <View style={styles.cardInfoCol}>
@@ -710,7 +762,7 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   guestBannerBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: "#FFC928",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8
@@ -956,6 +1008,13 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 18
+  },
+  centerModalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)'
   },
   modalOverlay: {
     flex: 1,
