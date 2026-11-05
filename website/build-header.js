@@ -66,7 +66,7 @@ function syncHeaderToPage(fileName, masterHeader) {
     'href="index.html#section-about"',
     'href="faq.html"',
     'href="contact.html"',
-    'href="index.html#section-app-download"'
+    'https://play.google.com/store/apps/details?id=com.zooomit.app&pcampaignid=web_share'
   ];
 
   for (const anchor of requiredAnchors) {
